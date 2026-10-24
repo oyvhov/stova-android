@@ -12,6 +12,11 @@ class ProfileRulesTest {
     private val kid = Profile("k", "K", AvatarColor.ROSE, kid = true)
     private val pinned = adult.copy(pin = PinHasher.hash("1357"))
 
+    @Test fun kidCannotLeaveBeforeProfilesLoad() {
+        assertTrue(leavingNeedsAdultPin(null, kid))
+        assertFalse(leavingNeedsAdultPin(null, adult))
+    }
+
     @Test fun noProfilesCreatesFirst() = assertEquals(StartDecision.CreateFirst, decideStart(ProfilesFile()))
 
     @Test fun lastProfileWithoutPinEnters() =

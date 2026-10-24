@@ -20,5 +20,5 @@ fun decideStart(file: ProfilesFile): StartDecision {
 }
 
 /** A child leaves their profile only with an adult's PIN, when any adult has set one. */
-fun leavingNeedsAdultPin(file: ProfilesFile, current: Profile): Boolean =
-    current.kid && file.profiles.any { !it.kid && it.pin != null }
+fun leavingNeedsAdultPin(file: ProfilesFile?, current: Profile): Boolean =
+    current.kid && (file == null || file.profiles.any { !it.kid && it.pin != null })

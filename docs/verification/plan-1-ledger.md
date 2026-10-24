@@ -63,7 +63,7 @@ Final: fixed I4 PBKDF2 on main thread (injectable cpu dispatcher, Default) — p
 Final: fixed I5 kid exit only first adult's PIN (verifyAnyAdultPin with its own kid-exit counter) — kidExitAcceptsAnyAdultPin RED→GREEN; Task 8 ruling reversed
 Final: fixed I6 new PIN unconfirmed (NEW → CONFIRM step) — newPinNeedsConfirmation RED→GREEN
 Final: fixed I7 prefs pruned on unavailable/renamed apps (reconcileKeys: follow rename, keep installed-but-unavailable, drop uninstalled) — reconcileRemapsRenamedKeepsUnavailableDropsUninstalled RED→GREEN; suite 94 passed + 7 skipped screenshot tests, 0 failed, lint clean
-Final: minor (deferred): kid-exit check fails open while profiles file is null (one frame)
+Final: minor (fixed): kid-exit check fails open while profiles file is null (one frame) — kidCannotLeaveBeforeProfilesLoad RED→GREEN; DesignRulesTest 3/3
 Final: minor (deferred): PIN lockout uses wall clock; backwards jumps can show huge waits
 Final: minor (deferred): disabled OK loses focus after a PIN attempt
 Final: minor (deferred): holding OK may click the first item of the app menu (verify on Shield)

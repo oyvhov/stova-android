@@ -60,7 +60,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     LaunchedEffect(container) { container.homeRequests.collect { current = Destination.HOME } }
     val switchProfile = {
         val profiles = file
-        if (profiles != null && leavingNeedsAdultPin(profiles, profile)) {
+        if (leavingNeedsAdultPin(profiles, profile)) {
             askAdultPin = true
         } else {
             container.session.leave()
