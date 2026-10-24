@@ -7,8 +7,11 @@ class StovaApplication : Application(), coil3.SingletonImageLoader.Factory {
     override fun newImageLoader(context: coil3.PlatformContext): coil3.ImageLoader =
         app.stova.media.ui.buildImageLoader(context, container.mediaHttp, container.imageAuth)
 
-    lateinit var container: AppContainer
-        private set
+    private var launcherContainer: AppContainer? = null
+    val container: AppContainer
+        get() = checkNotNull(launcherContainer) {
+            "Launcher container is unavailable before launcher startup or in :homebutton; use process-local Home service state."
+        }
 
     override fun onCreate() {
         super.onCreate()
@@ -17,6 +20,6 @@ class StovaApplication : Application(), coil3.SingletonImageLoader.Factory {
         // The guard goes in first, so even a crash while the container is built is counted.
         val guard = CrashGuard.store(this)
         CrashGuard.install(guard)
-        container = AppContainer(this, crashGuard = guard)
+        launcherContainer = AppContainer(this, crashGuard = guard)
     }
 }

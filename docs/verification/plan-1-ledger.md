@@ -76,7 +76,7 @@ Final: minor (fixed): ensureEnabled overrides a user's own "off" for the Home se
 Final: minor (fixed): JsonFileStore.read does not catch IOException (would crash at start) — unreadableFileFallsBackWithoutDestroyingOriginal + corruptBackupFailureStillReturnsDefault RED→GREEN; DesignRulesTest green
 Final: minor (fixed): adult types PIN twice to leave a kid profile (picker asks again) — adultWhoUnlockedKidDoesNotNeedSamePinAgain + unlockingKidDoesNotUnlockOtherAdult RED→GREEN; DesignRulesTest green
 Final: minor (fixed): PIN pad "Slett" wraps at font scale 2.0 — deleteLabelFitsOneLineAtDoubleFontScale RED→GREEN; DesignRulesTest green
-Final: minor (deferred): container lateinit fails opaquely in :homebutton process
+Final: minor (fixed): container lateinit fails opaquely in :homebutton process — uninitializedContainerExplainsHomeServiceProcessBoundary RED→GREEN; DesignRulesTest green
 Final: minor (deferred): HomeOverrideState treats unreadable guard file as "on"
 Final: minor (deferred): warm the JSON reader in onServiceConnected
 Final: minor (deferred): "siffer skrive" → "siffer skrivne"
