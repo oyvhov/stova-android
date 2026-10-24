@@ -42,7 +42,7 @@ fun ProfileGate(session: ProfileSession, repo: ProfileRepository) {
                 LaunchedEffect(decision) { if (decision is StartDecision.NeedsPin) pinFor = decision.profile }
                 ProfilePicker(
                     profiles = file?.profiles.orEmpty(),
-                    onPick = { profile -> if (profile.pin != null) pinFor = profile else scope.launch { session.enter(profile.id) } },
+                    onPick = { profile -> if (session.needsPin(profile)) pinFor = profile else scope.launch { session.enter(profile.id) } },
                     onAdd = null,
                 )
             }

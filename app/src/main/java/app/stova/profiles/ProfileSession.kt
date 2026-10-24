@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 
 /** Who is watching. `active == null` means the profile gate is showing. */
 class ProfileSession(private val repo: ProfileRepository, scope: CoroutineScope) {
+    private var exitAuthorizedAdultId: String? = null
     private val activeId = MutableStateFlow<String?>(null)
     private val _start = MutableStateFlow<StartDecision?>(null)
 
@@ -26,12 +27,17 @@ class ProfileSession(private val repo: ProfileRepository, scope: CoroutineScope)
         scope.launch { _start.value = decideStart(repo.current()) }
     }
 
+    /** Only the adult whose PIN unlocked the kid can skip a second prompt in this picker. */
+    fun needsPin(profile: Profile): Boolean = profile.pin != null && profile.id != exitAuthorizedAdultId
+
     suspend fun enter(profileId: String) {
+        exitAuthorizedAdultId = null
         activeId.value = profileId
         repo.rememberLast(profileId)
     }
 
-    fun leave() {
+    fun leave(authorizedAdultId: String? = null) {
+        exitAuthorizedAdultId = authorizedAdultId
         activeId.value = null
         _start.value = StartDecision.Pick
     }

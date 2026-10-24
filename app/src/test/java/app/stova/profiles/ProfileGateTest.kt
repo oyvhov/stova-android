@@ -2,6 +2,8 @@ package app.stova.profiles
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -48,6 +50,38 @@ class ProfileGateTest {
     @Test fun pickerAsksPinForProtectedProfile() {
         seedPicker()
         rule.onNodeWithText("Kven ser på?").assertExists()
+        rule.onNodeWithText("A").performClick()
+        rule.onNodeWithText("Skriv PIN for A").assertExists()
+    }
+
+    private fun leaveKidWithAdultPin() {
+        runBlocking {
+            val a = container.profiles.create("A", AvatarColor.LIME, false)
+            val b = container.profiles.create("B", AvatarColor.OCEAN, false)
+            val k = container.profiles.create("K", AvatarColor.ROSE, true)
+            container.profiles.setPin(a.id, "1357")
+            container.profiles.setPin(b.id, "2468")
+            container.session.enter(k.id)
+        }
+        rule.onNodeWithText("Byt profil").performClick()
+        "2468".forEach { rule.onNodeWithText(it.toString()).performClick() }
+        rule.onNodeWithText("OK").performClick()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Kven ser på?").fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test fun adultWhoUnlockedKidDoesNotNeedSamePinAgain() {
+        leaveKidWithAdultPin()
+        rule.onNodeWithText("B").performClick()
+        rule.onNodeWithText("Skriv PIN for B").assertDoesNotExist()
+        rule.waitUntil(5_000) { rule.onAllNodesWithTag("screen-HOME").fetchSemanticsNodes().isNotEmpty() }
+        // The grant lasts for this picker only.
+        rule.onNodeWithText("Byt profil").performClick()
+        rule.onNodeWithText("B").performClick()
+        rule.onNodeWithText("Skriv PIN for B").assertExists()
+    }
+
+    @Test fun unlockingKidDoesNotUnlockOtherAdult() {
+        leaveKidWithAdultPin()
         rule.onNodeWithText("A").performClick()
         rule.onNodeWithText("Skriv PIN for A").assertExists()
     }

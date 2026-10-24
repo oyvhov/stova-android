@@ -84,14 +84,15 @@ class ProfileRepository(
      * Leaving a kid profile: any adult's PIN will do, and wrong guesses count against the kid exit
      * itself, never against one adult's own profile.
      */
-    suspend fun verifyAnyAdultPin(pin: String): PinCheck {
-        val hashes = store.current().profiles.filter { !it.kid }.mapNotNull { it.pin }
+    suspend fun verifyAnyAdultPin(pin: String, onVerified: (String) -> Unit = {}): PinCheck {
+        val adults = store.current().profiles.filter { !it.kid && it.pin != null }
+        val hashes = adults.mapNotNull { it.pin }
         if (hashes.isEmpty()) return PinCheck.Accepted
-        return check(KID_EXIT, hashes, pin)
+        return check(KID_EXIT, hashes, pin) { hash -> onVerified(adults.first { it.pin == hash }.id) }
     }
 
     /** Counts a wrong PIN under [key], refuses during a lockout without counting, clears on success. */
-    private suspend fun check(key: String, hashes: List<app.stova.core.security.PinHash>, pin: String): PinCheck {
+    private suspend fun check(key: String, hashes: List<app.stova.core.security.PinHash>, pin: String, onVerified: (app.stova.core.security.PinHash) -> Unit = {}): PinCheck {
         val now = clock()
         val failures = store.current().pinFailures[key] ?: PinFailures()
         // Persist wall time across restarts, but rebase a future timestamp after a clock reset.
@@ -101,9 +102,10 @@ class ProfileRepository(
         val elapsed = (now - failures.lastFailureAt).coerceAtLeast(0)
         val lockout = PinPolicy.lockoutMillis(failures.count)
         if (failures.count > 0 && elapsed < lockout) return PinCheck.LockedOut(lockout - elapsed)
-        val matches = withContext(cpu) { hashes.any { PinHasher.verify(pin, it) } }
-        return if (matches) {
+        val matched = withContext(cpu) { hashes.firstOrNull { PinHasher.verify(pin, it) } }
+        return if (matched != null) {
             store.update { it.copy(pinFailures = it.pinFailures - key) }
+            onVerified(matched)
             PinCheck.Accepted
         } else {
             val next = PinFailures(failures.count + 1, now)

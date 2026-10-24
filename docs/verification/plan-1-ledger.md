@@ -74,7 +74,7 @@ Final: minor (fixed): HomeRowSettings rows lack key(); focus does not follow mov
 Final: minor (fixed): AppArtCache never retries missing banners / refreshes updated ones — missingBannerIsRetriedWhenItBecomesAvailable + updatedPackageReloadsBannerAndIcon + scanIncludesArtworkRevision RED→GREEN; DesignRulesTest green
 Final: minor (fixed): ensureEnabled overrides a user's own "off" for the Home service — startupRespectsUserDisabledAccessibilityService RED→GREEN; DesignRulesTest green
 Final: minor (fixed): JsonFileStore.read does not catch IOException (would crash at start) — unreadableFileFallsBackWithoutDestroyingOriginal + corruptBackupFailureStillReturnsDefault RED→GREEN; DesignRulesTest green
-Final: minor (deferred): adult types PIN twice to leave a kid profile (picker asks again)
+Final: minor (fixed): adult types PIN twice to leave a kid profile (picker asks again) — adultWhoUnlockedKidDoesNotNeedSamePinAgain + unlockingKidDoesNotUnlockOtherAdult RED→GREEN; DesignRulesTest green
 Final: minor (deferred): PIN pad "Slett" wraps at font scale 2.0
 Final: minor (deferred): container lateinit fails opaquely in :homebutton process
 Final: minor (deferred): HomeOverrideState treats unreadable guard file as "on"

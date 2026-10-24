@@ -53,6 +53,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     var current by rememberSaveable { mutableStateOf(Destination.HOME) }
     val file by container.profiles.file.collectAsStateWithLifecycle(initialValue = null)
     val household by container.household.data.collectAsStateWithLifecycle(initialValue = null)
+    var verifiedAdultId by remember { mutableStateOf<String?>(null) }
     var askAdultPin by remember { mutableStateOf(false) }
 
     // Back walks home, and stops there: a launcher has nowhere further back to go.
@@ -98,10 +99,11 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     if (askAdultPin) {
         PinDialog(
             title = stringResource(R.string.pin_any_adult),
-            onSubmit = { pin -> container.profiles.verifyAnyAdultPin(pin) },
+            onSubmit = { pin -> container.profiles.verifyAnyAdultPin(pin) { verifiedAdultId = it } },
             onAccepted = {
                 askAdultPin = false
-                container.session.leave()
+                container.session.leave(verifiedAdultId)
+                verifiedAdultId = null
             },
             onDismiss = { askAdultPin = false },
         )
