@@ -122,7 +122,7 @@ git add -A && git commit -m "build: Stova project skeleton registered as HOME la
   - `val LocalReduceMotion = staticCompositionLocalOf { false }`, `val LocalStrongFocus = staticCompositionLocalOf { false }`.
   - `@Composable fun StovaTheme(reduceMotion: Boolean = false, strongFocus: Boolean = false, content: @Composable () -> Unit)` set `MaterialTheme(darkColorScheme(...))` med alle roller eksplisitte (sjå `ReelstackColors` i Spole), `Shapes` frå `StovaShapes`, `LocalContentColor provides StovaColors.Text` og dei to locals.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class DesignRulesTest {
@@ -153,21 +153,21 @@ class StovaThemeTest {
 ```
 (Testkjelda kan bruke `Color(0x…)`; regelen gjeld berre `src/main`.)
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.DesignRulesTest" --tests "app.stova.core.theme.*"`
 Expected: FAIL (`StovaTheme` finst ikkje).
 
-- [ ] **Step 3: Implementer `Tokens.kt`, `Typography.kt` og `StovaTheme.kt`**
+- [x] **Step 3: Implementer `Tokens.kt`, `Typography.kt` og `StovaTheme.kt`**
 
 `MainActivity` pakkar `setContent` inn i `StovaTheme { Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) }`.
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: same som Step 2, deretter `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(theme): Spole forest tokens, typography and design rules test"
