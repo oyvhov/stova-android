@@ -22,6 +22,19 @@ class JsonFileStoreTest {
     private fun store(f: File = tmp.root.resolve("s.json")) =
         JsonFileStore(f, Sample.serializer(), Sample(), UnconfinedTestDispatcher())
 
+    @Test fun unreadableFileFallsBackWithoutDestroyingOriginal() = runTest {
+        val f = tmp.root.resolve("s.json").apply { mkdir() }
+        assertEquals(Sample(), store(f).current())
+        org.junit.Assert.assertTrue(f.isDirectory)
+    }
+
+    @Test fun corruptBackupFailureStillReturnsDefault() = runTest {
+        val f = tmp.root.resolve("s.json").apply { writeText("{bad") }
+        tmp.root.resolve("s.json.corrupt").apply { mkdir(); resolve("keep").writeText("keep") }
+        assertEquals(Sample(), store(f).current())
+        assertEquals("{bad", f.readText())
+    }
+
     @Test fun missingFileGivesDefault() = runTest { assertEquals(Sample(), store().current()) }
 
     @Test fun updateSurvivesReopen() = runTest {

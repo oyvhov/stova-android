@@ -1,6 +1,7 @@
 package app.stova.core.storage
 
 import java.io.File
+import java.io.IOException
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -71,11 +72,17 @@ class JsonFileStore<T : Any>(
             setAside()
         } catch (_: IllegalArgumentException) {
             setAside()
+        } catch (_: IOException) {
+            default
         }
     }
 
     private fun setAside(): T {
-        file.copyTo(File(file.path + ".corrupt"), overwrite = true)
+        try {
+            file.copyTo(File(file.path + ".corrupt"), overwrite = true)
+        } catch (_: IOException) {
+            // A failed backup must not prevent startup; leave the source untouched.
+        }
         return default
     }
 
