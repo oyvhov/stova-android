@@ -115,4 +115,12 @@
     <string name="sign_in_timeout">Tidsavbrot. Prøv igjen.</string>
     <string name="sign_in_failed">Kunne ikkje logge inn. Prøv igjen.</string>
     <string name="account_retry">Prøv igjen</string>
+    <string name="row_continue">Hald fram</string>
+    <string name="row_latest_movies">Nyleg lagt til · Filmar</string>
+    <string name="row_latest_series">Nyleg lagt til · Seriar</string>
+    <string name="offline">Fråkopla</string>
+    <string name="episode_code">S%1$d · E%2$d</string>
+    <string name="service_jellyfin">Jellyfin</string>
+    <string name="service_emby">Emby</string>
+    <string name="rating_tmdb">TMDB</string>
 </resources>

@@ -1,6 +1,8 @@
 package app.stova
 
 import android.content.Context
+import kotlinx.coroutines.launch
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import app.stova.apps.AppArtCache
 import app.stova.apps.AppRepository
 import app.stova.apps.PackageManagerAppCatalog
@@ -57,6 +59,21 @@ class AppContainer(
     val serverProbe = app.stova.media.net.ServerProbe(mediaHttp)
     val mediaAuth = app.stova.media.net.MediaAuth(mediaHttp, identity)
     val lanDiscovery = app.stova.media.net.LanDiscovery()
+
+    @Volatile private var imageTokens: Map<String, Pair<app.stova.media.model.ServerKind, String>> = emptyMap()
+    val imageAuth = app.stova.media.ui.MediaAuthInterceptor({ imageTokens }, identity)
+    init {
+        appScope.launch {
+            kotlinx.coroutines.flow.combine(session.active, mediaAccounts.all) { profile, accounts -> accounts.filter { it.profileId == profile?.id && !it.needsSignIn } }.collect { accounts ->
+                imageTokens = accounts.mapNotNull { account ->
+                    mediaAccounts.token(account.id)?.let { token ->
+                        val url = account.baseUrl.toHttpUrl()
+                        "${url.host}:${url.port}" to (account.kind to token)
+                    }
+                }.toMap()
+            }
+        }
+    }
 
     val appArt = AppArtCache(appContext)
 

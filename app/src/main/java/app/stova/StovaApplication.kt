@@ -4,7 +4,10 @@ import android.app.Application
 import app.stova.homebutton.CrashGuard
 import app.stova.homebutton.HomeButtonStatus
 
-class StovaApplication : Application() {
+class StovaApplication : Application(), coil3.SingletonImageLoader.Factory {
+    override fun newImageLoader(context: coil3.PlatformContext): coil3.ImageLoader =
+        app.stova.media.ui.buildImageLoader(context, container.mediaHttp, container.imageAuth)
+
     lateinit var container: AppContainer
         private set
 

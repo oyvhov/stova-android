@@ -1,0 +1,39 @@
+package app.stova.media.ui
+import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import app.stova.R
+import app.stova.core.theme.StovaLayout
+import app.stova.core.ui.focusOutline
+import app.stova.media.model.*
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+@Composable fun MediaCard(item:MediaItem,poster:Boolean,onClick:()->Unit,onLongClick:()->Unit,onFocused:()->Unit,modifier:Modifier=Modifier) {
+ val source=remember { MutableInteractionSource() };val shape=MaterialTheme.shapes.medium
+ val width=if(poster) StovaLayout.PosterWidth else StovaLayout.WideWidth
+ val height=if(poster) StovaLayout.PosterHeight else StovaLayout.WideHeight
+ val density=LocalDensity.current;val context=LocalContext.current
+ val request=remember(item.art,poster,density) { ImageRequest.Builder(context).data(if(poster) item.art.poster else item.art.wide).size(with(density){width.roundToPx()},with(density){height.roundToPx()}).build() }
+ Column(modifier.width(width).onFocusChanged { if(it.isFocused) onFocused() }.focusOutline(source,shape)
+  .onKeyEvent { if(it.key==Key.Menu && it.type==KeyEventType.KeyUp) { onLongClick();true } else false }
+  .combinedClickable(source,indication=null,role=Role.Button,onClick=onClick,onLongClick=onLongClick)) {
+  Box(Modifier.size(width,height).clip(shape).background(MaterialTheme.colorScheme.surfaceVariant)) {
+   AsyncImage(request,contentDescription=null,contentScale=ContentScale.Crop,modifier=Modifier.fillMaxSize())
+   if(!poster) item.progress?.let { progress -> Box(Modifier.align(Alignment.BottomStart).fillMaxWidth(progress.coerceIn(0f,1f)).height(4.dp).background(MaterialTheme.colorScheme.primary)) }
+  }
+  Text(if(item.type==ItemType.EPISODE) item.seriesName ?: item.title else item.title,Modifier.padding(top=8.dp),style=MaterialTheme.typography.titleSmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurface)
+  if(item.type==ItemType.EPISODE && item.season!=null && item.episode!=null) Text(stringResource(R.string.episode_code,item.season,item.episode),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+ }
+}

@@ -74,7 +74,15 @@ fun HomeScreen(
             ) {
                 items(loaded, key = { it.key.value }) { row ->
                     when (row) {
-                        is HomeRowUi.Media -> Unit // Cards are added in task 6.
+                        is HomeRowUi.Media -> Column {
+                            app.stova.media.ui.MediaRowHeader(row)
+                            LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap)) {
+                                itemsIndexed(row.items, key = { _, item -> item.id }) { index, item ->
+                                    app.stova.media.ui.MediaCard(item, row.kind == app.stova.media.MediaRowKind.LATEST_MOVIES, {}, {}, {},
+                                        if (index == 0 && row.key == initial) Modifier.focusRequester(firstItem) else Modifier)
+                                }
+                            }
+                        }
                         is HomeRowUi.Apps -> AppsRow(row, art, catalog, if (row.key == initial) firstItem else null)
                     }
                 }
