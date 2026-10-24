@@ -37,7 +37,8 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
     val available by home.availableRows.collectAsStateWithLifecycle()
     val watchNext by container.watchNext.status.collectAsStateWithLifecycle()
     LaunchedEffect(container.watchNext) { container.watchNext.read() }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (!granted) container.watchNext.permissionDenied()
         scope.launch { container.watchNext.read(); container.watchNext.refresh() }
     }
     val prefs = profile.home

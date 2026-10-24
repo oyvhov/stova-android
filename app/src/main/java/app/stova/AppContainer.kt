@@ -2,7 +2,8 @@ package app.stova
 
 import android.content.Context
 import kotlinx.coroutines.launch
-import okhttp3.HttpUrl.Companion.toHttpUrl
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import app.stova.apps.AppArtCache
 import app.stova.apps.AppRepository
 import app.stova.apps.PackageManagerAppCatalog
@@ -22,6 +23,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 /** Hand-wired dependencies for the whole app. Later tasks add their repositories here. */
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class AppContainer(
     context: Context,
     val crashGuard: JsonFileStore<CrashGuardState> = CrashGuard.store(context),
@@ -64,14 +66,11 @@ class AppContainer(
     val imageAuth = app.stova.media.ui.MediaAuthInterceptor({ imageTokens }, identity)
     init {
         appScope.launch {
-            kotlinx.coroutines.flow.combine(session.active, mediaAccounts.all) { profile, accounts -> accounts.filter { it.profileId == profile?.id && !it.needsSignIn } }.collect { accounts ->
-                imageTokens = accounts.mapNotNull { account ->
-                    mediaAccounts.token(account.id)?.let { token ->
-                        val url = account.baseUrl.toHttpUrl()
-                        "${url.host}:${url.port}" to (account.kind to token)
-                    }
-                }.toMap()
-            }
+            session.active.distinctUntilChangedBy { it?.id }.flatMapLatest { profile ->
+                // Clear the old profile before the new profile's Keystore reads complete.
+                imageTokens = emptyMap()
+                if (profile == null) kotlinx.coroutines.flow.flowOf(emptyMap()) else mediaAccounts.imageCredentials(profile.id)
+            }.collect { imageTokens = it }
         }
     }
 

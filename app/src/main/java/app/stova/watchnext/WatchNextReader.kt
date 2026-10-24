@@ -51,10 +51,12 @@ fun launchIntentFor(entry: WatchNextEntry): Intent? = try {
 class WatchNextReader(private val resolver: ContentResolver, private val hasPermission: () -> Boolean, private val selfPackage: String) {
     private val mutableStatus = MutableStateFlow<WatchNextResult>(WatchNextResult.Unavailable(WatchNextResult.Reason.NO_PERMISSION))
     val status: StateFlow<WatchNextResult> = mutableStatus
+    @Volatile private var denied = false
+    fun permissionDenied() { denied = true; mutableStatus.value = WatchNextResult.Unavailable(WatchNextResult.Reason.BLOCKED) }
     private val requests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     fun refresh() { requests.tryEmit(Unit) }
     suspend fun read(): WatchNextResult = withContext(Dispatchers.IO) {
-        val result = if (!hasPermission()) WatchNextResult.Unavailable(WatchNextResult.Reason.NO_PERMISSION)
+        val result = if (!hasPermission()) WatchNextResult.Unavailable(if (denied) WatchNextResult.Reason.BLOCKED else WatchNextResult.Reason.NO_PERMISSION)
         else try {
             resolver.query(TvContract.WatchNextPrograms.CONTENT_URI, null, null, null, null)?.use { cursor ->
                 WatchNextResult.Available(filterWatchNext(mapWatchNext(cursor), selfPackage))

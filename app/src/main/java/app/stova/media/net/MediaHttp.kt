@@ -18,7 +18,14 @@ sealed class MediaError(msg: String) : Exception(msg) {
  class Unreachable(cause: Throwable) : MediaError("unreachable") { init { initCause(cause) } }
  class Server(val code: Int) : MediaError("http $code")
 }
-fun mediaHttp() = OkHttpClient.Builder().connectTimeout(4,TimeUnit.SECONDS).readTimeout(8,TimeUnit.SECONDS).build()
+fun mediaHttp() = OkHttpClient.Builder()
+ .connectTimeout(4,TimeUnit.SECONDS).readTimeout(8,TimeUnit.SECONDS)
+ .addNetworkInterceptor { chain ->
+  val request=chain.request()
+  val origin=chain.call().request().url
+  val sameOrigin=request.url.scheme==origin.scheme && request.url.host==origin.host && request.url.port==origin.port
+  chain.proceed(if(sameOrigin) request else request.newBuilder().removeHeader("Authorization").removeHeader("X-Emby-Authorization").build())
+ }.build()
 /** Cancelling a refresh also closes the socket, including during the response body read. */
 internal suspend fun OkHttpClient.fetch(request: Request): String = suspendCancellableCoroutine { cont ->
  val call=newCall(request);cont.invokeOnCancellation { call.cancel() }

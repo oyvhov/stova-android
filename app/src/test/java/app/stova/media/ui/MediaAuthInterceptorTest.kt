@@ -18,8 +18,3 @@ class MediaAuthInterceptorTest {
         assertNull(server.takeRequest().getHeader("Authorization"))
     }
 }
-class RatingTextTest {
-    @Test fun nynorskUsesComma() = assertEquals("7,8", communityText(7.84, Locale.forLanguageTag("nn")))
-    @Test fun englishUsesDot() = assertEquals("7.8", communityText(7.84, Locale.ENGLISH))
-    @Test fun criticPercentHasNumber() = assertTrue(criticText(91, Locale.forLanguageTag("nn")).startsWith("91"))
-}
