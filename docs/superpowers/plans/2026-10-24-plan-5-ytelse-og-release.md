@@ -118,24 +118,24 @@ git add -A && git commit -m "perf: baseline profile generator, startup benchmark
     4. **PSS:** `dumpsys meminfo $Package` på heim etter 10 s ro.
   - `-SelfTest` køyrer dei tre parse-funksjonane mot innebygde eksempeltekstar og skriv `SELFTEST OK`, eller avsluttar med kode 1.
 
-- [ ] **Step 1: Skriv skriptet med `-SelfTest` først**
+- [x] **Step 1: Skriv skriptet med `-SelfTest` først**
 
 Eksempeltekstar i skriptet:
 - `"Status: ok`nLaunchState: COLD`nTotalTime: 812`nWaitTime: 830"` → 812
 - `"Total frames rendered: 1200`nJanky frames: 36 (3.00%)"` → 3.0
 - `"           TOTAL PSS:   187654            TOTAL RSS:   250000"` → 187654
 
-- [ ] **Step 2: Køyr sjølvtesten**
+- [x] **Step 2: Køyr sjølvtesten**
 
 Run: `pwsh -NoProfile -File scripts/Measure-Stova.ps1 -SelfTest`
 Expected: `SELFTEST OK`, kode 0.
 
-- [ ] **Step 3: Køyr mot Stova_TV med release-bygget installert**
+- [x] **Step 3: Køyr mot Stova_TV med release-bygget installert**
 
 Run: `adb -s emulator-5580 install -r app/build/outputs/apk/release/app-release.apk; pwsh -NoProfile -File scripts/Measure-Stova.ps1 -Serial emulator-5580`
 Expected: tabellen blir skriven (emulatortal er berre for å teste skriptet, ikkje for budsjettet).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/Measure-Stova.ps1 && git commit -m "perf: Shield measurement script for startup, jank and memory budgets"
