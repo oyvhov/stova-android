@@ -1,44 +1,32 @@
 package app.stova.home
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import android.widget.Toast
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.focusRestorer
-import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import app.stova.R
-import app.stova.apps.AppArtCache
-import app.stova.apps.AppCatalog
-import app.stova.apps.AppTile
+import app.stova.apps.*
+import app.stova.core.theme.LocalReduceMotion
 import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.StovaButton
+import app.stova.media.*
+import app.stova.media.model.*
+import app.stova.media.ui.*
+import coil3.SingletonImageLoader
+import coil3.request.ImageRequest
+import kotlinx.coroutines.delay
 
 @Composable
 fun HomeScreen(
@@ -49,83 +37,144 @@ fun HomeScreen(
     onRefresh: suspend () -> Unit = {},
     topBar: @Composable () -> Unit = {},
 ) {
-    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(lifecycle, onRefresh) {
-        lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
-            while (true) { onRefresh(); kotlinx.coroutines.delay(300_000) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val refresh by rememberUpdatedState(onRefresh)
+    LaunchedEffect(lifecycle, vm) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) { refresh(); delay(300_000) }
         }
     }
     val rows by vm.rows.collectAsStateWithLifecycle()
     val focused by vm.focused.collectAsStateWithLifecycle()
-    val reduceMotion = app.stova.core.theme.LocalReduceMotion.current
-    val rotationUrls = rows.orEmpty().filterIsInstance<HomeRowUi.Media>().filter { it.kind != app.stova.media.MediaRowKind.CONTINUE }.flatMap { it.items }.mapNotNull { it.art.backdrop }.distinct()
-    val rotationEnabled = vm.rotationEnabled()
-    LaunchedEffect(rotationUrls, reduceMotion, rotationEnabled) { vm.backdrop.rotation(rotationUrls, !reduceMotion && rotationEnabled) }
-    val backdrop by vm.backdrop.current.collectAsStateWithLifecycle()
-    val context = androidx.compose.ui.platform.LocalContext.current
-    LaunchedEffect(backdrop, rotationUrls, reduceMotion) {
-        if (!reduceMotion && rotationUrls.isNotEmpty() && vm.rotationEnabled()) {
-            val next = rotationUrls[(rotationUrls.indexOf(backdrop) + 1) % rotationUrls.size]
-            coil3.SingletonImageLoader.get(context).enqueue(coil3.request.ImageRequest.Builder(context).data(next).size(1920, 1080).build())
-        }
-    }
     val initial by vm.initialFocus.collectAsStateWithLifecycle()
-    val firstItem = remember { FocusRequester() }
-    var placedFocus by rememberSaveable { mutableStateOf(false) }
-
-    LaunchedEffect(initial) {
-        if (initial != null && !placedFocus) {
-            placedFocus = runCatching { firstItem.requestFocus() }.isSuccess
+    val backdrop by vm.backdrop.current.collectAsStateWithLifecycle()
+    val reduceMotion = LocalReduceMotion.current
+    val rotationEnabled = vm.rotationEnabled()
+    val rotationUrls = rows.orEmpty().filterIsInstance<HomeRowUi.Media>()
+        .filter { it.kind != MediaRowKind.CONTINUE }.flatMap { it.items }
+        .mapNotNull { it.art.backdrop }.distinct()
+    LaunchedEffect(rotationUrls, reduceMotion, rotationEnabled) {
+        vm.backdrop.rotation(rotationUrls, !reduceMotion && rotationEnabled)
+    }
+    val context = LocalContext.current
+    LaunchedEffect(backdrop, rotationUrls, reduceMotion, rotationEnabled) {
+        if (!reduceMotion && rotationEnabled && rotationUrls.isNotEmpty()) {
+            val next = rotationUrls[(rotationUrls.indexOf(backdrop) + 1) % rotationUrls.size]
+            SingletonImageLoader.get(context).enqueue(ImageRequest.Builder(context).data(next).size(1920, 1080).build())
         }
     }
+    val handoff = remember(context) { SpoleHandoff(context) }
+    var actions by remember { mutableStateOf<FocusedTarget.Media?>(null) }
+    var missing by remember { mutableStateOf(false) }
+    fun open(target: FocusedTarget.Media, action: SpoleAction) {
+        when (handoff.open(target.account, target.item, action)) {
+            HandoffResult.Opened -> Unit
+            HandoffResult.SpoleMissing -> missing = true
+            HandoffResult.InvalidIds -> Toast.makeText(context, R.string.invalid_media_ids, Toast.LENGTH_SHORT).show()
+        }
+    }
+    HomeContent(rows, focused, initial, art, catalog, onOpenApps, vm::focus,
+        onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = topBar)
+    actions?.let { target ->
+        ItemActionsMenu(target.item,
+            onPlay = { actions = null; open(target, SpoleAction.PLAY) },
+            onDetails = { actions = null; open(target, SpoleAction.DETAILS) },
+            onDismiss = { actions = null })
+    }
+    if (missing) SpoleMissingDialog { missing = false }
+}
 
+/** The rendered home with controlled data, shared by the launcher and visual tests. */
+@Composable
+fun HomeContent(
+    rows: List<HomeRowUi>?,
+    focused: FocusedTarget?,
+    initial: HomeRowKey?,
+    art: AppArtCache,
+    catalog: AppCatalog,
+    onOpenApps: () -> Unit,
+    onFocus: (FocusedTarget) -> Unit,
+    onMediaClick: (FocusedTarget.Media) -> Unit,
+    onMediaLongClick: (FocusedTarget.Media) -> Unit,
+    topBar: @Composable () -> Unit = {},
+) {
+    // The last focused title survives leaving Home for Spole or another launcher page.
+    val restoreTarget = remember { focused }
+    val restoreRow = rows?.firstOrNull { row ->
+        when (row) {
+            is HomeRowUi.Media -> (restoreTarget as? FocusedTarget.Media)?.let { target ->
+                row.account.id == target.account.id && row.items.any { it.id == target.item.id }
+            } == true
+            is HomeRowUi.Apps -> restoreTarget is FocusedTarget.App
+        }
+    }?.key ?: initial
+    val firstItem = remember { FocusRequester() }
+    var placedFocus by remember { mutableStateOf(false) }
+    LaunchedEffect(restoreRow, rows) {
+        if (restoreRow != null && !placedFocus) placedFocus = runCatching { firstItem.requestFocus() }.isSuccess
+    }
     Column(Modifier.fillMaxSize()) {
         topBar()
         BoxWithConstraints(Modifier.weight(1f)) {
-        val heroHeight = maxHeight * 0.45f
-        Column {
-        HeroPanel(focused, Modifier.fillMaxWidth().heightIn(min = heroHeight))
-        val loaded = rows
-        when {
-            loaded == null -> Unit // still loading: the top bar alone, never a flash of the empty state
-            loaded.isEmpty() -> EmptyHome(onOpenApps)
-            else -> LazyColumn(
-                Modifier.fillMaxSize().focusRestorer(),
-                contentPadding = PaddingValues(bottom = StovaLayout.TvSafeEdge),
-            ) {
-                items(loaded, key = { it.key.value }) { row ->
-                    when (row) {
-                        is HomeRowUi.Media -> Column {
-                            app.stova.media.ui.MediaRowHeader(row)
-                            LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap)) {
-                                itemsIndexed(row.items, key = { _, item -> item.id }) { index, item ->
-                                    app.stova.media.ui.MediaCard(item, row.kind == app.stova.media.MediaRowKind.LATEST_MOVIES, {}, {}, { vm.focus(FocusedTarget.Media(item, row.account)) },
-                                        if (index == 0 && row.key == initial) Modifier.focusRequester(firstItem) else Modifier)
+            val heroHeight = maxHeight * 0.45f
+            Column {
+                HeroPanel(focused, Modifier.fillMaxWidth().heightIn(min = heroHeight))
+                when {
+                    rows == null -> Unit
+                    rows.isEmpty() -> EmptyHome(onOpenApps)
+                    else -> {
+                        val firstRow = rows.indexOfFirst { it.key == restoreRow }.coerceAtLeast(0)
+                        val listState = rememberLazyListState(initialFirstVisibleItemIndex = firstRow)
+                        LazyColumn(Modifier.fillMaxSize().focusRestorer(), state = listState,
+                            contentPadding = PaddingValues(bottom = StovaLayout.TvSafeEdge)) {
+                            items(rows, key = { it.key.value }) { row ->
+                                val requester = if (row.key == restoreRow) firstItem else null
+                                when (row) {
+                                    is HomeRowUi.Media -> MediaRow(row, requester, restoreTarget, onFocus, onMediaClick, onMediaLongClick)
+                                    is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, restoreTarget) { onFocus(FocusedTarget.App(it)) }
                                 }
                             }
                         }
-                        is HomeRowUi.Apps -> AppsRow(row, art, catalog, if (row.key == initial) firstItem else null) { label -> vm.focus(FocusedTarget.App(label)) }
                     }
                 }
             }
-        }
-        }
         }
     }
 }
 
 @Composable
-private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, onFocused: (String) -> Unit) {
+private fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: FocusedTarget?,
+    onFocus: (FocusedTarget) -> Unit, onClick: (FocusedTarget.Media) -> Unit, onLongClick: (FocusedTarget.Media) -> Unit) {
+    val index = row.items.indexOfFirst { it.id == (restore as? FocusedTarget.Media)?.item?.id }.coerceAtLeast(0)
+    val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
+    Column {
+        MediaRowHeader(row)
+        LazyRow(Modifier.focusRestorer(), state = state,
+            contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
+            horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap)) {
+            itemsIndexed(row.items, key = { _, item -> item.id }) { i, item ->
+                val target = FocusedTarget.Media(item, row.account)
+                MediaCard(item, row.kind == MediaRowKind.LATEST_MOVIES,
+                    { onClick(target) }, { onLongClick(target) }, { onFocus(target) },
+                    if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, onFocused: (String) -> Unit) {
+    val index = row.apps.indexOfFirst { it.label == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
+    val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     Column {
         RowHeader(stringResource(R.string.row_favorite_apps))
-        LazyRow(
-            Modifier.focusRestorer(),
+        LazyRow(Modifier.focusRestorer(), state = state,
             contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
-            horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap),
-        ) {
-            itemsIndexed(row.apps, key = { _, app -> app.key }) { index, app ->
-                val modifier = if (index == 0 && focus != null) Modifier.focusRequester(focus) else Modifier
-                AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = {}, modifier = modifier.onFocusChanged { if (it.isFocused) onFocused(app.label) })
+            horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap)) {
+            itemsIndexed(row.apps, key = { _, app -> app.key }) { i, app ->
+                val modifier = if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier
+                AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = {},
+                    modifier = modifier.onFocusChanged { if (it.isFocused) onFocused(app.label) })
             }
         }
     }
@@ -133,7 +182,6 @@ private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, 
 
 @Composable
 private fun EmptyHome(onOpenApps: () -> Unit) {
-    // Something must hold focus on a TV, or the first press of the remote only wakes focus up.
     val button = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { button.requestFocus() } }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

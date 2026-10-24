@@ -129,4 +129,9 @@
     <string name="greeting_day">Good afternoon</string>
     <string name="greeting_evening">Good evening</string>
     <string name="greeting_night">Good night</string>
+    <string name="item_play">Play</string>
+    <string name="item_details">Details in Spole</string>
+    <string name="spole_missing">Spole is needed for playback. Download from github.com/oyvhov/spole-android/releases.</string>
+    <string name="spole_close">Close</string>
+    <string name="invalid_media_ids">This title could not be opened.</string>
 </resources>
