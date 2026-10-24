@@ -16,6 +16,14 @@ value class HomeRowKey(val value: String) {
     }
 }
 
+/** Moves [item] by [delta] places, stopping at either end. */
+fun <T> moveItem(list: List<T>, item: T, delta: Int): List<T> {
+    val from = list.indexOf(item)
+    if (from < 0) return list
+    val to = (from + delta).coerceIn(0, list.lastIndex)
+    return list.toMutableList().apply { add(to, removeAt(from)) }
+}
+
 /** The profile's own order first, then the rest in their default order; hidden rows are left out. */
 fun arrangeRows(available: List<HomeRowKey>, prefs: HomePrefs): List<HomeRowKey> {
     val present = available.toSet()

@@ -49,4 +49,35 @@
     <string name="app_hide">Hide</string>
     <string name="app_show">Show</string>
     <string name="app_info">App info</string>
+
+    <string name="settings_profile">Profile</string>
+    <string name="settings_home">Home</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_about">About</string>
+    <string name="settings_me">My profile</string>
+    <string name="settings_profiles">Profiles</string>
+    <string name="settings_start_last">Start in the last used profile</string>
+    <string name="profile_adult">Adult</string>
+    <string name="profile_name_and_colour">Name and colour</string>
+    <string name="profile_delete">Delete profile</string>
+    <string name="profile_delete_confirm">Delete %1$s?</string>
+    <string name="profile_delete_yes">Delete</string>
+    <string name="profile_delete_last">The last adult profile cannot be deleted.</string>
+    <string name="pin_set">Set PIN</string>
+    <string name="pin_change">Change PIN</string>
+    <string name="pin_remove">Remove PIN</string>
+    <string name="pin_new">New PIN</string>
+    <string name="kid_apps">Allowed apps</string>
+    <string name="kid_apps_title">Allowed apps for %1$s</string>
+    <string name="home_start_on_apps">Start on favourite apps</string>
+    <string name="home_start_on_apps_hint">Otherwise Home starts on the first media row</string>
+    <string name="home_rows">Rows</string>
+    <string name="row_move_up">Move up</string>
+    <string name="row_move_down">Move down</string>
+    <string name="row_watch_next">Continue in other apps</string>
+    <string name="appearance_reduce_motion">Reduce motion</string>
+    <string name="appearance_reduce_motion_hint">No crossfades or rotation</string>
+    <string name="appearance_strong_focus">Strong focus</string>
+    <string name="appearance_strong_focus_hint">Thicker focus outline</string>
+    <string name="about_version">Stova %1$s</string>
 </resources>

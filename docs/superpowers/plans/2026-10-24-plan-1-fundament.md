@@ -766,7 +766,7 @@ git add -A && git commit -m "feat(home): home skeleton with favorite apps row an
   - **Barneprofil:** heile skjermen blir erstatta av éin knapp: «Byt profil».
   - `HOME_BUTTON`-seksjonen er ein `SettingsNavRow` som oppgåve 12 fyller.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 @RunWith(AndroidJUnit4::class) @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
@@ -779,19 +779,19 @@ class SettingsScreenTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.settings.*"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer innstillingssidene og strengane**
+- [x] **Step 3: Implementer innstillingssidene og strengane**
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug`
 Expected: PASS, 0 lint-feil.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(settings): profile, home rows, appearance and kid app allow-list"

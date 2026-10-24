@@ -49,4 +49,35 @@
     <string name="app_hide">Skjul</string>
     <string name="app_show">Vis</string>
     <string name="app_info">Appinfo</string>
+
+    <string name="settings_profile">Profil</string>
+    <string name="settings_home">Heim</string>
+    <string name="settings_appearance">Utsjånad</string>
+    <string name="settings_about">Om</string>
+    <string name="settings_me">Min profil</string>
+    <string name="settings_profiles">Profilar</string>
+    <string name="settings_start_last">Start i sist brukte profil</string>
+    <string name="profile_adult">Vaksen</string>
+    <string name="profile_name_and_colour">Namn og farge</string>
+    <string name="profile_delete">Slett profil</string>
+    <string name="profile_delete_confirm">Slette %1$s?</string>
+    <string name="profile_delete_yes">Slett</string>
+    <string name="profile_delete_last">Den siste vaksne profilen kan ikkje slettast.</string>
+    <string name="pin_set">Set PIN</string>
+    <string name="pin_change">Endre PIN</string>
+    <string name="pin_remove">Fjern PIN</string>
+    <string name="pin_new">Ny PIN</string>
+    <string name="kid_apps">Tillatne appar</string>
+    <string name="kid_apps_title">Tillatne appar for %1$s</string>
+    <string name="home_start_on_apps">Start på favorittappar</string>
+    <string name="home_start_on_apps_hint">Elles startar Heim på første medierad</string>
+    <string name="home_rows">Rader</string>
+    <string name="row_move_up">Flytt opp</string>
+    <string name="row_move_down">Flytt ned</string>
+    <string name="row_watch_next">Hald fram i andre appar</string>
+    <string name="appearance_reduce_motion">Reduser rørsle</string>
+    <string name="appearance_reduce_motion_hint">Ingen krysstoning eller rotasjon</string>
+    <string name="appearance_strong_focus">Kraftig fokus</string>
+    <string name="appearance_strong_focus_hint">Tjukkare fokusramme</string>
+    <string name="about_version">Stova %1$s</string>
 </resources>

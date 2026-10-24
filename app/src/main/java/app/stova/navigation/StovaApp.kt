@@ -28,6 +28,7 @@ import app.stova.core.ui.PinDialog
 import app.stova.profiles.Profile
 import app.stova.profiles.ProfileGate
 import app.stova.profiles.leavingNeedsAdultPin
+import app.stova.settings.SettingsScreen
 
 /** The root: the profile gate when nobody is signed in, otherwise side rail plus destination. */
 @Composable
@@ -56,29 +57,28 @@ private fun MainShell(container: AppContainer, profile: Profile) {
 
     // Back walks home, and stops there: a launcher has nowhere further back to go.
     BackHandler(enabled = current != Destination.HOME) { current = Destination.HOME }
+    val switchProfile = {
+        val profiles = file
+        if (profiles != null && leavingNeedsAdultPin(profiles, profile)) {
+            askAdultPin = profiles.profiles.first { !it.kid && it.pin != null }
+        } else {
+            container.session.leave()
+        }
+    }
+    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) }
     Row(Modifier.fillMaxSize()) {
         SideRail(
             destinations = Destination.entries,
             current = current,
             profile = profile,
             onSelect = { current = it },
-            onProfile = {
-                val profiles = file
-                if (profiles != null && leavingNeedsAdultPin(profiles, profile)) {
-                    askAdultPin = profiles.profiles.first { !it.kid && it.pin != null }
-                } else {
-                    container.session.leave()
-                }
-            },
+            onProfile = switchProfile,
         )
         Box(Modifier.weight(1f).fillMaxHeight().testTag("screen-${current.name}")) {
             when (current) {
-                Destination.HOME -> {
-                    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) }
-                    HomeScreen(home, container.appArt, container.appCatalog, onOpenApps = { current = Destination.APPS })
-                }
+                Destination.HOME -> HomeScreen(home, container.appArt, container.appCatalog, onOpenApps = { current = Destination.APPS })
                 Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog)
-                Destination.SETTINGS -> Unit
+                Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile)
             }
         }
     }
