@@ -25,6 +25,8 @@ class HomeButtonService : AccessibilityService() {
     override fun onServiceConnected() {
         // Some TV builds ignore the XML flag, so it is set here as well.
         serviceInfo = serviceInfo.apply { flags = flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS }
+        // Load serializers and the JSON reader before the first latency-sensitive Home event.
+        state.isOn()
     }
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
