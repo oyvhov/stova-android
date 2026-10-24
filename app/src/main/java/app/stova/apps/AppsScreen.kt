@@ -55,6 +55,13 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
         horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap),
         verticalArrangement = Arrangement.spacedBy(StovaLayout.RowGap),
     ) {
+        item(key = "title", span = { GridItemSpan(maxLineSpan) }) {
+            Text(
+                stringResource(R.string.nav_apps),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
         if (arranged.favorites.isNotEmpty()) {
             header(R.string.apps_favorites)
             items(arranged.favorites, key = { "fav:${it.key}" }) { app ->

@@ -85,26 +85,29 @@ Korleis vi held tala:
 
 ## 5. Skjermar og navigasjon
 
-Sidemeny til venstre, lik Spole: 80 dp ikonkolonne som kan opnast til 200 dp med tekst.
-Profilavatar øvst, deretter **Heim**, **Smarthus**, **Appar** og **Innstillingar**. Tilbake på
-toppnivå gjer ingenting (launcheren lukkar seg ikkje).
+**Ingen sidemeny** (brukarønske 25.10.2026: «minimalistisk deilig launcher»). Heim er heile
+skjermen. Den einaste krommen er ei lita topplinje øvst til høgre: HA-statusbrikker, klokke,
+ikonknappar for **Smarthus** (når HA er sett opp), **Appar** og **Innstillingar**, og
+profilavataren («Byt profil»). Ikona viser namnet sitt berre når dei har fokus. Ein kjem til
+topplinja med opp-pila frå radene. Appar, Smarthus og Innstillingar er eigne fullskjermsider som
+Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
 
 ### 5.1 Heim
 
 ```
-┌────┬───────────────────────────────────────────────────────────┐
-│ ◉  │  [clearlogo / tittel]                     21:14  ☁ 4°  135 øre│
-│ ⌂  │  2024 · 1 t 52 min · 12 · ★ 7,8 · 🍅 91 %                     │
-│ ▦  │  To linjer omtale …                                          │
-│ ⊞  │  Jellyfin                                                    │
-│ ⚙  │                                                              │
-│    │  Favorittappar   [banner][banner][banner][banner]            │
-│    │  Hald fram · Jellyfin   [16:9][16:9][16:9] ▬▬▬ framdrift      │
-│    │  Hald fram · Emby       [16:9][16:9]                         │
-│    │  Nyleg lagt til · Filmar · Jellyfin  [plakat][plakat]…       │
-│    │  Nyleg lagt til · Seriar · Emby      [16:9]…                 │
-│    │  Hald fram i andre appar (Watch Next) [16:9]…                │
-└────┴───────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│  [clearlogo / tittel]          ☁ 4°  135 øre  21:14  ⌂  ▦  ⚙  ◉ │
+│  2024 · 1 t 52 min · 12 · ★ 7,8 · 🍅 91 %                        │
+│  To linjer omtale …                                             │
+│  Jellyfin                                                       │
+│                                                                 │
+│  Favorittappar   [banner][banner][banner][banner]               │
+│  Hald fram  Jellyfin   [16:9][16:9][16:9] ▬▬▬ framdrift          │
+│  Hald fram  Emby       [16:9][16:9]                             │
+│  Nyleg lagt til · Filmar  Jellyfin  [plakat][plakat]…           │
+│  Nyleg lagt til · Seriar  Emby      [16:9]…                     │
+│  Hald fram i andre appar (Watch Next) [16:9]…                   │
+└────────────────────────────────────────────────────────────────┘
           ▲ heile bakgrunnen = backdrop for fokusert tittel + flat scrim
 ```
 
@@ -327,7 +330,7 @@ app.stova
 ├─ ha              HaAuth, HaSocket, EntityStateDecoder, kort, Smarthus-side, heimestatus
 ├─ home            HomeScreen, HomeViewModel
 ├─ settings        Innstillingssider
-└─ navigation      StovaApp (rot: sidemeny + innhald + bakgrunn)
+└─ navigation      StovaApp (rot: innhald + bakgrunn), TopBar (minimal topplinje)
 ```
 
 **Verktøy** (same versjonar som Spole, slik at Gradle-cachen blir delt): Gradle 9.4.1,
@@ -360,7 +363,7 @@ inngangsbyte (HDMI-CEC), widgetar frå andre appar og import av Tunet-profilar.
 
 | Plan | Innhald | Repo |
 |---|---|---|
-| 1 Fundament | Prosjekt, tema, HOME, sidemeny, profilar og PIN, appar, Home-knappen | Stova |
+| 1 Fundament | Prosjekt, tema, HOME, topplinje, profilar og PIN, appar, Home-knappen | Stova |
 | 2 Media | Kontoar, klient, rader, hero, score, bakgrunn, Spole-opning, Watch Next | Stova |
 | 3 Spole-lenkje | `spole://open` i Spole | Spole |
 | 4 Home Assistant | OAuth, WebSocket, kort, Smarthus, heimestatus | Stova |

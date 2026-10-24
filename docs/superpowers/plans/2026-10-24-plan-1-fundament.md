@@ -472,6 +472,11 @@ git add -A && git commit -m "feat(ui): focus outline, buttons, PIN dialog, remot
 
 ### Task 7: Økt, sidemeny og navigasjon
 
+> **Endra 25.10.2026 etter brukarønske:** Sidemenyen (`SideRail`) er fjerna. Navigasjonen er no ein
+> minimal topplinje (`navigation/TopBar.kt`) på Heim med klokke, Appar, Innstillingar og profil.
+> Appar og Innstillingar er fullskjermsider. Sjå commit «refactor(nav): minimal top bar instead of
+> side rail» og ledgeren. Teksten under er historikk.
+
 **Files:**
 - Create: `app/src/main/java/app/stova/profiles/ProfileSession.kt`
 - Create: `app/src/main/java/app/stova/navigation/Destination.kt`, `SideRail.kt`, `StovaApp.kt`
@@ -915,7 +920,7 @@ Installer: `adb -s <serial> install -r app/build/outputs/apk/debug/app-debug.apk
 - Appar: favoritt, flytt, skjul, appinfo, og at appane startar.
 - Slå på tilgjengetenesta. Home på fjernkontrollen gir Stova utan at systemlauncheren blinkar. Home frå mobilfjernkontrollen gir Stova via fallback.
 - Tvinga kræsj tre gonger (`adb shell am crash app.stova.debug`). Home går då til systemlauncheren, og «Slå på att» fungerer.
-- Skriftstorleik 2,0 (`adb shell settings put system font_scale 2.0`): profilval, sidemeny og innstillingar er lesbare, og ingenting er klipt. Set tilbake til 1.0 etterpå.
+- Skriftstorleik 2,0 (`adb shell settings put system font_scale 2.0`): profilval, topplinje og innstillingar er lesbare, og ingenting er klipt. Set tilbake til 1.0 etterpå.
 
 - [ ] **Step 4: Commit**
 

@@ -3,12 +3,13 @@ package app.stova.navigation
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.assertIsSelected
-import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.MainActivity
 import app.stova.StovaApplication
@@ -36,18 +37,23 @@ class StovaAppNavigationTest {
         rule.waitForIdle()
     }
 
-    @Test fun railSelectsDestinationsAsTabs() {
-        rule.onNodeWithText("Appar").performClick()
-        rule.onNodeWithTag("screen-APPS").assertExists()
-        rule.onNode(hasText("Appar") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).assertIsSelected()
+    @Test fun homeHasNoSidebarAndFillsTheScreen() {
+        rule.onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).assertCountEquals(0)
+        rule.onNodeWithTag("screen-HOME").assertWidthIsEqualTo(960.dp)
     }
 
-    @Test fun backFromAppsGoesHomeAndBackOnHomeStays() {
-        rule.onNodeWithText("Appar").performClick()
+    @Test fun topBarOpensAppsAndBackGoesHome() {
+        rule.onAllNodesWithText("Appar")[0].performClick()
+        rule.onNodeWithTag("screen-APPS").assertExists()
         rule.waitForIdle() // the Back handler is enabled by the recomposition the click causes
         rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag("screen-HOME").assertExists()
         rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         assertFalse(rule.activity.isFinishing)
+    }
+
+    @Test fun topBarOpensSettings() {
+        rule.onAllNodesWithText("Innstillingar")[0].performClick()
+        rule.onNodeWithTag("screen-SETTINGS").assertExists()
     }
 }

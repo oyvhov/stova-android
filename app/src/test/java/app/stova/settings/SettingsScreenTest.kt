@@ -51,7 +51,7 @@ class SettingsScreenTest {
         }
         openSettings()
         rule.onNodeWithText("Utsjånad").assertDoesNotExist()
-        assertEquals(2, rule.onAllNodesWithText("Byt profil").fetchSemanticsNodes().size) // rail + the one button
+        assertEquals(1, rule.onAllNodesWithText("Byt profil").fetchSemanticsNodes().size) // the one button
     }
 
     @Test fun allowAppForKid() {

@@ -3,8 +3,6 @@ package app.stova.navigation
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -66,20 +64,23 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         }
     }
     val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) }
-    Row(Modifier.fillMaxSize()) {
-        SideRail(
-            destinations = Destination.entries,
-            current = current,
-            profile = profile,
-            onSelect = { current = it },
-            onProfile = switchProfile,
-        )
-        Box(Modifier.weight(1f).fillMaxHeight().testTag("screen-${current.name}")) {
-            when (current) {
-                Destination.HOME -> HomeScreen(home, container.appArt, container.appCatalog, onOpenApps = { current = Destination.APPS })
-                Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog)
-                Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile)
-            }
+    // No side rail: home is the whole screen, and Apps and Settings are pages that Back closes.
+    Box(Modifier.fillMaxSize().testTag("screen-${current.name}")) {
+        when (current) {
+            Destination.HOME -> HomeScreen(
+                home, container.appArt, container.appCatalog,
+                onOpenApps = { current = Destination.APPS },
+                topBar = {
+                    TopBar(
+                        profile = profile,
+                        onApps = { current = Destination.APPS },
+                        onSettings = { current = Destination.SETTINGS },
+                        onProfile = switchProfile,
+                    )
+                },
+            )
+            Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog)
+            Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile)
         }
     }
 

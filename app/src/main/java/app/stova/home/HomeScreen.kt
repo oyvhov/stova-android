@@ -4,9 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,11 +33,16 @@ import app.stova.apps.AppArtCache
 import app.stova.apps.AppCatalog
 import app.stova.apps.AppTile
 import app.stova.core.theme.StovaLayout
-import app.stova.core.ui.Clock
 import app.stova.core.ui.StovaButton
 
 @Composable
-fun HomeScreen(vm: HomeViewModel, art: AppArtCache, catalog: AppCatalog, onOpenApps: () -> Unit) {
+fun HomeScreen(
+    vm: HomeViewModel,
+    art: AppArtCache,
+    catalog: AppCatalog,
+    onOpenApps: () -> Unit,
+    topBar: @Composable () -> Unit = {},
+) {
     val rows by vm.rows.collectAsStateWithLifecycle()
     val initial by vm.initialFocus.collectAsStateWithLifecycle()
     val firstItem = remember { FocusRequester() }
@@ -51,10 +54,8 @@ fun HomeScreen(vm: HomeViewModel, art: AppArtCache, catalog: AppCatalog, onOpenA
         }
     }
 
-    Column(Modifier.fillMaxSize().padding(top = 32.dp)) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.End) {
-            Clock()
-        }
+    Column(Modifier.fillMaxSize()) {
+        topBar()
         if (rows.isEmpty()) {
             EmptyHome(onOpenApps)
         } else {

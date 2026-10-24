@@ -520,7 +520,7 @@ git add -A && git commit -m "feat(ha): flat Tunet-style cards, dialogs and spark
 
 **Files:**
 - Create: `app/src/main/java/app/stova/ha/ui/SmartHomeScreen.kt`, `AddCardFlow.kt`, `HaStatusLabel.kt`
-- Modify: `app/src/main/java/app/stova/navigation/Destination.kt` (set inn `SMART_HOME` etter `HOME`), `StovaApp.kt` (vis destinasjonen når `household.haBaseUrl != null`)
+- Modify: `app/src/main/java/app/stova/navigation/Destination.kt` (set inn `SMART_HOME` etter `HOME`), `navigation/TopBar.kt` (ny ikonknapp «Smarthus» før Appar, berre når `household.haBaseUrl != null`), `StovaApp.kt` (`SMART_HOME` er ei fullskjermside som Tilbake lukkar; ingen sidemeny)
 - Test: `app/src/test/java/app/stova/ha/ui/SmartHomeScreenTest.kt`
 
 **Interfaces:**

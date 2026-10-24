@@ -76,7 +76,7 @@ git add app/build.gradle.kts .gitignore && git commit -m "build: release signing
     1. `pressHome()`, `startActivityAndWait()`.
     2. Vent på `By.desc("home-ready")` (5 s).
     3. 10 × `pressDPadRight`, 3 × `pressDPadDown`, 10 × `pressDPadRight`.
-    4. Opne Appar via sidemenyen, deretter Smarthus om det finst.
+    4. Opne Appar via topplinja, deretter Smarthus om det finst.
   - `class StartupBenchmark { @Test fun coldStartup() }` med `StartupMode.COLD`, `CompilationMode.Partial(BaselineProfileMode.Require)` og 10 iterasjonar.
   - `HomeScreen` set `Modifier.semantics { contentDescription = "home-ready" }` på rotboksen når første rader er teikna (og berre då). Dette blir brukt av generatoren og måleskriptet.
   - Generatoren treng ei eining med `adb root`. Stova_TV (`android-tv`-biletet) støttar det. Om ikkje, lag ein API 34-TV-AVD (`system-images;android-34;android-tv;x86_64`) med same skript og port 5582.
