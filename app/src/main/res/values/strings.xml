@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Stova</string>
+
+    <string name="pin_title">Skriv PIN</string>
+    <string name="pin_delete">Slett</string>
+    <string name="pin_ok">OK</string>
+    <string name="pin_wait_seconds">Prøv igjen om %1$d s</string>
+    <string name="pin_wrong">Feil PIN</string>
+    <string name="pin_digits_entered">%1$d siffer skrive</string>
 </resources>

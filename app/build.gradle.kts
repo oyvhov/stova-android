@@ -52,7 +52,13 @@ android {
         unitTests {
             // Robolectric needs the merged resources and the manifest to stand up a real window.
             isIncludeAndroidResources = true
-            all { it.systemProperty("robolectric.logging.enabled", "false") }
+            // -Pstova.screens=true renders the screenshot tests to app/build/screens; off by default.
+            val screens = providers.gradleProperty("stova.screens").orElse("false")
+            all {
+                it.systemProperty("robolectric.logging.enabled", "false")
+                it.systemProperty("stova.screens", screens.get())
+                it.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
+            }
         }
     }
 

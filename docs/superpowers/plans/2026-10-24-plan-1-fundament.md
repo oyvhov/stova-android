@@ -424,7 +424,7 @@ git add -A && git commit -m "feat(profiles): profile model, PIN lockout and star
   - `@Composable fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit)`, `@Composable fun SettingsSwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit, subtitle: String? = null)`, `@Composable fun SettingsNavRow(title: String, value: String? = null, onClick: () -> Unit)`.
   - Strengar: `pin_title`, `pin_delete`, `pin_ok`, `pin_wait_seconds` («Prøv igjen om %1$d s» / «Try again in %1$d s»), `pin_wrong` («Feil PIN» / «Wrong PIN»).
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 @RunWith(AndroidJUnit4::class) @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
@@ -450,19 +450,19 @@ class ClockTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.core.ui.*"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer komponentane i `core/ui` og strengane**
+- [x] **Step 3: Implementer komponentane i `core/ui` og strengane**
 
-- [ ] **Step 4: Køyr testane (også `DesignRulesTest`)**
+- [x] **Step 4: Køyr testane (også `DesignRulesTest`)**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ui): focus outline, buttons, PIN dialog, remote text field and clock"
