@@ -5,6 +5,7 @@ import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -57,6 +58,14 @@ class PinDialogTest {
         compose.onNodeWithText("1").assertIsFocused()
         answer.complete(PinCheck.Rejected(0))
         compose.onNodeWithText("1").assertIsFocused()
+    }
+
+    @Test fun enteredDigitsUseNynorskAgreement() {
+        compose.setContent { StovaTheme { PinPanel("PIN", { PinCheck.Accepted }, {}) } }
+        compose.onNodeWithText("1").performClick()
+        compose.onNodeWithContentDescription("1 siffer skrive").assertExists()
+        "357".forEach { compose.onNodeWithText(it.toString()).performClick() }
+        compose.onNodeWithContentDescription("4 siffer skrivne").assertExists()
     }
 
     @Test fun wrongPinShowsMessage() {

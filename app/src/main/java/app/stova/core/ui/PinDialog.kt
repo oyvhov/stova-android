@@ -35,6 +35,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -172,7 +173,7 @@ fun PinPanel(
 
 @Composable
 private fun PinDots(count: Int) {
-    val description = stringResource(R.string.pin_digits_entered, count)
+    val description = pluralStringResource(R.plurals.pin_digits_entered, count, count)
     Row(
         Modifier.semantics { contentDescription = description }.heightIn(min = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),

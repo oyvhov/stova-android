@@ -7,7 +7,10 @@
     <string name="pin_ok">OK</string>
     <string name="pin_wait_seconds">Try again in %1$d s</string>
     <string name="pin_wrong">Wrong PIN</string>
-    <string name="pin_digits_entered">%1$d digits entered</string>
+    <plurals name="pin_digits_entered">
+        <item quantity="one">%1$d digit entered</item>
+        <item quantity="other">%1$d digits entered</item>
+    </plurals>
 
     <string name="nav_home">Home</string>
     <string name="nav_apps">Apps</string>
