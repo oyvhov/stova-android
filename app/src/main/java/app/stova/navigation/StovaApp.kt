@@ -17,8 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import app.stova.AppContainer
 import app.stova.R
+import app.stova.apps.AppsScreen
+import app.stova.home.HomeScreen
+import app.stova.home.HomeViewModel
 import app.stova.core.theme.StovaTheme
 import app.stova.core.ui.PinDialog
 import app.stova.profiles.Profile
@@ -67,7 +71,16 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                 }
             },
         )
-        Box(Modifier.weight(1f).fillMaxHeight().testTag("screen-${current.name}"))
+        Box(Modifier.weight(1f).fillMaxHeight().testTag("screen-${current.name}")) {
+            when (current) {
+                Destination.HOME -> {
+                    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) }
+                    HomeScreen(home, container.appArt, container.appCatalog, onOpenApps = { current = Destination.APPS })
+                }
+                Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog)
+                Destination.SETTINGS -> Unit
+            }
+        }
     }
 
     askAdultPin?.let { adult ->

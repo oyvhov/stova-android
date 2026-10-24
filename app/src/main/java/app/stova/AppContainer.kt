@@ -1,7 +1,10 @@
 package app.stova
 
 import android.content.Context
+import app.stova.apps.AppArtCache
 import app.stova.apps.AppRepository
+import app.stova.home.AppsRowSource
+import app.stova.home.HomeRowSource
 import app.stova.apps.PackageManagerAppCatalog
 import app.stova.core.storage.JsonFileStore
 import app.stova.profiles.ProfileRepository
@@ -31,4 +34,8 @@ class AppContainer(context: Context) {
     )
 
     val apps = AppRepository(appCatalog, profiles, appScope)
+
+    val appArt = AppArtCache(appContext)
+
+    val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session))
 }

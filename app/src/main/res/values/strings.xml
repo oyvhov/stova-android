@@ -34,4 +34,19 @@
     <string name="avatar_mint">Mynte</string>
     <string name="avatar_rose">Rose</string>
     <string name="avatar_pearl">Perle</string>
+
+    <string name="row_favorite_apps">Favorittappar</string>
+    <string name="home_empty_title">Ingen favorittappar enno</string>
+    <string name="home_empty_body">Hald inne OK på ein app under Appar for å leggje han til her.</string>
+    <string name="home_open_apps">Opne Appar</string>
+    <string name="apps_favorites">Favorittar</string>
+    <string name="apps_all">Alle appar</string>
+    <string name="apps_hidden">Skjulte appar (%1$d)</string>
+    <string name="app_add_favorite">Legg til i favorittar</string>
+    <string name="app_remove_favorite">Fjern frå favorittar</string>
+    <string name="app_move_left">Flytt til venstre</string>
+    <string name="app_move_right">Flytt til høgre</string>
+    <string name="app_hide">Skjul</string>
+    <string name="app_show">Vis</string>
+    <string name="app_info">Appinfo</string>
 </resources>

@@ -711,7 +711,7 @@ git add -A && git commit -m "feat(apps): app catalog with TV-first listing, favo
   - `@Composable fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog: AppCatalog)`: rutenett (`LazyVerticalGrid`, `GridCells.Adaptive(248.dp)`) med «Favorittar» og «Alle appar». «Skjulte appar» ligg i ei samanfalda gruppe, ikkje for barneprofil. Lang OK eller Meny-tasten opnar `AppActionsMenu` med «Legg til i favorittar»/«Fjern frå favorittar», «Flytt til venstre», «Flytt til høgre», «Skjul»/«Vis» og «Appinfo». Barneprofil får berre opne appar.
   - Strengar for alle etikettane over, nynorsk og engelsk.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class HomeViewModelTest {
@@ -726,21 +726,21 @@ class AppsScreenTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.home.HomeViewModelTest" --tests "app.stova.apps.AppsScreenTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer filene og kople dei inn i `StovaApp`**
+- [x] **Step 3: Implementer filene og kople dei inn i `StovaApp`**
 
 `AppContainer` får `appArt: AppArtCache` og `homeSources: List<HomeRowSource>` (no berre `AppsRowSource`).
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(home): home skeleton with favorite apps row and full apps screen"

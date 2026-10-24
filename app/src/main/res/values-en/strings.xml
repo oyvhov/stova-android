@@ -34,4 +34,19 @@
     <string name="avatar_mint">Mint</string>
     <string name="avatar_rose">Rose</string>
     <string name="avatar_pearl">Pearl</string>
+
+    <string name="row_favorite_apps">Favourite apps</string>
+    <string name="home_empty_title">No favourite apps yet</string>
+    <string name="home_empty_body">Hold OK on an app under Apps to add it here.</string>
+    <string name="home_open_apps">Open Apps</string>
+    <string name="apps_favorites">Favourites</string>
+    <string name="apps_all">All apps</string>
+    <string name="apps_hidden">Hidden apps (%1$d)</string>
+    <string name="app_add_favorite">Add to favourites</string>
+    <string name="app_remove_favorite">Remove from favourites</string>
+    <string name="app_move_left">Move left</string>
+    <string name="app_move_right">Move right</string>
+    <string name="app_hide">Hide</string>
+    <string name="app_show">Show</string>
+    <string name="app_info">App info</string>
 </resources>
