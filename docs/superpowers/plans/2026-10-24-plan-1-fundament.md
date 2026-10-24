@@ -261,7 +261,7 @@ git add -A && git commit -m "feat(storage): atomic JSON file store with corrupt-
   - `object PinHasher { fun isValid(pin: String): Boolean; fun hash(pin: String, random: SecureRandom = SecureRandom()): PinHash; fun verify(pin: String, stored: PinHash): Boolean }`. PBKDF2WithHmacSHA256, 16 byte salt, 256 bit, samanlikning med `MessageDigest.isEqual`.
   - `object PinPolicy { fun lockoutMillis(failures: Int): Long }`
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class AesGcmBoxTest {
@@ -290,19 +290,19 @@ class PinPolicyTest {
 ```
 Instrumentert (`KeystoreSecretStoreTest`): `write("a","b")` → `read("a") == "b"`, råfila `files/secrets.json` inneheld ikkje `"b"`, og `delete("a")` → `read("a") == null`.
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.core.security.*"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer filene i `core/security`**
+- [x] **Step 3: Implementer filene i `core/security`**
 
-- [ ] **Step 4: Køyr JVM-testane**
+- [x] **Step 4: Køyr JVM-testane**
 
 Run: same som Step 2
 Expected: PASS. (Den instrumenterte testen køyrer i oppgåve 13.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(security): keystore-backed secret store and PBKDF2 PIN hashing"
