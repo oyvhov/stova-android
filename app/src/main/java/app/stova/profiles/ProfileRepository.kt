@@ -33,7 +33,7 @@ class ProfileRepository(
         lateinit var created: Profile
         store.update { file ->
             require(!(kid && file.profiles.isEmpty())) { "the first profile must be an adult" }
-            created = Profile(newId(), clean, avatar, kid = kid)
+            created = Profile(newId(), clean, avatar, kid = kid, kidSmartHomeControl = false)
             file.copy(profiles = file.profiles + created)
         }
         return created

@@ -12,6 +12,8 @@ data class Profile(
     val avatar: AvatarColor,
     val pin: PinHash? = null,
     val kid: Boolean = false,
+    val kidSmartHomeControl: Boolean = false,
+    val dashboard: List<app.stova.ha.cards.CardConfig> = emptyList(),
     val apps: AppPrefs = AppPrefs(),
     val home: HomePrefs = HomePrefs(),
     val appearance: AppearancePrefs = AppearancePrefs(),

@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -21,6 +22,10 @@ import app.stova.apps.*
 import app.stova.core.theme.LocalReduceMotion
 import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.StovaButton
+import app.stova.ha.HaConnection
+import app.stova.ha.HaRepository
+import app.stova.ha.ui.ChipContent
+import app.stova.ha.ui.chipText
 import app.stova.media.*
 import app.stova.media.model.*
 import app.stova.media.ui.*
@@ -35,7 +40,9 @@ fun HomeScreen(
     catalog: AppCatalog,
     onOpenApps: () -> Unit,
     onRefresh: suspend () -> Unit = {},
-    topBar: @Composable () -> Unit = {},
+    topBar: @Composable (List<ChipContent>) -> Unit = {},
+    haRepository: HaRepository? = null,
+    haConnection: HaConnection? = null,
 ) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val refresh by rememberUpdatedState(onRefresh)
@@ -44,6 +51,12 @@ fun HomeScreen(
             while (true) { refresh(); delay(300_000) }
         }
     }
+    val chips = if (haRepository != null && haConnection != null) {
+        val cards by haRepository.homeCards.collectAsStateWithLifecycle()
+        val entities by haConnection.entities.collectAsStateWithLifecycle()
+        val locale = LocalConfiguration.current.locales[0]
+        cards.map { chipText(it, entities[it.entityId], locale) }
+    } else emptyList()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val focused by vm.focused.collectAsStateWithLifecycle()
     val initial by vm.initialFocus.collectAsStateWithLifecycle()
@@ -74,7 +87,7 @@ fun HomeScreen(
         }
     }
     HomeContent(rows, focused, initial, art, catalog, onOpenApps, vm::focus,
-        onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = topBar)
+        onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { topBar(chips) })
     actions?.let { target ->
         ItemActionsMenu(target.item,
             onPlay = { actions = null; open(target, SpoleAction.PLAY) },

@@ -14,6 +14,14 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private val container get() = (application as StovaApplication).container
 
+    override fun onStart() {
+        super.onStart()
+        container.haSocket.start()
+    }
+    override fun onStop() {
+        container.haSocket.stop()
+        super.onStop()
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

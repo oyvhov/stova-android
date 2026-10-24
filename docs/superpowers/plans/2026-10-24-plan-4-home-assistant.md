@@ -45,7 +45,7 @@
   - `fun checkHaAddress(input: String): AddressCheck`. Utan skjema og utan port → `http://<input>:8123`. Utan skjema med port → `http://<input>`.
   - `fun isPrivateHost(host: String): Boolean`
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class HaAddressTest {
@@ -60,18 +60,18 @@ class HaAddressTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.HaAddressTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `HaAddress.kt`**
+- [x] **Step 3: Implementer `HaAddress.kt`**
 
-- [ ] **Step 4: Køyr testen**
+- [x] **Step 4: Køyr testen**
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): address normalisation with LAN-only plain HTTP"
@@ -102,7 +102,7 @@ git add -A && git commit -m "feat(ha): address normalisation with LAN-only plain
     - `suspend fun invalidateAccess()`: set `expiresAt = 0`, så neste kall fornyar.
     - `suspend fun signOut()`: `POST /auth/revoke` (`token=<refresh>`, `action=revoke`) som beste forsøk, slett tokens og set `SIGNED_OUT`.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class HaAuthTest {
@@ -136,18 +136,18 @@ class HaAuthTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.HaAuthTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `HaAuth.kt` og `haBaseUrl`**
+- [x] **Step 3: Implementer `HaAuth.kt` og `haBaseUrl`**
 
-- [ ] **Step 4: Køyr testen**
+- [x] **Step 4: Køyr testen**
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): OAuth code exchange, refresh, revoke and long-lived token"
@@ -171,7 +171,7 @@ git add -A && git commit -m "feat(ha): OAuth code exchange, refresh, revoke and 
     - Feilmeldingar: «Ugyldig adresse», «Bruk https for adresser utanfor heimenettet.», «Innlogginga feila. Prøv igjen.»
   - Innstillingar → Smarthus (hushald): status («Tilkopla som … / Ikkje tilkopla / Logg inn på nytt»), «Kople til» / «Logg ut», og per barneprofil brytaren «Kan styre smarthus» (`Profile.kidSmartHomeControl`, sjå oppgåve 6).
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 @RunWith(AndroidJUnit4::class) @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
@@ -193,19 +193,19 @@ class HaSetupFlowTest {
 ```
 (`FakeRequest` er ein liten `WebResourceRequest`-implementasjon i testen.)
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.ui.*"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer flyten, WebView-klienten og innstillingsseksjonen**
+- [x] **Step 3: Implementer flyten, WebView-klienten og innstillingsseksjonen**
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug`
 Expected: PASS, 0 lint-feil.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): TV sign-in via WebView OAuth or long-lived token"
@@ -233,7 +233,7 @@ git add -A && git commit -m "feat(ha): TV sign-in via WebView OAuth or long-live
   - `event.r`: `[id]` → fjerna.
   - `c` (context) blir ignorert. Tidsstempel er sekund som `Double`.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class EntityStateDecoderTest {
@@ -250,18 +250,18 @@ class EntityStateDecoderTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.EntityStateDecoderTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `EntityStateDecoder`**
+- [x] **Step 3: Implementer `EntityStateDecoder`**
 
-- [ ] **Step 4: Køyr testen**
+- [x] **Step 4: Køyr testen**
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): decode compressed subscribe_entities events"
@@ -300,7 +300,7 @@ git add -A && git commit -m "feat(ha): decode compressed subscribe_entities even
     5. `pingInterval(30 s)` på OkHttp-klienten.
     6. Ventande kall blir fullførte med `false`/tom liste når tilkoplinga fell.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class HaProtocolTest {
@@ -320,20 +320,20 @@ class HaSocketTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.HaProtocolTest" --tests "app.stova.ha.HaSocketTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `HaProtocol.kt`, `HaSocket.kt` og livssyklusen i `MainActivity`**
+- [x] **Step 3: Implementer `HaProtocol.kt`, `HaSocket.kt` og livssyklusen i `MainActivity`**
 
 Socketen bruker `scope` med ein `Dispatchers.IO`-basert `SupervisorJob`. All skriving til `entities` skjer på éin serialisert korutine (`Channel` av innkomne meldingar).
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): websocket client with coalesced subscriptions, reconnect backoff and service calls"
@@ -396,7 +396,7 @@ git add -A && git commit -m "feat(ha): websocket client with coalesced subscript
     - `suspend fun perform(call: ServiceCall, entityId: String, profile: Profile): Boolean`: gjer ingenting og returnerer false når `!canControl(profile)`.
     - Kallar `socket.watch(cards.map { it.entityId }.toSet())` kvar gong korta eller den aktive profilen endrar seg.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class CardModelTest {
@@ -432,21 +432,21 @@ class HaRepositoryTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.cards.*" --tests "app.stova.ha.HaRepositoryTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer filene, profilfelta og `HaRepository`**
+- [x] **Step 3: Implementer filene, profilfelta og `HaRepository`**
 
 `ProfileRepository.create(kid = true)` set `kidSmartHomeControl = false` eksplisitt (standardverdien).
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): card model, service-call mapping, formatting and per-profile dashboards"
@@ -478,7 +478,7 @@ git add -A && git commit -m "feat(ha): card model, service-call mapping, formatt
   - Straumpris: noverande verdi + eining, og `Sparkline` for i dag med noverande time markert med ein 6 dp prikk i `Text`.
   - Strengar for alle etikettar og tilstandar (`På`/`Av`, `Utilgjengeleg`, `Lysstyrke`, `Mål`, `Spel`/`Pause`, `Køyr`), med engelske motstykke.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class SparklineTest {
@@ -496,19 +496,19 @@ class HaCardTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.cards.HaCardTest" --tests "app.stova.ha.cards.SparklineTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer ikona, korta og dialogane**
+- [x] **Step 3: Implementer ikona, korta og dialogane**
 
-- [ ] **Step 4: Køyr testane (også `DesignRulesTest`)**
+- [x] **Step 4: Køyr testane (også `DesignRulesTest`)**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): flat Tunet-style cards, dialogs and sparklines"
@@ -534,7 +534,7 @@ git add -A && git commit -m "feat(ha): flat Tunet-style cards, dialogs and spark
   - Redigeringsmodus (vaksne, knappen «Rediger»): kvar kort får meny «Flytt til venstre», «Flytt til høgre», «Brei / Smal», «Vis på heim» (med melding «Maks tre kort på heim» ved full) og «Fjern».
   - `@Composable fun AddCardFlow(container: AppContainer, onDone: () -> Unit)`: henter `states()` og grupperer etter domene med norske gruppenamn («Lys», «Brytarar», «Klima», «Sensorar», «Vêr», «Mediaspelarar», «Scener og skript», «Kamera»), sortert på `friendlyName`, med søkjefelt øvst. Ved fleire korttypar blir brukaren spurd om type.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 @RunWith(AndroidJUnit4::class) @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
@@ -547,19 +547,19 @@ class SmartHomeScreenTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.ui.SmartHomeScreenTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer sida, redigeringa, legg-til-flyten og destinasjonen**
+- [x] **Step 3: Implementer sida, redigeringa, legg-til-flyten og destinasjonen**
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug`
 Expected: PASS, 0 lint-feil.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): Smart home page with grid, edit mode and add-card flow"
@@ -585,7 +585,7 @@ git add -A && git commit -m "feat(ha): Smart home page with grid, edit mode and 
     - utilgjengeleg: «–»
   - `@Composable fun HomeStatusChips(chips: List<ChipContent>)`: maks 3, `Raised`-piller med 12 dp hjørne, ikon 16 dp og `labelLarge`. **Ikkje fokuserbare**, slik at D-pad-flyten på heim ikkje blir forstyrra.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class HomeStatusChipsTest {
@@ -598,21 +598,21 @@ class HomeStatusChipsTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.ui.HomeStatusChipsTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `chipText`, `HomeStatusChips` og koplinga i `HomeScreen`**
+- [x] **Step 3: Implementer `chipText`, `HomeStatusChips` og koplinga i `HomeScreen`**
 
 Vêr-avrunding: heiltal med `formatNumber(round(t))` + «°».
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): up to three status chips next to the clock on home"

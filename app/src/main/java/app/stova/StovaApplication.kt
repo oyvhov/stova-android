@@ -18,7 +18,7 @@ class StovaApplication : Application(), coil3.SingletonImageLoader.Factory {
         // The guard goes in first, so even a crash while the container is built is counted.
         val guard = CrashGuard.store(this)
         CrashGuard.install(guard)
-        container = AppContainer(this, guard)
+        container = AppContainer(this, crashGuard = guard)
         HomeButtonStatus.ensureEnabled(this)
     }
 }

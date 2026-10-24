@@ -1,7 +1,6 @@
 package app.stova
 
 import android.content.Context
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import app.stova.apps.AppArtCache
@@ -21,12 +20,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
+import app.stova.core.security.KeystoreSecretStore
+import app.stova.ha.*
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 
 /** Hand-wired dependencies for the whole app. Later tasks add their repositories here. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class AppContainer(
     context: Context,
     val crashGuard: JsonFileStore<CrashGuardState> = CrashGuard.store(context),
+    val secrets: app.stova.core.security.SecretStore = KeystoreSecretStore(context),
 ) {
     val appContext: Context = context.applicationContext
 
@@ -87,4 +92,17 @@ class AppContainer(
     val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session), app.stova.media.MediaRowSource(media), app.stova.watchnext.WatchNextRowSource(watchNext))
 
 
+    val haHttp = OkHttpClient.Builder().connectTimeout(4, TimeUnit.SECONDS).readTimeout(8, TimeUnit.SECONDS)
+        .followRedirects(false).followSslRedirects(false).build()
+    suspend fun haAddress(): HaAddress? = household.current().haBaseUrl?.let { (checkHaAddress(it) as? AddressCheck.Ok)?.address }
+    val haAuth = HaAuth(haHttp, secrets, ::haAddress)
+    private val haScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val haSocket = HaSocket(haHttp, haAuth, ::haAddress, haScope)
+    val haRepository = HaRepository(haSocket, session, profiles, appScope)
+    val haImages by lazy {
+        coil3.ImageLoader.Builder(appContext).components {
+            add(coil3.network.okhttp.OkHttpNetworkFetcherFactory(callFactory = { haHttp }))
+        }.build()
+    }
+    init { appScope.launch { haAuth.restore() } }
 }
