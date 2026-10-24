@@ -487,7 +487,7 @@ git add -A && git commit -m "feat(ui): focus outline, buttons, PIN dialog, remot
   - `@Composable fun StovaApp(container: AppContainer)`: Ruta er `ProfileGate` når `active == null` (oppgåve 8 fyller han), elles `Row { SideRail; innhald }`. `BackHandler` på toppnivå: frå ei anna destinasjon → HOME, på HOME → ingenting. Innhaldet per destinasjon er ein tom `Box` med `testTag("screen-<namn>")` til seinare oppgåver fyller han.
   - Strengar: `nav_home` («Heim»/«Home»), `nav_apps` («Appar»/«Apps»), `nav_settings` («Innstillingar»/«Settings»), `nav_profile` («Byt profil»/«Switch profile»).
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class ProfileSessionTest {
@@ -520,21 +520,21 @@ class StovaAppNavigationTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.profiles.ProfileSessionTest" --tests "app.stova.navigation.*"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `ProfileSession`, `Destination`, `SideRail` og `StovaApp`**
+- [x] **Step 3: Implementer `ProfileSession`, `Destination`, `SideRail` og `StovaApp`**
 
 `StovaTheme` i `StovaApp` får `reduceMotion`/`strongFocus` frå `active.appearance`.
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: same som Step 2
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(nav): profile session, side rail and top-level back handling"

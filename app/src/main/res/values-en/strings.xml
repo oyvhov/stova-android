@@ -8,4 +8,9 @@
     <string name="pin_wait_seconds">Try again in %1$d s</string>
     <string name="pin_wrong">Wrong PIN</string>
     <string name="pin_digits_entered">%1$d digits entered</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_apps">Apps</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_profile">Switch profile</string>
 </resources>
