@@ -534,7 +534,7 @@ git add -A && git commit -m "feat(ha): flat Tunet-style cards, dialogs and spark
   - Redigeringsmodus (vaksne, knappen «Rediger»): kvar kort får meny «Flytt til venstre», «Flytt til høgre», «Brei / Smal», «Vis på heim» (med melding «Maks tre kort på heim» ved full) og «Fjern».
   - `@Composable fun AddCardFlow(container: AppContainer, onDone: () -> Unit)`: henter `states()` og grupperer etter domene med norske gruppenamn («Lys», «Brytarar», «Klima», «Sensorar», «Vêr», «Mediaspelarar», «Scener og skript», «Kamera»), sortert på `friendlyName`, med søkjefelt øvst. Ved fleire korttypar blir brukaren spurd om type.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 @RunWith(AndroidJUnit4::class) @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
@@ -547,19 +547,19 @@ class SmartHomeScreenTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.ui.SmartHomeScreenTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer sida, redigeringa, legg-til-flyten og destinasjonen**
+- [x] **Step 3: Implementer sida, redigeringa, legg-til-flyten og destinasjonen**
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug`
 Expected: PASS, 0 lint-feil.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): Smart home page with grid, edit mode and add-card flow"

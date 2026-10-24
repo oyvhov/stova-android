@@ -11,7 +11,7 @@ import app.stova.core.ui.StovaIcons
 import app.stova.ha.HaEntity
 
 @Composable
-fun HaCard(config: CardConfig, entity: HaEntity?, locked: Boolean, perform: (ServiceCall) -> Unit, openDialog: (CardDialog) -> Unit, images: HaImageSource? = null, visible: Boolean = true) {
+fun HaCard(config: CardConfig, entity: HaEntity?, locked: Boolean, perform: (ServiceCall) -> Unit, openDialog: (CardDialog) -> Unit, images: HaImageSource? = null, visible: Boolean = true, onEdit:(()->Unit)?=null) {
     val unavailable = stateText(entity) == StateText.Unavailable
     val icon = when(config.type) {
         CardType.LIGHT -> StovaIcons.Light; CardType.TOGGLE -> StovaIcons.Toggle; CardType.CLIMATE -> StovaIcons.Climate
@@ -25,7 +25,7 @@ fun HaCard(config: CardConfig, entity: HaEntity?, locked: Boolean, perform: (Ser
         else -> null
     }
     CardFrame(config, icon, entity?.let(::friendlyName) ?: config.entityId, badge, locked, onClick={
-        if (!unavailable && entity != null) {
+        if(onEdit!=null) onEdit() else if (!unavailable && entity != null) {
             when(config.type) {
                 CardType.CLIMATE -> openDialog(CardDialog.Climate(entity.id))
                 CardType.CAMERA -> openDialog(CardDialog.Camera(entity.id))
@@ -33,7 +33,7 @@ fun HaCard(config: CardConfig, entity: HaEntity?, locked: Boolean, perform: (Ser
             }
         }
     }, onLongClick={
-        if (!unavailable && entity != null) when(config.type) {
+        if(onEdit!=null) onEdit() else if (!unavailable && entity != null) when(config.type) {
             CardType.LIGHT -> openDialog(CardDialog.Brightness(entity.id))
             CardType.SENSOR,CardType.ENERGY_PRICE -> openDialog(CardDialog.Graph(entity.id,today=config.type==CardType.ENERGY_PRICE))
             else -> longAction(config.type,entity)?.let(perform)

@@ -60,6 +60,7 @@ fun TopBar(
     onSettings: () -> Unit,
     onProfile: () -> Unit,
     modifier: Modifier = Modifier,
+    onSmartHome: (() -> Unit)? = null,
     leading: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -70,6 +71,7 @@ fun TopBar(
         leading()
         Spacer(Modifier.weight(1f))
         Clock(Modifier.padding(end = 16.dp))
+        if(onSmartHome!=null) TopBarButton(StovaIcons.Home,stringResource(R.string.nav_smart_home),onSmartHome)
         TopBarButton(StovaIcons.Apps, stringResource(R.string.nav_apps), onApps)
         TopBarButton(StovaIcons.Settings, stringResource(R.string.nav_settings), onSettings)
         ProfileButton(profile, onProfile)

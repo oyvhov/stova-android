@@ -56,4 +56,15 @@ class StovaAppNavigationTest {
         rule.onAllNodesWithText("Innstillingar")[0].performClick()
         rule.onNodeWithTag("screen-SETTINGS").assertExists()
     }
+    @Test fun smartHomeOnlyWhenConfiguredAndBackClosesPage() {
+        rule.onAllNodesWithText("Smarthus").assertCountEquals(0)
+        val container=(rule.activity.application as StovaApplication).container
+        runBlocking { container.household.update { it.copy(haBaseUrl="http://ha.local:8123") } }
+        rule.waitForIdle()
+        rule.onAllNodesWithText("Smarthus")[0].performClick()
+        rule.onNodeWithTag("screen-SMART_HOME").assertExists()
+        rule.waitForIdle()
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag("screen-HOME").assertExists()
+    }
 }

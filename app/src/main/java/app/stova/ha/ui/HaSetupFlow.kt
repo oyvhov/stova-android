@@ -72,6 +72,7 @@ fun HaSettings(container: AppContainer) {
     var setup by remember { mutableStateOf(false) }
     val household by container.household.data.collectAsStateWithLifecycle(initialValue = null)
     val auth by container.haAuth.state.collectAsStateWithLifecycle()
+    val connection by container.haSocket.status.collectAsStateWithLifecycle()
     val profiles by container.profiles.file.collectAsStateWithLifecycle(initialValue = null)
     val scope = rememberCoroutineScope()
     BackHandler(enabled = setup) { setup = false }
@@ -82,11 +83,11 @@ fun HaSettings(container: AppContainer) {
             }
         }
     }
-    Text(stringResource(when {
-        household?.haBaseUrl == null -> R.string.ha_not_connected
-        auth == HaAuthState.SIGNED_OUT -> R.string.ha_signed_out
-        else -> R.string.ha_connected
-    }), color = MaterialTheme.colorScheme.onSurfaceVariant)
+    HaStatusLabel(when {
+        household?.haBaseUrl == null -> HaStatus.NOT_CONFIGURED
+        auth == HaAuthState.SIGNED_OUT -> HaStatus.SIGNED_OUT
+        else -> connection
+    })
     household?.haBaseUrl?.let { Text(it) }
     StovaButton(stringResource(R.string.ha_connect), { setup = true })
     if (household?.haBaseUrl != null) {

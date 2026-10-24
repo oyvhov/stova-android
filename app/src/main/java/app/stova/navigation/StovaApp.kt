@@ -28,7 +28,7 @@ import app.stova.profiles.ProfileGate
 import app.stova.profiles.leavingNeedsAdultPin
 import app.stova.settings.SettingsScreen
 
-/** The root: the profile gate when nobody is signed in, otherwise side rail plus destination. */
+/** The root: the profile gate when nobody is signed in, otherwise the full-screen destination. */
 @Composable
 fun StovaApp(container: AppContainer) {
     val profile by container.session.active.collectAsStateWithLifecycle()
@@ -51,6 +51,7 @@ fun StovaApp(container: AppContainer) {
 private fun MainShell(container: AppContainer, profile: Profile) {
     var current by rememberSaveable { mutableStateOf(Destination.HOME) }
     val file by container.profiles.file.collectAsStateWithLifecycle(initialValue = null)
+    val household by container.household.data.collectAsStateWithLifecycle(initialValue = null)
     var askAdultPin by remember { mutableStateOf<Profile?>(null) }
 
     // Back walks home, and stops there: a launcher has nowhere further back to go.
@@ -76,10 +77,12 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         onApps = { current = Destination.APPS },
                         onSettings = { current = Destination.SETTINGS },
                         onProfile = switchProfile,
+                        onSmartHome = if(household?.haBaseUrl!=null) {{current=Destination.SMART_HOME}} else null,
                     )
                 },
             )
             Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog)
+            Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile)
             Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile)
         }
     }
