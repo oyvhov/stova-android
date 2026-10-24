@@ -54,7 +54,8 @@
             android:name=".homebutton.HomeButtonService"
             android:exported="true"
             android:label="@string/home_button_service_label"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:process=":homebutton">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>

@@ -4,6 +4,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -52,6 +54,22 @@ class StovaAppNavigationTest {
         assertFalse(rule.activity.isFinishing)
     }
 
+    @Test fun emptyHomeFocusesOpenApps() {
+        // Found on the TV emulator: with nothing focused, the first D-pad press was swallowed.
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Opne Appar").assertIsFocused()
+    }
+
+    // Review Important 2: Home pressed while a Stova page is open goes back to Home.
+    @Test fun homeIntentReturnsToHome() {
+        rule.onAllNodesWithText("Appar")[0].performClick()
+        rule.onNodeWithTag("screen-APPS").assertExists()
+        rule.activityRule.scenario.onActivity {
+            it.onNewIntent(android.content.Intent(android.content.Intent.ACTION_MAIN).addCategory(android.content.Intent.CATEGORY_HOME))
+        }
+        rule.onNodeWithTag("screen-HOME").assertExists()
+    }
+
     @Test fun topBarOpensSettings() {
         rule.onAllNodesWithText("Innstillingar")[0].performClick()
         rule.onNodeWithTag("screen-SETTINGS").assertExists()
@@ -66,5 +84,19 @@ class StovaAppNavigationTest {
         rule.waitForIdle()
         rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag("screen-HOME").assertExists()
+    }
+
+    @Test fun homeIntentClosesSmartHomeAndKeepsItAvailable() {
+        val container = (rule.activity.application as StovaApplication).container
+        runBlocking { container.household.update { it.copy(haBaseUrl = "http://ha.local:8123") } }
+        rule.waitForIdle()
+        rule.onAllNodesWithText("Smarthus")[0].performClick()
+        rule.onNodeWithTag("screen-SMART_HOME").assertExists()
+        rule.activityRule.scenario.onActivity {
+            it.onNewIntent(android.content.Intent(android.content.Intent.ACTION_MAIN).addCategory(android.content.Intent.CATEGORY_HOME))
+        }
+        rule.onNodeWithTag("screen-HOME").assertExists()
+        rule.onAllNodesWithText("Smarthus")[0].performClick()
+        rule.onNodeWithTag("screen-SMART_HOME").assertExists()
     }
 }

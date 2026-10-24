@@ -5,7 +5,10 @@ import app.stova.profiles.Profile
 import app.stova.profiles.ProfileRepository
 import java.text.Collator
 import java.util.Locale
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -17,13 +20,14 @@ class AppRepository(
     private val catalog: AppCatalog,
     private val profiles: ProfileRepository,
     private val scope: CoroutineScope,
+    private val io: CoroutineDispatcher = Dispatchers.IO,
 ) {
     /** Re-scans whenever a package is added, removed or changed. */
     private val installed: Flow<List<InstalledApp>> = catalog.changes().onStart { emit(Unit) }.map { catalog.installed() }
 
     fun arranged(profile: Flow<Profile?>): Flow<ArrangedApps> =
         combine(profile, installed) { p, apps -> p to apps }
-            .onEach { (p, apps) -> if (p != null) pruneIfMissing(p, apps) }
+            .onEach { (p, apps) -> if (p != null) reconcileIfNeeded(p, apps) }
             .map { (p, apps) ->
                 if (p == null) ArrangedApps()
                 else arrangeApps(apps, p.apps, p.kid, Collator.getInstance(Locale.getDefault()))
@@ -56,14 +60,26 @@ class AppRepository(
 
     /**
      * An empty scan means the package manager was not ready (early boot), not that every app was
-     * uninstalled; pruning then would wipe every profile's favourites.
+     * uninstalled. Otherwise each stored key a scan did not return is followed (renamed activity),
+     * kept (package installed but unavailable) or dropped (package uninstalled); see [reconcileKeys].
      */
-    private fun pruneIfMissing(profile: Profile, apps: List<InstalledApp>) {
+    private fun reconcileIfNeeded(profile: Profile, apps: List<InstalledApp>) {
         if (apps.isEmpty()) return
         val keys = apps.mapTo(mutableSetOf()) { it.key }
         val referenced = profile.apps.favorites + profile.apps.hidden + profile.apps.kidAllowed
         if (referenced.all { it in keys }) return
-        scope.launch { pruneMissing(profile.id, keys) }
+        scope.launch {
+            val mapping = withContext(io) { reconcileKeys(referenced.toSet(), apps, catalog::isInstalled) }
+            if (mapping.all { (old, new) -> old == new }) return@launch
+            fun List<String>.mapped() = mapNotNull { if (it in mapping) mapping[it] else it }.distinct()
+            updatePrefs(profile.id) { prefs ->
+                prefs.copy(
+                    favorites = prefs.favorites.mapped(),
+                    hidden = prefs.hidden.toList().mapped().toSet(),
+                    kidAllowed = prefs.kidAllowed.toList().mapped().toSet(),
+                )
+            }
+        }
     }
 
     private suspend fun updatePrefs(profileId: String, change: (AppPrefs) -> AppPrefs) {

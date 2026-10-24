@@ -30,14 +30,14 @@ class HaSetupFlowTest {
         assertFalse(client.shouldOverrideUrlLoading(view, "http://ha.local:8123/auth/login"))
     }
     @Test fun insecurePublicAddressShowsMessage() {
-        val container = AppContainer(ApplicationProvider.getApplicationContext(), InMemorySecretStore())
+        val container = AppContainer(ApplicationProvider.getApplicationContext(), secrets = InMemorySecretStore())
         compose.setContent { StovaTheme { HaSetupFlow(container) {} } }
         compose.onNodeWithText("Adresse").performTextInput("http://ha.example.no")
         compose.onNodeWithText("Logg inn").performClick()
         compose.onNodeWithText("Bruk https for adresser utanfor heimenettet.").assertExists()
     }
     @Test fun longLivedTokenSavesAndSignsIn() {
-        val container = AppContainer(ApplicationProvider.getApplicationContext(), InMemorySecretStore())
+        val container = AppContainer(ApplicationProvider.getApplicationContext(), secrets = InMemorySecretStore())
         var done = false
         compose.setContent { StovaTheme { HaSetupFlow(container) { done = true } } }
         compose.onNodeWithText("Adresse").performTextInput("ha.local")

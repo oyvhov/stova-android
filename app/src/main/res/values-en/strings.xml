@@ -67,6 +67,8 @@
     <string name="pin_change">Change PIN</string>
     <string name="pin_remove">Remove PIN</string>
     <string name="pin_new">New PIN</string>
+    <string name="pin_confirm">Confirm new PIN</string>
+    <string name="pin_any_adult">Enter an adult\'s PIN</string>
     <string name="kid_apps">Allowed apps</string>
     <string name="kid_apps_title">Allowed apps for %1$s</string>
     <string name="home_start_on_apps">Start on favourite apps</string>

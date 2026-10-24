@@ -67,6 +67,8 @@
     <string name="pin_change">Endre PIN</string>
     <string name="pin_remove">Fjern PIN</string>
     <string name="pin_new">Ny PIN</string>
+    <string name="pin_confirm">Stadfest ny PIN</string>
+    <string name="pin_any_adult">Skriv ein vaksen-PIN</string>
     <string name="kid_apps">Tillatne appar</string>
     <string name="kid_apps_title">Tillatne appar for %1$s</string>
     <string name="home_start_on_apps">Start på favorittappar</string>

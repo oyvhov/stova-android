@@ -8,4 +8,7 @@ interface AppCatalog {
     fun changes(): Flow<Unit>
     fun launch(app: InstalledApp): Boolean
     fun openAppInfo(packageName: String)
+
+    /** True while the package is installed, even when it is not launchable at this moment. */
+    fun isInstalled(packageName: String): Boolean
 }

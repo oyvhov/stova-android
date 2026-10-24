@@ -10,8 +10,12 @@ class StovaApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        container = AppContainer(this)
-        CrashGuard.install(container.crashGuard)
+        // The Home service's own process needs none of the launcher: no stores, no session.
+        if (getProcessName().endsWith(":homebutton")) return
+        // The guard goes in first, so even a crash while the container is built is counted.
+        val guard = CrashGuard.store(this)
+        CrashGuard.install(guard)
+        container = AppContainer(this, crashGuard = guard)
         HomeButtonStatus.ensureEnabled(this)
     }
 }

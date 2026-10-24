@@ -42,6 +42,13 @@ class HomeViewModelTest {
 
     private fun source(vararg rows: HomeRowUi) = HomeRowSource { flowOf(rows.toList()) }
 
+    // Review Important 3: "not loaded yet" is not "empty", so the empty state never flashes.
+    @Test fun rowsAreNullUntilSourcesAnswer() = runTest(UnconfinedTestDispatcher()) {
+        val silent = HomeRowSource { kotlinx.coroutines.flow.flow { kotlinx.coroutines.awaitCancellation() } }
+        val vm = HomeViewModel(session(backgroundScope, StartFocus.FIRST_MEDIA_ROW), listOf(silent))
+        assertEquals(null, vm.rows.value)
+    }
+
     @Test fun startFocusFallsBackToAppsWithoutMediaRows() = runTest(UnconfinedTestDispatcher()) {
         val vm = HomeViewModel(session(backgroundScope, StartFocus.FIRST_MEDIA_ROW), listOf(source(HomeRowUi.Apps(HomeRowKey.APPS, listOf(app)))))
         assertEquals(HomeRowKey.APPS, vm.initialFocus.value)
@@ -62,7 +69,7 @@ class HomeViewModelTest {
             session(backgroundScope, StartFocus.FAVORITE_APPS, rowOrder = listOf(x)),
             listOf(source(HomeRowUi.Apps(HomeRowKey.APPS, listOf(app))), source(HomeRowUi.Apps(x, listOf(app)))),
         )
-        assertEquals(listOf(x, HomeRowKey.APPS), vm.rows.value.map { it.key })
+        assertEquals(listOf(x, HomeRowKey.APPS), vm.rows.value!!.map { it.key })
         assertEquals(HomeRowKey.APPS, vm.initialFocus.value)
     }
 }

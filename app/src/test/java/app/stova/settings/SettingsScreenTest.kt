@@ -71,6 +71,20 @@ class SettingsScreenTest {
         rule.waitUntil(5_000) { "demo.banan/demo.banan.Main" in profile("K").apps.kidAllowed }
     }
 
+    // Review Important 6: a new PIN must be typed twice before it is saved.
+    @Test fun newPinNeedsConfirmation() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNodeWithText("Set PIN").performClick()
+        "2468".forEach { rule.onNodeWithText(it.toString()).performClick() }
+        rule.onNodeWithText("OK").performClick()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Stadfest ny PIN").fetchSemanticsNodes().isNotEmpty() }
+        assertEquals(null, profile("A").pin)
+        "2468".forEach { rule.onNodeWithText(it.toString()).performClick() }
+        rule.onNodeWithText("OK").performClick()
+        rule.waitUntil(5_000) { profile("A").pin != null }
+    }
+
     @Test fun changingPinRequiresCurrentPin() {
         runBlocking {
             val a = container.profiles.create("A", AvatarColor.LIME, false)

@@ -25,6 +25,23 @@ fun arrangeApps(installed: List<InstalledApp>, prefs: AppPrefs, kid: Boolean, co
     }
 }
 
+/**
+ * What becomes of each stored app key that a scan did not return (key → new key, or null to drop).
+ * Same package, new activity: follow the rename. Package still installed but not listed right
+ * now (adopted storage unmounted): keep it. Package really gone: drop it.
+ */
+fun reconcileKeys(keys: Collection<String>, scanned: List<InstalledApp>, installed: (String) -> Boolean): Map<String, String?> {
+    val scannedKeys = scanned.mapTo(HashSet()) { it.key }
+    val byPackage = scanned.associateBy { it.packageName }
+    return keys.associateWith { key ->
+        if (key in scannedKeys) key
+        else {
+            val pkg = key.substringBefore('/')
+            byPackage[pkg]?.key ?: if (installed(pkg)) key else null
+        }
+    }
+}
+
 /** Moves [key] by [delta] places, stopping at either end. */
 fun moveFavorite(favorites: List<String>, key: String, delta: Int): List<String> {
     val from = favorites.indexOf(key)

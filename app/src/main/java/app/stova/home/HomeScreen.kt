@@ -69,14 +69,15 @@ fun HomeScreen(
 
     Column(Modifier.fillMaxSize()) {
         topBar(chips)
-        if (rows.isEmpty()) {
-            EmptyHome(onOpenApps)
-        } else {
-            LazyColumn(
+        val loaded = rows
+        when {
+            loaded == null -> Unit // still loading: the top bar alone, never a flash of the empty state
+            loaded.isEmpty() -> EmptyHome(onOpenApps)
+            else -> LazyColumn(
                 Modifier.fillMaxSize().focusRestorer(),
                 contentPadding = PaddingValues(bottom = StovaLayout.TvSafeEdge),
             ) {
-                items(rows, key = { it.key.value }) { row ->
+                items(loaded, key = { it.key.value }) { row ->
                     when (row) {
                         is HomeRowUi.Apps -> AppsRow(row, art, catalog, if (row.key == initial) firstItem else null)
                     }
@@ -105,11 +106,14 @@ private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, 
 
 @Composable
 private fun EmptyHome(onOpenApps: () -> Unit) {
+    // Something must hold focus on a TV, or the first press of the remote only wakes focus up.
+    val button = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { button.requestFocus() } }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(Modifier.widthIn(max = 520.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(stringResource(R.string.home_empty_title), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
             Text(stringResource(R.string.home_empty_body), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            StovaButton(stringResource(R.string.home_open_apps), onOpenApps, primary = true)
+            StovaButton(stringResource(R.string.home_open_apps), onOpenApps, Modifier.focusRequester(button), primary = true)
         }
     }
 }
