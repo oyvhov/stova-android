@@ -153,6 +153,7 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
                     scope.launch {
                         try {
                             container.profiles.delete(other.id)
+                            container.mediaAccounts.removeForProfile(other.id)
                             onDeleted()
                         } catch (_: IllegalStateException) {
                             refused = true

@@ -50,6 +50,14 @@ class AppContainer(
     val identity = app.stova.media.net.ClientIdentity(android.os.Build.MODEL, deviceSettings.deviceId, BuildConfig.VERSION_NAME)
     val mediaHttp = app.stova.media.net.mediaHttp()
 
+    val mediaAccounts = app.stova.media.MediaAccountRepository(
+        JsonFileStore(File(appContext.filesDir, "media-accounts.json"), app.stova.media.MediaAccountsFile.serializer(), app.stova.media.MediaAccountsFile()),
+        app.stova.core.security.KeystoreSecretStore(appContext),
+    )
+    val serverProbe = app.stova.media.net.ServerProbe(mediaHttp)
+    val mediaAuth = app.stova.media.net.MediaAuth(mediaHttp, identity)
+    val lanDiscovery = app.stova.media.net.LanDiscovery()
+
     val appArt = AppArtCache(appContext)
 
     val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session))
