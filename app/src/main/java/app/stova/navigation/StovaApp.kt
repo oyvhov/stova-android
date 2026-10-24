@@ -71,13 +71,16 @@ private fun MainShell(container: AppContainer, profile: Profile) {
             Destination.HOME -> HomeScreen(
                 home, container.appArt, container.appCatalog,
                 onOpenApps = { current = Destination.APPS },
-                topBar = {
+                haRepository = container.haRepository,
+                haConnection = container.haSocket,
+                topBar = { chips ->
                     TopBar(
                         profile = profile,
                         onApps = { current = Destination.APPS },
                         onSettings = { current = Destination.SETTINGS },
                         onProfile = switchProfile,
                         onSmartHome = if(household?.haBaseUrl!=null) {{current=Destination.SMART_HOME}} else null,
+                        leading = { app.stova.ha.ui.HomeStatusChips(chips) },
                     )
                 },
             )

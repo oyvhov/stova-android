@@ -26,6 +26,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.R
@@ -34,6 +35,10 @@ import app.stova.apps.AppCatalog
 import app.stova.apps.AppTile
 import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.StovaButton
+import app.stova.ha.HaConnection
+import app.stova.ha.HaRepository
+import app.stova.ha.ui.ChipContent
+import app.stova.ha.ui.chipText
 
 @Composable
 fun HomeScreen(
@@ -41,12 +46,20 @@ fun HomeScreen(
     art: AppArtCache,
     catalog: AppCatalog,
     onOpenApps: () -> Unit,
-    topBar: @Composable () -> Unit = {},
+    topBar: @Composable (List<ChipContent>) -> Unit = {},
+    haRepository: HaRepository? = null,
+    haConnection: HaConnection? = null,
 ) {
     val rows by vm.rows.collectAsStateWithLifecycle()
     val initial by vm.initialFocus.collectAsStateWithLifecycle()
     val firstItem = remember { FocusRequester() }
     var placedFocus by rememberSaveable { mutableStateOf(false) }
+    val chips = if (haRepository != null && haConnection != null) {
+        val cards by haRepository.homeCards.collectAsStateWithLifecycle()
+        val entities by haConnection.entities.collectAsStateWithLifecycle()
+        val locale=LocalConfiguration.current.locales[0]
+        cards.map { chipText(it,entities[it.entityId],locale) }
+    } else emptyList()
 
     LaunchedEffect(initial) {
         if (initial != null && !placedFocus) {
@@ -55,7 +68,7 @@ fun HomeScreen(
     }
 
     Column(Modifier.fillMaxSize()) {
-        topBar()
+        topBar(chips)
         if (rows.isEmpty()) {
             EmptyHome(onOpenApps)
         } else {

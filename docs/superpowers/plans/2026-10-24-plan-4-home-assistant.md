@@ -585,7 +585,7 @@ git add -A && git commit -m "feat(ha): Smart home page with grid, edit mode and 
     - utilgjengeleg: «–»
   - `@Composable fun HomeStatusChips(chips: List<ChipContent>)`: maks 3, `Raised`-piller med 12 dp hjørne, ikon 16 dp og `labelLarge`. **Ikkje fokuserbare**, slik at D-pad-flyten på heim ikkje blir forstyrra.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class HomeStatusChipsTest {
@@ -598,21 +598,21 @@ class HomeStatusChipsTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.ui.HomeStatusChipsTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `chipText`, `HomeStatusChips` og koplinga i `HomeScreen`**
+- [x] **Step 3: Implementer `chipText`, `HomeStatusChips` og koplinga i `HomeScreen`**
 
 Vêr-avrunding: heiltal med `formatNumber(round(t))` + «°».
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): up to three status chips next to the clock on home"

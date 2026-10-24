@@ -68,8 +68,8 @@ fun TopBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        leading()
-        Spacer(Modifier.weight(1f))
+        val rowScope = this
+        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { leading(rowScope) }
         Clock(Modifier.padding(end = 16.dp))
         if(onSmartHome!=null) TopBarButton(StovaIcons.Home,stringResource(R.string.nav_smart_home),onSmartHome)
         TopBarButton(StovaIcons.Apps, stringResource(R.string.nav_apps), onApps)
