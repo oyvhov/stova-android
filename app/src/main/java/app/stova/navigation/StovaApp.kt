@@ -72,6 +72,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
             Destination.HOME -> HomeScreen(
                 home, container.appArt, container.appCatalog,
                 onOpenApps = { current = Destination.APPS },
+                onRefresh = { container.media.refresh(profile.id) },
                 topBar = {
                     TopBar(
                         profile = profile,

@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 sealed interface HomeRowUi {
     val key: HomeRowKey
 
+    data class Media(override val key: HomeRowKey, val account: app.stova.media.model.MediaAccount, val kind: app.stova.media.MediaRowKind, val items: List<app.stova.media.model.MediaItem>, val offline: Boolean) : HomeRowUi
+
     data class Apps(override val key: HomeRowKey, val apps: List<InstalledApp>) : HomeRowUi
 }
 

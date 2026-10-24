@@ -60,7 +60,11 @@ class AppContainer(
 
     val appArt = AppArtCache(appContext)
 
-    val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session))
+    val media = app.stova.media.MediaRepository(mediaAccounts, { account ->
+        mediaAccounts.token(account.id)?.let { app.stova.media.net.JellyfinEmbyClient(account, it, mediaHttp, identity) }
+    }, File(appContext.filesDir, "snapshots"), appScope)
+
+    val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session), app.stova.media.MediaRowSource(media))
 
 
 }

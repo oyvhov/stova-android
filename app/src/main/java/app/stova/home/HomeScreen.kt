@@ -28,6 +28,7 @@ import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import app.stova.R
 import app.stova.apps.AppArtCache
 import app.stova.apps.AppCatalog
@@ -41,8 +42,15 @@ fun HomeScreen(
     art: AppArtCache,
     catalog: AppCatalog,
     onOpenApps: () -> Unit,
+    onRefresh: suspend () -> Unit = {},
     topBar: @Composable () -> Unit = {},
 ) {
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(lifecycle, onRefresh) {
+        lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+            while (true) { onRefresh(); kotlinx.coroutines.delay(300_000) }
+        }
+    }
     val rows by vm.rows.collectAsStateWithLifecycle()
     val initial by vm.initialFocus.collectAsStateWithLifecycle()
     val firstItem = remember { FocusRequester() }
@@ -66,6 +74,7 @@ fun HomeScreen(
             ) {
                 items(loaded, key = { it.key.value }) { row ->
                     when (row) {
+                        is HomeRowUi.Media -> Unit // Cards are added in task 6.
                         is HomeRowUi.Apps -> AppsRow(row, art, catalog, if (row.key == initial) firstItem else null)
                     }
                 }
