@@ -7,50 +7,38 @@ import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import app.stova.MainActivity
-import app.stova.StovaApplication
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
 
 /**
- * Sends Home to Stova. Reads no window content and stores no keys: every key but Home is passed on
+ * Sends Home to Stova. Runs in its own process (`:homebutton`) so a crash in the launcher UI does
+ * not kill it: Android stops binding an accessibility service that has crashed until the user
+ * toggles it. Reads no window content and stores no keys: every key but Home is passed on
  * untouched the moment it arrives.
  */
 class HomeButtonService : AccessibilityService() {
     private val logic = HomeKeyLogic(SystemClock::elapsedRealtime)
-    @Volatile private var overrideOn = true
-    private var watch: Job? = null
+    private val state by lazy { HomeOverrideState(filesDir) }
 
     override fun onServiceConnected() {
         // Some TV builds ignore the XML flag, so it is set here as well.
         serviceInfo = serviceInfo.apply { flags = flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS }
-        val container = (application as StovaApplication).container
-        watch = container.appScope.launch {
-            combine(container.household.data, container.crashGuard.data) { household, guard ->
-                household.homeButtonOverride && !guard.tripped
-            }.collect { overrideOn = it }
-        }
     }
 
-    override fun onKeyEvent(event: KeyEvent): Boolean =
-        when (logic.onKey(event.keyCode, event.action, event.repeatCount, overrideOn)) {
+    override fun onKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode != KeyEvent.KEYCODE_HOME) return false
+        return when (logic.onKey(event.keyCode, event.action, event.repeatCount, state.isOn())) {
             KeyDecision.PASS -> false
             KeyDecision.CONSUME -> true
             KeyDecision.CONSUME_AND_LAUNCH -> { openStova(); true }
         }
+    }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && logic.onWindowChanged(event.packageName, overrideOn)) {
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && logic.onWindowChanged(event.packageName, state.isOn())) {
             openStova()
         }
     }
 
     override fun onInterrupt() = Unit
-
-    override fun onDestroy() {
-        watch?.cancel()
-        super.onDestroy()
-    }
 
     private fun openStova() {
         startActivity(

@@ -4,6 +4,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -50,6 +52,11 @@ class StovaAppNavigationTest {
         rule.onNodeWithTag("screen-HOME").assertExists()
         rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         assertFalse(rule.activity.isFinishing)
+    }
+
+    @Test fun emptyHomeFocusesOpenApps() {
+        // Found on the TV emulator: with nothing focused, the first D-pad press was swallowed.
+        rule.onNodeWithText("Opne Appar").assertIsFocused()
     }
 
     @Test fun topBarOpensSettings() {

@@ -898,7 +898,7 @@ git add -A && git commit -m "feat(homebutton): accessibility Home override with 
 - Consumes: alt over.
 - Produces: `Stova_TV`-AVD i `C:\Launcher\.avd` (port 5580) og ein verifiseringsrapport.
 
-- [ ] **Step 1: Lag emulatoren (éin gong)**
+- [x] **Step 1: Lag emulatoren (éin gong)**
 
 ```powershell
 & C:\Android\sdk\cmdline-tools\latest\bin\sdkmanager.bat "system-images;android-30;android-tv;x86"
@@ -907,12 +907,12 @@ $env:ANDROID_AVD_HOME = 'C:\Launcher\.avd'
 ```
 `scripts/Start-StovaEmulator.ps1` set `ANDROID_AVD_HOME` og startar `C:\Android\sdk\emulator\emulator.exe -avd Stova_TV -port 5580 -no-snapshot-save`. Deretter ventar skriptet på `adb -s emulator-5580 wait-for-device` og `sys.boot_completed=1`.
 
-- [ ] **Step 2: Køyr instrumenterte testar på Stova_TV**
+- [x] **Step 2: Køyr instrumenterte testar på Stova_TV**
 
 Run: `$env:ANDROID_SERIAL='emulator-5580'; pwsh -NoProfile -File scripts/gradle.ps1 connectedDebugAndroidTest`
 Expected: `KeystoreSecretStoreTest` PASS.
 
-- [ ] **Step 3: Manuell sjekkliste på Stova_TV, deretter på Shield (`adb connect <ip>:5555`)**
+- [x] **Step 3: Manuell sjekkliste på Stova_TV, deretter på Shield (`adb connect <ip>:5555`)**
 
 Installer: `adb -s <serial> install -r app/build/outputs/apk/debug/app-debug.apk`. Kryss av i `docs/verification/plan-1.md`:
 - Første oppsett → profil → heim med klokke.
@@ -922,7 +922,7 @@ Installer: `adb -s <serial> install -r app/build/outputs/apk/debug/app-debug.apk
 - Tvinga kræsj tre gonger (`adb shell am crash app.stova.debug`). Home går då til systemlauncheren, og «Slå på att» fungerer.
 - Skriftstorleik 2,0 (`adb shell settings put system font_scale 2.0`): profilval, topplinje og innstillingar er lesbare, og ingenting er klipt. Set tilbake til 1.0 etterpå.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A && git commit -m "docs: plan 1 verification on Stova_TV and Shield"
