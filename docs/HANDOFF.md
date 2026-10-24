@@ -8,3 +8,4 @@
 
 - Avvik oppgåve 3: `kidSmartHomeControl` er lagt til før oppgåve 6 fordi innstillingsbrytaren i oppgåve 3 treng feltet. INTERNET og cleartext-støtte er lagde til fordi Plan 2 ikkje er på denne greina; LAN-regelen blir handheva før adressa blir brukt.
 - Avvik oppgåve 5: `HaConnection` er eit lite transportgrensesnitt for kort/UI og deterministiske falske tilkoplingar i testar; `HaSocket` implementerer det. Socketen og alle tilstandsendringar er serialiserte gjennom ein kanal.
+- Avvik oppgåve 7: Coil 3.4.0 blir lagt til her (Plan 2 manglar). `StovaIcons.kt` fanst frå før og er utvida. Korta bruker minstehøgd 160 dp slik at skriftstorleik 2 ikkje blir klipt; `Graph(today)` skil straumpriskurve frå 24 t-sensorhistorikk.

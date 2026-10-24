@@ -57,5 +57,10 @@ class AppContainer(context: Context, val secrets: app.stova.core.security.Secret
     private val haScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val haSocket = HaSocket(haHttp, haAuth, ::haAddress, haScope)
     val haRepository = HaRepository(haSocket, session, profiles, appScope)
+    val haImages by lazy {
+        coil3.ImageLoader.Builder(appContext).components {
+            add(coil3.network.okhttp.OkHttpNetworkFetcherFactory(callFactory = { haHttp }))
+        }.build()
+    }
     init { appScope.launch { haAuth.restore() } }
 }

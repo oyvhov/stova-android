@@ -111,4 +111,22 @@
     <string name="ha_kid_control">%1$s: Can control smart home</string>
     <string name="ha_save">Save</string>
     <string name="ha_cancel">Cancel</string>
+    <string name="ha_locked">Locked</string>
+    <string name="ha_unavailable">Unavailable</string>
+    <string name="ha_on">On</string>
+    <string name="ha_off">Off</string>
+    <string name="ha_run">Run</string>
+    <string name="ha_play">Play</string>
+    <string name="ha_pause">Pause</string>
+    <string name="ha_brightness">Brightness</string>
+    <string name="ha_target">Target</string>
+    <string name="ha_target_value">Target: %1$s</string>
+    <string name="ha_celsius">°C</string>
+    <string name="ha_dash">–</string>
+    <string name="ha_percent">%1$d %%</string>
+    <string name="ha_decrease">Decrease</string>
+    <string name="ha_increase">Increase</string>
+    <string name="ha_no_history">No history</string>
+    <string name="ha_image">Camera image or artwork</string>
+    <string name="ha_close">Close</string>
 </resources>

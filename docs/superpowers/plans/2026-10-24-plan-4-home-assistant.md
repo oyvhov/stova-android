@@ -478,7 +478,7 @@ git add -A && git commit -m "feat(ha): card model, service-call mapping, formatt
   - Straumpris: noverande verdi + eining, og `Sparkline` for i dag med noverande time markert med ein 6 dp prikk i `Text`.
   - Strengar for alle etikettar og tilstandar (`På`/`Av`, `Utilgjengeleg`, `Lysstyrke`, `Mål`, `Spel`/`Pause`, `Køyr`), med engelske motstykke.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class SparklineTest {
@@ -496,19 +496,19 @@ class HaCardTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.cards.HaCardTest" --tests "app.stova.ha.cards.SparklineTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer ikona, korta og dialogane**
+- [x] **Step 3: Implementer ikona, korta og dialogane**
 
-- [ ] **Step 4: Køyr testane (også `DesignRulesTest`)**
+- [x] **Step 4: Køyr testane (også `DesignRulesTest`)**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): flat Tunet-style cards, dialogs and sparklines"

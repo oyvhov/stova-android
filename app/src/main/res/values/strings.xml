@@ -111,4 +111,22 @@
     <string name="ha_kid_control">%1$s: Kan styre smarthus</string>
     <string name="ha_save">Lagre</string>
     <string name="ha_cancel">Avbryt</string>
+    <string name="ha_locked">Låst</string>
+    <string name="ha_unavailable">Utilgjengeleg</string>
+    <string name="ha_on">På</string>
+    <string name="ha_off">Av</string>
+    <string name="ha_run">Køyr</string>
+    <string name="ha_play">Spel</string>
+    <string name="ha_pause">Pause</string>
+    <string name="ha_brightness">Lysstyrke</string>
+    <string name="ha_target">Mål</string>
+    <string name="ha_target_value">Mål: %1$s</string>
+    <string name="ha_celsius">°C</string>
+    <string name="ha_dash">–</string>
+    <string name="ha_percent">%1$d %%</string>
+    <string name="ha_decrease">Mindre</string>
+    <string name="ha_increase">Meir</string>
+    <string name="ha_no_history">Ingen historikk</string>
+    <string name="ha_image">Kamerabilete eller omslag</string>
+    <string name="ha_close">Lukk</string>
 </resources>
