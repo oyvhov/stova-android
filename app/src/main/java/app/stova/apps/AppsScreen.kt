@@ -18,6 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -30,14 +32,14 @@ import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.StovaShapes
 import app.stova.core.ui.focusOutline
 import app.stova.profiles.Profile
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /** Every app, favourites first. Adults get a menu per app; a kid only opens what is allowed. */
 @Composable
 fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog: AppCatalog) {
-    val arrangedFlow = remember(apps, profile) { apps.arranged(flowOf(profile)).map<ArrangedApps, ArrangedApps?> { it } }
+    val currentProfile by rememberUpdatedState(profile)
+    val arrangedFlow = remember(apps) { apps.arranged(snapshotFlow { currentProfile }).map<ArrangedApps, ArrangedApps?> { it } }
     // Null until the first scan: a grid laid out empty would anchor on "All apps" and then be
     // pushed down by the favourites arriving above it, so the page would open scrolled.
     val loaded by arrangedFlow.collectAsStateWithLifecycle(initialValue = null)

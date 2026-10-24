@@ -69,7 +69,7 @@ Final: minor (skipped): disabled OK loses focus after a PIN attempt — already 
 Final: minor (skipped): holding OK may click the first item of the app menu (verify on Shield) — user excludes this; requires real remote; see HANDOFF Småfunn
 Final: minor (fixed): top-bar focus labels shift layout (spec: focus never changes layout) — focusingLabelsKeepsAllButtonBoundsStable RED→GREEN; DesignRulesTest green
 Final: minor (fixed): clock stale up to 60 s after sleep; refresh on resume — resumeRefreshesClockBeforeNextMinuteTick RED→GREEN; DesignRulesTest green
-Final: minor (deferred): AppsScreen rescans all apps on every profile edit (remember keyed on profile)
+Final: minor (fixed): AppsScreen rescans all apps on every profile edit (remember keyed on profile) — profileEditsUpdateGridWithoutRescanningPackages RED→GREEN; DesignRulesTest green
 Final: minor (deferred): HomeRowSettings rows lack key(); focus does not follow moved row
 Final: minor (deferred): AppArtCache never retries missing banners / refreshes updated ones
 Final: minor (deferred): ensureEnabled overrides a user's own "off" for the Home service

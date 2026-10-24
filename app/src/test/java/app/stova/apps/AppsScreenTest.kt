@@ -54,6 +54,25 @@ class AppsScreenTest {
         }
     }
 
+    @Test fun profileEditsUpdateGridWithoutRescanningPackages() {
+        val profiles = profiles()
+        val adult = runBlocking { profiles.create("A", AvatarColor.LIME, false) }
+        val scans = java.util.concurrent.atomic.AtomicInteger()
+        val catalog = object : AppCatalog by FakeAppCatalog(listOf(banan, eple)) {
+            override suspend fun installed(): List<InstalledApp> {
+                scans.incrementAndGet()
+                return listOf(banan, eple)
+            }
+        }
+        show(profiles, adult, catalog)
+        compose.onNodeWithText("Banan").assertExists()
+        assertEquals(1, scans.get())
+        runBlocking { profiles.update(adult.id) { it.copy(name = "B", apps = it.apps.copy(hidden = setOf(banan.key))) } }
+        compose.onNodeWithText("Skjulte appar (1)").assertExists()
+        compose.onNodeWithText("Banan").assertDoesNotExist()
+        assertEquals(1, scans.get())
+    }
+
     @Test fun addToFavoritesFromMenu() {
         val profiles = profiles()
         val adult = runBlocking { profiles.create("A", AvatarColor.LIME, false) }
