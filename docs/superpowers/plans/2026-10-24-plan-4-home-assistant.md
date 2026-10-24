@@ -233,7 +233,7 @@ git add -A && git commit -m "feat(ha): TV sign-in via WebView OAuth or long-live
   - `event.r`: `[id]` → fjerna.
   - `c` (context) blir ignorert. Tidsstempel er sekund som `Double`.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class EntityStateDecoderTest {
@@ -250,18 +250,18 @@ class EntityStateDecoderTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.EntityStateDecoderTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `EntityStateDecoder`**
+- [x] **Step 3: Implementer `EntityStateDecoder`**
 
-- [ ] **Step 4: Køyr testen**
+- [x] **Step 4: Køyr testen**
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): decode compressed subscribe_entities events"
