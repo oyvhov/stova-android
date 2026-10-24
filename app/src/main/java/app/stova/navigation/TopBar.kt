@@ -1,10 +1,6 @@
 package app.stova.navigation
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -15,6 +11,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -84,32 +83,24 @@ private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit) 
     val focused by source.collectIsFocusedAsState()
     val shape = RoundedCornerShape(StovaShapes.ExtraLarge)
     val millis = if (LocalReduceMotion.current) 0 else 140
-    Row(
+    val labelAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(millis))
+    Box(
         Modifier
-            .heightIn(min = 48.dp)
+            .size(48.dp)
             .focusOutline(source, shape)
-            .clip(shape)
             .clickable(source, indication = null, role = Role.Button, onClick = onClick)
-            .semantics { text = AnnotatedString(label) }
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .semantics { text = AnnotatedString(label) },
+        contentAlignment = Alignment.Center,
     ) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(24.dp))
-        AnimatedVisibility(
-            visible = focused,
-            enter = expandHorizontally(tween(millis)) + fadeIn(tween(millis)),
-            exit = shrinkHorizontally(tween(millis)) + fadeOut(tween(millis)),
-        ) {
-            Row {
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    label,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.clearAndSetSemantics { },
-                )
-            }
-        }
+        // Draw the label below its fixed slot; focus must not move the clock or any button.
+        Text(
+            label,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.align(Alignment.TopCenter).offset(y = 48.dp)
+                .wrapContentWidth(unbounded = true).alpha(labelAlpha).clearAndSetSemantics { },
+        )
     }
 }
 

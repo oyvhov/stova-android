@@ -67,7 +67,7 @@ Final: minor (fixed): kid-exit check fails open while profiles file is null (one
 Final: minor (fixed): PIN lockout uses wall clock; backwards jumps can show huge waits — backwardsClockJumpNeverExtendsLockoutBeyondPolicy RED→GREEN; DesignRulesTest green
 Final: minor (skipped): disabled OK loses focus after a PIN attempt — already handled by Compose focus relocation; rejectedPinReturnsFocusToDigits passes before changes; see HANDOFF Småfunn
 Final: minor (skipped): holding OK may click the first item of the app menu (verify on Shield) — user excludes this; requires real remote; see HANDOFF Småfunn
-Final: minor (deferred): top-bar focus labels shift layout (spec: focus never changes layout)
+Final: minor (fixed): top-bar focus labels shift layout (spec: focus never changes layout) — focusingLabelsKeepsAllButtonBoundsStable RED→GREEN; DesignRulesTest green
 Final: minor (deferred): clock stale up to 60 s after sleep; refresh on resume
 Final: minor (deferred): AppsScreen rescans all apps on every profile edit (remember keyed on profile)
 Final: minor (deferred): HomeRowSettings rows lack key(); focus does not follow moved row
