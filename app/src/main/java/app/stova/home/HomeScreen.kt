@@ -106,6 +106,7 @@ fun HomeContent(
                 row.account.id == target.account.id && row.items.any { it.id == target.item.id }
             } == true
             is HomeRowUi.Apps -> restoreTarget is FocusedTarget.App
+            is HomeRowUi.WatchNext -> false
         }
     }?.key ?: initial
     val firstItem = remember { FocusRequester() }
@@ -130,6 +131,7 @@ fun HomeContent(
                             items(rows, key = { it.key.value }) { row ->
                                 val requester = if (row.key == restoreRow) firstItem else null
                                 when (row) {
+                                    is HomeRowUi.WatchNext -> WatchNextRow(row, requester, onFocus)
                                     is HomeRowUi.Media -> MediaRow(row, requester, restoreTarget, onFocus, onMediaClick, onMediaLongClick)
                                     is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, restoreTarget) { onFocus(FocusedTarget.App(it)) }
                                 }
@@ -189,6 +191,31 @@ private fun EmptyHome(onOpenApps: () -> Unit) {
             Text(stringResource(R.string.home_empty_title), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
             Text(stringResource(R.string.home_empty_body), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             StovaButton(stringResource(R.string.home_open_apps), onOpenApps, Modifier.focusRequester(button), primary = true)
+        }
+    }
+}
+
+@Composable
+private fun WatchNextRow(row: HomeRowUi.WatchNext, focus: FocusRequester?, onFocus: (FocusedTarget) -> Unit) {
+    val context = LocalContext.current
+    Column {
+        RowHeader(stringResource(R.string.row_watch_next))
+        LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
+            horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap)) {
+            itemsIndexed(row.entries, key = { _, entry -> entry.id }) { i, entry ->
+                app.stova.watchnext.WatchNextCard(entry, onClick = {
+                    val intent = app.stova.watchnext.launchIntentFor(entry)
+                    try {
+                        if (intent == null) throw android.content.ActivityNotFoundException()
+                        context.startActivity(intent)
+                    } catch (_: android.content.ActivityNotFoundException) {
+                        Toast.makeText(context, R.string.app_open_failed, Toast.LENGTH_SHORT).show()
+                    } catch (_: SecurityException) {
+                        Toast.makeText(context, R.string.app_open_failed, Toast.LENGTH_SHORT).show()
+                    }
+                }, onFocused = { onFocus(FocusedTarget.App(entry.title)) },
+                    modifier = if (i == 0 && focus != null) Modifier.focusRequester(focus) else Modifier)
+            }
         }
     }
 }

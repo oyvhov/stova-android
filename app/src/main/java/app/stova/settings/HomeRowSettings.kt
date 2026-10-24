@@ -3,6 +3,12 @@ package app.stova.settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
+import app.stova.watchnext.WatchNextResult
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -29,18 +35,35 @@ import kotlinx.coroutines.launch
 fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewModel) {
     val scope = rememberCoroutineScope()
     val available by home.availableRows.collectAsStateWithLifecycle()
+    val watchNext by container.watchNext.status.collectAsStateWithLifecycle()
+    LaunchedEffect(container.watchNext) { container.watchNext.read() }
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        scope.launch { container.watchNext.read(); container.watchNext.refresh() }
+    }
     val prefs = profile.home
     fun save(change: (HomePrefs) -> HomePrefs) {
         scope.launch { container.profiles.update(profile.id) { it.copy(home = change(it.home)) } }
     }
 
     SettingsGroup(stringResource(R.string.settings_home)) {
+        SettingsSwitchRow(stringResource(R.string.home_backdrop_rotation), prefs.backdropRotation, { enabled -> save { it.copy(backdropRotation = enabled) } })
         SettingsSwitchRow(
             stringResource(R.string.home_start_on_apps),
             prefs.startFocus == StartFocus.FAVORITE_APPS,
             { onApps -> save { it.copy(startFocus = if (onApps) StartFocus.FAVORITE_APPS else StartFocus.FIRST_MEDIA_ROW) } },
             stringResource(R.string.home_start_on_apps_hint),
         )
+    }
+    SettingsGroup(stringResource(R.string.row_watch_next)) {
+        when (val state = watchNext) {
+            is WatchNextResult.Available -> Text(stringResource(R.string.watch_next_available), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            is WatchNextResult.Unavailable -> {
+                Text(stringResource(if (state.reason == WatchNextResult.Reason.NO_PERMISSION) R.string.watch_next_needs_access else R.string.watch_next_blocked), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (state.reason == WatchNextResult.Reason.NO_PERMISSION) StovaButton(stringResource(R.string.watch_next_grant), {
+                    permission.launch("android.permission.READ_TV_LISTINGS")
+                })
+            }
+        }
     }
     // Every row the profile could have, hidden ones included, in the profile's own order.
     val ordered = arrangeRows(available, prefs.copy(hiddenRows = emptySet()))
@@ -66,5 +89,10 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
 fun rowLabel(key: HomeRowKey): String = when (key) {
     HomeRowKey.APPS -> stringResource(R.string.row_favorite_apps)
     HomeRowKey.WATCH_NEXT -> stringResource(R.string.row_watch_next)
-    else -> key.value
+    else -> when {
+        key.value.startsWith("continue:") -> stringResource(R.string.row_continue)
+        key.value.startsWith("latest_movies:") -> stringResource(R.string.row_latest_movies)
+        key.value.startsWith("latest_series:") -> stringResource(R.string.row_latest_series)
+        else -> key.value
+    }
 }

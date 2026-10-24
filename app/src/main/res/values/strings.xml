@@ -134,4 +134,10 @@
     <string name="spole_missing">Spole trengst for å spele av. Last ned frå github.com/oyvhov/spole-android/releases.</string>
     <string name="spole_close">Lukk</string>
     <string name="invalid_media_ids">Denne tittelen kunne ikkje opnast.</string>
+    <string name="app_open_failed">Appen kunne ikkje opnast</string>
+    <string name="watch_next_available">Tilgang er gitt</string>
+    <string name="watch_next_needs_access">Treng tilgang</string>
+    <string name="watch_next_blocked">Ikkje tilgjengeleg på denne eininga</string>
+    <string name="watch_next_grant">Gi tilgang</string>
+    <string name="home_backdrop_rotation">Bakgrunnsrotasjon</string>
 </resources>

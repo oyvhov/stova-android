@@ -134,4 +134,10 @@
     <string name="spole_missing">Spole is needed for playback. Download from github.com/oyvhov/spole-android/releases.</string>
     <string name="spole_close">Close</string>
     <string name="invalid_media_ids">This title could not be opened.</string>
+    <string name="app_open_failed">The app could not be opened</string>
+    <string name="watch_next_available">Access granted</string>
+    <string name="watch_next_needs_access">Needs access</string>
+    <string name="watch_next_blocked">Unavailable on this device</string>
+    <string name="watch_next_grant">Grant access</string>
+    <string name="home_backdrop_rotation">Background rotation</string>
 </resources>

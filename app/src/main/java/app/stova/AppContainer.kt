@@ -81,7 +81,11 @@ class AppContainer(
         mediaAccounts.token(account.id)?.let { app.stova.media.net.JellyfinEmbyClient(account, it, mediaHttp, identity) }
     }, File(appContext.filesDir, "snapshots"), appScope)
 
-    val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session), app.stova.media.MediaRowSource(media))
+    val watchNext = app.stova.watchnext.WatchNextReader(appContext.contentResolver, {
+        androidx.core.content.ContextCompat.checkSelfPermission(appContext, "android.permission.READ_TV_LISTINGS") == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }, appContext.packageName)
+
+    val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session), app.stova.media.MediaRowSource(media), app.stova.watchnext.WatchNextRowSource(watchNext))
 
 
 }
