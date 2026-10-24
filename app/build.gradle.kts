@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
+    id("androidx.baselineprofile")
 }
 
 android {
@@ -44,6 +45,7 @@ android {
         buildConfig = true
     }
 
+
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
@@ -68,7 +70,23 @@ android {
     }
 }
 
+// The profile plugin creates its build types in finalizeDsl, after the android block.
+androidComponents.finalizeDsl { extension ->
+    listOf("debug", "nonMinifiedRelease", "benchmarkRelease").forEach { variant ->
+        extension.sourceSets.getByName(variant).apply {
+            manifest.srcFile("src/performance/AndroidManifest.xml")
+        }
+    }
+}
+androidComponents.onVariants { variant ->
+    if (variant.buildType in setOf("debug", "nonMinifiedRelease", "benchmarkRelease")) {
+        variant.sources.kotlin!!.addStaticSourceDirectory("src/performance/java")
+    }
+}
+
 dependencies {
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
+    baselineProfile(project(":baselineprofile"))
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("io.coil-kt.coil3:coil-compose:3.4.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")

@@ -81,19 +81,19 @@ git add app/build.gradle.kts .gitignore && git commit -m "build: release signing
   - `HomeScreen` set `Modifier.semantics { contentDescription = "home-ready" }` på rotboksen når første rader er teikna (og berre då). Dette blir brukt av generatoren og måleskriptet.
   - Generatoren treng ei eining med `adb root`. Stova_TV (`android-tv`-biletet) støttar det. Om ikkje, lag ein API 34-TV-AVD (`system-images;android-34;android-tv;x86_64`) med same skript og port 5582.
 
-- [ ] **Step 1: Skriv generatoren og benchmarken, og legg til `home-ready`-markøren**
+- [x] **Step 1: Skriv generatoren og benchmarken, og legg til `home-ready`-markøren**
 
-- [ ] **Step 2: Generer profilen på Stova_TV med seed-data (éin profil, éin Jellyfin-konto)**
+- [x] **Step 2: Generer profilen på Stova_TV med seed-data (éin profil, éin Jellyfin-konto)**
 
 Run: `$env:ANDROID_SERIAL='emulator-5580'; adb root; pwsh -NoProfile -File scripts/gradle.ps1 :app:generateReleaseBaselineProfile`
 Expected: BUILD SUCCESSFUL. `baseline-prof.txt` finst og inneheld linjer med `Lapp/stova/home/`.
 
-- [ ] **Step 3: Køyr benchmarken**
+- [x] **Step 3: Køyr benchmarken**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 :baselineprofile:connectedBenchmarkReleaseAndroidTest`
 Expected: PASS. Rapporten viser `timeToInitialDisplayMs`. Noter medianen i commit-meldinga.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A && git commit -m "perf: baseline profile generator, startup benchmark and profile installer"
