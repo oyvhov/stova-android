@@ -1,6 +1,9 @@
 package app.stova.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,6 +56,19 @@ fun HomeScreen(
         }
     }
     val rows by vm.rows.collectAsStateWithLifecycle()
+    val focused by vm.focused.collectAsStateWithLifecycle()
+    val reduceMotion = app.stova.core.theme.LocalReduceMotion.current
+    val rotationUrls = rows.orEmpty().filterIsInstance<HomeRowUi.Media>().filter { it.kind != app.stova.media.MediaRowKind.CONTINUE }.flatMap { it.items }.mapNotNull { it.art.backdrop }.distinct()
+    val rotationEnabled = vm.rotationEnabled()
+    LaunchedEffect(rotationUrls, reduceMotion, rotationEnabled) { vm.backdrop.rotation(rotationUrls, !reduceMotion && rotationEnabled) }
+    val backdrop by vm.backdrop.current.collectAsStateWithLifecycle()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(backdrop, rotationUrls, reduceMotion) {
+        if (!reduceMotion && rotationUrls.isNotEmpty() && vm.rotationEnabled()) {
+            val next = rotationUrls[(rotationUrls.indexOf(backdrop) + 1) % rotationUrls.size]
+            coil3.SingletonImageLoader.get(context).enqueue(coil3.request.ImageRequest.Builder(context).data(next).size(1920, 1080).build())
+        }
+    }
     val initial by vm.initialFocus.collectAsStateWithLifecycle()
     val firstItem = remember { FocusRequester() }
     var placedFocus by rememberSaveable { mutableStateOf(false) }
@@ -64,6 +81,10 @@ fun HomeScreen(
 
     Column(Modifier.fillMaxSize()) {
         topBar()
+        BoxWithConstraints(Modifier.weight(1f)) {
+        val heroHeight = maxHeight * 0.45f
+        Column {
+        HeroPanel(focused, Modifier.fillMaxWidth().heightIn(min = heroHeight))
         val loaded = rows
         when {
             loaded == null -> Unit // still loading: the top bar alone, never a flash of the empty state
@@ -78,21 +99,23 @@ fun HomeScreen(
                             app.stova.media.ui.MediaRowHeader(row)
                             LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap)) {
                                 itemsIndexed(row.items, key = { _, item -> item.id }) { index, item ->
-                                    app.stova.media.ui.MediaCard(item, row.kind == app.stova.media.MediaRowKind.LATEST_MOVIES, {}, {}, {},
+                                    app.stova.media.ui.MediaCard(item, row.kind == app.stova.media.MediaRowKind.LATEST_MOVIES, {}, {}, { vm.focus(FocusedTarget.Media(item, row.account)) },
                                         if (index == 0 && row.key == initial) Modifier.focusRequester(firstItem) else Modifier)
                                 }
                             }
                         }
-                        is HomeRowUi.Apps -> AppsRow(row, art, catalog, if (row.key == initial) firstItem else null)
+                        is HomeRowUi.Apps -> AppsRow(row, art, catalog, if (row.key == initial) firstItem else null) { label -> vm.focus(FocusedTarget.App(label)) }
                     }
                 }
             }
+        }
+        }
         }
     }
 }
 
 @Composable
-private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?) {
+private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, onFocused: (String) -> Unit) {
     Column {
         RowHeader(stringResource(R.string.row_favorite_apps))
         LazyRow(
@@ -102,7 +125,7 @@ private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, 
         ) {
             itemsIndexed(row.apps, key = { _, app -> app.key }) { index, app ->
                 val modifier = if (index == 0 && focus != null) Modifier.focusRequester(focus) else Modifier
-                AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = {}, modifier = modifier)
+                AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = {}, modifier = modifier.onFocusChanged { if (it.isFocused) onFocused(app.label) })
             }
         }
     }

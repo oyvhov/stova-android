@@ -66,8 +66,10 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         }
     }
     val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) }
+    val backdrop by home.backdrop.current.collectAsStateWithLifecycle()
     // No side rail: home is the whole screen, and Apps and Settings are pages that Back closes.
     Box(Modifier.fillMaxSize().testTag("screen-${current.name}")) {
+        if (current == Destination.HOME) app.stova.background.BackdropLayer(backdrop)
         when (current) {
             Destination.HOME -> HomeScreen(
                 home, container.appArt, container.appCatalog,

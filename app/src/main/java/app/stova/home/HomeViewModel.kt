@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import app.stova.profiles.ProfileSession
 import app.stova.profiles.StartFocus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -16,7 +18,19 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class HomeViewModel(session: ProfileSession, sources: List<HomeRowSource>) : ViewModel() {
+class HomeViewModel(private val session: ProfileSession, sources: List<HomeRowSource>) : ViewModel() {
+    private val focusedState = MutableStateFlow<FocusedTarget?>(null)
+    val focused: StateFlow<FocusedTarget?> = focusedState
+    val backdrop = app.stova.background.BackdropController(viewModelScope)
+    init {
+        viewModelScope.launch { session.active.distinctUntilChangedBy { it?.id }.collect { focusedState.value = null; backdrop.clear() } }
+    }
+    fun rotationEnabled() = session.active.value?.home?.backdropRotation ?: false
+    fun focus(target: FocusedTarget) {
+        focusedState.value = target
+        backdrop.focus((target as? FocusedTarget.Media)?.item?.art?.backdrop)
+    }
+
     /**
      * Null until every source has answered for the current profile: "not loaded yet" must never
      * look like "empty", or the empty state flashes on every cold start. Restarts the sources only

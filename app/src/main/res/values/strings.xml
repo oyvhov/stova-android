@@ -123,4 +123,10 @@
     <string name="service_jellyfin">Jellyfin</string>
     <string name="service_emby">Emby</string>
     <string name="rating_tmdb">TMDB</string>
+    <string name="runtime_hm">%1$d t %2$d min</string>
+    <string name="runtime_m">%1$d min</string>
+    <string name="greeting_morning">God morgon</string>
+    <string name="greeting_day">God dag</string>
+    <string name="greeting_evening">God kveld</string>
+    <string name="greeting_night">God natt</string>
 </resources>
