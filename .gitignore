@@ -1,0 +1,14 @@
+.gradle/
+.gradle-tmp/
+build/
+app/build/
+baselineprofile/build/
+local.properties
+signing.properties
+*.jks
+.signing/
+.avd/
+.kotlin/
+.idea/
+*.iml
+.superpowers/
