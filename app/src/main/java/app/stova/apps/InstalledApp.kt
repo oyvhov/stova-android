@@ -7,4 +7,5 @@ data class InstalledApp(
     val activityName: String,
     val label: String,
     val tv: Boolean,
+    val lastUpdateTime: Long = 0,
 )

@@ -37,6 +37,15 @@ class PackageManagerAppCatalogTest {
         register("com.google.android.tvlauncher", Intent.CATEGORY_LEANBACK_LAUNCHER)
     }
 
+    @Test fun scanIncludesArtworkRevision() = runTest {
+        val info = context.packageManager.getPackageInfo("tv.app", 0)
+        info.lastUpdateTime = 1234L
+        shadowOf(context.packageManager).installPackage(info)
+        register("tv.app", Intent.CATEGORY_LEANBACK_LAUNCHER)
+        val apps = PackageManagerAppCatalog(context, emptySet()).installed()
+        assertEquals(1234L, apps.first { it.packageName == "tv.app" }.lastUpdateTime)
+    }
+
     @Test fun listsTvFirstDedupesAndExcludesStock() = runTest {
         val apps = PackageManagerAppCatalog(context, setOf(context.packageName, "com.google.android.tvlauncher")).installed()
         assertEquals(setOf("tv.app", "phone.app"), apps.map { it.packageName }.toSet())

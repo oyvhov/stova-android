@@ -51,7 +51,7 @@ fun AppTile(
 ) {
     val source = remember { MutableInteractionSource() }
     val shape = RoundedCornerShape(StovaShapes.Medium)
-    val banner by produceState<ImageBitmap?>(null, app.key) { value = art.banner(app) }
+    val banner by produceState<ImageBitmap?>(null, app.key, app.lastUpdateTime) { value = art.banner(app) }
     Box(
         modifier
             .size(StovaLayout.WideWidth, StovaLayout.WideHeight)
@@ -75,7 +75,7 @@ fun AppTile(
 
 @Composable
 private fun IconAndName(app: InstalledApp, art: AppArtCache) {
-    val icon by produceState<ImageBitmap?>(null, app.key) { value = art.icon(app) }
+    val icon by produceState<ImageBitmap?>(null, app.key, app.lastUpdateTime) { value = art.icon(app) }
     Column(
         Modifier.padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

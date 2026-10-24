@@ -33,7 +33,7 @@ class PackageManagerAppCatalog(
                     val activity = info.activityInfo
                     val pkg = activity.packageName
                     if (pkg in excluded || !seen.add(pkg)) continue
-                    add(InstalledApp("$pkg/${activity.name}", pkg, activity.name, info.loadLabel(pm).toString(), tv))
+                    add(InstalledApp("$pkg/${activity.name}", pkg, activity.name, info.loadLabel(pm).toString(), tv, pm.getPackageInfo(pkg, 0).lastUpdateTime))
                 }
             }
         }

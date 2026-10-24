@@ -21,15 +21,14 @@ import kotlinx.coroutines.withContext
 class AppArtCache(context: Context, maxEntries: Int = 64) {
     private val pm = context.packageManager
     private val cache = LruCache<String, ImageBitmap>(maxEntries)
-    private val missing = java.util.Collections.synchronizedSet(mutableSetOf<String>())
 
-    suspend fun banner(app: InstalledApp): ImageBitmap? = cached("b:${app.key}") {
+    suspend fun banner(app: InstalledApp): ImageBitmap? = cached("b:${app.key}:${app.lastUpdateTime}") {
         val info = pm.getActivityInfo(ComponentName(app.packageName, app.activityName), 0)
         val id = if (info.banner != 0) info.banner else info.applicationInfo.banner
         if (id == 0) null else drawable(info.applicationInfo.packageName, id)?.toBitmap(BANNER_W, BANNER_H)
     }
 
-    suspend fun icon(app: InstalledApp): ImageBitmap? = cached("i:${app.key}") {
+    suspend fun icon(app: InstalledApp): ImageBitmap? = cached("i:${app.key}:${app.lastUpdateTime}") {
         val info = pm.getActivityInfo(ComponentName(app.packageName, app.activityName), 0)
         val id = info.iconResource
         val drawable = (if (id != 0) drawable(info.applicationInfo.packageName, id) else null) ?: info.loadIcon(pm)
@@ -38,7 +37,6 @@ class AppArtCache(context: Context, maxEntries: Int = 64) {
 
     private suspend fun cached(key: String, load: () -> android.graphics.Bitmap?): ImageBitmap? {
         cache.get(key)?.let { return it }
-        if (key in missing) return null
         return withContext(Dispatchers.IO) {
             val bitmap = try {
                 load()?.asImageBitmap()
@@ -47,7 +45,7 @@ class AppArtCache(context: Context, maxEntries: Int = 64) {
             } catch (_: Resources.NotFoundException) {
                 null
             }
-            if (bitmap != null) cache.put(key, bitmap) else missing += key
+            if (bitmap != null) cache.put(key, bitmap)
             bitmap
         }
     }
