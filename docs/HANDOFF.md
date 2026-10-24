@@ -7,3 +7,4 @@
 - Smarthus skal bruke eksisterande topplinje og fullskjermside; ingen sidemeny. Ingen push.
 
 - Avvik oppgåve 3: `kidSmartHomeControl` er lagt til før oppgåve 6 fordi innstillingsbrytaren i oppgåve 3 treng feltet. INTERNET og cleartext-støtte er lagde til fordi Plan 2 ikkje er på denne greina; LAN-regelen blir handheva før adressa blir brukt.
+- Avvik oppgåve 5: `HaConnection` er eit lite transportgrensesnitt for kort/UI og deterministiske falske tilkoplingar i testar; `HaSocket` implementerer det. Socketen og alle tilstandsendringar er serialiserte gjennom ein kanal.

@@ -54,5 +54,7 @@ class AppContainer(context: Context, val secrets: app.stova.core.security.Secret
         .followRedirects(false).followSslRedirects(false).build()
     suspend fun haAddress(): HaAddress? = household.current().haBaseUrl?.let { (checkHaAddress(it) as? AddressCheck.Ok)?.address }
     val haAuth = HaAuth(haHttp, secrets, ::haAddress)
+    private val haScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val haSocket = HaSocket(haHttp, haAuth, ::haAddress, haScope)
     init { appScope.launch { haAuth.restore() } }
 }

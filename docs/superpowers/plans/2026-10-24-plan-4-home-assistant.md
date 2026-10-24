@@ -300,7 +300,7 @@ git add -A && git commit -m "feat(ha): decode compressed subscribe_entities even
     5. `pingInterval(30 s)` på OkHttp-klienten.
     6. Ventande kall blir fullførte med `false`/tom liste når tilkoplinga fell.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class HaProtocolTest {
@@ -320,20 +320,20 @@ class HaSocketTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.HaProtocolTest" --tests "app.stova.ha.HaSocketTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `HaProtocol.kt`, `HaSocket.kt` og livssyklusen i `MainActivity`**
+- [x] **Step 3: Implementer `HaProtocol.kt`, `HaSocket.kt` og livssyklusen i `MainActivity`**
 
 Socketen bruker `scope` med ein `Dispatchers.IO`-basert `SupervisorJob`. All skriving til `entities` skjer på éin serialisert korutine (`Channel` av innkomne meldingar).
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): websocket client with coalesced subscriptions, reconnect backoff and service calls"

@@ -67,6 +67,7 @@ class HaAuth(
         t.access
     }
     suspend fun invalidateAccess() = mutex.withLock { tokens()?.let { save(it.copy(expiresAt = 0)) } }
+    internal suspend fun reject() = mutex.withLock { secrets.delete("ha/tokens"); mutableState.value = HaAuthState.SIGNED_OUT }
     suspend fun signOut() = mutex.withLock {
         val t = tokens()
         secrets.delete("ha/tokens"); mutableState.value = HaAuthState.SIGNED_OUT

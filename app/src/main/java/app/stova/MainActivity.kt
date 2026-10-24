@@ -8,6 +8,14 @@ import androidx.activity.enableEdgeToEdge
 import app.stova.navigation.StovaApp
 
 class MainActivity : ComponentActivity() {
+    override fun onStart() {
+        super.onStart()
+        (application as StovaApplication).container.haSocket.start()
+    }
+    override fun onStop() {
+        (application as StovaApplication).container.haSocket.stop()
+        super.onStop()
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
