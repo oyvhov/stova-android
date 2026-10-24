@@ -14,11 +14,14 @@ import kotlinx.serialization.KSerializer
 class HomeOverrideState(private val filesDir: File) {
     fun isOn(): Boolean {
         val household = read(File(filesDir, "household.json"), HouseholdSettings.serializer(), HouseholdSettings())
-        val guard = read(File(filesDir, "crash_guard.json"), CrashGuardState.serializer(), CrashGuardState())
+        val guard = read(
+            File(filesDir, "crash_guard.json"), CrashGuardState.serializer(), CrashGuardState(),
+            onFailure = CrashGuardState(tripped = true),
+        )
         return household.homeButtonOverride && !guard.tripped
     }
 
-    private fun <T : Any> read(file: File, serializer: KSerializer<T>, default: T): T =
+    private fun <T : Any> read(file: File, serializer: KSerializer<T>, default: T, onFailure: T = default): T =
         runCatching { if (file.exists()) StovaJson.decodeFromString(serializer, file.readText()) else default }
-            .getOrDefault(default)
+            .getOrDefault(onFailure)
 }

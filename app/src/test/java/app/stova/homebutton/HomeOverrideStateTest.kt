@@ -32,6 +32,17 @@ class HomeOverrideStateTest {
         assertFalse(state().isOn())
     }
 
+    @Test fun unreadableGuardDisablesOverrideUntilReadableAgain() {
+        val guard = tmp.root.resolve("crash_guard.json")
+        guard.mkdir()
+        assertFalse(state().isOn())
+        guard.delete()
+        guard.writeText("{not json")
+        assertFalse(state().isOn())
+        guard.writeText("""{"tripped":false}""")
+        assertTrue(state().isOn())
+    }
+
     @Test fun corruptFilesMeanDefaults() {
         tmp.root.resolve("household.json").writeText("{not json")
         assertTrue(state().isOn())

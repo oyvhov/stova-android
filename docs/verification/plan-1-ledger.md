@@ -77,7 +77,7 @@ Final: minor (fixed): JsonFileStore.read does not catch IOException (would crash
 Final: minor (fixed): adult types PIN twice to leave a kid profile (picker asks again) — adultWhoUnlockedKidDoesNotNeedSamePinAgain + unlockingKidDoesNotUnlockOtherAdult RED→GREEN; DesignRulesTest green
 Final: minor (fixed): PIN pad "Slett" wraps at font scale 2.0 — deleteLabelFitsOneLineAtDoubleFontScale RED→GREEN; DesignRulesTest green
 Final: minor (fixed): container lateinit fails opaquely in :homebutton process — uninitializedContainerExplainsHomeServiceProcessBoundary RED→GREEN; DesignRulesTest green
-Final: minor (deferred): HomeOverrideState treats unreadable guard file as "on"
+Final: minor (fixed): HomeOverrideState treats unreadable guard file as "on" — unreadableGuardDisablesOverrideUntilReadableAgain RED→GREEN; DesignRulesTest green
 Final: minor (deferred): warm the JSON reader in onServiceConnected
 Final: minor (deferred): "siffer skrive" → "siffer skrivne"
 Final: Ruling: reviewer's declined-to-judge items (Home long-press shortcuts consumed, no shortcut to system Settings, any adult may delete another adult, PIN optional, corrupt profiles.json → first-run, favourites listed twice, launcher manifest attrs, Muted on Raised 4.9:1) stand as spec'd or unspecified — cost if wrong: small follow-ups after the user decides.
