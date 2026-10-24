@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import app.stova.core.theme.color
@@ -24,6 +25,7 @@ fun AvatarBadge(profile: Profile, size: Dp, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onPrimary,
             fontSize = fontSize,
             fontWeight = FontWeight.Bold,
+            modifier = Modifier.clearAndSetSemantics { },
         )
     }
 }

@@ -13,4 +13,25 @@
     <string name="nav_apps">Appar</string>
     <string name="nav_settings">Innstillingar</string>
     <string name="nav_profile">Byt profil</string>
+
+    <string name="welcome_title">Velkomen til Stova</string>
+    <string name="welcome_body">Lag profilen din. Du kan leggje til fleire seinare.</string>
+    <string name="profile_who">Kven ser på?</string>
+    <string name="profile_add">Legg til profil</string>
+    <string name="profile_name">Namn</string>
+    <string name="profile_avatar">Farge</string>
+    <string name="profile_kid">Barneprofil</string>
+    <string name="profile_kid_hint">Berre tillatne appar, ingen innstillingar</string>
+    <string name="profile_save">Lagre</string>
+    <string name="profile_cancel">Avbryt</string>
+    <string name="profile_locked">Låst med PIN</string>
+    <string name="pin_for_profile">Skriv PIN for %1$s</string>
+    <string name="avatar_lime">Lime</string>
+    <string name="avatar_ocean">Hav</string>
+    <string name="avatar_iris">Iris</string>
+    <string name="avatar_coral">Korall</string>
+    <string name="avatar_gold">Gull</string>
+    <string name="avatar_mint">Mynte</string>
+    <string name="avatar_rose">Rose</string>
+    <string name="avatar_pearl">Perle</string>
 </resources>

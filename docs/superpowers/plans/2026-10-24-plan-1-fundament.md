@@ -558,7 +558,7 @@ git add -A && git commit -m "feat(nav): profile session, side rail and top-level
   - `@Composable fun AvatarBadge(profile: Profile, size: Dp)`: sirkel i `avatar`-fargen med første bokstav i `onPrimary`.
   - Strengar: `welcome_title` («Velkomen til Stova»), `welcome_body` («Lag profilen din. Du kan leggje til fleire seinare.»), `profile_add` («Legg til profil»), `profile_name` («Namn»), `profile_kid` («Barneprofil»), `profile_save` («Lagre»), `profile_who` («Kven ser på?»), og engelske motstykke.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 @RunWith(AndroidJUnit4::class) @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
@@ -587,21 +587,21 @@ class ProfileGateTest {
 ```
 Seed-hjelpar: `fun seed(file: ProfilesFile)` i `TestConfig.kt` skriv `profiles.json` til `context.filesDir` før aktiviteten startar (bruk `@get:Rule val rule = createAndroidComposeRule<MainActivity>()` med `RuleChain` der seed-regelen er ytst).
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.profiles.ProfileGateTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `ProfileGate`, `ProfilePicker`, `ProfileEditor` og `AvatarBadge`, og kople dei inn i `StovaApp`**
+- [x] **Step 3: Implementer `ProfileGate`, `ProfilePicker`, `ProfileEditor` og `AvatarBadge`, og kople dei inn i `StovaApp`**
 
 Strengen `pin_for_profile` = «Skriv PIN for %1$s» / «Enter PIN for %1$s».
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(profiles): first-run setup, profile picker and PIN gate"
