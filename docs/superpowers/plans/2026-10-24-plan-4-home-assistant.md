@@ -102,7 +102,7 @@ git add -A && git commit -m "feat(ha): address normalisation with LAN-only plain
     - `suspend fun invalidateAccess()`: set `expiresAt = 0`, så neste kall fornyar.
     - `suspend fun signOut()`: `POST /auth/revoke` (`token=<refresh>`, `action=revoke`) som beste forsøk, slett tokens og set `SIGNED_OUT`.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class HaAuthTest {
@@ -136,18 +136,18 @@ class HaAuthTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.HaAuthTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `HaAuth.kt` og `haBaseUrl`**
+- [x] **Step 3: Implementer `HaAuth.kt` og `haBaseUrl`**
 
-- [ ] **Step 4: Køyr testen**
+- [x] **Step 4: Køyr testen**
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): OAuth code exchange, refresh, revoke and long-lived token"

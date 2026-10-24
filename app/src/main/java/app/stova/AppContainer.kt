@@ -16,6 +16,11 @@ import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import app.stova.core.security.KeystoreSecretStore
+import app.stova.ha.*
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 
 /** Hand-wired dependencies for the whole app. Later tasks add their repositories here. */
 class AppContainer(context: Context) {
@@ -44,4 +49,11 @@ class AppContainer(context: Context) {
     val household = JsonFileStore(File(appContext.filesDir, "household.json"), HouseholdSettings.serializer(), HouseholdSettings())
 
     val crashGuard = CrashGuard.store(appContext)
+
+    val haHttp = OkHttpClient.Builder().connectTimeout(4, TimeUnit.SECONDS).readTimeout(8, TimeUnit.SECONDS)
+        .followRedirects(false).followSslRedirects(false).build()
+    val secrets = KeystoreSecretStore(appContext)
+    suspend fun haAddress(): HaAddress? = household.current().haBaseUrl?.let { (checkHaAddress(it) as? AddressCheck.Ok)?.address }
+    val haAuth = HaAuth(haHttp, secrets, ::haAddress)
+    init { appScope.launch { haAuth.restore() } }
 }
