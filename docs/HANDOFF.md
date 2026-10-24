@@ -1,5 +1,16 @@
 # Plan 4
 
+- 2026-10-25: Fletting av `plan-1-fundament` (`72624eb`) inn i `plan-4-home-assistant` er fullført i merge-commit `bdff9f2`; begge foreldra er bevarte.
+- Verifisering: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug` → grønt (164 bestått, 10 valfrie skjermbilettestar hoppa over); same kommando med `'-Pstova.screens=true'` → 174/174 bestått, 0 hoppa over, inkludert 3/3 `DesignRulesTest`. Lint: 0 feil, 21 åtvaringar og 1 hint; debug-APK bygd.
+- Ingen påbyrja steg står att. Plan 4 oppgåve 10 er framleis urørt; ekte HA, emulator og Shield er ikkje verifiserte etter flettinga. Ingen spørsmål til brukaren.
+- Dei nygenererte `app/build/screens/ha-dashboard.png`, `ha-double-font-header.png` og `ha-double-font-sensor.png` er visuelt kontrollerte. Ingen push eller arbeid i andre worktrear.
+
+## Fletting
+
+Konfliktane låg i `AppContainer`, `MainActivity`, `HomeScreen` og `StovaApp`. `AppContainer` tek no både den tidleg installerte kræsjvakta og HA sitt `SecretStore`; kallestadene bruker namngjevne argument der desse blir sende inn. `MainActivity` beheld HA-start/stopp saman med `onNewIntent`, `homeRequests` og `LaunchGuard`. `HomeScreen` beheld statusbrikkene medan null-rader viser lasting utan tomtilstand. `StovaApp` kombinerer Smarthus-knappen og sida med Home-navigasjon og valfri vaksen-PIN ved profilbyte. Dei andre Plan 1-rettingane vart automatisk fletta inn. Ein ny integrasjonstest stadfestar at Home lukkar Smarthus, som framleis kan opnast att.
+
+## Før fletting
+
 - 2026-10-25: Oppgåve 1–9, alle steg til og med commit, er fullførte på `plan-4-home-assistant` i `C:/Launcher/.worktrees/plan-4`. Ingen påbyrja steg står att.
 - Oppgåve 10 er medvite urørt etter brukarønske. Ekte Home Assistant, emulator og Shield er ikkje verifiserte; ingen spørsmål til brukaren.
 - Sluttkontroll: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → 159/159 bestått, 0 hoppa over, inkludert alle 3 `DesignRulesTest`-testane; lint 0 feil (21 åtvaringar, 1 hint).
