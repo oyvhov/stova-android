@@ -97,4 +97,22 @@
     <string name="hb_adb_title">Med adb (valfritt)</string>
     <string name="hb_adb_body">adb shell cmd package set-home-activity %1$s/app.stova.MainActivity\nadb shell pm grant %1$s android.permission.WRITE_SECURE_SETTINGS</string>
     <string name="hb_warning">Ikkje slå av systemlauncheren. Nokre einingar startar ikkje då.</string>
+    <string name="settings_accounts">Kontoar</string>
+    <string name="enter_address">Skriv adresse</string>
+    <string name="server_address">Serveradresse</string>
+    <string name="account_next">Neste</string>
+    <string name="account_username">Brukarnamn</string>
+    <string name="account_password">Passord</string>
+    <string name="account_sign_in">Logg inn</string>
+    <string name="account_sign_out">Logg ut</string>
+    <string name="account_sign_in_again">Logg inn på nytt</string>
+    <string name="account_add">Legg til konto</string>
+    <string name="server_not_found">Fann ingen server på adressa</string>
+    <string name="wrong_credentials">Feil brukarnamn eller passord</string>
+    <string name="quick_connect_disabled">Quick Connect er ikkje slått på</string>
+    <string name="quick_connect_approve">Godkjenn på telefonen eller i nettlesaren</string>
+    <string name="use_password">Bruk passord i staden</string>
+    <string name="sign_in_timeout">Tidsavbrot. Prøv igjen.</string>
+    <string name="sign_in_failed">Kunne ikkje logge inn. Prøv igjen.</string>
+    <string name="account_retry">Prøv igjen</string>
 </resources>

@@ -1,0 +1,81 @@
+package app.stova.media.ui
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import app.stova.AppContainer
+import app.stova.R
+import app.stova.core.ui.*
+import app.stova.media.*
+import app.stova.media.net.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+
+private enum class SignInStep { DISCOVER, ADDRESS, PASSWORD, QUICK, DONE }
+@Composable fun AddAccountFlow(profileId: String,container: AppContainer,onDone: () -> Unit) {
+ val discovery=remember(container) { container.lanDiscovery.discover() }
+ AddAccountContent(profileId,container.mediaAccounts,container.serverProbe,container.mediaAuth,discovery,onDone)
+}
+/** Dependency seam also used by the flow tests; no application graph is needed to sign in. */
+@Composable internal fun AddAccountContent(profileId: String,accounts: MediaAccountRepository,probe: ServerProbe,auth: MediaAuth,discovery: Flow<DiscoveredServer>,onDone: () -> Unit) {
+ var step by remember { mutableStateOf(SignInStep.DISCOVER) }
+ var address by remember { mutableStateOf("") };var user by remember { mutableStateOf("") };var password by remember { mutableStateOf("") }
+ var server by remember { mutableStateOf<ServerInfo?>(null) };var code by remember { mutableStateOf<QuickConnectCode?>(null) }
+ var busy by remember { mutableStateOf(false) };var error by remember { mutableStateOf<Int?>(null) }
+ val found=remember { mutableStateListOf<DiscoveredServer>() }; val scope=rememberCoroutineScope()
+ LaunchedEffect(discovery) { try { discovery.collect { found.add(it) } } catch(e: CancellationException) { throw e } catch(_: Exception) { /* Manual entry remains available. */ } }
+ fun connect(input: String) { scope.launch {
+  busy=true;error=null
+  try {
+   val info=probe.probe(input);server=info
+   if(auth.quickConnectEnabled(info)) { code=auth.quickConnectStart(info);step=SignInStep.QUICK } else step=SignInStep.PASSWORD
+  } catch(e: CancellationException) { throw e } catch(_: Exception) { error=R.string.server_not_found }
+  finally { busy=false }
+ } }
+ LaunchedEffect(step,code) {
+  val info=server;val quick=code
+  if(step==SignInStep.QUICK && info!=null && quick!=null) try {
+   accounts.add(profileId,info,auth.quickConnectAwait(info,quick.secret));step=SignInStep.DONE;onDone()
+  } catch(_: TimeoutCancellationException) { error=R.string.sign_in_timeout }
+    catch(e: CancellationException) { throw e }
+    catch(_: Exception) { error=R.string.sign_in_failed }
+ }
+ Column(verticalArrangement=Arrangement.spacedBy(16.dp)) {
+  when(step) {
+   SignInStep.DISCOVER -> {
+    found.forEach { item -> StovaButton(item.name,{ connect(item.address) },enabled=!busy) }
+    StovaButton(stringResource(R.string.enter_address),{ step=SignInStep.ADDRESS },enabled=!busy)
+   }
+   SignInStep.ADDRESS -> {
+    RemoteTextField(address,{ address=it },stringResource(R.string.server_address),keyboardType=KeyboardType.Uri)
+    StovaButton(stringResource(R.string.account_next),{ connect(address) },enabled=!busy)
+   }
+   SignInStep.PASSWORD -> {
+    RemoteTextField(user,{ user=it },stringResource(R.string.account_username))
+    RemoteTextField(password,{ password=it },stringResource(R.string.account_password),keyboardType=KeyboardType.Password)
+    StovaButton(stringResource(R.string.account_sign_in),{
+     val info=server ?: return@StovaButton
+     scope.launch { busy=true;error=null
+      try { accounts.add(profileId,info,auth.signIn(info,user,password));password="";step=SignInStep.DONE;onDone() }
+      catch(e: CancellationException) { throw e }
+      catch(_: MediaError.Unauthorized) { error=R.string.wrong_credentials }
+      catch(_: Exception) { error=R.string.sign_in_failed }
+      finally { busy=false }
+     }
+    },enabled=!busy,primary=true)
+   }
+   SignInStep.QUICK -> {
+    Text(code?.code.orEmpty(),style=MaterialTheme.typography.displaySmall)
+    Text(stringResource(R.string.quick_connect_approve))
+    StovaButton(stringResource(R.string.use_password),{ step=SignInStep.PASSWORD;code=null;error=null })
+    if(error!=null) StovaButton(stringResource(R.string.account_retry),{ server?.let { connect(it.baseUrl) } })
+   }
+   SignInStep.DONE -> Unit
+  }
+  if(busy) CircularProgressIndicator()
+  error?.let { Text(stringResource(it),color=MaterialTheme.colorScheme.error) }
+ }
+}

@@ -44,6 +44,7 @@ fun ProfileSettings(container: AppContainer, profile: Profile) {
     val file by repo.file.collectAsStateWithLifecycle(initialValue = null)
     val scope = rememberCoroutineScope()
     var detailId by rememberSaveable { mutableStateOf<String?>(null) }
+    var showAccounts by rememberSaveable { mutableStateOf(false) }
     var showKidApps by rememberSaveable { mutableStateOf(false) }
     var editSelf by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf(false) }
@@ -51,12 +52,13 @@ fun ProfileSettings(container: AppContainer, profile: Profile) {
     // The first entry of a new PIN, kept only until it is typed again; a hidden typo would lock the adult out.
     var pendingPin by remember { mutableStateOf<String?>(null) }
 
-    BackHandler(enabled = detailId != null) { if (showKidApps) showKidApps = false else detailId = null }
+    BackHandler(enabled = detailId != null) { if (showAccounts) showAccounts = false else if (showKidApps) showKidApps = false else detailId = null }
 
     val detail = detailId?.let { id -> file?.profiles?.firstOrNull { it.id == id } }
     if (detail != null) {
-        if (showKidApps) KidAppsSettings(container, detail)
-        else ProfileDetail(container, detail, onKidApps = { showKidApps = true }, onDeleted = { detailId = null })
+        if (showAccounts) AccountsSettings(detail, container)
+        else if (showKidApps) KidAppsSettings(container, detail)
+        else ProfileDetail(container, detail, onKidApps = { showKidApps = true }, onAccounts = { showAccounts = true }, onDeleted = { detailId = null })
         return
     }
 
@@ -128,7 +130,7 @@ fun ProfileSettings(container: AppContainer, profile: Profile) {
 }
 
 @Composable
-private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: () -> Unit, onDeleted: () -> Unit) {
+private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: () -> Unit, onAccounts: () -> Unit, onDeleted: () -> Unit) {
     val scope = rememberCoroutineScope()
     var confirm by remember { mutableStateOf(false) }
     var refused by remember { mutableStateOf(false) }
@@ -136,6 +138,7 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
     if (other.kid) {
         SettingsGroup(stringResource(R.string.profile_kid)) {
             SettingsNavRow(stringResource(R.string.kid_apps), onClick = onKidApps)
+            SettingsNavRow(stringResource(R.string.settings_accounts), onClick = onAccounts)
         }
     }
     SettingsGroup(stringResource(R.string.settings_profile)) {

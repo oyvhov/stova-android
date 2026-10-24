@@ -85,6 +85,7 @@ fun RemoteTextField(
                 else -> false
             }
         },
+        outputTransformation = if (keyboardType == KeyboardType.Password) androidx.compose.foundation.text.input.OutputTransformation { replace(0, length, "•".repeat(length)) } else null,
         label = { Text(label) },
         supportingText = supportingText?.let { { Text(it) } },
         isError = isError,
