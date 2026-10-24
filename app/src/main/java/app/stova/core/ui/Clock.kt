@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLocale
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -29,7 +30,7 @@ fun Clock(modifier: Modifier = Modifier) {
         }
     }
     Text(
-        clockText(now, ZoneId.systemDefault(), Locale.getDefault()),
+        clockText(now, ZoneId.systemDefault(), LocalLocale.current.platformLocale),
         style = MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.onSurface,
         modifier = modifier,
