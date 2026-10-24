@@ -336,7 +336,7 @@ git add -A && git commit -m "feat(security): keystore-backed secret store and PB
   - `fun decideStart(file: ProfilesFile): StartDecision` og `fun leavingNeedsAdultPin(file: ProfilesFile, current: Profile): Boolean` i `ProfileRules.kt`.
   - `AppContainer.profiles: ProfileRepository` (fil `files/profiles.json`).
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class ProfileRepositoryTest {
@@ -384,21 +384,21 @@ class HomeRowKeyTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.profiles.*" --tests "app.stova.home.*"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `Profile.kt`, `ProfileRules.kt`, `HomeRowKey.kt` og `ProfileRepository.kt`, og legg `profiles` til i `AppContainer`**
+- [x] **Step 3: Implementer `Profile.kt`, `ProfileRules.kt`, `HomeRowKey.kt` og `ProfileRepository.kt`, og legg `profiles` til i `AppContainer`**
 
 `verifyPin`: Om `now - lastFailureAt < lockoutMillis(count)`, returner `LockedOut(rest)` utan å telje. Ved feil PIN: `count+1`, returner `Rejected(lockoutMillis(count+1))`. Ved rett PIN: fjern innslaget, returner `Accepted`. Ein profil utan PIN gir alltid `Accepted`.
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: same som Step 2
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(profiles): profile model, PIN lockout and start rules"
