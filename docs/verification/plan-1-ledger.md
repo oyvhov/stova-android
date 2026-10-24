@@ -65,8 +65,8 @@ Final: fixed I6 new PIN unconfirmed (NEW → CONFIRM step) — newPinNeedsConfir
 Final: fixed I7 prefs pruned on unavailable/renamed apps (reconcileKeys: follow rename, keep installed-but-unavailable, drop uninstalled) — reconcileRemapsRenamedKeepsUnavailableDropsUninstalled RED→GREEN; suite 94 passed + 7 skipped screenshot tests, 0 failed, lint clean
 Final: minor (fixed): kid-exit check fails open while profiles file is null (one frame) — kidCannotLeaveBeforeProfilesLoad RED→GREEN; DesignRulesTest 3/3
 Final: minor (fixed): PIN lockout uses wall clock; backwards jumps can show huge waits — backwardsClockJumpNeverExtendsLockoutBeyondPolicy RED→GREEN; DesignRulesTest green
-Final: minor (deferred): disabled OK loses focus after a PIN attempt
-Final: minor (deferred): holding OK may click the first item of the app menu (verify on Shield)
+Final: minor (skipped): disabled OK loses focus after a PIN attempt — already handled by Compose focus relocation; rejectedPinReturnsFocusToDigits passes before changes; see HANDOFF Småfunn
+Final: minor (skipped): holding OK may click the first item of the app menu (verify on Shield) — user excludes this; requires real remote; see HANDOFF Småfunn
 Final: minor (deferred): top-bar focus labels shift layout (spec: focus never changes layout)
 Final: minor (deferred): clock stale up to 60 s after sleep; refresh on resume
 Final: minor (deferred): AppsScreen rescans all apps on every profile edit (remember keyed on profile)

@@ -1,5 +1,8 @@
 package app.stova.core.ui
 
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -35,6 +38,25 @@ class PinDialogTest {
         compose.onNodeWithText("OK").performClick()
         compose.onNodeWithText("Prøv igjen om 15 s").assertExists()
         compose.onNodeWithText("OK").assertIsNotEnabled()
+    }
+
+    @Test fun rejectedPinReturnsFocusToDigits() {
+        val answer = kotlinx.coroutines.CompletableDeferred<PinCheck>()
+        compose.setContent { StovaTheme { PinPanel("PIN", { answer.await() }, {}) } }
+        "1111".forEach { compose.onNodeWithText(it.toString()).performClick() }
+        compose.onNodeWithText("1").performKeyInput {
+            keyDown(Key.DirectionDown); keyUp(Key.DirectionDown)
+            keyDown(Key.DirectionDown); keyUp(Key.DirectionDown)
+            keyDown(Key.DirectionDown); keyUp(Key.DirectionDown)
+            keyDown(Key.DirectionRight); keyUp(Key.DirectionRight)
+            keyDown(Key.DirectionRight); keyUp(Key.DirectionRight)
+        }
+        compose.onNodeWithText("OK").assertIsFocused().performKeyInput {
+            keyDown(Key.DirectionCenter); keyUp(Key.DirectionCenter)
+        }
+        compose.onNodeWithText("1").assertIsFocused()
+        answer.complete(PinCheck.Rejected(0))
+        compose.onNodeWithText("1").assertIsFocused()
     }
 
     @Test fun wrongPinShowsMessage() {
