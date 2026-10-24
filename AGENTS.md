@@ -26,6 +26,7 @@ kan ta over frå kvarandre midt i ein plan.
 
 - Følg stega i planen nøyaktig: test først, sjå han feile, implementer, sjå han bestå, commit.
 - Hak av `- [ ]` → `- [x]` etter kvart steg som er gjort, og commit planfila saman med koden.
+- Ledger: `.superpowers/sdd/<plan-filnamn>/progress.md` (git-ignorert). Når ei oppgåve er ferdig og testane er grøne, legg til linja `Task N: complete (commits <base>..<head>, tests: <kommando> → <resultat>)`. Avvik frå planen blir skrivne som `Task N: Ruling: <kva> — <kvifor> — <kostnad om feil>`.
 - Har du superpowers-skills (`subagent-driven-development` eller `executing-plans`), bruk dei.
   Elles: gjer oppgåvene i rekkjefølgje sjølv.
 - Alle Gradle-kall: `pwsh -NoProfile -File scripts/gradle.ps1 <tasks>`. Han set ASCII-sti for Gradle-heim og temp, sidan brukarmappa inneheld «Ø».
@@ -40,3 +41,13 @@ kan ta over frå kvarandre midt i ein plan.
 Før du stoppar (grense nådd, slutt på økta, eller blokkert): skriv 3–6 linjer øvst i
 `docs/HANDOFF.md` med dato, kva plan/oppgåve/steg som er sist fullført, kva som er påbyrja men
 ikkje ferdig, kva som ikkje er verifisert, og eventuelle spørsmål til brukaren. Commit fila.
+
+**Claude → Codex:** Claude les forbruket (`get_usage`) ved start av kvar oppgåve. Er 5-timarsvindauget
+på ≥ 90 % (og det er meir enn 15 min til nullstilling), eller vekegrensa på ≥ 95 %, gjer Claude dette:
+1. Skriv `docs/HANDOFF.md` og committar.
+2. Startar Codex med
+   `pwsh -NoProfile -File scripts/Start-CodexHandoff.ps1 -StopAfter "<nullstillingstid, lokal>"`.
+3. Stoppar.
+
+Codex stoppar etter `-StopAfter` og skriv `docs/HANDOFF.md`. Deretter held Claude fram derifrå.
+Berre éin agent arbeider i mappa om gongen.
