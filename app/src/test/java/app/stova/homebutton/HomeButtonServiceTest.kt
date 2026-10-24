@@ -33,4 +33,3 @@ class ConnectedServiceInfo : org.robolectric.shadows.ShadowService() {
     @org.robolectric.annotation.Implementation fun getServiceInfo(): AccessibilityServiceInfo = info
     @org.robolectric.annotation.Implementation fun setServiceInfo(value: AccessibilityServiceInfo) { info = value }
 }
-

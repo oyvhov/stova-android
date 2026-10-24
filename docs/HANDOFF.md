@@ -1,4 +1,10 @@
 # Status
+2026-10-25: Alle 17 utsette Plan 1-småfunn er behandla i `C:/Launcher/.worktrees/minors`, greina `review-minors`.
+15 funn er retta med raud/grøn TDD og éin commit per funn; 2 er hoppa over med grunn under «Småfunn».
+Sluttkontroll: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → 252/252 bestått, ingen hoppa over; DesignRulesTest 3/3; lint 0 feil (20 åtvaringar, 1 hint); debug-APK OK.
+Ingen påbyrja steg står att. Ekte fjernkontroll/Shield er ikkje verifisert; ingen spørsmål, ingen push og ingen arbeid i andre worktrear.
+Skjermbiletet `app/build/screens/minor-pin-font-2.png` er generert og visuelt kontrollert; «Slett» held éi linje.
+
 2026-10-25: Samanslåingsoppgåve 1–3 er fullførte på `plan-2-media` i `C:/Launcher/.worktrees/plan-2`; Plan 2 og Plan 4 er bevarte.
 Merge: `a568e8b`. Aldersgrense med raud/grøn TDD: `3865293`; HeroPanelTest er òg oppdatert til éi alderspille.
 Sluttkontroll: `testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → 232/232 bestått, ingen hoppa over, DesignRulesTest 3/3, lint 0 feil (22 åtvaringar, 1 hint), debug-APK OK.
@@ -82,3 +88,29 @@ Konfliktane låg i `AppContainer`, `MainActivity`, `HomeScreen` og `StovaApp`. `
 
 - OK mistar fokus etter PIN-forsøk: hoppa over som alt handtert av noverande Compose-versjon. `rejectedPinReturnsFocusToDigits` viser at D-pad-fokus går til «1» når OK blir deaktivert, både medan eit ekte suspendert svar ventar og etter avvist PIN. Ingen produksjonsendring.
 - Langt OK-trykk kan velje første appmenyval: hoppa over etter brukarønske; krev ekte fjernkontroll/Shield.
+
+Alle nummer nedanfor følgjer rekkjefølgja til dei 17 opphavlege `Final: minor (deferred)`-linjene. Kvar retting har ein test som feila før rettinga og bestod etter; testnamna står i `docs/verification/plan-1-ledger.md`.
+
+| Funn | Commit | Retting |
+|---|---|---|
+| 1 | `264a6f3` | Vaksen-PIN medan profilfila lastar |
+| 2 | `f511d9c` | Avgrensa PIN-ventetid ved klokkehopp bakover |
+| 5 | `9ab6687` | Fast layout for fokusetikettar i topplinja |
+| 6 | `11f5c46` | Klokka blir oppdatert ved resume |
+| 7 | `82b57c0` | Profilendringar utan ny pakkeskanning |
+| 8 | `7940989` | Fokus følgjer flytta heimerad |
+| 9 | `9a67bb3` | Nye forsøk på manglande appkunst og oppfrisking ved pakkeoppdatering |
+| 10 | `ad3ab5b` | Respekter avslått tilgjengeteneste |
+| 11 | `f7a9c60` | JSON-lesing toler I/O-feil, òg ved korrupt kopi |
+| 12 | `12f0f7d` | Same vaksen slepp dobbel PIN ved eitt profilbyte |
+| 13 | `f520fe4` | PIN-tastatur med «Slett» på éi linje ved skriftstorleik 2,0 |
+| 14 | `371417d` | Tydeleg feil ved tilgang til launcher-container i feil prosess |
+| 15 | `593810f` | Home-overstyring av ved uleseleg kræsjvaktfil |
+| 16 | `9a7fef9` | Varm JSON-lesar når Home-tenesta blir kopla til |
+| 17 | `a438d7c` | «siffer skrivne» i fleirtal, korrekt eintal og engelsk |
+
+Funn 3 er dokumentert med regresjonstest i `c0e3d9f`; testen var grøn før produksjonsendringar, også medan PIN-svaret var suspendert. Funn 4 er medvite urørt og krev fysisk fjernkontroll.
+
+Funn 10: Android fortel ikkje om ei avslått teneste vart slått av av systemet eller av brukaren. Automatisk aktivering ved oppstart er difor fjerna, saman med den unyttige adb-grant-oppskrifta i UI-et; brukaren slår tenesta på i Android-innstillingane. Spesifikasjonen er oppdatert med denne avgjerda.
+
+Sluttverifikasjon: 252/252 bestått (inkludert skjermtestane), DesignRulesTest 3/3, lint 0 feil / 20 åtvaringar / 1 hint, assembleDebug OK. Ingen emulator eller Shield er brukt. Arbeidstreet er reint etter overleveringscommit.

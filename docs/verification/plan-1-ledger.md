@@ -81,3 +81,6 @@ Final: minor (fixed): HomeOverrideState treats unreadable guard file as "on" —
 Final: minor (fixed): warm the JSON reader in onServiceConnected — connectionWarmsOverrideReaderBeforeFirstHomeKey RED→GREEN; DesignRulesTest green
 Final: minor (fixed): "siffer skrive" → "siffer skrivne" — enteredDigitsUseNynorskAgreement RED→GREEN; DesignRulesTest green
 Final: Ruling: reviewer's declined-to-judge items (Home long-press shortcuts consumed, no shortcut to system Settings, any adult may delete another adult, PIN optional, corrupt profiles.json → first-run, favourites listed twice, launcher manifest attrs, Muted on Raised 4.9:1) stand as spec'd or unspecified — cost if wrong: small follow-ups after the user decides.
+
+Minor review 2026-10-25 (`review-minors`): 15 fixed with per-finding RED→GREEN commits, 2 skipped (current Compose already relocates disabled OK focus; real-remote long-press excluded by user). Commit map and rationale: `docs/HANDOFF.md`, Småfunn.
+Final minor verification: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → 252/252 passed, 0 skipped/failed, DesignRulesTest 3/3; lint 0 errors (20 warnings, 1 hint); debug APK built. No push or device installation.
