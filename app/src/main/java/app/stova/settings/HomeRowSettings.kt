@@ -9,6 +9,7 @@ import androidx.compose.runtime.LaunchedEffect
 import app.stova.watchnext.WatchNextResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.key
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -68,17 +69,31 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
     }
     // Every row the profile could have, hidden ones included, in the profile's own order.
     val ordered = arrangeRows(available, prefs.copy(hiddenRows = emptySet()))
+    HomeRowOrderSettings(
+        ordered, prefs.hiddenRows,
+        onVisible = { key, visible -> save { it.copy(hiddenRows = if (visible) it.hiddenRows - key else it.hiddenRows + key) } },
+        onMove = { key, delta -> save { it.copy(rowOrder = moveItem(ordered, key, delta)) } },
+    )
+}
+
+@Composable
+internal fun HomeRowOrderSettings(
+    ordered: List<HomeRowKey>,
+    hiddenRows: Set<HomeRowKey>,
+    onVisible: (HomeRowKey, Boolean) -> Unit,
+    onMove: (HomeRowKey, Int) -> Unit,
+) {
     if (ordered.isNotEmpty()) {
         SettingsGroup(stringResource(R.string.home_rows)) {
             ordered.forEach { key ->
+                key(key) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(Modifier.weight(1f)) {
-                        SettingsSwitchRow(rowLabel(key), key !in prefs.hiddenRows, { visible ->
-                            save { it.copy(hiddenRows = if (visible) it.hiddenRows - key else it.hiddenRows + key) }
-                        })
+                        SettingsSwitchRow(rowLabel(key), key !in hiddenRows, { visible -> onVisible(key, visible) })
                     }
-                    StovaButton(stringResource(R.string.row_move_up), { save { it.copy(rowOrder = moveItem(ordered, key, -1)) } })
-                    StovaButton(stringResource(R.string.row_move_down), { save { it.copy(rowOrder = moveItem(ordered, key, +1)) } })
+                    StovaButton(stringResource(R.string.row_move_up), { onMove(key, -1) })
+                    StovaButton(stringResource(R.string.row_move_down), { onMove(key, +1) })
+                }
                 }
             }
         }
