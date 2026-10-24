@@ -95,7 +95,7 @@
     <string name="hb_crash">Home-knappen går til systemlauncheren fordi Stova kræsja. Slå på att?</string>
     <string name="hb_crash_reset">Slå på att</string>
     <string name="hb_adb_title">Med adb (valfritt)</string>
-    <string name="hb_adb_body">adb shell cmd package set-home-activity %1$s/app.stova.MainActivity\nadb shell pm grant %1$s android.permission.WRITE_SECURE_SETTINGS</string>
+    <string name="hb_adb_body">adb shell cmd package set-home-activity %1$s/app.stova.MainActivity</string>
     <string name="hb_warning">Ikkje slå av systemlauncheren. Nokre einingar startar ikkje då.</string>
     <string name="settings_accounts">Kontoar</string>
     <string name="enter_address">Skriv adresse</string>

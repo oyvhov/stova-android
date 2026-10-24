@@ -72,7 +72,7 @@ Final: minor (fixed): clock stale up to 60 s after sleep; refresh on resume — 
 Final: minor (fixed): AppsScreen rescans all apps on every profile edit (remember keyed on profile) — profileEditsUpdateGridWithoutRescanningPackages RED→GREEN; DesignRulesTest green
 Final: minor (fixed): HomeRowSettings rows lack key(); focus does not follow moved row — focusFollowsRowMovedWithDpad RED→GREEN; DesignRulesTest green
 Final: minor (fixed): AppArtCache never retries missing banners / refreshes updated ones — missingBannerIsRetriedWhenItBecomesAvailable + updatedPackageReloadsBannerAndIcon + scanIncludesArtworkRevision RED→GREEN; DesignRulesTest green
-Final: minor (deferred): ensureEnabled overrides a user's own "off" for the Home service
+Final: minor (fixed): ensureEnabled overrides a user's own "off" for the Home service — startupRespectsUserDisabledAccessibilityService RED→GREEN; DesignRulesTest green
 Final: minor (deferred): JsonFileStore.read does not catch IOException (would crash at start)
 Final: minor (deferred): adult types PIN twice to leave a kid profile (picker asks again)
 Final: minor (deferred): PIN pad "Slett" wraps at font scale 2.0

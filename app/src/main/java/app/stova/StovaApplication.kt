@@ -2,7 +2,6 @@ package app.stova
 
 import android.app.Application
 import app.stova.homebutton.CrashGuard
-import app.stova.homebutton.HomeButtonStatus
 
 class StovaApplication : Application(), coil3.SingletonImageLoader.Factory {
     override fun newImageLoader(context: coil3.PlatformContext): coil3.ImageLoader =
@@ -19,6 +18,5 @@ class StovaApplication : Application(), coil3.SingletonImageLoader.Factory {
         val guard = CrashGuard.store(this)
         CrashGuard.install(guard)
         container = AppContainer(this, crashGuard = guard)
-        HomeButtonStatus.ensureEnabled(this)
     }
 }

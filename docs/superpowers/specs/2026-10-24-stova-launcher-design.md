@@ -285,8 +285,8 @@ Endringa i Spole er Plan 3 og blir gjord i Spole-repoet etter Spole sine eigne r
 - **adb-oppskrift** (vist i Innstillingar → Home-knappen):
   - `adb shell cmd package set-home-activity app.stova/.MainActivity` (valfritt, ikkje stadfesta
     på Shield 9.x)
-  - `adb shell pm grant app.stova android.permission.WRITE_SECURE_SETTINGS` (valfritt). Då
-    slår Stova tilgjengetenesta på att sjølv ved oppstart dersom systemet har slått henne av.
+  - Tilgjengetenesta blir berre slått på av brukaren i Android-innstillingane. Stova endrar ikkje
+    dette valet ved oppstart, heller ikkje med `WRITE_SECURE_SETTINGS` (småfunn 25.10.2026).
 
 ## 10. Appar og Watch Next
 

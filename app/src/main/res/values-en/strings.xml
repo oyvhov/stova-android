@@ -95,7 +95,7 @@
     <string name="hb_crash">Home goes to the system launcher because Stova crashed. Turn it back on?</string>
     <string name="hb_crash_reset">Turn back on</string>
     <string name="hb_adb_title">With adb (optional)</string>
-    <string name="hb_adb_body">adb shell cmd package set-home-activity %1$s/app.stova.MainActivity\nadb shell pm grant %1$s android.permission.WRITE_SECURE_SETTINGS</string>
+    <string name="hb_adb_body">adb shell cmd package set-home-activity %1$s/app.stova.MainActivity</string>
     <string name="hb_warning">Do not disable the system launcher. Some devices will not start without it.</string>
     <string name="settings_accounts">Accounts</string>
     <string name="enter_address">Enter address</string>
