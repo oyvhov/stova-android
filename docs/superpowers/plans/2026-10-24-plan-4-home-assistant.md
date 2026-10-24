@@ -396,7 +396,7 @@ git add -A && git commit -m "feat(ha): websocket client with coalesced subscript
     - `suspend fun perform(call: ServiceCall, entityId: String, profile: Profile): Boolean`: gjer ingenting og returnerer false når `!canControl(profile)`.
     - Kallar `socket.watch(cards.map { it.entityId }.toSet())` kvar gong korta eller den aktive profilen endrar seg.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class CardModelTest {
@@ -432,21 +432,21 @@ class HaRepositoryTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.cards.*" --tests "app.stova.ha.HaRepositoryTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer filene, profilfelta og `HaRepository`**
+- [x] **Step 3: Implementer filene, profilfelta og `HaRepository`**
 
 `ProfileRepository.create(kid = true)` set `kidSmartHomeControl = false` eksplisitt (standardverdien).
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): card model, service-call mapping, formatting and per-profile dashboards"

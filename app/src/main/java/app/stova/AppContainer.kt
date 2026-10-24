@@ -56,5 +56,6 @@ class AppContainer(context: Context, val secrets: app.stova.core.security.Secret
     val haAuth = HaAuth(haHttp, secrets, ::haAddress)
     private val haScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val haSocket = HaSocket(haHttp, haAuth, ::haAddress, haScope)
+    val haRepository = HaRepository(haSocket, session, profiles, appScope)
     init { appScope.launch { haAuth.restore() } }
 }
