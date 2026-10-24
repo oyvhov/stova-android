@@ -94,7 +94,11 @@ class ProfileRepository(
     private suspend fun check(key: String, hashes: List<app.stova.core.security.PinHash>, pin: String): PinCheck {
         val now = clock()
         val failures = store.current().pinFailures[key] ?: PinFailures()
-        val elapsed = now - failures.lastFailureAt
+        // Persist wall time across restarts, but rebase a future timestamp after a clock reset.
+        if (failures.lastFailureAt > now) {
+            store.update { it.copy(pinFailures = it.pinFailures + (key to failures.copy(lastFailureAt = now))) }
+        }
+        val elapsed = (now - failures.lastFailureAt).coerceAtLeast(0)
         val lockout = PinPolicy.lockoutMillis(failures.count)
         if (failures.count > 0 && elapsed < lockout) return PinCheck.LockedOut(lockout - elapsed)
         val matches = withContext(cpu) { hashes.any { PinHasher.verify(pin, it) } }

@@ -43,6 +43,16 @@ class ProfileRepositoryTest {
         assertEquals(PinCheck.Rejected(0), r.verifyPin(id, "0000"))
     }
 
+    @Test fun backwardsClockJumpNeverExtendsLockoutBeyondPolicy() = runTest {
+        val r = repo(); val id = r.create("A", AvatarColor.LIME, false).id
+        r.setPin(id, "1357")
+        repeat(4) { r.verifyPin(id, "0000") }
+        now -= 86_400_000
+        assertEquals(PinCheck.LockedOut(5_000), r.verifyPin(id, "1357"))
+        now += 5_000
+        assertEquals(PinCheck.Accepted, r.verifyPin(id, "1357"))
+    }
+
     @Test fun lockoutSurvivesRestart() = runTest {
         val r = repo(); val id = r.create("A", AvatarColor.LIME, false).id; r.setPin(id, "1357")
         repeat(4) { r.verifyPin(id, "0000") }
