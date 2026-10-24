@@ -1,6 +1,8 @@
 package app.stova.core.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +33,8 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -109,13 +113,21 @@ fun PinPanel(
             busy = false
         }
     }
+    val deleteLabel = stringResource(R.string.pin_delete)
+    val okLabel = stringResource(R.string.pin_ok)
+    val measurer = rememberTextMeasurer()
+    val labelStyle = MaterialTheme.typography.labelLarge
+    val labelWidth = maxOf(measurer.measure(deleteLabel, labelStyle).size.width, measurer.measure(okLabel, labelStyle).size.width)
+    val keyWidth = with(LocalDensity.current) { maxOf(80.dp, labelWidth.toDp() + 40.dp) }
+    val panelWidth = maxOf(320.dp, keyWidth * 3 + 24.dp)
     val canSubmit = pin.length >= MIN_DIGITS && secondsLeft == 0 && !busy
 
     Column(
         modifier
             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(StovaShapes.ExtraLarge))
             .padding(32.dp)
-            .width(320.dp)
+            .width(panelWidth)
+            .verticalScroll(rememberScrollState())
             .onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                 val digit = digitFor(event.key)
@@ -146,14 +158,14 @@ fun PinPanel(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEachIndexed { column, digit ->
                     val keyModifier = if (index == 0 && column == 0) Modifier.focusRequester(first) else Modifier
-                    StovaButton(digit.toString(), { type(digit) }, keyModifier.width(80.dp))
+                    StovaButton(digit.toString(), { type(digit) }, keyModifier.width(keyWidth))
                 }
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StovaButton(stringResource(R.string.pin_delete), ::erase, Modifier.width(80.dp))
-            StovaButton("0", { type('0') }, Modifier.width(80.dp))
-            StovaButton(stringResource(R.string.pin_ok), ::submit, Modifier.width(80.dp), primary = true, enabled = canSubmit)
+            StovaButton(deleteLabel, ::erase, Modifier.width(keyWidth))
+            StovaButton("0", { type('0') }, Modifier.width(keyWidth))
+            StovaButton(okLabel, ::submit, Modifier.width(keyWidth), primary = true, enabled = canSubmit)
         }
     }
 }
