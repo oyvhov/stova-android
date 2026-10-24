@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 320×180 TV banner: ink ground, a lime house mark and a lime underline. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path
+        android:fillColor="@color/stova_ink"
+        android:pathData="M0,0h320v180h-320z" />
+    <path
+        android:fillColor="@color/stova_lime"
+        android:pathData="M160,44 L208,84 L208,132 Q208,138 202,138 L118,138 Q112,138 112,132 L112,84 Z" />
+    <path
+        android:fillColor="@color/stova_ink"
+        android:pathData="M146,104 h28 v34 h-28z" />
+</vector>

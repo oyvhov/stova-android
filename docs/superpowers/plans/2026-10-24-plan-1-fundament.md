@@ -49,7 +49,7 @@
 **Interfaces:**
 - Produces: `class StovaApplication : Application { lateinit var container: AppContainer }`, `class AppContainer(context: Context)` (tom no; seinare oppgåver legg til felt), `class MainActivity : ComponentActivity` (registrert med `MAIN` + `HOME` + `DEFAULT`, og `MAIN` + `LEANBACK_LAUNCHER`, `launchMode="singleTask"`, `android:banner="@drawable/tv_banner"`), `const val TV_QUALIFIERS = "w960dp-h540dp-land-television-xhdpi"` i `TestConfig.kt`.
 
-- [ ] **Step 1: Init repo og byggfiler**
+- [x] **Step 1: Init repo og byggfiler**
 
 ```powershell
 git init C:\Launcher; git -C C:\Launcher checkout -b main
@@ -65,7 +65,7 @@ exit $LASTEXITCODE
 `local.properties`: `sdk.dir=C\:\\Android\\sdk`. `.gitignore`: `.gradle/`, `.gradle-tmp/`, `build/`, `app/build/`, `local.properties`, `signing.properties`, `*.jks`, `.avd/`, `.kotlin/`.
 Plugin-versjonar i rot-`build.gradle.kts`: `com.android.application` 9.2.1, `org.jetbrains.kotlin.plugin.compose` 2.3.10, `org.jetbrains.kotlin.plugin.serialization` 2.3.10. `app/build.gradle.kts` følgjer Spole sitt (`C:\JellyBin\reelstack-android\app\build.gradle.kts`): namespace `app.stova`, verdiane i Global Constraints, `buildFeatures { compose = true; buildConfig = true }`, release med `isMinifyEnabled = true` og `isShrinkResources = true`, `lint { error += "HardcodedText" }`, `testOptions.unitTests.isIncludeAndroidResources = true`. Avhengigheiter: compose-bom 2026.06.00 (ui, foundation, material3, ui-tooling-preview), core-ktx 1.17.0, activity-compose 1.13.0, lifecycle-runtime-compose 2.10.0, lifecycle-viewmodel-compose 2.10.0, kotlinx-serialization-json 1.11.0, kotlinx-coroutines-android 1.10.2. Test: junit 4.13.2, kotlinx-coroutines-test 1.10.2, robolectric 4.14.1, ui-test-junit4, androidx.test.ext:junit 1.3.0. debugImplementation: ui-tooling, ui-test-manifest.
 
-- [ ] **Step 2: Skriv testen som feilar**
+- [x] **Step 2: Skriv testen som feilar**
 
 ```kotlin
 @RunWith(AndroidJUnit4::class) @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
@@ -84,21 +84,21 @@ class HomeIntentTest {
 }
 ```
 
-- [ ] **Step 3: Køyr testen og sjå at han feilar**
+- [x] **Step 3: Køyr testen og sjå at han feilar**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.HomeIntentTest"`
 Expected: FAIL (manifestet manglar aktiviteten eller kompilering feilar).
 
-- [ ] **Step 4: Lag manifest, `StovaApplication`, `AppContainer` og `MainActivity`**
+- [x] **Step 4: Lag manifest, `StovaApplication`, `AppContainer` og `MainActivity`**
 
 `MainActivity.onCreate` kallar `enableEdgeToEdge()` og `setContent { }` (tomt innhald no). Manifest: `android:allowBackup="false"`, `android:label="@string/app_name"` (nynorsk og engelsk: «Stova»), `<uses-feature android:name="android.software.leanback" android:required="false"/>`, `<uses-feature android:name="android.hardware.touchscreen" android:required="false"/>`. Tilbake-knappen må ikkje avslutte launcheren: `onBackPressedDispatcher` får ein callback som ikkje gjer noko (navigasjonen overstyrer seinare).
 
-- [ ] **Step 5: Køyr testane og bygg**
+- [x] **Step 5: Køyr testane og bygg**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest assembleDebug lintDebug`
 Expected: BUILD SUCCESSFUL, 2 testar bestått, 0 lint-feil.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A && git commit -m "build: Stova project skeleton registered as HOME launcher"
