@@ -2,12 +2,15 @@
 # stops). Codex uses the user's own ~/.codex/config.toml. Output and Codex's final message land in
 # C:\Launcher\.superpowers\agents\<Name>-<stamp>.log and -last.md.
 #
-# Usage: pwsh -NoProfile -File scripts/Start-CodexAgent.ps1 -Name plan-3 -Repo C:\path -Prompt "..." [-Worktree] [-DryRun]
+# Give -Repo a git worktree you created yourself on an ASCII path (for example
+# `git worktree add C:\JellyBin\<name> -b <branch>`). Codex's own --worktree puts it under
+# C:\Users\Øyvind\.codex, and Gradle fails on the "Ø" in that path.
+#
+# Usage: pwsh -NoProfile -File scripts/Start-CodexAgent.ps1 -Name plan-3 -Repo C:\path -Prompt "..." [-DryRun]
 param(
     [Parameter(Mandatory = $true)][string]$Name,
     [Parameter(Mandatory = $true)][string]$Repo,
     [Parameter(Mandatory = $true)][string]$Prompt,
-    [switch]$Worktree,
     [switch]$DryRun
 )
 $ErrorActionPreference = 'Stop'
@@ -22,10 +25,9 @@ $logDir = 'C:\Launcher\.superpowers\agents'
 New-Item -ItemType Directory -Force $logDir | Out-Null
 $log = Join-Path $logDir "$Name-$stamp.log"
 $last = Join-Path $logDir "$Name-$stamp-last.md"
-$worktreeFlag = if ($Worktree) { ' --worktree' } else { '' }
 $text = $Prompt.Replace('"', "'").Replace("`r", ' ').Replace("`n", ' ')
 
-$cmdLine = "cmd.exe /c `"`"$($codex.FullName)`" exec -C `"$Repo`"$worktreeFlag -o `"$last`" `"$text`" > `"$log`" 2>&1`""
+$cmdLine = "cmd.exe /c `"`"$($codex.FullName)`" exec -C `"$Repo`" -o `"$last`" `"$text`" > `"$log`" 2>&1`""
 if ($cmdLine.Length -gt 8000) { throw "Kommandolinja er $($cmdLine.Length) teikn; cmd.exe tek maks 8191." }
 
 if ($DryRun) {
