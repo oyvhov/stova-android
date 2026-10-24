@@ -44,6 +44,7 @@ import app.stova.profiles.Profile
 enum class SettingsSection(@StringRes val label: Int) {
     PROFILE(R.string.settings_profile),
     HOME(R.string.settings_home),
+    SMART_HOME(R.string.nav_smart_home),
     HOME_BUTTON(R.string.settings_home_button),
     APPEARANCE(R.string.settings_appearance),
     ABOUT(R.string.settings_about),
@@ -76,6 +77,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
             when (section) {
                 SettingsSection.PROFILE -> ProfileSettings(container, profile)
                 SettingsSection.HOME -> HomeRowSettings(container, profile, home)
+                SettingsSection.SMART_HOME -> app.stova.ha.ui.HaSettings(container)
                 SettingsSection.HOME_BUTTON -> HomeButtonSettings(container)
                 SettingsSection.APPEARANCE -> AppearanceSettings(container, profile)
                 SettingsSection.ABOUT -> AboutSettings()

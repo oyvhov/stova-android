@@ -23,7 +23,7 @@ import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
 /** Hand-wired dependencies for the whole app. Later tasks add their repositories here. */
-class AppContainer(context: Context) {
+class AppContainer(context: Context, val secrets: app.stova.core.security.SecretStore = KeystoreSecretStore(context)) {
     val appContext: Context = context.applicationContext
 
     /** Lives as long as the process: a launcher's process is the home screen itself. */
@@ -52,7 +52,6 @@ class AppContainer(context: Context) {
 
     val haHttp = OkHttpClient.Builder().connectTimeout(4, TimeUnit.SECONDS).readTimeout(8, TimeUnit.SECONDS)
         .followRedirects(false).followSslRedirects(false).build()
-    val secrets = KeystoreSecretStore(appContext)
     suspend fun haAddress(): HaAddress? = household.current().haBaseUrl?.let { (checkHaAddress(it) as? AddressCheck.Ok)?.address }
     val haAuth = HaAuth(haHttp, secrets, ::haAddress)
     init { appScope.launch { haAuth.restore() } }

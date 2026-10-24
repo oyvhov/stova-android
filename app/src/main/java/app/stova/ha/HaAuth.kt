@@ -53,8 +53,8 @@ class HaAuth(
         mutableState.value = HaAuthState.SIGNED_IN
     }
     suspend fun restore() = mutex.withLock { mutableState.value = if (tokens() == null) HaAuthState.SIGNED_OUT else HaAuthState.SIGNED_IN }
-    suspend fun exchange(code: String) = mutex.withLock {
-        save(postToken(mapOf("grant_type" to "authorization_code", "code" to code, "client_id" to HA_CLIENT_ID), null))
+    suspend fun exchange(code: String, at: HaAddress? = null) = mutex.withLock {
+        save(postToken(mapOf("grant_type" to "authorization_code", "code" to code, "client_id" to HA_CLIENT_ID), null, at))
     }
     suspend fun useLongLivedToken(token: String) = mutex.withLock { require(token.isNotBlank()); save(HaTokens(token.trim(), Long.MAX_VALUE)) }
     suspend fun accessToken(): String = mutex.withLock {
@@ -76,8 +76,8 @@ class HaAuth(
             catch (_: IOException) { /* Local sign-out succeeds even while HA is offline. */ }
         }
     }
-    private suspend fun postToken(fields: Map<String, String>, oldRefresh: String?): HaTokens {
-        val base = address()?.base ?: throw HaSignedOut()
+    private suspend fun postToken(fields: Map<String, String>, oldRefresh: String?, at: HaAddress? = null): HaTokens {
+        val base = (at ?: address())?.base ?: throw HaSignedOut()
         return withContext(Dispatchers.IO) {
             http.newCall(Request.Builder().url("$base/auth/token").post(form(fields)).build()).execute().use { response ->
                 if (oldRefresh != null && response.code in listOf(400, 401)) {

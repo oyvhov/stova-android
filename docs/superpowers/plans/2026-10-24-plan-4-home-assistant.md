@@ -171,7 +171,7 @@ git add -A && git commit -m "feat(ha): OAuth code exchange, refresh, revoke and 
     - Feilmeldingar: «Ugyldig adresse», «Bruk https for adresser utanfor heimenettet.», «Innlogginga feila. Prøv igjen.»
   - Innstillingar → Smarthus (hushald): status («Tilkopla som … / Ikkje tilkopla / Logg inn på nytt»), «Kople til» / «Logg ut», og per barneprofil brytaren «Kan styre smarthus» (`Profile.kidSmartHomeControl`, sjå oppgåve 6).
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 @RunWith(AndroidJUnit4::class) @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
@@ -193,19 +193,19 @@ class HaSetupFlowTest {
 ```
 (`FakeRequest` er ein liten `WebResourceRequest`-implementasjon i testen.)
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.ui.*"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer flyten, WebView-klienten og innstillingsseksjonen**
+- [x] **Step 3: Implementer flyten, WebView-klienten og innstillingsseksjonen**
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug`
 Expected: PASS, 0 lint-feil.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): TV sign-in via WebView OAuth or long-lived token"
