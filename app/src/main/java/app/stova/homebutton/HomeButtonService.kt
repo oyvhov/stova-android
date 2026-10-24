@@ -17,6 +17,10 @@ import app.stova.MainActivity
 class HomeButtonService : AccessibilityService() {
     private val logic = HomeKeyLogic(SystemClock::elapsedRealtime)
     private val state by lazy { HomeOverrideState(filesDir) }
+    private val launches = ArrayDeque<Long>()
+
+    private fun overrideOn(): Boolean =
+        state.isOn() && !LaunchGuard.standDown(launches.toList(), LaunchGuard.lastAlive(filesDir), System.currentTimeMillis())
 
     override fun onServiceConnected() {
         // Some TV builds ignore the XML flag, so it is set here as well.
@@ -25,7 +29,7 @@ class HomeButtonService : AccessibilityService() {
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
         if (event.keyCode != KeyEvent.KEYCODE_HOME) return false
-        return when (logic.onKey(event.keyCode, event.action, event.repeatCount, state.isOn())) {
+        return when (logic.onKey(event.keyCode, event.action, event.repeatCount, overrideOn())) {
             KeyDecision.PASS -> false
             KeyDecision.CONSUME -> true
             KeyDecision.CONSUME_AND_LAUNCH -> { openStova(); true }
@@ -33,7 +37,7 @@ class HomeButtonService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && logic.onWindowChanged(event.packageName, state.isOn())) {
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && logic.onWindowChanged(event.packageName, overrideOn())) {
             openStova()
         }
     }
@@ -41,6 +45,8 @@ class HomeButtonService : AccessibilityService() {
     override fun onInterrupt() = Unit
 
     private fun openStova() {
+        launches.addLast(System.currentTimeMillis())
+        while (launches.size > LaunchGuard.THRESHOLD * 4) launches.removeFirst()
         startActivity(
             Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_HOME)

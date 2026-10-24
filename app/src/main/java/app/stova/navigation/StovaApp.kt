@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,14 +52,15 @@ fun StovaApp(container: AppContainer) {
 private fun MainShell(container: AppContainer, profile: Profile) {
     var current by rememberSaveable { mutableStateOf(Destination.HOME) }
     val file by container.profiles.file.collectAsStateWithLifecycle(initialValue = null)
-    var askAdultPin by remember { mutableStateOf<Profile?>(null) }
+    var askAdultPin by remember { mutableStateOf(false) }
 
     // Back walks home, and stops there: a launcher has nowhere further back to go.
     BackHandler(enabled = current != Destination.HOME) { current = Destination.HOME }
+    LaunchedEffect(container) { container.homeRequests.collect { current = Destination.HOME } }
     val switchProfile = {
         val profiles = file
         if (profiles != null && leavingNeedsAdultPin(profiles, profile)) {
-            askAdultPin = profiles.profiles.first { !it.kid && it.pin != null }
+            askAdultPin = true
         } else {
             container.session.leave()
         }
@@ -84,15 +86,15 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         }
     }
 
-    askAdultPin?.let { adult ->
+    if (askAdultPin) {
         PinDialog(
-            title = stringResource(R.string.pin_for_profile, adult.name),
-            onSubmit = { pin -> container.profiles.verifyPin(adult.id, pin) },
+            title = stringResource(R.string.pin_any_adult),
+            onSubmit = { pin -> container.profiles.verifyAnyAdultPin(pin) },
             onAccepted = {
-                askAdultPin = null
+                askAdultPin = false
                 container.session.leave()
             },
-            onDismiss = { askAdultPin = null },
+            onDismiss = { askAdultPin = false },
         )
     }
 }

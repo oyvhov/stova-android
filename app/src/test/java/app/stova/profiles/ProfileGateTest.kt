@@ -61,7 +61,7 @@ class ProfileGateTest {
         }
         rule.waitForIdle()
         rule.onNodeWithText("Byt profil").performClick()
-        rule.onNodeWithText("Skriv PIN for A").assertExists()
+        rule.onNodeWithText("Skriv ein vaksen-PIN").assertExists()
     }
 
     @Test @Config(fontScale = 2f) fun pickerSurvivesDoubleFontScale() {

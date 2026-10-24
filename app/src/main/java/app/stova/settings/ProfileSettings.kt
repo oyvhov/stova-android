@@ -36,7 +36,7 @@ import app.stova.profiles.Profile
 import app.stova.profiles.ProfileEditor
 import kotlinx.coroutines.launch
 
-private enum class PinStep { NONE, VERIFY_FOR_CHANGE, VERIFY_FOR_REMOVE, NEW }
+private enum class PinStep { NONE, VERIFY_FOR_CHANGE, VERIFY_FOR_REMOVE, NEW, CONFIRM }
 
 @Composable
 fun ProfileSettings(container: AppContainer, profile: Profile) {
@@ -48,6 +48,8 @@ fun ProfileSettings(container: AppContainer, profile: Profile) {
     var editSelf by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf(false) }
     var pinStep by remember { mutableStateOf(PinStep.NONE) }
+    // The first entry of a new PIN, kept only until it is typed again; a hidden typo would lock the adult out.
+    var pendingPin by remember { mutableStateOf<String?>(null) }
 
     BackHandler(enabled = detailId != null) { if (showKidApps) showKidApps = false else detailId = null }
 
@@ -110,9 +112,17 @@ fun ProfileSettings(container: AppContainer, profile: Profile) {
         )
         PinStep.NEW -> PinDialog(
             title = stringResource(R.string.pin_new),
-            onSubmit = { pin -> repo.setPin(profile.id, pin); PinCheck.Accepted },
-            onAccepted = { pinStep = PinStep.NONE },
-            onDismiss = { pinStep = PinStep.NONE },
+            onSubmit = { pin -> pendingPin = pin; PinCheck.Accepted },
+            onAccepted = { pinStep = PinStep.CONFIRM },
+            onDismiss = { pinStep = PinStep.NONE; pendingPin = null },
+        )
+        PinStep.CONFIRM -> PinDialog(
+            title = stringResource(R.string.pin_confirm),
+            onSubmit = { pin ->
+                if (pin == pendingPin) { repo.setPin(profile.id, pin); PinCheck.Accepted } else PinCheck.Rejected(0)
+            },
+            onAccepted = { pinStep = PinStep.NONE; pendingPin = null },
+            onDismiss = { pinStep = PinStep.NONE; pendingPin = null },
         )
     }
 }

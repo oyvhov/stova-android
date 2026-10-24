@@ -56,14 +56,15 @@ fun HomeScreen(
 
     Column(Modifier.fillMaxSize()) {
         topBar()
-        if (rows.isEmpty()) {
-            EmptyHome(onOpenApps)
-        } else {
-            LazyColumn(
+        val loaded = rows
+        when {
+            loaded == null -> Unit // still loading: the top bar alone, never a flash of the empty state
+            loaded.isEmpty() -> EmptyHome(onOpenApps)
+            else -> LazyColumn(
                 Modifier.fillMaxSize().focusRestorer(),
                 contentPadding = PaddingValues(bottom = StovaLayout.TvSafeEdge),
             ) {
-                items(rows, key = { it.key.value }) { row ->
+                items(loaded, key = { it.key.value }) { row ->
                     when (row) {
                         is HomeRowUi.Apps -> AppsRow(row, art, catalog, if (row.key == initial) firstItem else null)
                     }

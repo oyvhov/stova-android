@@ -12,8 +12,10 @@ class StovaApplication : Application() {
         super.onCreate()
         // The Home service's own process needs none of the launcher: no stores, no session.
         if (getProcessName().endsWith(":homebutton")) return
-        container = AppContainer(this)
-        CrashGuard.install(container.crashGuard)
+        // The guard goes in first, so even a crash while the container is built is counted.
+        val guard = CrashGuard.store(this)
+        CrashGuard.install(guard)
+        container = AppContainer(this, guard)
         HomeButtonStatus.ensureEnabled(this)
     }
 }

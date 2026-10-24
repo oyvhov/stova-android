@@ -5,7 +5,10 @@ import app.stova.core.security.PinPolicy
 import app.stova.core.storage.JsonFileStore
 import app.stova.core.theme.AvatarColor
 import java.util.UUID
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 
 sealed interface PinCheck {
     data object Accepted : PinCheck
@@ -17,6 +20,8 @@ class ProfileRepository(
     private val store: JsonFileStore<ProfilesFile>,
     private val clock: () -> Long = System::currentTimeMillis,
     private val newId: () -> String = { UUID.randomUUID().toString() },
+    /** 100 000 rounds of PBKDF2 take a noticeable moment on a TV CPU; never on the UI thread. */
+    private val cpu: CoroutineDispatcher = Dispatchers.Default,
 ) {
     val file: Flow<ProfilesFile> = store.data
 
@@ -58,7 +63,7 @@ class ProfileRepository(
 
     suspend fun setPin(id: String, pin: String?) {
         require(pin == null || PinHasher.isValid(pin)) { "PIN must be 4–8 digits" }
-        val hash = pin?.let(PinHasher::hash)
+        val hash = pin?.let { withContext(cpu) { PinHasher.hash(it) } }
         store.update { file ->
             check(file.profiles.any { it.id == id }) { "no profile $id" }
             file.copy(
@@ -70,20 +75,35 @@ class ProfileRepository(
 
     /** Counts a wrong PIN, refuses during a lockout without counting, and clears the count on success. */
     suspend fun verifyPin(id: String, pin: String): PinCheck {
-        val file = store.current()
-        val profile = file.profiles.firstOrNull { it.id == id } ?: throw NoSuchElementException(id)
+        val profile = store.current().profiles.firstOrNull { it.id == id } ?: throw NoSuchElementException(id)
         val stored = profile.pin ?: return PinCheck.Accepted
+        return check(id, listOf(stored), pin)
+    }
+
+    /**
+     * Leaving a kid profile: any adult's PIN will do, and wrong guesses count against the kid exit
+     * itself, never against one adult's own profile.
+     */
+    suspend fun verifyAnyAdultPin(pin: String): PinCheck {
+        val hashes = store.current().profiles.filter { !it.kid }.mapNotNull { it.pin }
+        if (hashes.isEmpty()) return PinCheck.Accepted
+        return check(KID_EXIT, hashes, pin)
+    }
+
+    /** Counts a wrong PIN under [key], refuses during a lockout without counting, clears on success. */
+    private suspend fun check(key: String, hashes: List<app.stova.core.security.PinHash>, pin: String): PinCheck {
         val now = clock()
-        val failures = file.pinFailures[id] ?: PinFailures()
+        val failures = store.current().pinFailures[key] ?: PinFailures()
         val elapsed = now - failures.lastFailureAt
         val lockout = PinPolicy.lockoutMillis(failures.count)
         if (failures.count > 0 && elapsed < lockout) return PinCheck.LockedOut(lockout - elapsed)
-        return if (PinHasher.verify(pin, stored)) {
-            store.update { it.copy(pinFailures = it.pinFailures - id) }
+        val matches = withContext(cpu) { hashes.any { PinHasher.verify(pin, it) } }
+        return if (matches) {
+            store.update { it.copy(pinFailures = it.pinFailures - key) }
             PinCheck.Accepted
         } else {
             val next = PinFailures(failures.count + 1, now)
-            store.update { it.copy(pinFailures = it.pinFailures + (id to next)) }
+            store.update { it.copy(pinFailures = it.pinFailures + (key to next)) }
             PinCheck.Rejected(PinPolicy.lockoutMillis(next.count))
         }
     }
@@ -98,5 +118,6 @@ class ProfileRepository(
 
     private companion object {
         const val MAX_NAME = 24
+        const val KID_EXIT = "kid-exit"
     }
 }

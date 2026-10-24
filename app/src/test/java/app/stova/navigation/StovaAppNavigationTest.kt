@@ -56,7 +56,18 @@ class StovaAppNavigationTest {
 
     @Test fun emptyHomeFocusesOpenApps() {
         // Found on the TV emulator: with nothing focused, the first D-pad press was swallowed.
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("Opne Appar").assertIsFocused()
+    }
+
+    // Review Important 2: Home pressed while a Stova page is open goes back to Home.
+    @Test fun homeIntentReturnsToHome() {
+        rule.onAllNodesWithText("Appar")[0].performClick()
+        rule.onNodeWithTag("screen-APPS").assertExists()
+        rule.activityRule.scenario.onActivity {
+            it.onNewIntent(android.content.Intent(android.content.Intent.ACTION_MAIN).addCategory(android.content.Intent.CATEGORY_HOME))
+        }
+        rule.onNodeWithTag("screen-HOME").assertExists()
     }
 
     @Test fun topBarOpensSettings() {

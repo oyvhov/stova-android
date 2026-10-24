@@ -73,6 +73,13 @@ class PackageManagerAppCatalog(
         }
     }
 
+    override fun isInstalled(packageName: String): Boolean = try {
+        pm.getPackageInfo(packageName, 0)
+        true
+    } catch (_: android.content.pm.PackageManager.NameNotFoundException) {
+        false
+    }
+
     companion object {
         val STOCK_LAUNCHERS = setOf(
             "com.google.android.tvlauncher",

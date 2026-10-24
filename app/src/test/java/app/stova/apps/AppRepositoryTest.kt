@@ -26,6 +26,7 @@ class FakeAppCatalog(initial: List<InstalledApp>) : AppCatalog {
     override fun changes(): Flow<Unit> = apps.drop(1).map { }
     override fun launch(app: InstalledApp): Boolean { launched += app; return true }
     override fun openAppInfo(packageName: String) = Unit
+    override fun isInstalled(packageName: String): Boolean = apps.value.any { it.packageName == packageName }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -41,7 +42,7 @@ class AppRepositoryTest {
         val id = profiles.create("A", AvatarColor.LIME, false).id
         profiles.update(id) { it.copy(apps = it.apps.copy(favorites = listOf(a.key, b.key))) }
         val catalog = FakeAppCatalog(listOf(a, b))
-        val repo = AppRepository(catalog, profiles, backgroundScope)
+        val repo = AppRepository(catalog, profiles, backgroundScope, UnconfinedTestDispatcher(testScheduler))
         val arranged = repo.arranged(profiles.file.map { file -> file.profiles.first() })
             .stateIn(backgroundScope, SharingStarted.Eagerly, null)
         assertEquals(listOf(a, b), arranged.value?.favorites)
@@ -60,7 +61,7 @@ class AppRepositoryTest {
         val id = profiles.create("A", AvatarColor.LIME, false).id
         profiles.update(id) { it.copy(apps = it.apps.copy(favorites = listOf(a.key))) }
         val catalog = FakeAppCatalog(emptyList())
-        val repo = AppRepository(catalog, profiles, backgroundScope)
+        val repo = AppRepository(catalog, profiles, backgroundScope, UnconfinedTestDispatcher(testScheduler))
         repo.arranged(profiles.file.map { file -> file.profiles.first() }).stateIn(backgroundScope, SharingStarted.Eagerly, null)
         assertEquals(listOf(a.key), profiles.file.first().profiles.first().apps.favorites)
     }
@@ -70,7 +71,7 @@ class AppRepositoryTest {
             JsonFileStore(tmp.root.resolve("p.json"), ProfilesFile.serializer(), ProfilesFile(), UnconfinedTestDispatcher(testScheduler)),
         )
         val id = profiles.create("A", AvatarColor.LIME, false).id
-        val repo = AppRepository(FakeAppCatalog(emptyList()), profiles, backgroundScope)
+        val repo = AppRepository(FakeAppCatalog(emptyList()), profiles, backgroundScope, UnconfinedTestDispatcher(testScheduler))
         repo.toggleFavorite(id, "x/.M"); repo.toggleFavorite(id, "y/.M"); repo.moveFavorite(id, "y/.M", -1)
         assertEquals(listOf("y/.M", "x/.M"), profiles.file.first().profiles.first().apps.favorites)
         repo.toggleFavorite(id, "x/.M")
