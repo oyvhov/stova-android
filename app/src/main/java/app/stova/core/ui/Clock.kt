@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLocale
 import java.time.Instant
@@ -21,12 +22,16 @@ fun clockText(epochMillis: Long, zone: ZoneId, locale: Locale): String =
 
 /** 24-hour clock that wakes once a minute, on the minute, and never otherwise recomposes. */
 @Composable
-fun Clock(modifier: Modifier = Modifier) {
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+fun Clock(modifier: Modifier = Modifier, clock: () -> Long = System::currentTimeMillis) {
+    var now by remember { mutableLongStateOf(clock()) }
+    LifecycleResumeEffect(Unit) {
+        now = clock()
+        onPauseOrDispose { }
+    }
     LaunchedEffect(Unit) {
         while (true) {
             delay(MINUTE - now % MINUTE)
-            now = System.currentTimeMillis()
+            now = clock()
         }
     }
     Text(
