@@ -80,4 +80,19 @@
     <string name="appearance_strong_focus">Kraftig fokus</string>
     <string name="appearance_strong_focus_hint">Tjukkare fokusramme</string>
     <string name="about_version">Stova %1$s</string>
+
+    <string name="settings_home_button">Home-knappen</string>
+    <string name="home_button_service_label">Stova Home-knapp</string>
+    <string name="home_button_service_description">Sender Home-knappen på fjernkontrollen til Stova. Les ikkje innhald på skjermen og lagrar ingen tastetrykk.</string>
+    <string name="hb_service_on">Tilgjengetenesta er på.</string>
+    <string name="hb_service_off">Tilgjengetenesta er av. Slå på «Stova Home-knapp» i tilgjengeinnstillingane.</string>
+    <string name="hb_open_accessibility">Opne tilgjengeinnstillingar</string>
+    <string name="hb_override">Home-knappen opnar Stova</string>
+    <string name="hb_override_hint">Krev at tilgjengetenesta er på</string>
+    <string name="hb_crash_title">Stova kræsja</string>
+    <string name="hb_crash">Home-knappen går til systemlauncheren fordi Stova kræsja. Slå på att?</string>
+    <string name="hb_crash_reset">Slå på att</string>
+    <string name="hb_adb_title">Med adb (valfritt)</string>
+    <string name="hb_adb_body">adb shell cmd package set-home-activity %1$s/app.stova.MainActivity\nadb shell pm grant %1$s android.permission.WRITE_SECURE_SETTINGS</string>
+    <string name="hb_warning">Ikkje slå av systemlauncheren. Nokre einingar startar ikkje då.</string>
 </resources>

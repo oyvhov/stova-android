@@ -80,4 +80,19 @@
     <string name="appearance_strong_focus">Strong focus</string>
     <string name="appearance_strong_focus_hint">Thicker focus outline</string>
     <string name="about_version">Stova %1$s</string>
+
+    <string name="settings_home_button">Home button</string>
+    <string name="home_button_service_label">Stova Home button</string>
+    <string name="home_button_service_description">Sends the remote\'s Home button to Stova. Reads no screen content and stores no key presses.</string>
+    <string name="hb_service_on">The accessibility service is on.</string>
+    <string name="hb_service_off">The accessibility service is off. Turn on “Stova Home button” in accessibility settings.</string>
+    <string name="hb_open_accessibility">Open accessibility settings</string>
+    <string name="hb_override">Home button opens Stova</string>
+    <string name="hb_override_hint">Needs the accessibility service</string>
+    <string name="hb_crash_title">Stova crashed</string>
+    <string name="hb_crash">Home goes to the system launcher because Stova crashed. Turn it back on?</string>
+    <string name="hb_crash_reset">Turn back on</string>
+    <string name="hb_adb_title">With adb (optional)</string>
+    <string name="hb_adb_body">adb shell cmd package set-home-activity %1$s/app.stova.MainActivity\nadb shell pm grant %1$s android.permission.WRITE_SECURE_SETTINGS</string>
+    <string name="hb_warning">Do not disable the system launcher. Some devices will not start without it.</string>
 </resources>

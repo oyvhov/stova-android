@@ -38,11 +38,13 @@ import app.stova.core.theme.StovaShapes
 import app.stova.core.ui.StovaButton
 import app.stova.core.ui.focusOutline
 import app.stova.home.HomeViewModel
+import app.stova.homebutton.HomeButtonSettings
 import app.stova.profiles.Profile
 
 enum class SettingsSection(@StringRes val label: Int) {
     PROFILE(R.string.settings_profile),
     HOME(R.string.settings_home),
+    HOME_BUTTON(R.string.settings_home_button),
     APPEARANCE(R.string.settings_appearance),
     ABOUT(R.string.settings_about),
 }
@@ -74,6 +76,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
             when (section) {
                 SettingsSection.PROFILE -> ProfileSettings(container, profile)
                 SettingsSection.HOME -> HomeRowSettings(container, profile, home)
+                SettingsSection.HOME_BUTTON -> HomeButtonSettings(container)
                 SettingsSection.APPEARANCE -> AppearanceSettings(container, profile)
                 SettingsSection.ABOUT -> AboutSettings()
             }

@@ -5,6 +5,8 @@ import app.stova.apps.AppArtCache
 import app.stova.apps.AppRepository
 import app.stova.home.AppsRowSource
 import app.stova.home.HomeRowSource
+import app.stova.homebutton.CrashGuard
+import app.stova.settings.HouseholdSettings
 import app.stova.apps.PackageManagerAppCatalog
 import app.stova.core.storage.JsonFileStore
 import app.stova.profiles.ProfileRepository
@@ -38,4 +40,8 @@ class AppContainer(context: Context) {
     val appArt = AppArtCache(appContext)
 
     val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session))
+
+    val household = JsonFileStore(File(appContext.filesDir, "household.json"), HouseholdSettings.serializer(), HouseholdSettings())
+
+    val crashGuard = CrashGuard.store(appContext)
 }

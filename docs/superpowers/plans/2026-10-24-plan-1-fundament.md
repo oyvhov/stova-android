@@ -831,7 +831,7 @@ git add -A && git commit -m "feat(settings): profile, home rows, appearance and 
     - adb-oppskrifta som tekst.
     - Åtvaringa «Ikkje slå av systemlauncheren. Nokre einingar startar ikkje då.»
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class HomeKeyLogicTest {
@@ -867,21 +867,21 @@ class HomeButtonStatusTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.homebutton.*"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `homebutton/*`, `HouseholdSettings`, service-XML, manifest og innstillingssida**
+- [x] **Step 3: Implementer `homebutton/*`, `HouseholdSettings`, service-XML, manifest og innstillingssida**
 
 `isEnabled` samanliknar også mot den korte forma `app.stova/.homebutton.HomeButtonService`.
 
-- [ ] **Step 4: Køyr alle testar og lint**
+- [x] **Step 4: Køyr alle testar og lint**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug`
 Expected: PASS, 0 lint-feil.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(homebutton): accessibility Home override with window fallback and crash guard"

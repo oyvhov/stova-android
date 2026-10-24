@@ -49,6 +49,22 @@ class AppScreensTest {
         rule.saveScreen("04-shell")
     }
 
+    @Test fun settings() {
+        runBlocking {
+            val a = container.profiles.create("Øyvind", AvatarColor.LIME, false)
+            container.profiles.create("Maya", AvatarColor.ROSE, true)
+            container.profiles.setPin(a.id, "1357")
+            container.session.enter(a.id)
+        }
+        rule.waitForIdle()
+        rule.onAllNodesWithText("Innstillingar")[0].performClick()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Maya").fetchSemanticsNodes().isNotEmpty() }
+        rule.saveScreen("07-settings")
+        rule.onNodeWithText("Home-knappen").performClick()
+        rule.waitForIdle()
+        rule.saveScreen("08-home-button")
+    }
+
     private fun installFakeApps(): List<String> {
         val pm = shadowOf(rule.activity.packageManager)
         return listOf("Spole", "Jellyfin", "Tunet", "Kodi", "VLC", "Innstillingar").map { label ->
