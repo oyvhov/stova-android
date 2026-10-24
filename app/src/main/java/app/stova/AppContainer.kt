@@ -45,9 +45,14 @@ class AppContainer(
 
     val apps = AppRepository(appCatalog, profiles, appScope)
 
+    val household = JsonFileStore(File(appContext.filesDir, "household.json"), HouseholdSettings.serializer(), HouseholdSettings())
+    private val deviceSettings = household.writeBlocking { if (it.deviceId.isBlank()) it.copy(deviceId = java.util.UUID.randomUUID().toString()) else it }
+    val identity = app.stova.media.net.ClientIdentity(android.os.Build.MODEL, deviceSettings.deviceId, BuildConfig.VERSION_NAME)
+    val mediaHttp = app.stova.media.net.mediaHttp()
+
     val appArt = AppArtCache(appContext)
 
     val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session))
 
-    val household = JsonFileStore(File(appContext.filesDir, "household.json"), HouseholdSettings.serializer(), HouseholdSettings())
+
 }
