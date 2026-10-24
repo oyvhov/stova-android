@@ -11,6 +11,12 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasText
 import app.stova.home.*
+import app.stova.ha.HaEntity
+import app.stova.ha.cards.CardConfig
+import app.stova.ha.cards.CardType
+import app.stova.ha.ui.ChipContent
+import app.stova.ha.ui.HomeStatusChips
+import app.stova.ha.ui.chipText
 import app.stova.media.*
 import app.stova.media.model.*
 import app.stova.background.BackdropLayer
@@ -21,6 +27,9 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import java.io.File
+import java.util.Locale
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import android.content.Intent
 import android.content.IntentFilter
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -140,7 +149,7 @@ class AppScreensTest {
         return file.absolutePath
     }
 
-    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f) {
+    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList()) {
         val backdrop = demoArt("demo-landscape", android.graphics.Color.rgb(79, 95, 88))
         val second = demoArt("demo-evening", android.graphics.Color.rgb(68, 77, 95))
         val account = MediaAccount("demo-account", "demo-profile", ServerKind.JELLYFIN, "demo-server", "Demoarkiv", "https://demo.invalid", "demo-user", "Demo")
@@ -161,7 +170,11 @@ class AppScreensTest {
                         Box(Modifier.fillMaxSize()) {
                             BackdropLayer(backdrop)
                             HomeContent(rows, FocusedTarget.Media(item, account), key, container.appArt, container.appCatalog,
-                                {}, {}, {}, {}, topBar = { TopBar(Profile("demo-profile", "Demo", AvatarColor.LIME), {}, {}, {}) })
+                                {}, {}, {}, {}, topBar = {
+                                    TopBar(Profile("demo-profile", "Demo", AvatarColor.LIME), {}, {}, {},
+                                        onSmartHome = if (chips.isNotEmpty()) ({}) else null,
+                                        leading = { HomeStatusChips(chips) })
+                                })
                         }
                     }
                 }
@@ -183,6 +196,24 @@ class AppScreensTest {
     @Test fun homeWithHeroScoreAndMediaRows() {
         renderMediaHome()
         rule.saveScreen("09-home-media-hero")
+    }
+
+    @Test fun homeWithHeroMediaRowsAndHaStatus() {
+        val weather = HaEntity("weather.demo", "cloudy", buildJsonObject { put("temperature", 4) }, 0, 0)
+        val price = HaEntity("sensor.demo_price", "135", buildJsonObject { put("unit_of_measurement", "øre") }, 0, 0)
+        val locale = Locale.forLanguageTag("nn")
+        renderMediaHome(chips = listOf(
+            chipText(CardConfig("weather", CardType.WEATHER, weather.id, onHome = true), weather, locale),
+            chipText(CardConfig("price", CardType.ENERGY_PRICE, price.id, onHome = true), price, locale),
+        ))
+        rule.onNodeWithText("4°").assertIsDisplayed()
+        rule.onNodeWithText("135 øre").assertIsDisplayed()
+        rule.onNodeWithText("Smarthus").assertIsDisplayed()
+        rule.onNodeWithText("Hald fram").assertIsDisplayed()
+        rule.onNodeWithText("Nyleg lagt til · Seriar").assertIsDisplayed()
+        rule.onNodeWithText("2024 · 1 t 52 min").assertIsDisplayed()
+        rule.onNodeWithText("12").assertIsDisplayed()
+        rule.saveScreen("12-home-media-ha")
     }
 
     @Test fun homeWithMoviePosters() {

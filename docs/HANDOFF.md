@@ -1,4 +1,15 @@
 # Status
+2026-10-25: Samanslåingsoppgåve 1–3 er fullførte på `plan-2-media` i `C:/Launcher/.worktrees/plan-2`; Plan 2 og Plan 4 er bevarte.
+Merge: `a568e8b`. Aldersgrense med raud/grøn TDD: `3865293`; HeroPanelTest er òg oppdatert til éi alderspille.
+Sluttkontroll: `testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → 232/232 bestått, ingen hoppa over, DesignRulesTest 3/3, lint 0 feil (22 åtvaringar, 1 hint), debug-APK OK.
+Eigen AppScreensTest-køyring: 10/10 bestått; nytt bilete med hero, media og HA-status ligg i `docs/images/home-media-ha.png` og er visuelt kontrollert.
+Ingen påbyrja steg står att. Ekte medieserverar, Home Assistant, Shield og emulator er ikkje verifiserte; oppgåve 10 i Plan 2 og 4 er framleis urørt. Ingen spørsmål og ingen push.
+
+## Samanslåing
+
+2026-10-25: HA-greina `8216d9b` er fletta inn i `a568e8b`; etterfølgjande fletting av Plan 1 gav «Already up to date». Dei krevjande konfliktane i `AppContainer`, `HomeScreen` og `StovaApp` er løyste med både hero/backdrop/mediarader og HA-tilkopling/statusbrikker/Smarthus-navigasjon bevarte. Hushaldsmodellen har både `deviceId` og `haBaseUrl`, innstillingane har Kontoar og Smarthus, og avhengigheiter og INTERNET-løyve er utan duplikat. `3865293` fjernar dobbel aldersgrense med raud/grøn TDD; UI-testen krev òg éi alderspille. [Heim med media og HA-status](images/home-media-ha.png) bruker falske data og lokal kunst og er visuelt kontrollert. Sluttkontroll: 232/232 testar, AppScreensTest 10/10, DesignRulesTest 3/3, lint 0 feil og debug-APK OK. Ingen push.
+
+## Før samanslåinga (Plan 2)
 2026-10-25: Plan 2, oppgåve 1–9 er ferdige og committa etter raud/grøn TDD; alle stega er haka av.
 Ingen påbyrja oppgåver står att. Oppgåve 10 er medvite ikkje køyrd etter brukarønske.
 Sluttkontroll: 147/147 køyrde einingstestar (10 valfrie skjermtestar hoppa over), DesignRulesTest 3/3, lint 0 feil, assembleDebug OK.

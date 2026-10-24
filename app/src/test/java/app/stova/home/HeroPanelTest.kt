@@ -14,6 +14,11 @@ class HeroPanelTest {
  @Test fun showsTitleMetaAndSourceWhenNoLogo() {
   val a=MediaAccount("a","p",ServerKind.JELLYFIN,"s","Demoarkiv","https://demo.invalid","u","Demo")
   compose.setContent { StovaTheme { HeroPanel(FocusedTarget.Media(MediaItem("m","a",ItemType.MOVIE,"Kystvakta",year=2024,runtimeMinutes=112,ratings=Ratings(official="12")),a)) } }
-  compose.onNodeWithText("Kystvakta").assertIsDisplayed();compose.onNodeWithText("2024 · 1 t 52 min · 12").assertIsDisplayed();compose.onNodeWithText("Demoarkiv").assertIsDisplayed()
+  compose.onNodeWithText("Kystvakta").assertIsDisplayed()
+  compose.onNodeWithText("2024 · 1 t 52 min").assertIsDisplayed()
+  compose.onNodeWithText("2024 · 1 t 52 min · 12").assertDoesNotExist()
+  compose.onAllNodesWithText("12").assertCountEquals(1)
+  compose.onNodeWithText("12").assertIsDisplayed()
+  compose.onNodeWithText("Demoarkiv").assertIsDisplayed()
  }
 }
