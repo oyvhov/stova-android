@@ -45,7 +45,7 @@
   - `fun checkHaAddress(input: String): AddressCheck`. Utan skjema og utan port → `http://<input>:8123`. Utan skjema med port → `http://<input>`.
   - `fun isPrivateHost(host: String): Boolean`
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class HaAddressTest {
@@ -60,18 +60,18 @@ class HaAddressTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.ha.HaAddressTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer `HaAddress.kt`**
+- [x] **Step 3: Implementer `HaAddress.kt`**
 
-- [ ] **Step 4: Køyr testen**
+- [x] **Step 4: Køyr testen**
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(ha): address normalisation with LAN-only plain HTTP"
