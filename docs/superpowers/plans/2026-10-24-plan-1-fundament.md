@@ -628,7 +628,7 @@ git add -A && git commit -m "feat(profiles): first-run setup, profile picker and
   - `fun moveFavorite(favorites: List<String>, key: String, delta: Int): List<String>` (klemt til kantane)
   - `class AppRepository(catalog: AppCatalog, profiles: ProfileRepository, scope: CoroutineScope)` med `fun arranged(profile: Flow<Profile?>): Flow<ArrangedApps>` (ny skanning ved `changes()`), `suspend fun toggleFavorite(profileId: String, key: String)`, `suspend fun moveFavorite(profileId: String, key: String, delta: Int)`, `suspend fun setHidden(profileId: String, key: String, hidden: Boolean)`, `suspend fun setKidAllowed(profileId: String, key: String, allowed: Boolean)` og `suspend fun pruneMissing(profileId: String, installedKeys: Set<String>)`, som fjernar avinstallerte nøklar frå `favorites`, `hidden` og `kidAllowed`.
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 class AppArrangementTest {
@@ -668,21 +668,21 @@ class AppRepositoryTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.apps.*"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implementer filene i `apps`, `<queries>` og `AppContainer.apps`**
+- [x] **Step 3: Implementer filene i `apps`, `<queries>` og `AppContainer.apps`**
 
 `AppRepository.arranged` kallar `pruneMissing` når ei skanning manglar nøklar som profilen refererer til.
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: same som Step 2
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(apps): app catalog with TV-first listing, favorites, hidden and kid allow-list"

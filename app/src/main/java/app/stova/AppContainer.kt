@@ -1,6 +1,8 @@
 package app.stova
 
 import android.content.Context
+import app.stova.apps.AppRepository
+import app.stova.apps.PackageManagerAppCatalog
 import app.stova.core.storage.JsonFileStore
 import app.stova.profiles.ProfileRepository
 import app.stova.profiles.ProfileSession
@@ -22,4 +24,11 @@ class AppContainer(context: Context) {
     )
 
     val session = ProfileSession(profiles, appScope)
+
+    val appCatalog = PackageManagerAppCatalog(
+        appContext,
+        PackageManagerAppCatalog.STOCK_LAUNCHERS + appContext.packageName,
+    )
+
+    val apps = AppRepository(appCatalog, profiles, appScope)
 }
