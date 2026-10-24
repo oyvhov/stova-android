@@ -2,5 +2,5 @@
 <resources>
     <!-- Startup window and icons only. Compose reads its colours from core/theme. -->
     <color name="stova_ink">#FF101211</color>
-    <color name="stova_lime">#FFD5F478</color>
+    <color name="stova_lime">#FFBAC79C</color>
 </resources>

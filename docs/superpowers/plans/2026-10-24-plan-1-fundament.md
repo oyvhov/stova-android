@@ -16,7 +16,7 @@
 - `minSdk = 30`, `targetSdk = 36`, `compileSdk = 36`, Java/Kotlin-mål 17.
 - Alle Gradle-kall går gjennom `scripts/gradle.ps1`. Det set `GRADLE_USER_HOME=C:\JellyBin\.gradle-home` (ASCII-sti, delt cache med Spole) og `TEMP/TMP=C:\Launcher\.gradle-tmp`.
 - Ingen `Modifier.blur`, ingen `RenderEffect` og ingen `Color(0x…)` utanfor `app/src/main/java/app/stova/core/theme/`. `DesignRulesTest` håndhevar dette.
-- Fargar, hjørne, typografi og fokus nøyaktig som i spesifikasjonen §2. Lime (`#D5F478`) er berre for val, framdrift og handling.
+- Fargar, hjørne, typografi og fokus nøyaktig som i spesifikasjonen §2. Aksenten (dempa salvie-lime `#BAC79C`, endra 25.10.2026 frå Spole sin `#D5F478`) er berre for val, framdrift og handling. Verdiane i `core/theme/Tokens.kt` er fasit. Eldre fargeverdiar lenger nede i denne planen er historikk.
 - Tekst i UI kjem frå `res/values/strings.xml` (nynorsk) og `res/values-en/strings.xml` (engelsk). Lint `HardcodedText` er feil.
 - Ingen kontroll med fast høgd rundt tekst. Compose-testar for skjermar køyrer også med `fontScale = 2f`.
 - TV-testkonfigurasjon for Robolectric: `@Config(sdk = [30], qualifiers = "w960dp-h540dp-land-television-xhdpi")` (Shield = 1920×1080 ved 320 dpi = 960×540 dp).

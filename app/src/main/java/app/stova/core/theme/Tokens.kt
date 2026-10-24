@@ -5,21 +5,23 @@ import androidx.compose.ui.unit.dp
 import kotlinx.serialization.Serializable
 
 /**
- * Spole's FOREST palette, unchanged. Matte surfaces separated by fill, never by glass or a line.
- * Lime is for selection, progress and direct actions only — never for counts, labels or status.
+ * Spole's matte FOREST surfaces with everything on top of them muted further: a sage-lime accent
+ * instead of Spole's bright lime, softer text and desaturated status colours. Surfaces are
+ * separated by fill, never by glass or a line. The accent is for selection, progress and direct
+ * actions only — never for counts, labels or status. Text keeps at least 6:1 against Surface.
  */
 object StovaColors {
     val Ink = Color(0xFF101211)
     val Surface = Color(0xFF191C19)
     val Raised = Color(0xFF2E332E)
-    val Text = Color(0xFFF3F3EC)
-    val Muted = Color(0xFFA4ADA3)
-    val Primary = Color(0xFFD5F478)
-    val PrimaryContainer = Color(0xFF344024)
-    val PrimarySoft = Color(0xFFDCE9BD)
-    val Success = Color(0xFF56D993)
-    val Caution = Color(0xFFFFC66D)
-    val Warning = Color(0xFFFF7A7D)
+    val Text = Color(0xFFE9E9E2)
+    val Muted = Color(0xFF9AA299)
+    val Primary = Color(0xFFBAC79C)
+    val PrimaryContainer = Color(0xFF30372A)
+    val PrimarySoft = Color(0xFFD2D9C2)
+    val Success = Color(0xFF84BE9C)
+    val Caution = Color(0xFFD8B97E)
+    val Warning = Color(0xFFD48E8E)
     val Outline = Color(0xFF646E63)
     val Divider = Color(0xFF3D443C)
 }
@@ -50,17 +52,17 @@ object StovaLayout {
     const val FocusFadeMillis = 110
 }
 
-/** The eight accent palettes Spole offers, reused as profile avatar colours. */
+/** Spole's eight accent hues, desaturated to sit with the muted palette, as profile avatar colours. */
 @Serializable
 enum class AvatarColor(val argb: Long) {
-    LIME(0xFFD5F478),
-    OCEAN(0xFF96D5FF),
-    IRIS(0xFFCAB8FF),
-    CORAL(0xFFFFB5A0),
-    GOLD(0xFFFFD478),
-    MINT(0xFF86E2C2),
-    ROSE(0xFFF4ABD0),
-    PEARL(0xFFE3E7EF),
+    LIME(0xFFBAC79C),
+    OCEAN(0xFF9DB9CC),
+    IRIS(0xFFB4ACD3),
+    CORAL(0xFFD3AEA3),
+    GOLD(0xFFD4BE8F),
+    MINT(0xFF97C4B2),
+    ROSE(0xFFCFAFC0),
+    PEARL(0xFFD3D6DC),
 }
 
 val AvatarColor.color: Color get() = Color(argb)

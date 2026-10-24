@@ -26,12 +26,15 @@ Kjelder: `C:\JellyBin\reelstack-android\docs\DESIGN_SYSTEM.md`, `docs\LAYOUT.md`
 - **Ikkje glas.** Ingen `Modifier.blur`, ingen `RenderEffect`, ingen halvgjennomsiktige panel lagde
   over innhald. Det einaste gjennomsiktige laget er éin flat, mørk gradient-scrim over backdropen
   for lesbarheit.
-- **Matte, mørke flater.** Fargar (FOREST-standarden frå Spole):
-  `Ink #101211` (bakgrunn), `Surface #191C19`, `Raised #2E332E`, `Text #F3F3EC`, `Muted #A4ADA3`,
-  `Primary (lime) #D5F478`, `PrimaryContainer #344024`, `Success #56D993`, `Caution #FFC66D`,
-  `Warning #FF7A7D`.
-- **Lime er berre handling.** Lime blir brukt på val, framdrift og direkte handlingar, aldri på tal,
-  typemerke, kjeldenamn eller passiv status.
+- **Matte, mørke flater og **meir dempa fargar enn Spole** (brukarønske 25.10.2026).** Flatene er
+  Spole sin FOREST. Alt oppå er dempa: `Ink #101211` (bakgrunn), `Surface #191C19`,
+  `Raised #2E332E`, `Text #E9E9E2`, `Muted #9AA299`, `Primary` (dempa salvie-lime) `#BAC79C`,
+  `PrimaryContainer #30372A`, `PrimarySoft #D2D9C2`, `Success #84BE9C`, `Caution #D8B97E`,
+  `Warning #D48E8E`, `Outline #646E63`, `Divider #3D443C`. Avatarfargane er Spole sine åtte
+  kulørar, desaturerte (sjå `AvatarColor` i `core/theme/Tokens.kt`). Tekst held minst 6:1 mot
+  `Surface`.
+- **Aksenten er berre handling.** Aksenten blir brukt på val, framdrift og direkte handlingar,
+  aldri på tal, typemerke, kjeldenamn eller passiv status. Ingen skarpe eller metta fargar.
 - **Hjørne:** fem steg, 4 / 8 / 12 / 16 / 24 dp. Ingen andre radiusar.
 - **Typografi:** Spole sin `reelstackTypography()`-skala (sans-serif, 12 nivå), kopiert uendra.
 - **Fokus:** 3 dp `onSurface`-strek som tonar inn på 110 ms og følgjer forma til kunsten.
