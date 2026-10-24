@@ -24,7 +24,6 @@ import coil3.request.ImageRequest
     val parts=metaParts(item).map { part -> when(part) {
      is MetaPart.Year -> part.y.toString()
      is MetaPart.Runtime -> if(part.minutes>=60) stringResource(R.string.runtime_hm,part.minutes/60,part.minutes%60) else stringResource(R.string.runtime_m,part.minutes)
-     is MetaPart.Age -> part.rating
      is MetaPart.EpisodeCode -> stringResource(R.string.episode_code,part.season,part.episode)
     } }
     Text(parts.joinToString(" · "),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
