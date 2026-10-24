@@ -187,7 +187,7 @@ git add -A && git commit -m "feat(theme): Spole forest tokens, typography and de
   - `class JsonFileStore<T : Any>(file: File, serializer: KSerializer<T>, default: T, io: CoroutineDispatcher = Dispatchers.IO)` med `val data: Flow<T>` (les fila ved første innsamling og sender kvar endring), `suspend fun current(): T` og `suspend fun update(transform: (T) -> T): T` (serialisert med `Mutex`, skriv med `androidx.core.util.AtomicFile`).
   - `fun writeBlocking(transform: (T) -> T): T` er for kræsjhandsamaren (oppgåve 12). Same lås, men synkron (`runBlocking` på kallaren sin tråd).
 
-- [ ] **Step 1: Skriv testane som feilar**
+- [x] **Step 1: Skriv testane som feilar**
 
 ```kotlin
 @Serializable data class Sample(val n: Int = 0, val s: String = "")
@@ -221,21 +221,21 @@ class JsonFileStoreTest {
 }
 ```
 
-- [ ] **Step 2: Køyr og sjå feil**
+- [x] **Step 2: Køyr og sjå feil**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests "app.stova.core.storage.*"`
 Expected: FAIL (klassen finst ikkje).
 
-- [ ] **Step 3: Implementer `JsonFileStore`**
+- [x] **Step 3: Implementer `JsonFileStore`**
 
 Intern `MutableStateFlow<T?>` (null = ikkje lasta). `data` = `flow { emit(current()); emitAll(state.filterNotNull().drop(1)) }`. Ved `SerializationException` blir fila kopiert til `<namn>.corrupt` og standardverdien brukt.
 
-- [ ] **Step 4: Køyr testane**
+- [x] **Step 4: Køyr testane**
 
 Run: same som Step 2
 Expected: PASS (6 testar).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat(storage): atomic JSON file store with corrupt-file recovery"
