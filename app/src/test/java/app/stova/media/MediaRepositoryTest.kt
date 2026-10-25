@@ -190,4 +190,23 @@ class MediaRepositoryTest {
   r.rows("p",app.stova.profiles.Season.HALLOWEEN).first();r.refresh("p")
   assertEquals(1,seasonalCalls)
  }
+ // Lean core 2: a narrower hero pool ran its whole-library query on every entry to Home.
+ @Test fun aFavouritesPoolIsQueriedOncePerTwoHoursHoweverOftenHomeRestarts()=runTest {
+  val a=accounts();val account=add(a,ServerKind.JELLYFIN);var queries=0;var now=1_000L
+  val client=object:MediaServerClient {
+   override suspend fun resume()=emptyList<MediaItem>();override suspend fun nextUp()=emptyList<MediaItem>();override suspend fun latest(endpoint:Endpoint)=emptyList<MediaItem>()
+   override suspend fun spotlight(source:app.stova.profiles.SpotlightSource):List<MediaItem> { queries++;return listOf(spot(account).copy(favorite=true)) }
+  }
+  val r=MediaRepository(a,{ client },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ now })
+  val favorites=app.stova.profiles.SpotlightSource.FAVORITES
+  val seen=mutableListOf<List<String>>()
+  fun home()=backgroundScope.launch { r.spotlight("p",source=favorites).collect { seen+=it.map { e -> e.item.id } } }
+  home().also { testScheduler.runCurrent() }.cancel()
+  home().also { testScheduler.runCurrent() }.cancel()
+  assertEquals(1,queries)
+  assertEquals("the second entry is served from the pool at once",listOf("f1"),seen.last())
+  now+=SPOTLIGHT_REFRESH_MILLIS+1
+  home().also { testScheduler.runCurrent() }.cancel()
+  assertEquals(2,queries)
+ }
 }

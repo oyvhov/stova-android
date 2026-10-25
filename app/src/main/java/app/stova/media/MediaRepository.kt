@@ -31,6 +31,8 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   var seasonalAt=0L;var seasonalFor: Season = Season.NONE
   /** The last attempt, and the season and accounts it was for: a new account or season is never made to wait. */
   var refreshedAt=0L;var refreshedFor: Pair<Season,List<String>>?=null
+  /** Narrower hero pools (films, series, favourites) and when each is next due; shared by every entry to Home. */
+  val extra=MutableStateFlow<Map<SpotlightSource,List<SpotlightEntry>>>(emptyMap());val extraDue=mutableMapOf<SpotlightSource,Long>();val extraMutex=Mutex()
  }
  private class Fetched(val rows: List<HomeRowUi.Media>,val spotlight: List<SpotlightEntry>,val spotlightOk: Boolean,val seasonalOk: Boolean=true)
  private val slots=ConcurrentHashMap<String,Slot>()
@@ -60,18 +62,20 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
  fun spotlight(profileId:String, season: Season = Season.NONE, source: SpotlightSource = SpotlightSource.LIBRARY): Flow<List<SpotlightEntry>> = flow {
   val slot=loaded(profileId)
   val pool: Flow<List<SpotlightEntry>> = if(source==SpotlightSource.LIBRARY) slot.spotlight else flow {
-   emit(slot.spotlight.value.filter { acceptsSpotlight(it.item,source) })
+   // Home restarts this flow on every entry; the whole-library query itself runs once per two hours.
+   emit(slot.extra.value[source] ?: slot.spotlight.value.filter { acceptsSpotlight(it.item,source) })
    while(true) {
-    val selected=accounts.forProfile(profileId).first().filterNot { it.needsSignIn }
-    val result=supervisorScope { selected.map { account -> async {
-     withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(null) {
-      clientFor(account)?.spotlight(source)?.filter { acceptsSpotlight(it,source) }?.map { item ->
-       SpotlightEntry(item,account,slot.spotlight.value.any { it.account.id==account.id && it.item.id==item.id && it.newSeason })
-      }
-     } }
-    } }.awaitAll() }
-    if(result.any { it!=null }) emit(result.filterNotNull().flatten())
-    delay(SPOTLIGHT_REFRESH_MILLIS)
+    slot.extraMutex.withLock {
+     val now=clock()
+     if((slot.extraDue[source] ?: 0L)-now !in 1..SPOTLIGHT_REFRESH_MILLIS) {
+      val fetched=fetchSpotlight(profileId,slot,source)
+      if(fetched!=null) slot.extra.value+=source to fetched
+      // No account answered: try again after a short while, not every time Home comes back.
+      slot.extraDue[source]=now+(if(fetched!=null) SPOTLIGHT_REFRESH_MILLIS else REFRESH_MIN_AGE_MILLIS)
+     }
+    }
+    slot.extra.value[source]?.let { emit(it) }
+    delay(((slot.extraDue[source] ?: 0L)-clock()).coerceIn(1_000L,SPOTLIGHT_REFRESH_MILLIS))
    }
   }
   emitAll(combine(pool,slot.rows.filterNotNull(),accounts.forProfile(profileId)) { entries,rows,active ->
@@ -80,6 +84,19 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
     visible(rows,active).map { it.copy(items=it.items.filter { item -> acceptsSpotlight(item,source) }) },season)
   })
  }.distinctUntilChanged()
+
+ /** One whole-library query per account for a narrower hero pool; null when no account answered. */
+ private suspend fun fetchSpotlight(profileId:String,slot:Slot,source:SpotlightSource): List<SpotlightEntry>? {
+  val selected=accounts.forProfile(profileId).first().filterNot { it.needsSignIn }
+  val result=supervisorScope { selected.map { account -> async {
+   withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(null) {
+    clientFor(account)?.spotlight(source)?.filter { acceptsSpotlight(it,source) }?.map { item ->
+     SpotlightEntry(item,account,slot.spotlight.value.any { it.account.id==account.id && it.item.id==item.id && it.newSeason })
+    }
+   } }
+  } }.awaitAll() }
+  return if(result.any { it!=null }) result.filterNotNull().flatten() else null
+ }
 
  /** Search all connected libraries, with the snapshot available when a server is offline. */
  fun cachedPreview(profileId:String): Flow<SpotlightEntry?> = flow {
