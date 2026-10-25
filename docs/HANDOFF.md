@@ -1,3 +1,10 @@
+# Smarthus – fjernkontrollhandlingar fullført
+2026-10-25: Heile bestillinga `2026-10-25-smarthus-handlingar.md` er fullført i `ha-v2`; ingen påbyrja steg står att. §5.2 og eigen plan er oppdaterte.
+Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug -Pstova.screens=true`: 381/381, ingen hoppa over; HA 165, DesignRulesTest 4/4; lint 0 feil (32 åtvaringar, 1 hint), APK OK.
+Ekte HA på emulator-5580: PH av/på og 222 → 224 → 222/255; mål 23,5 → 24,0 → 23,5 °C. Ferske HA-svar stadfestar alle fem relevante einingar tilbake; ti kort og tre Heim-brikker er identiske med før prøva.
+Ti visuelt kontrollerte ekte bilete: `docs/images/ha-v2-handling-*.png`. Rapport: `docs/verification/smarthus-handlingar.md`; TDD-ledger og tilbakeføringskvitteringar ligg lokalt i `.superpowers/`.
+Eit anna bygg avløyste APK-en under prøva; vårt bygg vart installert på nytt og kontrollert med SHA-256. Ingen spørsmål eller push. Alarm, opplåsing og garasje er berre testa med falske einingar; fysisk Shield er ikkje verifisert. Forbodne filer er urørte.
+
 # Smarthus v2 – finpuss fullført
 2026-10-25: Heile finpussbestillinga er fullført i `ha-v2`; ingen påbyrja steg står att. Spesifikasjonen §5.2 og finpussplanen er oppdaterte.
 Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug -Pstova.screens=true`: 348/348, 0 hoppa over; HA 132, DesignRulesTest 4/4; lint 0 feil (25 åtvaringar, 1 hint), APK OK.

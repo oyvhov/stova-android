@@ -70,6 +70,14 @@ class ControlPanelTest {
         compose.onNodeWithText("Slå av").performKeyInput {pressKey(Key.DirectionRight)}
         compose.mainClock.advanceTimeBy(400);assertTrue(calls.isEmpty())
     }
+    @Test fun roundedServerBrightnessDoesNotTrapSinglePercentSteps() {
+        panel(CardDialog.Brightness("light.a"),entity("light.a",attrs="""{"brightness":224}"""))
+        compose.onAllNodesWithText("88 %").assertCountEquals(2)
+        compose.onNodeWithTag("slider-brightness").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithTag("slider-brightness").performKeyInput {pressKey(Key.DirectionRight)}
+        compose.waitForIdle();compose.mainClock.advanceTimeBy(400);compose.waitForIdle()
+        assertEquals(listOf(brightnessCall(89)),calls)
+    }
     @Test fun lightShowsOnlySupportedTemperatureAndColourControls() {
         panel(CardDialog.Brightness("light.a"),entity("light.a",attrs="""{"brightness":128,"supported_color_modes":["color_temp","hs"],"min_color_temp_kelvin":2000,"max_color_temp_kelvin":6000}"""))
         compose.onNodeWithText("Varm").performClick()

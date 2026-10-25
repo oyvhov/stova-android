@@ -213,36 +213,68 @@ statusar har nøytrale tekstfargar.
 - Alle kort har ikon og namn øvst (`titleMedium`, `onSurface`), med hovudverdi og detalj
   nedst. Tilstandsbrikke kjem berre når ho tilfører informasjon; ingen duplisert På-brikke.
   Rom-undertekst blir berre vist i Favorittar. Fokusert kort blir bede heilt inn i synsfeltet,
-  med plass til heile fokusringen. Hint er berre synleg med fokus i rutenettet ved vanleg
-  skriftstorleik, i overskriftsfeltet slik at det korkje dekkjer eller tek høgd frå korta.
+  med plass til heile fokusringen. Hint er synleg med fokus i rutenettet og ligg i den trygge botnmargen utan å
+  dekkje eller ta høgd frå korta.
 - `CardConfig` lagrar `size`, valfritt `name` og `icon`, `favorite` og `onHome`.
   Gamle JSON-kort med `wide=true` blir M når `size` manglar; eksplisitt `size` vinn.
   `wide` er berre eit kompatibilitetsfelt. Ny redigering brukar `size`.
 
-| Korttype | Visning | OK | Venstre/høgre på sjølve kortet |
-|---|---|---|---|
-| Lys | Lysstyrke som hovudverdi når på, elles Av; Varm kvit (<3000 K), Nøytral (3000–4500 K), Kald kvit (>4500 K), eller fargeprikk | av/på | lysstyrke ±10 %, samla etter 250 ms |
-| Brytar/vifte/input_boolean | På/av | av/på | vanleg fokusflytting |
-| Klima | Noverande temperatur stort, mål med ±-hint ved fokus, modusbrikke med ikon | temperaturdialog | mål ±0,5 °C innan min/maks |
-| Sensor | Verdi/eining og 24 t-sparkline | 24 t-graf når numerisk | vanleg fokusflytting |
-| Binærsensor | Ord etter device class, t.d. Open/Lukka eller Rørsle/Ingen rørsle | lesing | vanleg fokusflytting |
-| Vêr | No og fem dagar med ikon og høg/låg | lesing | vanleg fokusflytting |
-| Straumpris | Timesnitt, nivåfarga søyler, noverande time markert, min/maks med klokkeslett | graf med I dag/I morgon og Timesnitt/15 minutt | vanleg fokusflytting |
-| Mediaspelar | Kunst fyller venstresida av M/L, tittel/artist til høgre, framdrift, spel/pause/neste og volum | spel/pause | volum ±5 % |
-| Scene/skript | Køyr | køyr med kvittering | vanleg fokusflytting |
-| Kamera | Stillbilete kvart 10. s medan synleg | fullskjerm, kvart 2. s | vanleg fokusflytting |
-| Gardin/port | Tilstand og prosent | opne/lukke/stopp-dialog | posisjon ±10 % når støtta |
-| Lås | Låst/ulåst | stadfesting før endring | vanleg fokusflytting |
+#### Fjernkontroll og handlingar (bindande, 25.10.2026)
 
-Meny eller lang OK opnar kortmenyen for vaksne, også utan redigeringsmodus: storleik,
-flytt venstre/høgre/opp/ned, namn, ikon, Favorittar, Vis på Heim (maks tre), fjern.
-Fokus kjem tilbake til kortet etter menyen. Opp/ned i klima-dialogen navigerer; dei endrar
-ikkje temperaturen. Inne i medieknappane navigerer pilene mellom knappane.
+| Tast | Rolle | Gjeld |
+|---|---|---|
+| Piler | Berre navigasjon i rutenettet. Endrar aldri ei eining. | Alle kort |
+| OK | Openberr, trygg og reversibel snøgghandling, sjå nedanfor. | Alle kort |
+| Hald OK | Opnar kontrollpanelet («Fleire val»). | Alle kort |
+| Meny (≡) | Kortval: storleik, flytt, namn, ikon, Favorittar, Vis på Heim, fjern. | Vaksne, òg i Rediger-modus |
+| Spel/pause | Spel/pause på fokusert mediaspelar. | Media |
+| Spol fram/tilbake | Neste/førre spor på fokusert mediaspelar. | Media |
+| Tilbake | Lukkar panel, val eller Rediger-modus; elles Heim. | Alle |
 
-Brytarar får optimistisk tilstand straks og eit ventemerke. Ved feil kjem den sist mottatte
-HA-tilstanden tilbake med ei roleg melding. Doble kall til same ventande eining blir avviste.
-Tenestekall er verna av `canControl`; barneprofilar utan styringsløyve kan framleis lese
-sensorhistorikk og kamera, men kan ikkje endre einingar eller kortoppsettet.
+| Korttype | OK | Kontrollpanel (hald OK) |
+|---|---|---|
+| Lys | Slå på/av. | Lysstyrke, Varm/Nøytral/Kald, fargeførehandsval når støtta, av/på. |
+| Brytar, vifte, input_boolean | Slå på/av. | Av/på, viftefart og retning når støtta. |
+| Scene, skript | Køyr; «Køyrt ✓» på kortet i 2 s etter vellukka kall. | Køyr og sist køyrt. |
+| Mediaspelar | Spel/pause. | Førre, spel/pause, neste, volum og støtta kjelder. |
+| Klima | Opne panelet. | Måltemperatur ±0,5 °C innan min/maks, støtta modus (Varme/Kjøling/Auto/Av m.fl.) og førehandsinnstillingar. |
+| Gardin/port (cover) | Opne panelet. | Opne, Stopp, Lukk, posisjon når støtta. Garage/gate krev eiga stadfesting før handling, òg posisjon. |
+| Lås | Opne panelet. | Lås med eitt trykk. Lås opp krev eige steg med «Ja, lås opp». |
+| Kamera | Fullskjerm, oppdatert kvart 2. s. | Same. |
+| Sensor, binærsensor | Opne panelet. | 24 t-graf der numerisk historikk finst, min/maks, status og sist endra. |
+| Vêr | Opne panelet. | Timar og dagar. |
+| Straumpris | Opne panelet. | Graf: i dag/i morgon, time/15 minutt. |
+| Alarm | Berre lesing. | Ingen styring. |
+
+Kontrollpanelet er eit roleg, matt ark med namn, rom og stor hovudverdi.
+Opp/ned flyttar mellom kontrollrader; venstre/høgre justerer berre den fokuserte
+glidebrytaren. OK aktiverer knappar. Prosentsteg aukar ved repetisjon frå 1 til 5
+til 10; klima held 0,5 °C. Verdien blir vist optimistisk, og justeringskallet går
+300 ms etter siste tastetrykk. Nye tastetrykk avbryt ikkje kall som alt er sende.
+Ved feil kjem den sist mottekne HA-verdien tilbake med ei roleg melding.
+Tilbake lukkar panelet og gjenopprettar fokus på same kort.
+
+Snøgghandlingar har optimistisk tilstand og eit lite ventemerke. Doble kall til
+same ventande eining blir avviste. Utilgjengelege kort er dempa og sender ingen
+kall. Alarm kan aldri styrast. Ein barneprofil utan `kidSmartHomeControl` får
+lesepanel både med OK og hald OK. Barn får ingen kortval eller Rediger-modus,
+heller ikkje når dei har styringsløyve. Stadfestingar startar med fokus på Avbryt.
+
+Hinten nedst følgjer det fokuserte kortet, til dømes «OK: slå av · Hald OK:
+lysstyrke og farge · Meny: tilpass» og «OK: juster temperatur · Hald OK: fleire
+val · Meny: tilpass». Han tonar inn ved fokusbyte og ut etter fire sekund.
+Han ligg i den trygge botnmargen og tek ingen plass frå korta.
+
+«3 lys på» i oppsummeringa er ein knapp som spør «Slå av alle 3 lys?» med
+Ja/Avbryt, berre for dei unike påslåtte lyskorta på dashbordet. Andre verdiar er
+informasjon. Rediger i overskrifta slår på Rediger-modus med flytteramme rundt
+korta. OK opnar kortval; piler medan OK er halde flyttar same kort innanfor
+seksjonen. Tilbake avsluttar. Meny opnar kortval direkte utan Rediger-modus.
+
+Statusbrikkene på Heim opnar Smarthus med sitt eige kort fokusert og sender
+aldri direkte handlingar. Vanleg retur til Smarthus hugsar sist fokuserte kort
+per profil, òg når det ligg utanfor det første synsfeltet. Heim-skjermen,
+heroen og mediekorta blir ikkje endra av denne interaksjonsmodellen.
 
 Einingsveljaren ventar på CONNECTED, viser skjelett under lasting og lastar på nytt ved
 ny tilkopling. Fråkopling, lastefeil og tomme søk er ulike tilstandar. Søk treff namn,

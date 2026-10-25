@@ -40,6 +40,17 @@ class HaRepositoryTest {
         advanceTimeBy(1999);runCurrent();assertTrue(scene.id in repo.completed.value)
         advanceTimeBy(1);runCurrent();assertFalse(scene.id in repo.completed.value)
     }
+    @Test fun coverPositionWaitsForActualPositionEvent() = runTest {
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
+        val cover=HaEntity("cover.curtain","open",kotlinx.serialization.json.buildJsonObject {put("current_position",kotlinx.serialization.json.JsonPrimitive(50))},0,0)
+        repo.add(cover,CardType.COVER);runCurrent();socket.entities.value=mapOf(cover.id to cover);runCurrent()
+        val call=ServiceCall("cover","set_cover_position",kotlinx.serialization.json.buildJsonObject {put("position",kotlinx.serialization.json.JsonPrimitive(60))})
+        val job=backgroundScope.async {repo.perform(call,cover.id,adult)};runCurrent()
+        assertFalse(job.isCompleted);assertTrue(cover.id in repo.pending.value)
+        socket.entities.value=mapOf(cover.id to optimisticEntity(cover,call));runCurrent()
+        assertTrue(job.await());assertTrue(repo.pending.value.isEmpty())
+    }
     @Test fun watchFollowsActiveProfileCards() = runTest {
         val p = profiles(); val s = ProfileSession(p, backgroundScope); val socket = FakeHaConnection()
         val repo = HaRepository(socket, s, p, backgroundScope)

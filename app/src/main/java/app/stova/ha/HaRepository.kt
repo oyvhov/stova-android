@@ -129,8 +129,7 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
                 // Keep the pending display until the corresponding state event arrives, or a bounded timeout.
                 withTimeoutOrNull(2_000) {mutableEntities.first { live ->
                     val current=live[entityId]
-                    current!=null && current.state==predicted.state && (call.data.keys + if(call.data.containsKey("brightness_pct")) setOf("brightness") else emptySet())
-                        .filterNot {it=="brightness_pct"}.all {current.attributes[it]==predicted.attributes[it]}
+                    current!=null && predictionReceived(current,predicted,call)
                 }}
             }
             mutableFeedback.value=if(success) HaFeedback.DONE else HaFeedback.FAILED
@@ -147,3 +146,12 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
         }
     }
 }
+
+private fun predictionReceived(current:HaEntity,predicted:HaEntity,call:ServiceCall):Boolean =
+    current.state==predicted.state && call.data.keys.filterNot {it=="hvac_mode"}.all {key ->
+        val attribute=when(key) {"brightness_pct"->"brightness";"position"->"current_position";else->key}
+        val actual=current.attributes.number(attribute)
+        val expected=predicted.attributes.number(attribute)
+        if(actual!=null && expected!=null) kotlin.math.abs(actual-expected)<=if(attribute=="brightness") 1.0 else 0.001
+        else current.attributes[attribute]==predicted.attributes[attribute]
+    }
