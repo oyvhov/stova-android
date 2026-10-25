@@ -1,34 +1,71 @@
 package app.stova.ha.cards
+
 import androidx.compose.runtime.*
-import app.stova.ha.HaEntity
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.stova.R
+import app.stova.ha.HaEntity
+import app.stova.ha.text
+import app.stova.core.theme.StovaColors
 import kotlinx.coroutines.delay
+import java.time.*
 
-@Composable fun EnergyPriceCard(entity:HaEntity) {StateValue(entity);PriceChart(entity,modifier=Modifier.height(42.dp))}
+@Composable fun EnergyPriceCard(entity:HaEntity,zone:ZoneId=ZoneId.systemDefault()) {
+    StateValue(entity)
+    PriceChart(entity,modifier=Modifier.height(34.dp),detailed=false,zone=zone)
+}
 
-@Composable fun PriceChart(entity:HaEntity,tomorrow:Boolean=false,modifier:Modifier=Modifier) {
-    val points=remember(entity,tomorrow) {pricePoints(entity,tomorrow)}
+@Composable fun PriceChart(entity:HaEntity,tomorrow:Boolean=false,modifier:Modifier=Modifier,
+    quarters:Boolean=false,detailed:Boolean=true,zone:ZoneId=ZoneId.systemDefault()) {
     var now by remember {mutableLongStateOf(System.currentTimeMillis())}
     LaunchedEffect(Unit) {while(true) {delay(60_000);now=System.currentTimeMillis()}}
+    val date=Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+    val points=remember(entity,tomorrow,quarters,zone,date) {
+        val raw=pricePoints(entity,tomorrow,date,zone)
+        if(quarters) raw else hourlyPrices(raw,zone)
+    }
     if(points.isEmpty()) {CardDetail(stringResource(if(tomorrow) R.string.ha_v2_no_tomorrow else R.string.ha_no_history));return}
-    val text=MaterialTheme.colorScheme.onSurface;val muted=MaterialTheme.colorScheme.onSurfaceVariant
-    Canvas(modifier.fillMaxWidth()) {
-        val min=minOf(0.0,points.minOf {it.value});val max=maxOf(0.0,points.maxOf {it.value});val range=(max-min).coerceAtLeast(.001)
-        val zero=(size.height*max/range).toFloat();val width=size.width/points.size
-        points.forEachIndexed {i,p ->
-            val y=(size.height*(max-p.value)/range).toFloat()
-            drawRect(if(now>=p.start && now<p.end) text else muted.copy(alpha=.55f),Offset(i*width,minOf(y,zero)),Size((width-2.dp.toPx()).coerceAtLeast(1f),(kotlin.math.abs(zero-y)).coerceAtLeast(1f)))
+    val locale=LocalConfiguration.current.locales[0]
+    val unit=entity.attributes.text("unit_of_measurement").orEmpty()
+    val accent=MaterialTheme.colorScheme.primary
+    val lowest=points.minBy {it.value};val highest=points.maxBy {it.value}
+    if(detailed) {
+        points.find {now>=it.start && now<it.end}?.let {
+            Text(stringResource(R.string.ha_v2_chart_now,formatNumber(it.value,locale),unit),style=MaterialTheme.typography.titleMedium,color=accent)
         }
     }
-    val locale=LocalConfiguration.current.locales[0]
-    CardDetail(stringResource(R.string.ha_v2_minmax,formatNumber(points.minOf {it.value},locale),formatNumber(points.maxOf {it.value},locale)))
+    Canvas(modifier.fillMaxWidth()) {
+        val min=minOf(0.0,lowest.value);val max=maxOf(0.0,highest.value);val range=(max-min).coerceAtLeast(.001)
+        val zero=(size.height*max/range).toFloat()
+        val begin=points.first().start;val duration=(points.last().end-begin).coerceAtLeast(1)
+        points.forEach {p ->
+            val x=(size.width*(p.start-begin)/duration).toFloat()
+            val width=(size.width*(p.end-p.start)/duration).toFloat()
+            val y=(size.height*(max-p.value)/range).toFloat()
+            val current=now>=p.start && now<p.end
+            val level=when(priceLevel(p.value,lowest.value,highest.value)) {
+                PriceLevel.LOW->StovaColors.Success;PriceLevel.MEDIUM->StovaColors.Caution;PriceLevel.HIGH->StovaColors.Warning
+            }
+            drawRoundRect(if(current) accent else level.copy(alpha=.72f),Offset(x,minOf(y,zero)),
+                Size((width-(if(quarters) 1.dp else 3.dp).toPx()).coerceAtLeast(1f),kotlin.math.abs(zero-y).coerceAtLeast(2.dp.toPx())),CornerRadius(4.dp.toPx()))
+            if(current && detailed) drawLine(accent,Offset(x+width/2,0f),Offset(x+width/2,size.height),1.dp.toPx())
+        }
+    }
+    if(detailed) {
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+            (0..24 step 6).forEach {Text(it.toString().padStart(2,'0'),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+        }
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+            Column {CardDetail(stringResource(R.string.ha_v2_cheapest,priceWindow(lowest,zone,quarters)));CardDetail("${formatNumber(lowest.value,locale)} $unit")}
+            Column {CardDetail(stringResource(R.string.ha_v2_dearest,priceWindow(highest,zone,quarters)));CardDetail("${formatNumber(highest.value,locale)} $unit")}
+        }
+    }
 }

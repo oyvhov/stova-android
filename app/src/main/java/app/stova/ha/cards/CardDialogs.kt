@@ -75,11 +75,13 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
                     Text(entity?.let(::friendlyName) ?: dialog.entityId)
                     if(dialog.today && entity!=null) {
                         var tomorrow by remember {mutableStateOf(false)}
+                        var quarters by remember {mutableStateOf(false)}
                         Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                             StovaButton(stringResource(R.string.ha_v2_today),{tomorrow=false},primary=!tomorrow)
                             StovaButton(stringResource(R.string.ha_v2_tomorrow),{tomorrow=true},primary=tomorrow)
+                            StovaButton(stringResource(if(quarters) R.string.ha_v2_quarter_hours else R.string.ha_v2_hourly),{quarters=!quarters})
                         }
-                        PriceChart(energy ?: entity,tomorrow,Modifier.width(496.dp).height(180.dp))
+                        PriceChart(energy ?: entity,tomorrow,Modifier.width(496.dp).height(148.dp),quarters=quarters,zone=socket.timeZone)
                     } else {
                         Text(stringResource(R.string.ha_v2_history),style=MaterialTheme.typography.labelLarge)
                         if(history.size<2) Text(stringResource(R.string.ha_no_history)) else Sparkline(history,Modifier.width(496.dp).height(180.dp))

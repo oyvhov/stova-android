@@ -299,4 +299,9 @@
     <string name="ha_v2_warm_white">Warm white</string>
     <string name="ha_v2_neutral_white">Neutral</string>
     <string name="ha_v2_cool_white">Cool white</string>
+    <string name="ha_v2_chart_now">Now %1$s %2$s</string>
+    <string name="ha_v2_cheapest">Cheapest %1$s</string>
+    <string name="ha_v2_dearest">Highest %1$s</string>
+    <string name="ha_v2_hourly">Hourly</string>
+    <string name="ha_v2_quarter_hours">15 minutes</string>
 </resources>

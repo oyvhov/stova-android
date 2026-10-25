@@ -299,4 +299,9 @@
     <string name="ha_v2_warm_white">Varm kvit</string>
     <string name="ha_v2_neutral_white">Nøytral</string>
     <string name="ha_v2_cool_white">Kald kvit</string>
+    <string name="ha_v2_chart_now">No %1$s %2$s</string>
+    <string name="ha_v2_cheapest">Billigast %1$s</string>
+    <string name="ha_v2_dearest">Dyrast %1$s</string>
+    <string name="ha_v2_hourly">Timesnitt</string>
+    <string name="ha_v2_quarter_hours">15 minutt</string>
 </resources>
