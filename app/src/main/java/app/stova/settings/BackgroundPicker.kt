@@ -12,12 +12,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import app.stova.R
 import app.stova.core.ui.RemoteTextField
 import app.stova.core.ui.SettingsNavRow
 import app.stova.core.ui.StovaButton
+import app.stova.core.ui.StovaDialog
 import app.stova.media.SpotlightEntry
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -38,7 +37,7 @@ fun BackgroundPicker(search: suspend (String) -> List<SpotlightEntry>, onSelect:
         catch (e: CancellationException) { throw e }
         catch (_: Exception) { failed = true }
     }
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    StovaDialog(onDismiss) {
         Column(Modifier.fillMaxSize(0.9f).widthIn(max = 760.dp)
             .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large).padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {

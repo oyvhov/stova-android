@@ -9,8 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.AppContainer
 import app.stova.R
@@ -77,7 +75,7 @@ fun HaSettings(container: AppContainer) {
     val scope = rememberCoroutineScope()
     BackHandler(enabled = setup) { setup = false }
     if (setup) {
-        Dialog({ setup = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        StovaDialog({ setup = false }) {
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(48.dp)) {
                 HaSetupFlow(container) { setup = false }
             }

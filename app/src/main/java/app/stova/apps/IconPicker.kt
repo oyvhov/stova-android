@@ -22,14 +22,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.R
 import app.stova.core.theme.LocalAppearance
 import app.stova.core.ui.RemoteTextField
 import app.stova.core.ui.SettingsChoiceRow
 import app.stova.core.ui.StovaButton
+import app.stova.core.ui.StovaDialog
 import app.stova.core.ui.focusOutline
 import app.stova.profiles.IconColor
 import kotlinx.coroutines.Dispatchers
@@ -54,7 +53,7 @@ fun IconPicker(art: AppArtCache, initialPack: String?, onSelect: (IconOverride) 
     }
     val names = result?.takeIf { it.pack == pack && it.query == query }?.names.orEmpty()
     val search = remember { FocusRequester() }
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    StovaDialog(onDismiss) {
         Column(Modifier.fillMaxSize(0.9f).widthIn(max = 850.dp).clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surface).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.icon_from_pack), style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)

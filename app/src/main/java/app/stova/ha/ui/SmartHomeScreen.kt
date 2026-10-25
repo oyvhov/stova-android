@@ -27,8 +27,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.AppContainer
 import app.stova.R
@@ -65,7 +63,7 @@ import kotlin.math.ceil
         onConfigure={card->scope.launch {container.haRepository.configure(card.id,card.size,card.name,card.icon,card.favorite)}},
         registry=registry,pending=pending,feedback=feedback,connection=container.haSocket,completed=completed,overlayOpen=dialog!=null || adding,
         initialFocusId=firstFocus,onCardFocused={container.haRepository.rememberFocus(profile.id,it)})
-    if(adding && !profile.kid) Dialog({adding=false},properties=DialogProperties(usePlatformDefaultWidth=false)) {
+    if(adding && !profile.kid) StovaDialog({adding=false}) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(StovaLayout.TvSafeEdge)) {AddCardFlow(container) {adding=false}}
     }
     CardDialogHost(dialog,entities,container.haSocket,images,!canControl(profile),{call,id->scope.launch {container.haRepository.perform(call,id,profile)}},{dialog=null},room=dialog?.let {registry.entities[it.entityId]?.room},
@@ -228,7 +226,7 @@ import kotlin.math.ceil
     }
     lightsToTurnOff?.let {ids ->
         fun dismiss() {lightsToTurnOff=null;runCatching {summaryFocus.requestFocus()}}
-        Dialog(::dismiss) {
+        StovaDialog(::dismiss) {
             val cancelFocus=remember {FocusRequester()}
             Column(Modifier.widthIn(max=480.dp).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                 Text(stringResource(R.string.ha_action_all_lights,ids.size),style=MaterialTheme.typography.titleLarge)
@@ -293,7 +291,7 @@ import kotlin.math.ceil
     var limit by remember {mutableStateOf(false)}
     val scope=rememberCoroutineScope()
     fun save(updated:CardConfig) {onConfigure(updated);onDismiss()}
-    Dialog(onDismiss) {
+    StovaDialog(onDismiss) {
         Column(Modifier.widthIn(max=560.dp).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Text(label,style=MaterialTheme.typography.titleLarge)
             LazyColumn(Modifier.heightIn(max=320.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {

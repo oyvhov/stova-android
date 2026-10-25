@@ -20,8 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import app.stova.core.ui.StovaDialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.AppContainer
 import app.stova.R
@@ -182,7 +181,7 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
 
 @Composable
 private fun EditorDialog(onDismiss: () -> Unit, content: @Composable () -> Unit) {
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    StovaDialog(onDismiss) {
         Column(
             Modifier.background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.extraLarge)
                 .padding(32.dp)

@@ -4,5 +4,13 @@
         <item name="android:windowBackground">@color/stova_ink</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:dialogTheme">@style/Theme.Stova.Dialog</item>
+    </style>
+
+    <!-- StovaDialog draws the scrim and plays the entry and exit itself, following the motion
+         tokens and "Reduser rørsle"; the window must neither dim nor animate on its own. -->
+    <style name="Theme.Stova.Dialog" parent="android:Theme.DeviceDefault.Dialog">
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
     </style>
 </resources>

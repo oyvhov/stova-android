@@ -12,9 +12,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import app.stova.R
 import app.stova.core.ui.StovaButton
+import app.stova.core.ui.StovaDialog
 import app.stova.profiles.Profile
 import kotlinx.coroutines.launch
 
@@ -31,7 +31,7 @@ fun AppMenuHost(app: InstalledApp, apps: AppRepository, profile: Profile, art: A
                 { icon -> scope.launch { apps.setIcon(profile.id, app.key, icon); onDismiss() } }, { picking = false })
             changing -> {
                 val first = remember { FocusRequester() }
-                Dialog(onDismissRequest = { changing = false }) {
+                StovaDialog({ changing = false }) {
                     Column(Modifier.width(360.dp).background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large)
                         .verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(stringResource(R.string.icon_change), style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)

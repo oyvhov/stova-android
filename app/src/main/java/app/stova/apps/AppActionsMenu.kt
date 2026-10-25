@@ -19,10 +19,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import app.stova.R
 import app.stova.core.theme.StovaShapes
 import app.stova.core.ui.StovaButton
+import app.stova.core.ui.StovaDialog
 
 /** What an adult can do with one app. Every choice closes the menu. */
 @Composable
@@ -40,7 +40,7 @@ fun AppActionsMenu(
 ) {
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
-    Dialog(onDismissRequest = onDismiss) {
+    StovaDialog(onDismiss) {
         Column(
             Modifier.width(360.dp)
                 .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.extraLarge)
