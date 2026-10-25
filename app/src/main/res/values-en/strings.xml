@@ -459,4 +459,6 @@
     <string name="ha_action_hint_menu">" · Menu: customise"</string>
     <string name="ha_action_all_lights">"Turn off all %1$d lights?"</string>
     <string name="ha_action_yes_off">"Yes, turn off"</string>
+    <!-- System -->
+    <string name="nav_system_settings">Android settings</string>
 </resources>

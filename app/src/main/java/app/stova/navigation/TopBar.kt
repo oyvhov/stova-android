@@ -62,6 +62,8 @@ fun TopBar(
     modifier: Modifier = Modifier,
     onSmartHome: (() -> Unit)? = null,
     leading: @Composable RowScope.() -> Unit = {},
+    /** Android's own settings; null for kids, who must not reach the system menu. */
+    onSystemSettings: (() -> Unit)? = null,
 ) {
     Row(
         modifier.fillMaxWidth().padding(horizontal = StovaLayout.TvSafeEdge).padding(top = 28.dp, bottom = 8.dp),
@@ -80,6 +82,7 @@ fun TopBar(
         if(onSmartHome!=null) TopBarButton(StovaIcons.Home,stringResource(R.string.nav_smart_home),onSmartHome)
         TopBarButton(StovaIcons.Apps, stringResource(R.string.nav_apps), onApps)
         TopBarButton(StovaIcons.Settings, stringResource(R.string.nav_settings), onSettings)
+        if (onSystemSettings != null) TopBarButton(StovaIcons.Gear, stringResource(R.string.nav_system_settings), onSystemSettings)
         ProfileButton(profile, onProfile)
     }
 }

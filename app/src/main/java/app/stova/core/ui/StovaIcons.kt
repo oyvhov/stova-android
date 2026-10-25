@@ -104,6 +104,22 @@ object StovaIcons {
         }
     }
 
+    /** Android's settings: eight teeth round an axle, so it never reads as Stova's own sliders. */
+    val Gear: ImageVector by lazy {
+        icon("gear") {
+            for (i in 0 until 8) {
+                val centre = i * 45.0
+                listOf(-14.0 to 7.4f, -9.0 to 9.8f, 9.0 to 9.8f, 14.0 to 7.4f).forEachIndexed { k, (offset, radius) ->
+                    val angle = Math.toRadians(centre + offset)
+                    val x = 12f + radius * kotlin.math.cos(angle).toFloat(); val y = 12f + radius * kotlin.math.sin(angle).toFloat()
+                    if (i == 0 && k == 0) moveTo(x, y) else lineTo(x, y)
+                }
+            }
+            close()
+            moveTo(15f, 12f); arcTo(3f, 3f, 0f, true, true, 9f, 12f); arcTo(3f, 3f, 0f, true, true, 15f, 12f)
+        }
+    }
+
     val Lock: ImageVector by lazy {
         icon("lock") {
             moveTo(6f, 11f); lineTo(18f, 11f); lineTo(18f, 20f); lineTo(6f, 20f); close()

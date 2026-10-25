@@ -72,6 +72,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
             container.session.leave()
         }
     }
+    val context = androidx.compose.ui.platform.LocalContext.current
     val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season()) } }
     val date = app.stova.core.theme.LocalSeasonDate.current
     LaunchedEffect(home, date) { home.setCalendarDate(date) }
@@ -95,6 +96,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         onProfile = switchProfile,
                         onSmartHome = if(household?.haBaseUrl!=null) {{smartHomeCardId=null;current=Destination.SMART_HOME}} else null,
                         leading = { app.stova.ha.ui.HomeStatusChips(chips,onOpenCard={id->smartHomeCardId=id;current=Destination.SMART_HOME}) },
+                        onSystemSettings = if (profile.kid) null else ({ openSystemSettings(context) }),
                     )
                 },
             )

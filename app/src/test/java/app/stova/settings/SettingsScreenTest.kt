@@ -57,6 +57,14 @@ class SettingsScreenTest {
         assertEquals(app.stova.profiles.ArtworkSize.MEDIUM, profile("B").appearance.cardSize)
     }
 
+    @Test fun adultReachesAndroidSettingsFromStovaSettings() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNodeWithText("Android-innstillingar").performScrollTo().performClick()
+        val started = org.robolectric.Shadows.shadowOf(rule.activity).nextStartedActivity
+        assertEquals(android.provider.Settings.ACTION_SETTINGS, started?.action)
+    }
+
     @Test fun kidSeesOnlySwitchProfile() {
         runBlocking {
             container.profiles.create("A", AvatarColor.LIME, false)

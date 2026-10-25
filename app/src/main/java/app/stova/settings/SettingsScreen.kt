@@ -60,7 +60,8 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
     }
     var section by rememberSaveable { mutableStateOf(SettingsSection.PROFILE) }
     Row(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-        Column(Modifier.width(260.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Scrolls: eight entries no longer fit 540 dp, and the last ones must stay reachable by focus.
+        Column(Modifier.width(260.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 stringResource(R.string.nav_settings),
                 style = MaterialTheme.typography.headlineMedium,
@@ -70,6 +71,9 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
             SettingsSection.entries.forEach { entry ->
                 SectionTab(stringResource(entry.label), entry == section) { section = entry }
             }
+            // Not a Stova section: a door to Android's own settings (network, picture, sound).
+            val context = androidx.compose.ui.platform.LocalContext.current
+            SectionTab(stringResource(R.string.nav_system_settings), false) { app.stova.navigation.openSystemSettings(context) }
         }
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState()),

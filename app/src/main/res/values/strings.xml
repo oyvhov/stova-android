@@ -459,4 +459,6 @@
     <string name="ha_action_hint_menu">" · Meny: tilpass"</string>
     <string name="ha_action_all_lights">"Slå av alle %1$d lys?"</string>
     <string name="ha_action_yes_off">"Ja, slå av"</string>
+    <!-- System -->
+    <string name="nav_system_settings">Android-innstillingar</string>
 </resources>
