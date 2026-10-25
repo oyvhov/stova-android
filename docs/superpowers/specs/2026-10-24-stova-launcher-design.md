@@ -34,11 +34,14 @@ Kjelder: `C:\JellyBin\reelstack-android\docs\DESIGN_SYSTEM.md`, `docs\LAYOUT.md`
   kulørar, desaturerte (sjå `AvatarColor` i `core/theme/Tokens.kt`). Tekst held minst 6:1 mot
   `Surface`.
 - **Aksenten er berre handling.** Aksenten blir brukt på val, framdrift og direkte handlingar,
-  aldri på tal, typemerke, kjeldenamn eller passiv status. Ingen skarpe eller metta fargar.
-- **Hjørne:** fem steg, 4 / 8 / 12 / 16 / 24 dp. Ingen andre radiusar.
+  aldri på tal, typemerke eller kjeldenamn. «Ny sesong» følgjer òg den valde aksenten (Utsjånad v2). Ingen skarpe eller metta fargar.
+- **Hjørne:** fem runde steg, 4 / 8 / 12 / 16 / 24 dp. Profilvalet «Skarpe» gir 0 dp
+  i temastyrte flater og kunstkort.
 - **Typografi:** Spole sin `reelstackTypography()`-skala (sans-serif, 12 nivå), kopiert uendra.
-- **Fokus:** 3 dp `onSurface`-strek som tonar inn på 110 ms og følgjer forma til kunsten.
-  Fokus endrar aldri storleik eller layout (ingen skalering). Fokus er ikkje val.
+- **Fokus:** 3 dp strek i vald aksent som tonar inn på 110 ms og følgjer forma til kunsten
+  (4 dp ved kraftig fokus). Standard er berre ring. Valfri forstørring til 1,05 skjer i
+  teiknelaget på kunsten, animert over 180 ms, og endrar aldri layout eller plassering av titlar.
+  Redusert rørsle slår av forstørringa og animasjonen.
 - **Rørsle:** 180 ms standardovergang, FastOutSlowIn, ingen fjør eller overshoot. «Reduser
   rørsle» slår av krysstoning og rotasjon.
 - **TV-margin:** 48 dp trygg kant (5 % av 1080p).
@@ -62,7 +65,7 @@ Korleis vi held tala:
 - Heim blir teikna frå eit lokalt øyeblikksbilete (JSON) før nettverket svarar. Nettverket
   oppdaterer i bakgrunnen.
 - Bilete blir alltid bedne om i visningsstorleik (`maxWidth`/`maxHeight` og `tag` frå serveren).
-- Backdrop følgjer spotlighten, ikkje fokus: eitt bilete kvart 12. s, ferdig dekoda før det tonar inn.
+- Backdrop følgjer spotlighten, ikkje fokus: eitt bilete kvart 8., 12. eller 20. s (12 som standard), ferdig dekoda før det tonar inn.
 - Ingen blur, ingen skuggar på kort og ingen alfa-lag over rader.
 - Release har R8 og Baseline Profile.
 - HA-socketen og nettverksoppdateringane stoppar når Stova ikkje er synleg.
@@ -99,10 +102,10 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│  [Ny sesong]                   ☁ 4°  135 øre  21:14  ⌂  ▦  ⚙  ◉ │
-│  [clearlogo / tittel]                                           │
-│  2024 · 1 t 52 min · 12 · ★ 7,8 · 🍅 91 %                        │
-│  Tre linjer omtale …                                            │
+│                               ☁ 4°  135 øre  21:14  ⌂  ▦  ⚙  ◉ │
+│  [liten clearlogo / tittel]                                     │
+│  [Ny sesong] [★ 7,8] [2024] [12] [🍅 91 %]                       │
+│  Film · Drama · Eventyr                                        │
 │                                                                 │
 │  Favorittappar   [banner][banner][banner][banner]               │
 │  Hald fram  Jellyfin   [16:9][16:9][16:9] ▬▬▬ framdrift          │
@@ -119,9 +122,20 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   tilfeldige titlar med backdrop (dei med clearlogo først), opptil 30, og eitt nytt utval kvar
   2. time. Seriar der sesong 2 eller seinare har hatt premiere dei siste 45 dagane kjem først,
   merka «Ny sesong». Aldri episodekunst, episodenummer eller tenestemerke i heroen.
-  - Innhald: «Ny sesong»-merke, clearlogo (fallback: tittel i `displaySmall`), metadatalinje
-    (år, og speletid berre for film), score og tre linjer omtale.
-  - Kvar tittel står i 12 s. Neste bakgrunn blir lasta ferdig før han tonar inn over 900 ms,
+  - Innhald (Utsjånad v2): teksten står øvst til venstre rett under toppfeltet. Clearlogo er
+    høgst 320 × 72 dp og får transparent kant trimma; utan logo blir tittelen vist i
+    `headlineMedium`. Små, matte kantlinjepillar viser «Ny sesong» når det gjeld, stjernescore,
+    år, aldersgrense og kritikarprosent med tomatikon. Ingen speletid eller omtale som standard.
+    Sjangerlinja bruker `Muted`, med typen («Film»/«Serie») først og sjangrar etterpå.
+    Berre community-score i 0–10 blir vist; til dømes 39,0 gir inga stjerne.
+  - Heroen har fast høgd for profil- og skriftvala, uavhengig av tittel, logo eller omtaletekst.
+    Kompakt og Stor reserverer høvesvis inntil 40 % og 52 % av området under toppfeltet. Ved
+    vanleg skrift og avslått omtale blir høgda avgrensa slik at ei heil rad med vald kunststorleik
+    og valfri tittel får plass. Påslått omtale reserverer minst 208 dp til heroen, slik at to
+    linjer faktisk blir synlege også med tett metadata. Då bruker fallback-tittelen éi linje.
+    Sjangerlinja er éi linje med ellipse ved behov. Logoen krympar vidare ved trong plass. Ved skriftstorleik ≥ 1,5 får heroen
+    16 prosentpoeng meir høgd; omtalen blir utelaten som før for å prioritere logo og metadata.
+  - Kvar tittel står i 12 s som standard (profilval: 8/12/20 s). Neste bakgrunn blir lasta ferdig før han tonar inn over 900 ms,
     så det blir aldri eit svart blink. Ingen kontinuerleg rørsle (zoom), så Shield kan kvile.
   - Rotasjonen tikkar berre medan Heim er synleg, og held fram der han slapp.
     «Bakgrunnsrotasjon» av eller redusert rørsle stoppar han på første tittel.
@@ -140,8 +154,12 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
 - **Kunstformat:** filmar i «Nyleg lagt til» bruker plakat (2:3, 132 × 198 dp). Hald fram,
   episodar og seriar bruker brei thumbnail (16:9, 248 × 139,5 dp). Eit episodekort viser
   seriekunst (serie-thumb, elles seriebackdrop) og serienamnet, utan episodenummer. Apprada bruker banner
-  (16:9, 248 × 139,5 dp). Ingen kunstige botnkantar på plakatar.
-- **Framdrift:** 4 dp lime-strek i botnen av 16:9-kort for påbyrja titlar.
+  (16:9, 248 × 139,5 dp). Desse er middelsstorleikane; Liten og Stor skalerer alle kort
+  proporsjonalt ut frå breidd 200 og 296 dp. Ikonstil gir kvadratiske appflisar med side lik
+  bannerhøgda. Filmrada kan òg velje breie kort. Ingen kunstige botnkantar på plakatar.
+  Titlar under kunst er av som standard, men tittelen er alltid tilgjengeleg for skjermlesar.
+  Manglande kunst viser tittelen inne i plasshaldaren. Fokusringen rammar berre kunsten.
+- **Framdrift:** 4 dp strek i vald aksent i botnen av 16:9-kort for påbyrja titlar.
 - **OK** på ein tittel opnar detaljsida i Spole. **Lang OK / Meny** opnar ein liten handlingsmeny:
   «Spel», «Detaljar i Spole».
 - **Startfokus** (profilinnstilling): første medierad (standard) eller Favorittappar.
@@ -185,8 +203,32 @@ Grupper (som i Spole sine innstillingar):
 - **Heim:** rader av/på og rekkjefølgje, bakgrunnsrotasjon av/på.
 - **Smarthus:** HA-tilkopling (hushald), kortutval og rekkjefølgje for profilen.
 - **Home-knappen:** status for tilgjengetenesta og adb-oppskrifta (sjå 9).
-- **Utsjånad:** reduser rørsle, kraftig fokus (4 dp strek).
+- **Utsjånad:** profilstyrte val i gruppene Heim, Kort, Bakgrunn, Farge og fokus, og Klokke.
+  Ei rad er eitt D-pad-stopp med namnet til venstre og gjeldande verdi med piler til høgre.
+  Venstre går til førre verdi; høgre og OK går til neste, med omløp. Opp/ned flyttar fokus.
+  Endringar blir lagra straks for den aktive profilen. Barneprofilar har same sperre som resten
+  av innstillingane: berre «Byt profil» er tilgjengeleg.
+  Reduser rørsle og kraftig fokus (4 dp strek) er bevarte.
 - **Om:** versjon og lisensar.
+
+Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
+
+| Gruppe | Val | Verdiar og verknad |
+|---|---|---|
+| Heim | Herostorleik | **Kompakt** / Stor; fast høgd per profilval, meir plass til biletet i Stor |
+| Heim | Omtale i heroen | **Av** / På; opptil to linjer |
+| Heim | Sjangrar i heroen | **På** / Av; typen står først |
+| Heim | Spotlight-tid | 8 s / **12 s** / 20 s; tek effekt utan å hente biblioteket på nytt |
+| Heim | Radavstand | Tett (12 dp) / **Normal (22 dp)** / Luftig (34 dp) over radoverskrifta |
+| Kort | Kortstorleik | Liten (200 dp) / **Middels (248 dp)** / Stor (296 dp); plakat og appikon skalerer proporsjonalt |
+| Kort | Titlar under kort | **Av** / På; skjermlesarnamn er alltid med |
+| Kort | Appstil | **Banner** (16:9) / Ikon (kvadrat) |
+| Kort | Nyleg lagt til · Filmar | **Plakat** / Breie kort |
+| Kort | Hjørne | **Runde** / Skarpe |
+| Bakgrunn | Bakgrunnsdemping | Lys / **Middels** / Mørk; Mørk bevarer den tidlegare scrimen |
+| Farge og fokus | Aksentfarge | **Lime** / Hav / Iris / Korall / Gull / Mint; dempa AvatarColor-token, ring, framdrift og «Ny sesong» |
+| Farge og fokus | Fokuseffekt | **Ring** / Ring + forstørring (1,05); redusert rørsle slår av forstørringa |
+| Klokke | Klokkeformat | **24 t** / 12 t / Skjult; skjult fjernar òg klokkesloten |
 
 ## 6. Media: Jellyfin og Emby
 
@@ -199,14 +241,14 @@ Grupper (som i Spole sine innstillingar):
   - Neste episode: `Shows/NextUp?UserId={u}`
   - Nyleg lagt til: Jellyfin `Items/Latest?userId=` → `Users/{u}/Items/Latest`; Emby `Users/{u}/Items/Latest`
   - Stova hentar aldri enkelttitlar. Det gjer Spole når ein tittel blir opna.
-- **Felt:** `Fields=Overview,ProductionYear,RunTimeTicks,OfficialRating,CommunityRating,CriticRating,ParentId,SeriesId`,
+- **Felt:** `Fields=Overview,ProductionYear,RunTimeTicks,OfficialRating,CommunityRating,CriticRating,Genres,ParentId,SeriesId`,
   `EnableUserData=true`, `EnableImageTypes=Primary,Backdrop,Logo,Thumb`, `ImageTypeLimit=1`, `Limit=20`.
 - **Kunst** med tag og storleik: backdrop `Items/{id}/Images/Backdrop/0?maxWidth=1920&quality=80&tag=`,
   logo `Images/Logo?maxWidth=600&tag=`, plakat `Images/Primary?maxHeight=450&tag=`,
   thumb `Images/Thumb?maxWidth=640&tag=`. Episodar arvar backdrop og logo frå serien
   (`ParentBackdropItemId`/`ParentBackdropImageTags`, `ParentLogoItemId`/`ParentLogoImageTag`).
   Thumb til episodar: eiga `Primary` (stillbilete) før serien sin `Thumb`.
-- **Score:** `CommunityRating` (0–10, vist med éin desimal og Spole sitt TMDB-merke) og
+- **Score:** `CommunityRating` (berre 0–10, vist med éin desimal og stjerne) og
   `CriticRating` (0–100 %, vist med Spole sitt tomatmerke `ic_tomato`). Aldersgrense frå
   `OfficialRating`. Alt på éi linje, med same merke som Spole (`RatingMarks.kt`).
 - **Autentisering:** Jellyfin bruker header `Authorization: MediaBrowser Client="Stova",
@@ -216,10 +258,12 @@ Grupper (som i Spole sine innstillingar):
 - **Hurtigbuffer:** siste vellukka rader per profil i `files/snapshots/{profileId}.json`. Ved
   oppstart blir øyeblikksbiletet vist straks, og nettverket oppdaterer. Feil på nettverket viser
   bufra rader med ein diskret «Fråkopla · Jellyfin» i radoverskrifta.
-- **Bakgrunn frå media:** backdropen følgjer fokusert tittel (forseinking 250 ms, krysstoning
-  300 ms). Når fokus ikkje er på ein tittel og «Bakgrunnsrotasjon» er på, roterer Stova gjennom
-  backdropane i «Nyleg lagt til» kvart 20. sekund. Scrim: vertikal og horisontal flat gradient frå
-  `Ink` (100 %) til `Ink` (0 %), dekkjer venstre 60 % og nedre 55 %.
+- **Bakgrunn frå media:** backdropen følgjer spotlighten, aldri kortfokus. Neste bilete blir
+  dekoda før 900 ms krysstoning. Éin flat Ink-scrim kombinerer horisontal fading bak den korte
+  venstre tekstgruppa, vern øvst i 30 % for toppfeltet og fading nedst bak radene. Middels og
+  Lys slepper fram mykje meir av høgre halvdel enn tidlegare; Mørk bevarer den førre scrimen.
+  Pillane har matt Ink-bakgrunn. Lys kunst skal framleis gi minst 4,5:1 bak hero/logo/metadata
+  og toppfelt; dette blir kontrollert i den native skjermbiletharnessen med alle tre dempenivåa.
 
 ## 7. Opning i Spole (kontrakt)
 

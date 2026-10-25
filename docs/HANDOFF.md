@@ -1,3 +1,10 @@
+# Utsjånad v2 ferdig
+2026-10-25: Heile `docs/briefs/2026-10-25-utsjanad-v2.md` er fullført i appearance-worktreet, greina `appearance-v2`; plan `2026-10-25-appearance-v2.md` er ferdig. Ingen påbyrja steg står att.
+Hero v2, kort utan titlar som standard, 14 profilval med D-pad, profilpersistens, klokke, aksent/fokus og lettare scrim er implementerte. Ekstra tett hero med omtale har to faktisk synlege linjer; radene flyttar seg ikkje ved spotlight-byte.
+Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'`: 318/318, 0 hoppa over, AppScreensTest 19/19, DesignRulesTest 4/4, lint 0 feil (23 åtvaringar, 1 hint), debug-APK OK.
+Fem visuelt kontrollerte 1920 × 1080-bilete: `docs/images/appearance-{default,large-titles,small-icons,light,ocean}.png`; full evidens i `docs/verification/appearance-v2.md`. Spesifikasjonen §2, §5.1, §5.4 og §6 er oppdatert.
+Ingen emulatorinstallasjon, Shield-test, push eller endring av HA-/SmartHome-filer. Ingen spørsmål. Brukaren si nye, ucommitta `docs/briefs/2026-10-25-tema-v1.md` er urørt.
+
 # Spotlight og innlogging på emulatoren
 2026-10-25: Spotlight og innlogging er gjort i `polish` på `polish-cache` og snøggspola inn i `plan-2-media`. Siste commit er `cc217b8`.
 - **Brukarønske:** ingen episodekunst eller episodenummer, ingen tenestelogo, og ein vakker hero som roterer frå biblioteket.
