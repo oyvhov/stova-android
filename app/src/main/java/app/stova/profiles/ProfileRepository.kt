@@ -29,7 +29,7 @@ class ProfileRepository(
 
     suspend fun create(name: String, avatar: AvatarColor, kid: Boolean): Profile {
         val clean = name.trim()
-        require(clean.length in 1..MAX_NAME) { "name must be 1–$MAX_NAME characters" }
+        require(clean.length in 1..MAX_NAME) { "name must be 1â€“$MAX_NAME characters" }
         lateinit var created: Profile
         store.update { file ->
             require(!(kid && file.profiles.isEmpty())) { "the first profile must be an adult" }
@@ -43,7 +43,8 @@ class ProfileRepository(
         lateinit var updated: Profile
         store.update { file ->
             val existing = file.profiles.firstOrNull { it.id == id } ?: throw NoSuchElementException(id)
-            updated = transform(existing).copy(id = id)
+            val changed = transform(existing)
+            updated = changed.copy(id = id, appearance = changed.appearance.withoutCalendarSeason())
             file.copy(profiles = file.profiles.map { if (it.id == id) updated else it })
         }
         return updated
@@ -62,7 +63,7 @@ class ProfileRepository(
     }
 
     suspend fun setPin(id: String, pin: String?) {
-        require(pin == null || PinHasher.isValid(pin)) { "PIN must be 4–8 digits" }
+        require(pin == null || PinHasher.isValid(pin)) { "PIN must be 4â€“8 digits" }
         val hash = pin?.let { withContext(cpu) { PinHasher.hash(it) } }
         store.update { file ->
             check(file.profiles.any { it.id == id }) { "no profile $id" }

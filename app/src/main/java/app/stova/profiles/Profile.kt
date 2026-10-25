@@ -56,6 +56,10 @@ data class AppearancePrefs(
     val accent: Accent = Accent.LIME,
     val clock: ClockMode = ClockMode.H24,
     val rowSpacing: RowSpacing = RowSpacing.NORMAL,
+    val visualTheme: app.stova.core.theme.VisualTheme = app.stova.core.theme.VisualTheme.FOREST,
+    val seasonChoice: SeasonChoice = SeasonChoice.CALENDAR,
+    val seasonalDecor: SeasonalDecor = SeasonalDecor.FULL,
+    @kotlinx.serialization.Transient val seasonOverlay: SeasonOverlay? = null,
 )
 
 @Serializable enum class CardSize(val width: Int) { SMALL(200), MEDIUM(248), LARGE(296) }
@@ -66,7 +70,7 @@ data class AppearancePrefs(
 @Serializable enum class BackdropDimming { LIGHT, MEDIUM, DARK }
 @Serializable enum class Corners { ROUND, SHARP }
 @Serializable enum class FocusEffect { RING, ZOOM }
-@Serializable enum class Accent { LIME, OCEAN, IRIS, CORAL, GOLD, MINT }
+@Serializable enum class Accent { LIME, OCEAN, IRIS, CORAL, GOLD, MINT, ROSE, PEARL, HOLLY, PUMPKIN }
 @Serializable enum class ClockMode { H24, H12, HIDDEN }
 @Serializable enum class RowSpacing(val top: Int) { TIGHT(12), NORMAL(22), AIRY(34) }
 

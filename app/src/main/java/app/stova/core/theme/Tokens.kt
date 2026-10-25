@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  * Spole's matte FOREST surfaces with everything on top of them muted further: a sage-lime accent
  * instead of Spole's bright lime, softer text and desaturated status colours. Surfaces are
  * separated by fill, never by glass or a line. The accent is for selection, progress and direct
- * actions only — never for counts, labels or status. Text keeps at least 6:1 against Surface.
+ * actions only â€” never for counts, labels or status. Text keeps at least 6:1 against Surface.
  */
 object StovaColors {
     val Ink = Color(0xFF101211)
@@ -68,7 +68,11 @@ enum class AvatarColor(val argb: Long) {
 val AvatarColor.color: Color get() = Color(argb)
 
 /** Appearance accents share the same muted palette as profile avatars. */
-val app.stova.profiles.Accent.color: Color get() = AvatarColor.valueOf(name).color
+val app.stova.profiles.Accent.color: Color get() = when (this) {
+    app.stova.profiles.Accent.HOLLY -> Color(0xFFF6806C)
+    app.stova.profiles.Accent.PUMPKIN -> Color(0xFFFFA74F)
+    else -> AvatarColor.valueOf(name).color
+}
 
 val app.stova.profiles.Accent.container: Color get() =
     if (this == app.stova.profiles.Accent.LIME) StovaColors.PrimaryContainer
