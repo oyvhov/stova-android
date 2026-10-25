@@ -24,4 +24,9 @@ class HaProtocolTest {
         val states = parseStates(StovaJson.parseToJsonElement("""[{"entity_id":"light.a","state":"on","attributes":{},"last_changed":"2023-11-14T22:13:20Z","last_updated":"2023-11-14T22:13:21Z"}]""").jsonArray)
         assertEquals(1_700_000_001_000L, states.single().lastUpdated)
     }
+    @Test fun parsesHomeAssistantOffsetTimestamps() {
+        val states = parseStates(StovaJson.parseToJsonElement("""[{"entity_id":"light.a","state":"on","attributes":{},"last_changed":"2023-11-14T22:13:20.123456+00:00","last_updated":"2023-11-15T00:13:21+02:00"}]""").jsonArray)
+        assertEquals(1_700_000_000_123L, states.single().lastChanged)
+        assertEquals(1_700_000_001_000L, states.single().lastUpdated)
+    }
 }

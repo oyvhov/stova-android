@@ -2,6 +2,7 @@ package app.stova.ha
 
 import app.stova.core.storage.StovaJson
 import java.time.Instant
+import java.time.OffsetDateTime
 import kotlinx.serialization.json.*
 
 fun authMessage(token: String) = buildJsonObject { put("type", "auth"); put("access_token", token) }.toString()
@@ -29,10 +30,12 @@ fun parseHistory(result: JsonObject, entityId: String): List<Pair<Long, Double>>
         val time = ((j["lu"] ?: j["lc"]) as? JsonPrimitive)?.doubleOrNull ?: return@mapNotNull null
         (time * 1000).toLong() to value
     }
+/** HA sends "+00:00"; Android 11's Instant.parse accepts only "Z", so parse the offset explicitly. */
+internal fun haMillis(text: String): Long = OffsetDateTime.parse(text).toInstant().toEpochMilli()
 fun parseStates(result: JsonArray): List<HaEntity> = result.mapNotNull { raw -> runCatching {
     val j = raw.jsonObject
-    val changed = Instant.parse(j.getValue("last_changed").jsonPrimitive.content).toEpochMilli()
+    val changed = haMillis(j.getValue("last_changed").jsonPrimitive.content)
     HaEntity(j.getValue("entity_id").jsonPrimitive.content, j.getValue("state").jsonPrimitive.content,
         j["attributes"] as? JsonObject ?: JsonObject(emptyMap()), changed,
-        j["last_updated"]?.jsonPrimitive?.content?.let { Instant.parse(it).toEpochMilli() } ?: changed)
+        j["last_updated"]?.jsonPrimitive?.content?.let(::haMillis) ?: changed)
 }.getOrNull() }

@@ -20,6 +20,13 @@ class DesignRulesTest {
         assertEquals(emptyList<File>(), offenders)
     }
 
+    // Android 11 (the Shield) parses only "Z" in Instant.parse; Home Assistant sends "+00:00",
+    // so every entity was silently dropped and "Add card" found nothing.
+    @Test fun noInstantParseBecauseAndroid11RejectsOffsets() {
+        val offenders = files().filter { "Instant.parse(" in it.readText() }.toList()
+        assertEquals(emptyList<File>(), offenders)
+    }
+
     @Test fun scansRealSources() {
         // Guards the two rules above against passing because the working directory moved.
         assert(files().any()) { "no Kotlin sources under ${src.absolutePath}" }
