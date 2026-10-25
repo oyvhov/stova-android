@@ -65,6 +65,8 @@ class HaSocket(
     private val priceMutex=Mutex()
     private var priceResponse:JsonObject?=null
     private var pricesAt=0L
+    /** Integrations Home Assistant has loaded (`get_config` components); null until first known. */
+    private val components=MutableStateFlow<Set<String>?>(null)
     @Volatile private var homeZone=ZoneId.systemDefault()
     override val timeZone:ZoneId get()=homeZone
     init {
@@ -184,7 +186,9 @@ class HaSocket(
         val results = HaRegistryKind.entries.map { kind -> async {
             request { registryRequest(it, kind) }?.get("result") as? JsonArray
         } }.awaitAll()
-        config.await()?.text("time_zone")?.let {zone->runCatching {ZoneId.of(zone)}.getOrNull()?.let {homeZone=it}}
+        val settings=config.await()
+        settings?.text("time_zone")?.let {zone->runCatching {ZoneId.of(zone)}.getOrNull()?.let {homeZone=it}}
+        (settings?.get("components") as? JsonArray)?.let {list->components.value=list.mapNotNull {(it as? JsonPrimitive)?.contentOrNull}.toSet()}
         if(results.any { it==null }) null
         // Thousands of entries: parse off the main thread the socket's callers run on.
         else withContext(Dispatchers.Default) { parseRegistry(results[0]!!, results[1]!!, results[2]!!) }
@@ -193,10 +197,15 @@ class HaSocket(
         (request { forecastRequest(it, entityId) }?.get("result") as? JsonObject)?.let { parseForecast(it, entityId) }.orEmpty()
     override suspend fun hourlyForecast(entityId:String):List<ForecastDay> =
         (request {forecastRequest(it,entityId,"hourly")}?.get("result") as? JsonObject)?.let {parseForecast(it,entityId,24)}.orEmpty()
+    /** Never ask an integration that is not there; unknown after 10 s counts as absent. */
+    private suspend fun hasIntegration(domain:String)=
+        withTimeoutOrNull(10_000) {components.filterNotNull().first()}?.contains(domain)==true
     override suspend fun energy(entity:HaEntity):HaEntity {
         if(app.stova.ha.cards.pricePoints(entity).isNotEmpty()) return entity
+        if(!hasIntegration("tibber")) return entity
         val result=priceMutex.withLock {
-            if(System.currentTimeMillis()-pricesAt>900_000 || priceResponse==null) {
+            // A missing answer (no Tibber) is remembered too, so cards and resumes never re-ask within 15 min.
+            if(System.currentTimeMillis()-pricesAt>900_000) {
                 priceResponse=request {tibberPricesRequest(it,LocalDate.now(timeZone))}?.get("result") as? JsonObject
                 pricesAt=System.currentTimeMillis()
             }

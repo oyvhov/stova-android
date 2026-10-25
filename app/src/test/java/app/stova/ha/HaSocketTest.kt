@@ -23,7 +23,7 @@ class HaSocketTest {
     private val received = CopyOnWriteArrayList<JsonObject>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var peer: WebSocket? = null
-    private fun enqueue(invalid: Boolean = false, emptySnapshot: Boolean = false) {
+    private fun enqueue(invalid: Boolean = false, emptySnapshot: Boolean = false, components: String = "[]") {
         server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
             override fun onOpen(ws: WebSocket, response: Response) { peer = ws; ws.send("""{"type":"auth_required"}""") }
             override fun onMessage(ws: WebSocket, text: String) {
@@ -35,6 +35,7 @@ class HaSocketTest {
                         val event = if (emptySnapshot) "{}" else """{"a":{"light.stove":{"s":"on","a":{},"lc":1.0}}}"""
                         ws.send("""[{"id":$id,"type":"result","success":true},{"id":$id,"type":"event","event":$event}]""")
                     }
+                    "get_config" -> ws.send("""{"id":$id,"type":"result","success":true,"result":{"time_zone":"Europe/Oslo","components":$components}}""")
                     else -> ws.send("""{"id":$id,"type":"result","success":true,"result":[]} """)
                 }
             }
@@ -63,7 +64,8 @@ class HaSocketTest {
             withTimeout(5_000) { repo.entities.first { it["light.stove"]?.state == "on" } }
             socket.start()
             withTimeout(5_000) { repo.entities.first { it.isEmpty() } }
-            withTimeout(5_000) { cache.data.first { it.entities.isEmpty() } }
+            // Cache writes are spaced 5 s apart, so the empty snapshot can land just after a 5 s wait.
+            withTimeout(12_000) { cache.data.first { it.entities.isEmpty() } }
             Unit
         } finally { scope.cancel() }
     }
@@ -97,6 +99,26 @@ class HaSocketTest {
             enqueue(); val s = socket(); s.watch(setOf("light.stove")); s.start(); connected(s)
             assertTrue(s.callService("light", "toggle", "light.stove"))
             assertEquals("light.stove", received.last()["target"]!!.jsonObject["entity_id"]!!.jsonPrimitive.content)
+        } finally { scope.cancel() }
+    }
+    // Review finding 12 and «ikkje spør når det ikkje er der»: no Tibber, no Tibber question.
+    private val price = HaEntity("sensor.price", "1.2", JsonObject(mapOf("unit_of_measurement" to JsonPrimitive("kr/kWh"))), 0, 0)
+    private fun tibberCalls() = received.count { it["domain"]?.jsonPrimitive?.content == "tibber" }
+    @Test fun withoutTheTibberIntegrationTibberIsNeverAsked() = runBlocking {
+        try {
+            enqueue(components = """["sensor","weather"]"""); val s = socket(); s.watch(setOf("light.stove")); s.start(); connected(s)
+            s.registry()
+            assertEquals(price, s.energy(price))
+            assertEquals(0, tibberCalls())
+        } finally { scope.cancel() }
+    }
+    @Test fun aMissingTibberAnswerIsRememberedForFifteenMinutes() = runBlocking {
+        try {
+            enqueue(components = """["sensor","tibber"]"""); val s = socket(); s.watch(setOf("light.stove")); s.start(); connected(s)
+            s.registry()
+            assertEquals(price, s.energy(price))
+            assertEquals(price, s.energy(price))
+            assertEquals(1, tibberCalls())
         } finally { scope.cancel() }
     }
     @Test fun stopGraceCanBeCancelledByStart() = runBlocking {
