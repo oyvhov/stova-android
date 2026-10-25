@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.Modifier
 import app.stova.R
 import app.stova.apps.IconPack
 import app.stova.core.ui.SettingsChoiceRow
@@ -13,7 +14,7 @@ import app.stova.profiles.IconColor
 import app.stova.profiles.IconFill
 
 @Composable
-fun IconPackSettingsContent(p: AppearancePrefs, packs: List<IconPack>, groupTitle: String? = null, description: String? = null, onChange: (AppearancePrefs) -> Unit) {
+fun IconPackSettingsContent(p: AppearancePrefs, packs: List<IconPack>, groupTitle: String? = null, description: String? = null, firstControl: Modifier = Modifier, onChange: (AppearancePrefs) -> Unit) {
     SettingsGroup(groupTitle ?: stringResource(R.string.icon_pack_group)) {
         if (description != null) Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         val choices = listOf<String?>(null) + packs.map { it.packageName } + listOfNotNull(p.iconPack?.takeIf { saved -> packs.none { it.packageName == saved } })
@@ -21,7 +22,7 @@ fun IconPackSettingsContent(p: AppearancePrefs, packs: List<IconPack>, groupTitl
         val none = stringResource(R.string.icon_pack_none)
         val unavailable = stringResource(R.string.icon_pack_unavailable, p.iconPack.orEmpty())
         val label = packs.firstOrNull { it.packageName == p.iconPack }?.label ?: if (p.iconPack == null) none else unavailable
-        SettingsChoiceRow(stringResource(R.string.icon_pack), label) { step ->
+        SettingsChoiceRow(stringResource(R.string.icon_pack), label, modifier = firstControl) { step ->
             val selected = choices[Math.floorMod(index + step, choices.size)]
             onChange(p.copy(iconPack = selected, appTileBackground = if (selected == app.stova.apps.ProjectivyIcons.PACKAGE) false else p.appTileBackground))
         }

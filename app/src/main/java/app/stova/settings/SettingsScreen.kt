@@ -24,6 +24,14 @@ enum class SettingsSection(@StringRes val label: Int) {
     ABOUT(R.string.settings_about),
 }
 
+/** Visual groups and D-pad order share this list. Enum order is kept for saved destinations. */
+internal val settingsGroups = listOf(
+    R.string.settings_group_home to listOf(SettingsSection.HOME, SettingsSection.APPEARANCE),
+    R.string.settings_group_services to listOf(SettingsSection.ACCOUNTS, SettingsSection.SMART_HOME),
+    R.string.settings_group_system to listOf(SettingsSection.PROFILE, SettingsSection.HOME_BUTTON, SettingsSection.ABOUT),
+)
+internal val settingsOrder = settingsGroups.flatMap { it.second }
+
 /** Sections on the left, the chosen one on the right, as in Spole's TV settings. */
 @Composable
 fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewModel, onSwitchProfile: () -> Unit) {
@@ -40,7 +48,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
             SettingsSection.HOME -> HomeRowSettings(container, profile, home, onEditAppearance = { openSection(SettingsSection.APPEARANCE) })
             SettingsSection.SMART_HOME -> app.stova.ha.ui.HaSettings(container)
             SettingsSection.HOME_BUTTON -> HomeButtonSettings(container)
-            SettingsSection.APPEARANCE -> AppearanceSettings(container, profile, pinnedPreview = true, onEditRows = { openSection(SettingsSection.HOME) })
+            SettingsSection.APPEARANCE -> AppearanceSettings(container, profile, scrollable = true, onEditRows = { openSection(SettingsSection.HOME) })
             SettingsSection.ABOUT -> AboutSettings()
         }
     }

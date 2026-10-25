@@ -2,6 +2,8 @@ package app.stova.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -64,13 +66,29 @@ internal fun RowFormatPreview(format: RowFormat) {
 
 @Composable
 internal fun RowMenuSection(key: HomeRowKey, prefs: HomePrefs, onChange: (HomePrefs) -> Unit, onMove: () -> Unit, onHide: () -> Unit) {
+    var customizing by remember { mutableStateOf(false) }
+    val customize = remember { FocusRequester() }
     Text(stringResource(R.string.custom_row_section), style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
     StovaButton(stringResource(R.string.custom_move_row), onMove, Modifier.fillMaxWidth())
     StovaButton(stringResource(R.string.custom_hide_row), onHide, Modifier.fillMaxWidth())
-    val p = app.stova.core.theme.LocalAppearance.current
-    RowStyleChoices(prefs.rowFormats[key] ?: RowStyle(), defaultRowFormat(key, p), p.cardSize, rowLabel(key),
-        hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT) { style ->
-        onChange(prefs.copy(rowFormats = if (style == RowStyle()) prefs.rowFormats - key else prefs.rowFormats + (key to style)))
+    app.stova.core.ui.SettingsNavRow(stringResource(R.string.settings_customize_row), Modifier.focusRequester(customize),
+        value = stringResource(R.string.settings_customize_row_hint)) { customizing = true }
+    if (customizing) {
+        val p = app.stova.core.theme.LocalAppearance.current
+        val back = remember { FocusRequester() }
+        val close = { customizing = false; runCatching { customize.requestFocus() }; Unit }
+        app.stova.core.ui.StovaDialog(close) {
+            Column(Modifier.width(440.dp).background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large)
+                .verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                StovaButton(stringResource(R.string.custom_back), close, Modifier.focusRequester(back))
+                Text((prefs.rowFormats[key] ?: RowStyle()).heading(rowLabel(key)), style = MaterialTheme.typography.headlineSmall)
+                RowStyleChoices(prefs.rowFormats[key] ?: RowStyle(), defaultRowFormat(key, p), p.cardSize, rowLabel(key),
+                    hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT) { style ->
+                    onChange(prefs.copy(rowFormats = if (style == RowStyle()) prefs.rowFormats - key else prefs.rowFormats + (key to style)))
+                }
+            }
+            LaunchedEffect(Unit) { back.requestFocus() }
+        }
     }
 }

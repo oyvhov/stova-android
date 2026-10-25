@@ -547,4 +547,19 @@
     <string name="custom_hero_ratings">Vis vurderingar i heroen</string>
     <string name="custom_hero_new_season">Vis ny sesong i heroen</string>
     <string name="icon_tile_background">Bakgrunn på appkort</string>
+    <string name="settings_all_appearance">Alle utsjånadval</string>
+    <string name="settings_appearance_intro">Vel kva du vil tilpasse. Vala blir lagra for denne profilen.</string>
+    <string name="settings_group_home">Heimeskjerm</string>
+    <string name="settings_group_services">Tenester</string>
+    <string name="settings_group_system">Profil og system</string>
+    <string name="settings_summary_theme">Fargar og sesong</string>
+    <string name="settings_summary_hero">Logo, fakta og rotasjon</string>
+    <string name="settings_summary_cards">Storleik, format og avstand</string>
+    <string name="settings_summary_background">Kunst, kjelde og demping</string>
+    <string name="settings_summary_focus">Markering og rørsle</string>
+    <string name="settings_summary_top">Klokke, snarvegar og status</string>
+    <string name="settings_summary_icons">Ikonpakke og appkort</string>
+    <string name="settings_summary_profile">Kopier eller nullstill</string>
+    <string name="settings_customize_row">Tilpass rada</string>
+    <string name="settings_customize_row_hint">Overskrift, kortformat og storleik</string>
 </resources>

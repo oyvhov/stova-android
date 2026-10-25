@@ -43,9 +43,10 @@ class SettingsLayoutFocusTest {
 
     @Test fun largeFontSidebarMovesInOrderAndStopsAtBothEnds() {
         render(fontScale = 2f)
-        tab("Profil").assertIsFocused().performKeyInput { pressKey(Key.DirectionUp) }
-        tab("Profil").assertIsFocused()
-        val labels = listOf("Profil", "Kontoar", "Heim", "Smarthus", "Home-knappen", "Utsjånad", "Om", "Android-innstillingar")
+        tab("Heim").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        tab("Heim").performKeyInput { pressKey(Key.DirectionUp) }
+        tab("Heim").assertIsFocused()
+        val labels = listOf("Heim", "Utsjånad", "Kontoar", "Smarthus", "Profil", "Home-knappen", "Om", "Android-innstillingar")
         labels.zipWithNext().forEach { (from, to) ->
             tab(from).performKeyInput { pressKey(Key.DirectionDown) }
             tab(to).assertIsFocused()
@@ -60,7 +61,8 @@ class SettingsLayoutFocusTest {
 
     @Test fun fastSectionChangeThenRightEntersTheNewPane() {
         render()
-        tab("Profil").performKeyInput {
+        tab("Heim").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        tab("Heim").performKeyInput {
             repeat(3) { pressKey(Key.DirectionDown) }
             pressKey(Key.DirectionRight)
         }
@@ -156,16 +158,17 @@ class SettingsLayoutFocusTest {
 
     private fun assertPendingEntryIsCancelledBy(cancel: Key) {
         render()
-        tab("Profil").assertIsFocused()
+        val label = if (cancel == Key.DirectionUp) "Heim" else "Profil"
+        tab(label).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
         compose.mainClock.autoAdvance = false
-        tab("Profil").performKeyInput {
+        tab(label).performKeyInput {
             keyDown(Key.DirectionRight)
             keyUp(Key.DirectionRight)
             keyDown(cancel)
             keyUp(cancel)
         }
         compose.mainClock.advanceTimeBy(250)
-        tab("Profil").assertIsFocused()
+        tab(label).assertIsFocused()
         compose.mainClock.autoAdvance = true
     }
 

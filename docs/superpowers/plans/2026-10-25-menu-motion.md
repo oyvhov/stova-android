@@ -10,9 +10,9 @@ Arbeid på emulator-5580 med ekte data; bevar eksisterande Smarthus-endringar.
 - [x] Commit kode, testar og denne planen; før ledger.
 
 ## Task 2: Eit oversiktleg, kompakt menysystem
-- [ ] Skriv og køyr raude testar for kategorioversikt, underkategori, retur og stor skrift.
-- [ ] Del utsjånad i åtte små sider, gi menyen tydeleg gruppering og meir plass til innhaldet.
-- [ ] Verifiser tastestyring, profilval og visuell layout; commit og ledger.
+- [x] Skriv og køyr raude testar for kategorioversikt, underkategori, retur og stor skrift.
+- [x] Del utsjånad i åtte små sider, gi menyen tydeleg gruppering og meir plass til innhaldet. Samle radval under «Tilpass rada» i kontekstmenyane.
+- [x] Verifiser tastestyring, profilval og visuell layout; commit og ledger.
 
 ## Task 3: Mjuk og avbrytbar rørsle
 - [ ] Skriv og køyr raude testar for radflytting over fleire rammer, reversering og redusert rørsle.

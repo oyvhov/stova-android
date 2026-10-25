@@ -15,6 +15,9 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.input.key.Key
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -51,6 +54,7 @@ class SettingsScreenTest {
         openSettings()
         val appearance=hasText("Utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role,Role.Tab)
         rule.onNode(appearance).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        rule.onNode(hasText("Ikon") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Ikonpakke").performScrollTo().performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
         rule.onNodeWithText("Ikonpakke").performKeyInput { keyDown(Key.DirectionLeft);keyUp(Key.DirectionLeft) }
         rule.onNode(appearance).assertIsFocused()
@@ -70,8 +74,36 @@ class SettingsScreenTest {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
         rule.onNodeWithText("Utsjånad").performClick()
+        rule.onNode(hasText("Fokus") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Reduser rørsle").performScrollTo().performClick()
         rule.waitUntil(5_000) { profile("A").appearance.reduceMotion }
+    }
+
+    @Test fun appearanceStartsWithCategoriesAndOpensOnlyTheChosenControls() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNodeWithText("Heim").performClick()
+        rule.onNodeWithText("Utsjånad på framsida").assertIsFocused().performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNode(hasText("Tema") and hasClickAction()).assertIsFocused()
+        rule.onNodeWithText("Kortstorleik").assertDoesNotExist()
+        rule.onNode(hasText("Fokus") and hasClickAction()).performClick()
+        rule.onNodeWithText("Fokuseffekt").assertIsFocused()
+        rule.onNodeWithText("Klokkeformat").assertDoesNotExist()
+        rule.onNodeWithText("Kortstorleik").assertDoesNotExist()
+        rule.onNodeWithText("Alle utsjånadval").performClick()
+        rule.onNode(hasText("Fokus") and hasClickAction()).assertIsFocused()
+    }
+
+    @Test fun appearanceCategoryCanBeOpenedAndBackedOutWithTheRemote() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNodeWithText("Utsjånad").performClick()
+        rule.onNode(hasText("Tema") and hasClickAction()).performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNode(hasText("Tema") and hasClickAction()).assertIsFocused()
+        rule.onRoot().performKeyInput { pressKey(Key.Back) }
+        rule.onNode(hasText("Tema") and hasClickAction()).assertIsFocused()
+        rule.onNode(hasText("Toppfelt") and hasClickAction()).assertIsDisplayed()
+        rule.onNodeWithText("Klokkeformat").assertDoesNotExist()
     }
 
     @Test fun appearanceChoicesPersistOnlyForTheActiveProfile() {
@@ -81,6 +113,7 @@ class SettingsScreenTest {
         }
         openSettings()
         rule.onNodeWithText("Utsjånad").performClick()
+        rule.onNode(hasText("Kort og rader") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Kortstorleik").performScrollTo().performClick()
         rule.waitUntil(5_000) { profile("A").appearance.cardSize == app.stova.profiles.ArtworkSize.LARGE }
         assertEquals(app.stova.profiles.ArtworkSize.MEDIUM, profile("B").appearance.cardSize)
@@ -133,11 +166,13 @@ class SettingsScreenTest {
         openSettings()
         rule.onNodeWithText("K").performClick()
         rule.onAllNodesWithText("Utsjånad")[1].performScrollTo().performClick()
+        rule.onNode(hasText("Kort og rader") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Kortstorleik").performScrollTo().performClick()
         rule.waitUntil(5_000) { profile("K").appearance.cardSize == app.stova.profiles.ArtworkSize.LARGE }
         assertEquals(app.stova.profiles.ArtworkSize.MEDIUM, profile("A").appearance.cardSize)
         rule.onNodeWithText("Tilpass kvar rad").performScrollTo().performClick()
         rule.onAllNodesWithText("Kortformat for rada")[0].performScrollTo().performClick()
+        rule.waitForIdle()
         rule.waitUntil(5_000) { profile("K").home.rowFormats[app.stova.home.HomeRowKey.APPS]?.format == app.stova.profiles.RowFormat.LARGE_WIDE }
         assertEquals(emptyMap<app.stova.home.HomeRowKey, app.stova.profiles.RowStyle>(), profile("A").home.rowFormats)
     }

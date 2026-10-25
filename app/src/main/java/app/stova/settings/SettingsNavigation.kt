@@ -40,7 +40,7 @@ internal fun SettingsNavigation(
     val fallbackFocus = remember { SettingsSection.entries.associateWith { FocusRequester() } }
     val tabs = sectionFocus.ifEmpty { fallbackFocus }
     val system = remember { FocusRequester() }
-    val requesters = SettingsSection.entries.map { tabs.getValue(it) } + system
+    val requesters = settingsOrder.map { tabs.getValue(it) } + system
     Column(Modifier.width(StovaLayout.SettingsNavigationWidth), verticalArrangement = Arrangement.spacedBy(StovaLayout.Gutter)) {
         Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface)
@@ -52,7 +52,11 @@ internal fun SettingsNavigation(
         }.focusProperties {
             onExit = { if (requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down) cancelFocusChange() }
         }.focusGroup().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            SettingsSection.entries.forEachIndexed { index, entry ->
+            settingsOrder.forEachIndexed { index, entry ->
+                settingsGroups.firstOrNull { it.second.first() == entry }?.let { group ->
+                    Text(stringResource(group.first), Modifier.padding(start = 12.dp, top = if (index == 0) 0.dp else 16.dp, bottom = 4.dp),
+                        style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 SectionTab(stringResource(entry.label), entry == selected, { onSelect(entry) },
                     modifier = Modifier.focusRequester(requesters[index]).focusProperties {
                         up = requesters.getOrNull(index - 1) ?: FocusRequester.Cancel
@@ -87,7 +91,7 @@ private fun SectionTab(label: String, selected: Boolean, onFocused: (() -> Unit)
         .focusOutline(source, shape).clip(shape)
         .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
         .selectable(selected, source, indication = null, role = Role.Tab, onClick = onClick)
-        .padding(horizontal = 16.dp, vertical = 12.dp), contentAlignment = Alignment.CenterStart) {
+        .padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.CenterStart) {
         Text(label, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
     }
 }

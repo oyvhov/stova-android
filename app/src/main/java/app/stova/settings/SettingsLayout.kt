@@ -13,6 +13,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import app.stova.core.theme.StovaLayout
 
+internal val LocalSettingsSectionFocus = staticCompositionLocalOf<FocusRequester?> { null }
+
 /** Two explicit focus areas: arrows never choose a neighbouring section by screen geometry. */
 @Composable
 internal fun SettingsLayout(
@@ -70,7 +72,11 @@ internal fun SettingsLayout(
                     .focusGroup()
                     .then(if (selected == SettingsSection.APPEARANCE) Modifier else Modifier.verticalScroll(rememberScrollState())),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
-            ) { content(selected, ::enter) }
+            ) {
+                CompositionLocalProvider(LocalSettingsSectionFocus provides tabs.getValue(selected)) {
+                    content(selected, ::enter)
+                }
+            }
         }
     }
 }

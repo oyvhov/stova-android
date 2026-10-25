@@ -79,6 +79,7 @@ class RowEditingTest {
         var saved = HomePrefs()
         render { saved = it }
         menu()
+        compose.onNodeWithText("Tilpass rada").performClick()
         compose.onNodeWithText("Kortformat for rada").performSemanticsAction(SemanticsActions.RequestFocus)
         compose.onNodeWithText("Kortformat for rada").performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("Storleik for rada").performSemanticsAction(SemanticsActions.RequestFocus)
@@ -86,6 +87,19 @@ class RowEditingTest {
         compose.onNodeWithText("Vis radtittel").performScrollTo().performClick()
         assertEquals(RowStyle(RowFormat.LARGE_WIDE, ArtworkSize.LARGE, false), saved.rowFormats[first])
         assertNull(saved.rowFormats[second])
+    }
+
+    @Test fun rowMenuShowsCommonActionsBeforeOpeningItsDetailedSettings() {
+        render()
+        menu()
+        compose.onNodeWithText("Flytt rada").assertIsDisplayed()
+        compose.onNodeWithText("Skjul rada").assertIsDisplayed()
+        compose.onNodeWithText("Kortformat for rada").assertDoesNotExist()
+        compose.onNodeWithText("Tilpass rada").performClick()
+        compose.onNodeWithText("Kortformat for rada").assertExists()
+        compose.onNodeWithText("Tilbake").performClick()
+        compose.onNodeWithText("Kortformat for rada").assertDoesNotExist()
+        compose.onNodeWithText("Tilpass rada").assertIsFocused()
     }
 
     @Test fun dismissingMenuAndFinishingMoveRestoreTheSameCard() {

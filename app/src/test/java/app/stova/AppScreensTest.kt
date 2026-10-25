@@ -250,6 +250,7 @@ class AppScreensTest {
         rule.waitForIdle()
         if (previewSettings) {
             rule.onNodeWithText("Utsjånad").performClick()
+            rule.onNode(hasText("Tema") and hasClickAction()).performClick()
             rule.waitUntil(5_000) { rule.onAllNodesWithTag("preview-backdrop",useUnmergedTree=true).fetchSemanticsNodes().isNotEmpty() }
             rule.onNode(hasText("Tema") and hasClickAction()).performSemanticsAction(SemanticsActions.RequestFocus) { it() }
             rule.mainClock.advanceTimeBy(250)
@@ -545,6 +546,7 @@ class AppScreensTest {
         rule.waitForIdle()
         rule.onAllNodesWithText("Innstillingar")[0].performClick()
         rule.onNodeWithText("Utsjånad").performClick()
+        rule.onNode(hasText("Tema") and hasClickAction()).performClick()
         rule.onNodeWithText("Sesongpynt").performScrollTo().assertIsDisplayed()
         rule.saveScreen("tema-innstillingar")
     }

@@ -108,10 +108,10 @@ private fun RowText(title: String, subtitle: String?, modifier: Modifier) {
 
 /** A single D-pad stop. Left goes back, right and OK go forward, with wrapping at either end. */
 @Composable
-fun SettingsChoiceRow(title: String, value: String, preview: (@Composable () -> Unit)? = null, onStep: (Int) -> Unit) {
+fun SettingsChoiceRow(title: String, value: String, preview: (@Composable () -> Unit)? = null, modifier: Modifier = Modifier, onStep: (Int) -> Unit) {
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.medium
-    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).focusOutline(source, shape).clip(shape)
+    Row(modifier.fillMaxWidth().heightIn(min = 56.dp).focusOutline(source, shape).clip(shape)
         .semantics { stateDescription = value }
         // Right and OK step forward and wrap; Left is left alone, so it leads back to the section list.
         .onPreviewKeyEvent { event ->

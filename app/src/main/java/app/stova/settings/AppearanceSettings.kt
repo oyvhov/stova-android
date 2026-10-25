@@ -1,10 +1,6 @@
 package app.stova.settings
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.Composable
@@ -15,15 +11,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.AppContainer
-import app.stova.core.theme.*
 import app.stova.profiles.*
 import app.stova.profiles.Profile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 
 @Composable
-fun AppearanceSettings(container: AppContainer, profile: Profile, pinnedPreview: Boolean = false, onEditRows: () -> Unit = {}) {
+fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Boolean = false, onEditRows: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
+    val sectionFocus = LocalSettingsSectionFocus.current
     val packs by container.iconPacks.packs.collectAsStateWithLifecycle()
     LaunchedEffect(container.iconPacks) { container.iconPacks.installed() }
     val profiles by container.profiles.file.collectAsStateWithLifecycle(initialValue = ProfilesFile())
@@ -36,9 +32,13 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, pinnedPreview:
         else container.media.cachedPreview(profile.id)
     }
     val preview by previewFlow.collectAsStateWithLifecycle(initialValue = null)
-    val contents: @Composable () -> Unit = {
-        AppearanceSettingsContent(draft, packs, onPickBackground = { picking = true }, onEditRows = onEditRows,
-            includePreview = !pinnedPreview, previewEntry = preview, homePrefs = profile.home,
+    val contents: @Composable (AppearanceCategory, Modifier) -> Unit = { category, firstControl ->
+        AppearanceSettingsContent(draft, packs, onPickBackground = { picking = true }, onEditRows = {
+            // This may replace the entire menu when editing another profile.
+            sectionFocus?.requestFocus()
+            onEditRows()
+        },
+            includePreview = false, category = category, firstControl = firstControl, previewEntry = preview, homePrefs = profile.home,
             others = profiles.profiles.filter { it.id != profile.id },
             onReset = { scope.launch { container.profiles.resetAppearance(profile.id) } },
             onCopy = { sourceId -> scope.launch {
@@ -62,10 +62,10 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, pinnedPreview:
                 }
             }
     }
-    if (pinnedPreview) Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        ThemePreview(draft, preview, profile.home)
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(24.dp)) { contents() }
-    } else contents()
+    AppearanceMenu(scrollable = scrollable) { category, firstControl ->
+        contents(category, firstControl)
+        if (category != AppearanceCategory.PROFILE) ThemePreview(draft, preview, profile.home)
+    }
     if (picking) BackgroundPicker({ container.media.searchBackgrounds(profile.id, it) }, { entry ->
         picking = false
         scope.launch {

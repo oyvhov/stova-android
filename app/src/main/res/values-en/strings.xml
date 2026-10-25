@@ -547,4 +547,19 @@
     <string name="custom_hero_ratings">Show ratings in hero</string>
     <string name="custom_hero_new_season">Show new season in hero</string>
     <string name="icon_tile_background">App card background</string>
+    <string name="settings_all_appearance">All appearance settings</string>
+    <string name="settings_appearance_intro">Choose what to customise. Changes are saved for this profile.</string>
+    <string name="settings_group_home">Home screen</string>
+    <string name="settings_group_services">Services</string>
+    <string name="settings_group_system">Profile and system</string>
+    <string name="settings_summary_theme">Colours and seasons</string>
+    <string name="settings_summary_hero">Logo, details and rotation</string>
+    <string name="settings_summary_cards">Size, format and spacing</string>
+    <string name="settings_summary_background">Artwork, source and dimming</string>
+    <string name="settings_summary_focus">Highlight and motion</string>
+    <string name="settings_summary_top">Clock, shortcuts and status</string>
+    <string name="settings_summary_icons">Icon pack and app tiles</string>
+    <string name="settings_summary_profile">Copy or reset</string>
+    <string name="settings_customize_row">Customise row</string>
+    <string name="settings_customize_row_hint">Heading, artwork format and size</string>
 </resources>
