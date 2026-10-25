@@ -44,3 +44,17 @@ fun PageHeader(title: String, icon: ImageVector, modifier: Modifier = Modifier, 
         }
     }
 }
+
+/** A compact landmark above content, with optional count on the opposite edge. */
+@Composable
+fun SectionHeading(title: String, icon: ImageVector, modifier: Modifier = Modifier,
+    detail: String? = null, iconModifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Icon(icon, null, iconModifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface)
+        if (detail != null) Text(detail, style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}

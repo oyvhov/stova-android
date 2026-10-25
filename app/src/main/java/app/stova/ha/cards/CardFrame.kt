@@ -79,13 +79,15 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
             Box(Modifier.size(36.dp).clip(MaterialTheme.shapes.medium).background(if(lit) glow.color else MaterialTheme.colorScheme.surfaceVariant), contentAlignment=Alignment.Center) {
                 Icon(icon,null,Modifier.size(22.dp),tint=if(lit) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Text(label,Modifier.weight(1f),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)
+            if(config.size==CardSize.S) Spacer(Modifier.weight(1f))
+            else Text(label,Modifier.weight(1f),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)
             if (locked) Icon(StovaIcons.Lock,stringResource(R.string.ha_locked),Modifier.size(18.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
             androidx.compose.animation.Crossfade(pending to badge, animationSpec = app.stova.core.theme.stovaMotion.fade(), label = "card-status") { (busy, text) ->
                 if (busy) Text(stringResource(R.string.ha_v2_pending),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 else if (text != null) Text(text,Modifier.clip(MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal=8.dp,vertical=4.dp),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        if(config.size==CardSize.S) Text(label,Modifier.fillMaxWidth(),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)
         Column(Modifier.weight(1f),verticalArrangement=Arrangement.Bottom) {
             Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {
                 CompositionLocalProvider(LocalCardFocused provides focused) {content()}

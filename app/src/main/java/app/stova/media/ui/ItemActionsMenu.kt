@@ -10,14 +10,16 @@ import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.ui.StovaButton
 import app.stova.core.ui.StovaDialog
+import app.stova.core.ui.StovaIcons
+import app.stova.core.ui.PageHeader
 import app.stova.media.model.MediaItem
 @Composable fun ItemActionsMenu(item:MediaItem,onPlay:()->Unit,onDetails:()->Unit,onDismiss:()->Unit,rowActions: @Composable () -> Unit = {}) {
  StovaDialog(onDismiss) {
   Surface(shape=MaterialTheme.shapes.large) {
    Column(Modifier.width(440.dp).verticalScroll(rememberScrollState()).padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-    Text(item.title,style=MaterialTheme.typography.headlineSmall)
-    StovaButton(stringResource(R.string.item_play),onPlay,primary=true)
-    StovaButton(stringResource(R.string.item_details),onDetails)
+    PageHeader(item.title,StovaIcons.Play)
+    StovaButton(stringResource(R.string.item_play),onPlay,Modifier.fillMaxWidth(),primary=true,icon=StovaIcons.Play,compact=true)
+    StovaButton(stringResource(R.string.item_details),onDetails,Modifier.fillMaxWidth(),icon=StovaIcons.Info,compact=true,quiet=true)
     rowActions()
    }
   }

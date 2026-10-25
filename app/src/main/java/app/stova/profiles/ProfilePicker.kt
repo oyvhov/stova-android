@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -28,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.ui.StovaIcons
+import app.stova.core.ui.CategoryIcon
 import app.stova.core.ui.focusOutline
 
 /** "Who's watching?" — one large avatar per profile, a lock under the ones with a PIN. */
@@ -36,8 +39,11 @@ fun ProfilePicker(profiles: List<Profile>, onPick: (Profile) -> Unit, onAdd: (()
     val first = remember { FocusRequester() }
     LaunchedEffect(profiles.isNotEmpty()) { if (profiles.isNotEmpty()) runCatching { first.requestFocus() } }
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(40.dp)) {
-        Text(stringResource(R.string.profile_who), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onSurface)
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            CategoryIcon(StovaIcons.Home, size = 44.dp)
+            Text(stringResource(R.string.profile_who), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onSurface)
+        }
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(32.dp), contentPadding = PaddingValues(8.dp)) {
             items(profiles, key = { it.id }) { profile ->
                 val modifier = if (profile == profiles.first()) Modifier.focusRequester(first) else Modifier
                 PickerItem(profile, { onPick(profile) }, modifier)
@@ -63,7 +69,7 @@ private fun PickerItem(profile: Profile, onClick: () -> Unit, modifier: Modifier
                 profile.name,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
             )

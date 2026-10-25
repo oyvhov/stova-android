@@ -49,6 +49,12 @@ class SmartHomeScreenTest {
     }
     @Test fun statusIsCenteredWithHeading() = assertStatusCentered(1f)
     @Test fun statusIsCenteredWithHeadingAtDoubleFont() = assertStatusCentered(2f)
+    @Test fun pageAndGroupsHaveConsistentVisualSymbols() {
+        val cards = listOf(CardConfig("1", CardType.LIGHT, "light.x", favorite = true))
+        compose.setContent { StovaTheme { SmartHomeContent(adult,cards,emptyMap(),HaStatus.CONNECTED) } }
+        compose.onNodeWithTag("page-icon-smart-home",useUnmergedTree=true).assertIsDisplayed()
+        compose.onNodeWithTag("section-icon-favorites",useUnmergedTree=true).assertIsDisplayed()
+    }
     @Test fun emptyStateOffersAddForAdult() {
         var adding=false
         compose.setContent { StovaTheme { SmartHomeContent(adult,emptyList(),emptyMap(),HaStatus.CONNECTED,onAdd={adding=true}) } }

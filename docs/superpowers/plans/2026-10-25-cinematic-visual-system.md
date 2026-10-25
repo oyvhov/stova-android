@@ -18,10 +18,10 @@ Ingen push eller styring av verkelege HA-einingar. Profil-/konto-/hushaldshashar
 - [x] Kontroller fokus, profilisolasjon og native skjermprøver; commit og ledger.
 
 ## Task 3: Smarthus og dei andre flatene
-- [ ] Skriv/køyr relevante testar før endra kontraktar.
-- [ ] Samordne overskrifter, ikon, handlingsfelt, gruppeetikettar og tomtilstandar i Smarthus/Appar/profil-/menyflater.
-- [ ] Finpuss kort, avstandar og tekstplassering utan å endre styringskontraktar.
-- [ ] Køyr tastetestane og sjå native skjermprøver; commit og ledger.
+- [x] Skriv/køyr relevante testar før endra kontraktar.
+- [x] Samordne overskrifter, ikon, handlingsfelt, gruppeetikettar og tomtilstandar i Smarthus/Appar/profil-/menyflater.
+- [x] Finpuss kort, avstandar og tekstplassering utan å endre styringskontraktar.
+- [x] Køyr tastetestane og sjå native skjermprøver; commit og ledger.
 
 ## Task 4: Endeleg emulatorrunde
 - [ ] TestDebugUnitTest, lintDebug, assembleDebug med skjermprøver; kontroller XML og bilete.

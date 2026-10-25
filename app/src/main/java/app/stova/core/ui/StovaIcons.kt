@@ -14,6 +14,11 @@ import androidx.compose.ui.unit.dp
  * language. The stroke colour is a placeholder; `Icon` tints it.
  */
 object StovaIcons {
+    val Check by lazy { icon("check") { moveTo(4f, 12f); lineTo(9f, 17f); lineTo(20f, 6f) } }
+    val Hide by lazy { icon("hide") {
+        moveTo(3f, 12f); curveTo(8f, 3f, 16f, 3f, 21f, 12f); curveTo(16f, 21f, 8f, 21f, 3f, 12f); close()
+        moveTo(3f, 21f); lineTo(21f, 3f)
+    } }
     val Palette by lazy { icon("palette") {
         moveTo(12f, 3f); curveTo(6f, 3f, 3f, 7f, 3f, 12f); curveTo(3f, 18f, 7f, 21f, 12f, 21f)
         curveTo(16f, 21f, 15f, 17f, 17f, 16f); curveTo(19f, 15f, 21f, 16f, 21f, 12f); curveTo(21f, 7f, 17f, 3f, 12f, 3f); close()

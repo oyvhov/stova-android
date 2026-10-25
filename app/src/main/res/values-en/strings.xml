@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="apps_intro">Your favourites first. Hold OK to arrange apps and icons.</string>
+    <string name="apps_intro_kid">The apps chosen for you.</string>
     <string name="app_name">Stova</string>
 
     <string name="pin_title">Enter PIN</string>

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.theme.StovaLayout
+import app.stova.core.theme.color
 import app.stova.core.ui.*
 import app.stova.ha.*
 import app.stova.ha.cards.*
@@ -183,26 +184,34 @@ import kotlin.math.ceil
                 }
             }.focusGroup(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
             Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                Row(horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
-                    Text(stringResource(R.string.nav_smart_home),style=MaterialTheme.typography.headlineMedium)
-                    HaStatusLabel(status)
-                }
-                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
+                PageHeader(stringResource(R.string.nav_smart_home),StovaIcons.Home,
+                    tint=app.stova.core.theme.AvatarColor.GOLD.color,
+                    iconModifier=Modifier.testTag("page-icon-smart-home"),metadata={HaStatusLabel(status)})
+                Row(Modifier.fillMaxWidth().padding(start=54.dp),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
                     DashboardSummary(cards,entities,canControl(profile),summaryFocus) {lightsToTurnOff=it}
                 }
             }
             if(!profile.kid && status!=HaStatus.NOT_CONFIGURED) {
-                if(cards.isNotEmpty()) StovaButton(stringResource(if(editing) R.string.ha_done else R.string.ha_edit),{editing=!editing;restoreId=focusedId ?: firstId})
-                StovaButton(stringResource(R.string.ha_add_card),onAdd,icon=StovaIcons.Plus)
+                if(cards.isNotEmpty()) StovaButton(stringResource(if(editing) R.string.ha_done else R.string.ha_edit),
+                    {editing=!editing;restoreId=focusedId ?: firstId},icon=if(editing) StovaIcons.Check else StovaIcons.Edit,compact=true,quiet=!editing)
+                StovaButton(stringResource(R.string.ha_add_card),onAdd,icon=StovaIcons.Plus,compact=true)
             }
         }
-        if(status==HaStatus.NOT_CONFIGURED) {Text(stringResource(R.string.ha_setup_instruction));return@Column}
+        if(status==HaStatus.NOT_CONFIGURED) {
+            Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(28.dp),
+                verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                CategoryIcon(StovaIcons.Link,size=48.dp)
+                Text(stringResource(R.string.ha_setup_instruction),style=MaterialTheme.typography.titleMedium,
+                    color=MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            return@Column
+        }
         androidx.compose.animation.Crossfade(feedback, animationSpec = app.stova.core.theme.stovaMotion.fade(), label = "ha-feedback") { shown ->
             if(shown!=null) Text(stringResource(if(shown==HaFeedback.FAILED) R.string.ha_v2_failed else R.string.ha_v2_done),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if(cards.isEmpty()) {
-            Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(32.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                Icon(StovaIcons.Home,null,Modifier.size(40.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(28.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                CategoryIcon(StovaIcons.Rows,size=48.dp)
                 Text(stringResource(R.string.ha_empty),style=MaterialTheme.typography.titleLarge)
                 Text(stringResource(R.string.ha_v2_empty_hint),style=MaterialTheme.typography.bodyLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -216,10 +225,10 @@ import kotlin.math.ceil
         },state=list,verticalArrangement=Arrangement.spacedBy(16.dp),contentPadding=PaddingValues(4.dp,4.dp,4.dp,28.dp)) {
             sections.forEachIndexed {index,section ->
                 item(key="section-$index") {
-                    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
-                        Text(if(section.favorites) stringResource(R.string.ha_v2_favorites) else section.room ?: stringResource(R.string.ha_v2_unassigned),style=MaterialTheme.typography.titleMedium)
-                        Text(pluralStringResource(R.plurals.ha_v2_room_count,section.cards.size,section.cards.size),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                    SectionHeading(if(section.favorites) stringResource(R.string.ha_v2_favorites) else section.room ?: stringResource(R.string.ha_v2_unassigned),
+                        if(section.favorites) StovaIcons.Star else StovaIcons.Home,
+                        detail=pluralStringResource(R.plurals.ha_v2_room_count,section.cards.size,section.cards.size),
+                        iconModifier=Modifier.testTag(if(section.favorites) "section-icon-favorites" else "section-icon-room-$index"))
                 }
                 items(packCards(section.cards),key={band->"band-${band.first().card.id}"}) {band ->
                     CardBand(band) {card ->
@@ -282,7 +291,7 @@ import kotlin.math.ceil
     Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
         if(selected.any {it.id.startsWith("light.")}) {
             val label=pluralStringResource(R.plurals.ha_v2_lights_on,lights.size,lights.size)
-            if(canControl && lights.isNotEmpty()) StovaButton(label,{onLights(lights)},Modifier.focusRequester(focus))
+            if(canControl && lights.isNotEmpty()) StovaButton(label,{onLights(lights)},Modifier.focusRequester(focus),icon=StovaIcons.Light,compact=true,quiet=true)
             else Text(label,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
         selected.firstNotNullOfOrNull {if(it.id.startsWith("climate.")) it.attributes.number("current_temperature") else null}?.let {parts+=stringResource(R.string.ha_v2_inside,formatNumber(it,locale))}

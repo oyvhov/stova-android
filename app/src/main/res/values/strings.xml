@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="apps_intro">Favorittane dine først. Hald inne OK for å ordne appar og ikon.</string>
+    <string name="apps_intro_kid">Appane som er valde for deg.</string>
     <string name="app_name">Stova</string>
 
     <string name="pin_title">Skriv PIN</string>

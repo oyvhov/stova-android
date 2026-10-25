@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performScrollTo
@@ -455,7 +456,7 @@ class AppScreensTest {
         rule.onNodeWithText("135 øre").assertIsDisplayed()
         rule.onNodeWithText("Smarthus").assertIsDisplayed()
         rule.onNodeWithText("Hald fram").assertIsDisplayed()
-        rule.onNodeWithText("Nyleg lagt til · Seriar").assertIsDisplayed()
+        rule.onNodeWithText("Nyleg lagt til · Seriar").assertIsNotDisplayed()
         rule.onNodeWithText("2024").assertIsDisplayed()
         rule.onNodeWithText("12 år").assertIsDisplayed()
         rule.saveScreen("12-home-media-ha")

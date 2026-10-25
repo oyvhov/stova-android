@@ -38,6 +38,11 @@ class HaPolishUiTest {
         compose.onNodeWithText("Leselys").assertHeightIsEqualTo(152.dp)
         compose.onNodeWithText("Av").assertExists()
     }
+    @Test fun smallCardNameGetsTheFullTextWidthEvenWithAStatusBadge() {
+        compose.setContent {StovaTheme {CardFrame(CardConfig("a",CardType.SENSOR,"sensor.a"),
+            app.stova.core.ui.StovaIcons.Sensor,"Temperatur i vinterhagen","Fråkopla",false,{}, {},Modifier.width(264.dp)) {CardValue("21,5")}}}
+        compose.onNodeWithText("Temperatur i vinterhagen",useUnmergedTree=true).assertWidthIsAtLeast(220.dp)
+    }
     @Test fun largeCardSpansTwoCompactRowsAndGutter() {
         compose.setContent {StovaTheme {HaCard(CardConfig("a",CardType.LIGHT,"light.a",size=CardSize.L),light("off"),false,{},{},modifier=Modifier.width(544.dp))}}
         compose.onNodeWithText("Leselys").assertHeightIsEqualTo(320.dp)

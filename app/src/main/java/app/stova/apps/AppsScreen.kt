@@ -30,6 +30,9 @@ import app.stova.R
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.StovaShapes
 import app.stova.core.ui.focusOutline
+import app.stova.core.ui.PageHeader
+import app.stova.core.ui.SectionHeading
+import app.stova.core.ui.StovaIcons
 import app.stova.profiles.Profile
 import kotlinx.coroutines.flow.map
 
@@ -56,11 +59,8 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
         verticalArrangement = Arrangement.spacedBy(StovaLayout.RowGap),
     ) {
         item(key = "title", span = { GridItemSpan(maxLineSpan) }) {
-            Text(
-                stringResource(R.string.nav_apps),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            PageHeader(stringResource(R.string.nav_apps), StovaIcons.Apps,
+                subtitle = stringResource(if (profile.kid) R.string.apps_intro_kid else R.string.apps_intro))
         }
         if (arranged.favorites.isNotEmpty()) {
             header(R.string.apps_favorites)
@@ -91,12 +91,8 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
 
 private fun LazyGridScope.header(title: Int) {
     item(key = "header:$title", span = { GridItemSpan(maxLineSpan) }) {
-        Text(
-            stringResource(title),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(top = StovaLayout.SectionTop, bottom = StovaLayout.SectionBottom),
-        )
+        SectionHeading(stringResource(title), if (title == R.string.apps_favorites) StovaIcons.Star else StovaIcons.Apps,
+            Modifier.padding(top = StovaLayout.SectionTop, bottom = StovaLayout.SectionBottom))
     }
 }
 

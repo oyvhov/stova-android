@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
     fun save(updated:CardConfig) {onConfigure(updated);onDismiss()}
     StovaDialog(onDismiss) {
         Column(Modifier.widthIn(max=560.dp).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            Text(label,style=MaterialTheme.typography.titleLarge)
+            PageHeader(label,cardIcon(card.type,override=card.icon))
             LazyColumn(Modifier.heightIn(max=320.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 when(page) {
                     "name" -> item {
@@ -38,16 +38,16 @@ import kotlinx.coroutines.launch
                         StovaButton(stringResource(when(icon) {null->R.string.ha_v2_icon_default;"sun"->R.string.ha_v2_sun_icon;"home"->R.string.nav_home;else->cardTypeLabel(type)}),{save(card.copy(icon=icon))},icon=cardIcon(type,override=icon))
                     }
                     else -> {
-                        item {StovaButton(stringResource(R.string.ha_v2_size),{page="size"})}
-                        item {StovaButton(stringResource(if(card.onHome) R.string.ha_hide_home else R.string.ha_show_home),{scope.launch {if(onHome(card)) onDismiss() else limit=true}})}
+                        item {StovaButton(stringResource(R.string.ha_v2_size),{page="size"},icon=StovaIcons.Rows,compact=true,quiet=true)}
+                        item {StovaButton(stringResource(if(card.onHome) R.string.ha_hide_home else R.string.ha_show_home),{scope.launch {if(onHome(card)) onDismiss() else limit=true}},icon=StovaIcons.Home,compact=true,quiet=true)}
                         if(limit) item {Text(stringResource(R.string.ha_home_limit),color=MaterialTheme.colorScheme.onSurfaceVariant)}
                         item {StovaButton(stringResource(R.string.ha_move_left),{onMove(card,-1);onDismiss()})}
                         item {StovaButton(stringResource(R.string.ha_move_right),{onMove(card,1);onDismiss()})}
                         item {StovaButton(stringResource(R.string.ha_v2_move_up),{onMove(card,-3);onDismiss()})}
                         item {StovaButton(stringResource(R.string.ha_v2_move_down),{onMove(card,3);onDismiss()})}
-                        item {StovaButton(stringResource(R.string.ha_v2_rename),{page="name"})}
-                        item {StovaButton(stringResource(R.string.ha_v2_icon),{page="icon"})}
-                        item {StovaButton(stringResource(if(card.favorite) R.string.ha_v2_favorite_remove else R.string.ha_v2_favorite_add),{save(card.copy(favorite=!card.favorite))})}
+                        item {StovaButton(stringResource(R.string.ha_v2_rename),{page="name"},icon=StovaIcons.Edit,compact=true,quiet=true)}
+                        item {StovaButton(stringResource(R.string.ha_v2_icon),{page="icon"},icon=StovaIcons.Palette,compact=true,quiet=true)}
+                        item {StovaButton(stringResource(if(card.favorite) R.string.ha_v2_favorite_remove else R.string.ha_v2_favorite_add),{save(card.copy(favorite=!card.favorite))},icon=StovaIcons.Star,compact=true,quiet=true)}
                         item {StovaButton(stringResource(R.string.ha_remove),{onRemove(card);onDismiss()})}
                     }
                 }

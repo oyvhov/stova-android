@@ -54,6 +54,12 @@ class HaScreensTest {
         }}}
         compose.saveScreen("ha-double-font-sensor")
     }
+    @Test fun emptyDashboard() {
+        compose.setContent {StovaTheme {Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+            SmartHomeContent(Profile("a","A",AvatarColor.LIME),emptyList(),emptyMap(),HaStatus.CONNECTED)
+        }}}
+        compose.saveScreen("ha-empty-dashboard")
+    }
     @Test fun doubleFontHomeHeader() {
         compose.setContent {StovaTheme {CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density,2f)) {
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {

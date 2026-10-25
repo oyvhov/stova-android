@@ -23,6 +23,8 @@ import app.stova.R
 import app.stova.core.theme.StovaShapes
 import app.stova.core.ui.StovaButton
 import app.stova.core.ui.StovaDialog
+import app.stova.core.ui.PageHeader
+import app.stova.core.ui.StovaIcons
 
 /** What an adult can do with one app. Every choice closes the menu. */
 @Composable
@@ -48,20 +50,21 @@ fun AppActionsMenu(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text(app.label, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
+            PageHeader(app.label, StovaIcons.Apps)
             val full = Modifier.fillMaxWidth()
             StovaButton(
                 stringResource(if (favorite) R.string.app_remove_favorite else R.string.app_add_favorite),
                 { onToggleFavorite(); onDismiss() },
                 full.focusRequester(first),
+                icon = StovaIcons.Star, compact = true, quiet = true,
             )
             if (favorite) {
-                StovaButton(stringResource(R.string.app_move_left), { onMove(-1); onDismiss() }, full)
-                StovaButton(stringResource(R.string.app_move_right), { onMove(+1); onDismiss() }, full)
+                StovaButton(stringResource(R.string.app_move_left), { onMove(-1); onDismiss() }, full, icon = StovaIcons.ChevronLeft, compact = true, quiet = true)
+                StovaButton(stringResource(R.string.app_move_right), { onMove(+1); onDismiss() }, full, icon = StovaIcons.ChevronRight, compact = true, quiet = true)
             }
-            StovaButton(stringResource(if (hidden) R.string.app_show else R.string.app_hide), { onToggleHidden(); onDismiss() }, full)
-            StovaButton(stringResource(R.string.app_info), { onAppInfo(); onDismiss() }, full)
-            StovaButton(stringResource(R.string.icon_change), onChangeIcon, full)
+            StovaButton(stringResource(if (hidden) R.string.app_show else R.string.app_hide), { onToggleHidden(); onDismiss() }, full, icon = StovaIcons.Hide, compact = true, quiet = true)
+            StovaButton(stringResource(R.string.app_info), { onAppInfo(); onDismiss() }, full, icon = StovaIcons.Info, compact = true, quiet = true)
+            StovaButton(stringResource(R.string.icon_change), onChangeIcon, full, icon = StovaIcons.Palette, compact = true, quiet = true)
             rowActions()
         }
     }
