@@ -1,3 +1,8 @@
+# Fråkopla medierader og overgangsklipp – overlevert til Codex
+2026-10-25: Claude si vekegrense er på 96 %, så denne bestillinga er overlevert etter AGENTS.md. Aktuell plan: `docs/superpowers/plans/2026-10-25-offline-retry.md`; ingen steg er påbyrja.
+Claude såg «Fråkopla» på medieradene på emulator-5580 etter ein ny installasjon (HA var levande). Mistanke: `refresh` merkjer ei feila henting som fersk i fem minutt. Planen har raud test, retting, emulatorprøve og eit klipp av overgangane.
+Ikkje installer på Shield og ikkje push i denne bestillinga. Claude held fram når vekegrensa er nullstilt (26.10 kl. 01:00).
+
 # Appmeny etter langt OK – retta
 2026-10-25: Kode, emulatorprøver og testplan `2026-10-25-app-longpress.md` er fullførte. Repetert OK frå opningstrykket kunne velje første dialoghandling og lukke menyen; `StovaDialog` krev no ei eiga ny KeyDown og ryddar trykket ved fokustap, utan tidsbasert sperre.
 Sluttkontroll: 571/571 inkludert skjermtestane, 0 hoppa over; lint 0 feil (38 åtvaringar, 1 hint), debug-bygg OK. Native regresjonar dekkjer OK/Enter/numpad, rest-slepp og første nye trykk; appmeny/favoritt og resten av dialogane er med i fulltesten.
