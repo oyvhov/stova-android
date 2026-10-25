@@ -1,3 +1,10 @@
+# Smarthus v2 – finpuss fullført
+2026-10-25: Heile finpussbestillinga er fullført i `ha-v2`; ingen påbyrja steg står att. Spesifikasjonen §5.2 og finpussplanen er oppdaterte.
+Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug -Pstova.screens=true`: 348/348, 0 hoppa over; HA 132, DesignRulesTest 4/4; lint 0 feil (25 åtvaringar, 1 hint), APK OK.
+Ekte HA på emulator-5580: to lys av/på og stadfesta tilbake på 222/255 og 84/255; mål 23,5 → 24,0 → 23,5 °C. Ti kort og tre Heim-brikker bevarte; tryggleiksutstyr urørt.
+Ti visuelt kontrollerte bilete: `docs/images/ha-v2-polish-*.png` (ni ekte, eitt Robolectric/font 2). Rapport: `docs/verification/smarthus-v2-finpuss.md`; lokal TDD-ledger og tilbakeføringskvitteringar i `.superpowers/`.
+Ingen spørsmål eller push. Smarthus står ope i vanleg MainActivity. Fysisk Shield og eldre release-steg er framleis ikkje verifiserte; dei forbodne filene er urørte.
+
 # Smarthus v2 – fullført
 2026-10-25: Bestillinga og alle seks oppgåvene i `2026-10-25-smarthus-v2.md` er fullførte i worktreet `ha-v2`; ingen påbyrja steg står att.
 Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug -Pstova.screens=true`: 329/329, 0 hoppa over; DesignRulesTest 4/4, lint 0 feil (25 åtvaringar, 1 hint), APK OK.

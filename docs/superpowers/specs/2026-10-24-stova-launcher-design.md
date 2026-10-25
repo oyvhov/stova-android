@@ -151,30 +151,38 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
 Smarthus v2 (25.10.2026) er ein naturleg del av Stova. Tunet er funksjonsreferansen;
 korta brukar Stova sine matte `Surface`-flater, `MaterialTheme.shapes`, typografi og
 `focusOutline` berre rundt kortflata. Ingen skalering, glas eller blur. Ikon står i ei
-`Raised`-rute; påslåtte lys har dempa `primaryContainer` og temaaksent som handlingsfeedback.
-Verdiar, romnamn og passive statusar har nøytrale tekstfargar.
+`Raised`-rute. Påslåtte lys har flat glød frå `HaTokens`: 8–22 % etter lysstyrken,
+varm som standard og avmetta frå `hs_color`/`rgb_color` i fargemodus. Ikonruta er fylt
+med glødfargen; avslåtte lys er nøytrale med dempa ikon. Verdiar, romnamn og passive
+statusar har nøytrale tekstfargar.
 
 - Overskrift med tilkoplingsstatus og roleg oppsummering av lys på, innetemperatur og
   straumpris frå korta på dashbordet. «Legg til kort» og «Rediger» ligg til høgre.
 - Favorittar kjem først, deretter seksjonar per HA-rom. Kort utan rom ligg under
   «Andre einingar». Rekkefølgja er lagra per profil; flytting held seg innanfor seksjonen.
 - Storleikar: **S (1 × 1), M (2 × 1), L (2 × 2)**. Tre kolonnar og 16 dp mellomrom.
+  S er om lag 264 × 152 dp; M er to S i breidd med mellomrommet, og L to i begge retningar.
   Ei to-raders pakking let to S-kort stå ved sida av eit L-kort. Radhøgd blir målt frå
-  tekstinnhaldet og kan vekse ved stor skrift; S har minst 160 dp, L minst 336 dp.
+  tekstinnhaldet og kan vekse ved stor skrift; S/M har minst 152 dp, L minst 320 dp.
+- Alle kort har ikon og namn øvst (`titleMedium`, `onSurface`), med hovudverdi og detalj
+  nedst. Tilstandsbrikke kjem berre når ho tilfører informasjon; ingen duplisert På-brikke.
+  Rom-undertekst blir berre vist i Favorittar. Fokusert kort blir bede heilt inn i synsfeltet,
+  med plass til heile fokusringen. Hint er berre synleg med fokus i rutenettet ved vanleg
+  skriftstorleik, i overskriftsfeltet slik at det korkje dekkjer eller tek høgd frå korta.
 - `CardConfig` lagrar `size`, valfritt `name` og `icon`, `favorite` og `onHome`.
   Gamle JSON-kort med `wide=true` blir M når `size` manglar; eksplisitt `size` vinn.
   `wide` er berre eit kompatibilitetsfelt. Ny redigering brukar `size`.
 
 | Korttype | Visning | OK | Venstre/høgre på sjølve kortet |
 |---|---|---|---|
-| Lys | På/av, lysstyrke, eventuell kelvinverdi | av/på | lysstyrke ±10 %, samla etter 250 ms |
+| Lys | Lysstyrke som hovudverdi når på, elles Av; Varm kvit (<3000 K), Nøytral (3000–4500 K), Kald kvit (>4500 K), eller fargeprikk | av/på | lysstyrke ±10 %, samla etter 250 ms |
 | Brytar/vifte/input_boolean | På/av | av/på | vanleg fokusflytting |
-| Klima | Noverande temperatur, mål og modus | temperaturdialog | mål ±0,5 °C innan min/maks |
+| Klima | Noverande temperatur stort, mål med ±-hint ved fokus, modusbrikke med ikon | temperaturdialog | mål ±0,5 °C innan min/maks |
 | Sensor | Verdi/eining og 24 t-sparkline | 24 t-graf når numerisk | vanleg fokusflytting |
 | Binærsensor | Ord etter device class, t.d. Open/Lukka eller Rørsle/Ingen rørsle | lesing | vanleg fokusflytting |
 | Vêr | No og fem dagar med ikon og høg/låg | lesing | vanleg fokusflytting |
-| Straumpris | Søyler, noverande intervall markert, min/maks | graf med I dag/I morgon | vanleg fokusflytting |
-| Mediaspelar | Kunst, tittel/artist, spel/pause/neste og volum | spel/pause | volum ±5 % |
+| Straumpris | Timesnitt, nivåfarga søyler, noverande time markert, min/maks med klokkeslett | graf med I dag/I morgon og Timesnitt/15 minutt | vanleg fokusflytting |
+| Mediaspelar | Kunst fyller venstresida av M/L, tittel/artist til høgre, framdrift, spel/pause/neste og volum | spel/pause | volum ±5 % |
 | Scene/skript | Køyr | køyr med kvittering | vanleg fokusflytting |
 | Kamera | Stillbilete kvart 10. s medan synleg | fullskjerm, kvart 2. s | vanleg fokusflytting |
 | Gardin/port | Tilstand og prosent | opne/lukke/stopp-dialog | posisjon ±10 % når støtta |
@@ -197,7 +205,14 @@ Gruppebrikkene er Alle, Lys, Brytarar, Klima, Sensorar, Vêr, Media, Scener, Kam
 Straumpris, Gardiner/port og Lås. «Vis alle» inkluderer skjulte, diagnostiske, konfigurasjons-
 og deaktiverte registereiningar; deaktiverte einingar utan tilstand blir viste som utilgjengelege.
 
-Heim-brikkene brukar dei same ikona, overstyringane, temaformene og matte flatene som korta.
+Straumgraf og minigraf brukar same dempa nivåfargar: `Success` under nedste tredel av
+dagsspennet, `Caution` i midten og `Warning` øvst. Jamne prisar brukar `Caution`.
+Noverande intervall får temaaksenten og etiketten «No …». Timesnitt er vekta etter
+intervallengda. Normale dagar har 24 søyler; sommar-/vintertid held 23/25 timar og
+begge 02-timane, med tidsakse 00/06/12/18/24 plassert etter lokal klokke i HA si tidssone.
+
+Heim-brikkene brukar dei same ikona, overstyringane, temaformene, matte flatene og
+lysgløden som korta, utan endringar i sjølve Heim-skjermen.
 
 ### 5.3 Appar
 
