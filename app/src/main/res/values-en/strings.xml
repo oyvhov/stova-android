@@ -562,4 +562,14 @@
     <string name="settings_summary_profile">Copy or reset</string>
     <string name="settings_customize_row">Customise row</string>
     <string name="settings_customize_row_hint">Heading, artwork format and size</string>
+    <string name="home_row_counter">%1$d / %2$d · Up/down</string>
+    <string name="home_visible_rows">Visible rows</string>
+    <string name="home_rows_one">One row</string>
+    <string name="home_rows_two">Two rows</string>
+    <string name="home_rows_scrolling">Scrolling view</string>
+    <string name="home_rows_hint">One row gives artwork room. Two rows fit the cards; large text gets one complete row. Up/down reaches every row.</string>
+    <string name="home_row_inset">Row position</string>
+    <string name="home_row_low">At the bottom</string>
+    <string name="home_row_balanced">Slightly raised</string>
+    <string name="home_row_high">Raised</string>
 </resources>

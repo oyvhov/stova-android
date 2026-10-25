@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.input.key.KeyEventType
@@ -62,6 +63,8 @@ fun HomeContent(
     appActions: (@Composable (InstalledApp, @Composable () -> Unit, () -> Unit) -> Unit)? = null,
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
+    val deck = appearance.homeRows != HomeRows.SCROLLING
+    val availableRows = remember(rows, deck) { if (deck) rows?.filter { it.hasFocusableItems() } else rows }
     val rowTargets = remember { mutableStateMapOf<HomeRowKey, FocusedTarget>() }
     var menuRow by remember { mutableStateOf<HomeRowUi?>(null) }
     var menuMedia by remember { mutableStateOf<FocusedTarget.Media?>(null) }
@@ -73,18 +76,11 @@ fun HomeContent(
     var undoFocused by remember { mutableStateOf(false) }
     var topBarFocused by remember { mutableStateOf(false) }
     var topReturn by remember { mutableIntStateOf(0) }
-    val currentRows by rememberUpdatedState(rows)
+    val currentRows by rememberUpdatedState(availableRows)
     val requesters = remember { mutableMapOf<HomeRowKey, FocusRequester>() }
     fun restore(key: HomeRowKey?) { returnRow = key; focusReturn++ }
     fun closeMenu() { val key = menuRow?.key; menuRow = null; menuMedia = null; menuApp = null; restore(key) }
     BackHandler(enabled = movingRow != null) { val key = movingRow; movingRow = null; restore(key) }
-    LaunchedEffect(focusReturn) {
-        val requester = requesters[returnRow] ?: return@LaunchedEffect
-        repeat(12) {
-            withFrameNanos { }
-            if (runCatching { requester.requestFocus() }.getOrDefault(false)) return@LaunchedEffect
-        }
-    }
     LaunchedEffect(hiddenRow) {
         val hidden = hiddenRow ?: return@LaunchedEffect
         delay(8_000)
@@ -93,17 +89,20 @@ fun HomeContent(
     }
     // The last focused title survives leaving Home for Spole or another launcher page.
     val restoreTarget = remember { focused }
-    val restoreRow = rows?.firstOrNull { row ->
+    val requestedRow = availableRows?.firstOrNull { row ->
         when (row) {
             is HomeRowUi.Media -> (restoreTarget as? FocusedTarget.Media)?.let { target ->
                 row.account.id == target.account.id && row.items.any { it.id == target.item.id }
             } == true
-            is HomeRowUi.Apps -> restoreTarget is FocusedTarget.App
-            is HomeRowUi.WatchNext -> false
+            is HomeRowUi.Apps -> restoreTarget is FocusedTarget.App && row.apps.any { it.label == restoreTarget.label }
+            is HomeRowUi.WatchNext -> restoreTarget is FocusedTarget.App && row.entries.any { it.title == restoreTarget.label }
         }
     }?.key ?: initial
+    val restoreRow = if (deck) requestedRow?.takeIf { key -> availableRows.orEmpty().any { it.key == key } }
+        ?: availableRows?.firstOrNull()?.key else requestedRow
     val firstItem = remember { FocusRequester() }
     var placedRow by remember { mutableStateOf<HomeRowKey?>(null) }
+    var activeRow by remember { mutableStateOf(restoreRow) }
     var viewerMoved by remember { mutableStateOf(false) }
     val topBarFocus = remember { FocusRequester() }
     val focusScope = rememberCoroutineScope()
@@ -111,9 +110,20 @@ fun HomeContent(
     var pendingRow by remember { mutableStateOf<HomeRowKey?>(null) }
     var navigationVersion by remember { mutableIntStateOf(0) }
     val motion = stovaMotion
-    fun scrollIndex(index: Int) = if (index == 0 || appearance.heroSize == HeroSize.OFF) index else index + 1
-    val initialRow = rows.orEmpty().indexOfFirst { it.key == restoreRow }.coerceAtLeast(0)
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = scrollIndex(initialRow))
+    fun scrollIndex(index: Int) = if (deck || index == 0 || appearance.heroSize == HeroSize.OFF) index else index + 1
+    val initialRow = availableRows.orEmpty().indexOfFirst { it.key == restoreRow }.coerceAtLeast(0)
+    val listState = key(appearance.homeRows) { rememberLazyListState(initialFirstVisibleItemIndex = scrollIndex(initialRow)) }
+    LaunchedEffect(focusReturn) {
+        if (focusReturn == 0) return@LaunchedEffect
+        val index = availableRows.orEmpty().indexOfFirst { it.key == returnRow }
+        if (index < 0) return@LaunchedEffect
+        listState.smoothScrollToItem(scrollIndex(index), motion)
+        repeat(12) {
+            withFrameNanos { }
+            if (runCatching { requesters[returnRow]?.requestFocus() == true }.getOrDefault(false)) return@LaunchedEffect
+        }
+    }
+    LaunchedEffect(appearance.homeRows) { rowNavigation?.cancel(); pendingRow = null }
     fun focusRow(index: Int) {
         rowNavigation?.cancel()
         navigationVersion++
@@ -155,7 +165,7 @@ fun HomeContent(
         if (key == null) false else when (event.key) {
             Key.DirectionUp, Key.DirectionDown -> {
                 if (event.type == KeyEventType.KeyDown) {
-                    onHomeChange(moveHomeRow(homePrefs, rows.orEmpty().map { it.key }, key, if (event.key == Key.DirectionUp) -1 else 1))
+                    onHomeChange(moveHomeRow(homePrefs, availableRows.orEmpty().map { it.key }, key, if (event.key == Key.DirectionUp) -1 else 1))
                 }
                 true
             }
@@ -166,8 +176,8 @@ fun HomeContent(
             else -> true
         }
     }.semantics {
-        // Automation marker, not user-facing copy. Null rows mean sources are still loading.
-        if (rows != null) contentDescription = "home-ready"
+        // Automation marker, not user-facing copy. Null availableRows mean sources are still loading.
+        if (availableRows != null) contentDescription = "home-ready"
     }) {
         Box(Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
             if (event.key != Key.DirectionDown) false else {
@@ -182,8 +192,9 @@ fun HomeContent(
             style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         BoxWithConstraints(Modifier.weight(1f)) {
             val viewportHeight = maxHeight
+            val geometry = if (deck) homeDeckGeometry(availableRows.orEmpty(), homePrefs, appearance, maxWidth, maxHeight) else null
             val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
-            val artworkHeight = rows.orEmpty().maxOfOrNull { row ->
+            val artworkHeight = availableRows.orEmpty().maxOfOrNull { row ->
                 val style = homePrefs.rowFormats[row.key] ?: RowStyle()
                 artworkDimensions(style.format ?: defaultRowFormat(row.key, appearance), style.size ?: appearance.cardSize).height
             }?.dp ?: StovaLayout.WideHeight
@@ -193,22 +204,31 @@ fun HomeContent(
             // room for a whole row; even a large poster's optional caption must remain reachable.
             val baseHeroHeight = if (fontScale >= 1.5f) maxHeight * (appearance.heroSize.fraction + 0.16f)
                 else minOf(maxHeight * appearance.heroSize.fraction, (maxHeight - rowHeight).coerceAtLeast(0.dp))
-            val heroHeight = if (appearance.heroSize == HeroSize.OFF) 0.dp else if (appearance.showOverview && fontScale < 1.5f) maxOf(baseHeroHeight, 208.dp) else baseHeroHeight
+            val deckHeroSpace = geometry?.let { (maxHeight - it.height - it.bottom).coerceAtLeast(0.dp) }
+            val heroHeight = if (appearance.heroSize == HeroSize.OFF) 0.dp else if (deckHeroSpace != null) {
+                if (deckHeroSpace < if (fontScale >= 1.5f) 140.dp else 112.dp) 0.dp
+                else minOf(deckHeroSpace, maxOf(maxHeight * appearance.heroSize.fraction,
+                    if (appearance.showOverview && fontScale < 1.5f) 208.dp else 0.dp))
+            } else if (appearance.showOverview && fontScale < 1.5f) maxOf(baseHeroHeight, 208.dp) else baseHeroHeight
             Column {
                 when {
-                    rows == null -> if (appearance.heroSize != HeroSize.OFF) HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
-                    rows.isEmpty() -> {
+                    availableRows == null -> if (appearance.heroSize != HeroSize.OFF) HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
+                    availableRows.isEmpty() -> {
                         if (appearance.heroSize != HeroSize.OFF) HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
                         EmptyHome(onOpenApps)
                     }
                     else -> {
-                        val headerItems = if (appearance.heroSize == HeroSize.OFF) 0 else 1
-                        LaunchedEffect(restoreRow, rows) {
-                            // Media rows can arrive after the apps row; start focus follows them until the viewer has moved.
+                        val headerItems = if (deck || appearance.heroSize == HeroSize.OFF) 0 else 1
+                        if (deck) {
+                            if (heroHeight > 0.dp) HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
+                            Spacer(Modifier.weight(1f))
+                        }
+                        LaunchedEffect(restoreRow, availableRows) {
+                            // Media availableRows can arrive after the apps row; start focus follows them until the viewer has moved.
                             if (restoreRow == null || restoreRow == placedRow || (placedRow != null && viewerMoved)) return@LaunchedEffect
                             // A row inserted above the visible ones is not composed yet: bring it in first.
-                            rows.indexOfFirst { it.key == restoreRow }.takeIf { it >= 0 }?.let { listState.scrollToItem(scrollIndex(it)) }
-                            // Lazy rows compose during layout, after this effect starts; give the requester a few frames to attach.
+                            availableRows.indexOfFirst { it.key == restoreRow }.takeIf { it >= 0 }?.let { listState.scrollToItem(scrollIndex(it)) }
+                            // Lazy availableRows compose during layout, after this effect starts; give the requester a few frames to attach.
                             repeat(10) {
                                 if (runCatching { firstItem.requestFocus(FocusDirection.Enter) }.getOrDefault(false)) { placedRow = restoreRow; return@LaunchedEffect }
                                 withFrameNanos { }
@@ -217,12 +237,12 @@ fun HomeContent(
                         val scope = rememberCoroutineScope()
                         LaunchedEffect(topReturn) {
                             if (topReturn > 0) {
-                                if (pendingRow == null) listState.smoothScrollToItem(0, motion)
+                                if (!deck && pendingRow == null) listState.smoothScrollToItem(0, motion)
                             }
                         }
                         val rowSpec = LocalBringIntoViewSpec.current
-                        val lastStyle = homePrefs.rowFormats[rows.last().key] ?: RowStyle()
-                        val lastArt = artworkDimensions(lastStyle.format ?: defaultRowFormat(rows.last().key, appearance), lastStyle.size ?: appearance.cardSize).height.dp
+                        val lastStyle = homePrefs.rowFormats[availableRows.last().key] ?: RowStyle()
+                        val lastArt = artworkDimensions(lastStyle.format ?: defaultRowFormat(availableRows.last().key, appearance), lastStyle.size ?: appearance.cardSize).height.dp
                         val lastRowHeight = appearance.rowSpacing.top.dp + (if (lastStyle.showTitle) 25.dp * fontScale + StovaLayout.SectionBottom else 0.dp) + lastArt +
                             (if (appearance.showTitles) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp
                         // Even the last row can reach the top after the hero has scrolled away.
@@ -230,12 +250,13 @@ fun HomeContent(
                         // One animation owns the column, including the hero. Individual cards must
                         // not start a second vertical bring-into-view scroll during a row transition.
                         CompositionLocalProvider(LocalBringIntoViewSpec provides StayPut) {
-                            LazyColumn(Modifier.fillMaxSize().focusRestorer(), state = listState,
-                                contentPadding = PaddingValues(bottom = bottomSpace)) {
+                            LazyColumn(Modifier.then(if (geometry != null) Modifier.fillMaxWidth().height(geometry.height).clipToBounds()
+                                else Modifier.fillMaxSize()).focusRestorer(), state = listState,
+                                contentPadding = PaddingValues(bottom = if (deck) 0.dp else bottomSpace)) {
                                 if (headerItems != 0) item(key = "spotlight-header", contentType = "hero") {
                                     ParallaxHero(spotlight, heroHeight, listState)
                                 }
-                                itemsIndexed(rows, key = { _, row -> row.key.value }) { index, row ->
+                                itemsIndexed(availableRows, key = { _, row -> row.key.value }) { index, row ->
                                     val requester = if (row.key == restoreRow) firstItem else null
                                     CompositionLocalProvider(LocalBringIntoViewSpec provides rowSpec) {
                                         val rowRequester = remember(row.key) { requesters.getOrPut(row.key) { FocusRequester() } }
@@ -259,13 +280,17 @@ fun HomeContent(
                                         }.focusRestorer().onFocusChanged { state ->
                                             val gainedFocus = state.hasFocus && !hasFocus
                                             hasFocus = state.hasFocus
+                                            if (gainedFocus) activeRow = row.key
                                             if (gainedFocus && pendingRow == null) scope.launch {
                                                 listState.smoothScrollToItem(scrollIndex(index), motion)
                                             }
-                                        }.focusGroup().then(if (movingRow == row.key) Modifier.padding(horizontal = 32.dp)
-                                            .border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large) else Modifier)) {
+                                        }.focusGroup().then(if (geometry != null) Modifier.fillMaxWidth().height(geometry.slotHeight).padding(vertical = 4.dp) else Modifier)
+                                            .then(if (movingRow == row.key) Modifier.padding(horizontal = 32.dp)
+                                            .border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large) else Modifier),
+                                            contentAlignment = if (deck) Alignment.BottomStart else Alignment.TopStart) {
                                           CompositionLocalProvider(LocalRowStyle provides style,
-                                            LocalRowHasFocus provides hasFocus) {
+                                            LocalRowHasFocus provides hasFocus,
+                                            LocalArtworkScale provides (geometry?.artworkScale ?: 1f)) {
                                             val rowMenu: () -> Unit = { if (canEditRows) menuRow = row }
                                             val rowTarget = rowTargets[row.key] ?: restoreTarget
                                             val trackFocus: (FocusedTarget) -> Unit = { rowTargets[row.key] = it; onFocus(it) }
@@ -284,6 +309,12 @@ fun HomeContent(
                                     }
                                 }
                             }
+                        if (geometry != null) Box(Modifier.fillMaxWidth().height(geometry.bottom)
+                            .padding(horizontal = StovaLayout.TvSafeEdge), contentAlignment = Alignment.CenterEnd) {
+                            if (availableRows.size > 1) Text(stringResource(R.string.home_row_counter,
+                                availableRows.indexOfFirst { it.key == (pendingRow ?: activeRow) }.coerceAtLeast(0) + 1, availableRows.size),
+                                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                         }
                     }
                 }
@@ -306,9 +337,9 @@ fun HomeContent(
                 onMove = { movingRow = row.key; closeMenu() },
                 onHide = {
                     onHomeChange(homePrefs.copy(hiddenRows = homePrefs.hiddenRows + row.key,
-                        rowOrder = (homePrefs.rowOrder + rows.orEmpty().map { it.key }).distinct()))
+                        rowOrder = (homePrefs.rowOrder + availableRows.orEmpty().map { it.key }).distinct()))
                     hiddenRow = row.key; closeMenu()
-                    restore(rows.orEmpty().firstOrNull { it.key != row.key }?.key)
+                    restore(availableRows.orEmpty().firstOrNull { it.key != row.key }?.key)
                 })
         }
         when {

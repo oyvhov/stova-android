@@ -562,4 +562,14 @@
     <string name="settings_summary_profile">Kopier eller nullstill</string>
     <string name="settings_customize_row">Tilpass rada</string>
     <string name="settings_customize_row_hint">Overskrift, kortformat og storleik</string>
+    <string name="home_row_counter">%1$d / %2$d · Opp/ned</string>
+    <string name="home_visible_rows">Synlege rader</string>
+    <string name="home_rows_one">Éi rad</string>
+    <string name="home_rows_two">To rader</string>
+    <string name="home_rows_scrolling">Rullande oversikt</string>
+    <string name="home_rows_hint">Éi rad gir kunsten ro. To rader tilpassar korta; stor skrift får éi heil rad. Opp/ned når alle radene.</string>
+    <string name="home_row_inset">Plassering av radene</string>
+    <string name="home_row_low">Nedst</string>
+    <string name="home_row_balanced">Litt opp</string>
+    <string name="home_row_high">Heva</string>
 </resources>

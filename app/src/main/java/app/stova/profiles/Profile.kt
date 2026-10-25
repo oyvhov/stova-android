@@ -86,6 +86,8 @@ data class AppearancePrefs(
     val showHeroRatings: Boolean = true,
     val showNewSeason: Boolean = true,
     val clockSize: ClockSize = ClockSize.NORMAL,
+    val homeRows: HomeRows = HomeRows.ONE,
+    val homeRowInset: HomeRowInset = HomeRowInset.LOW,
     /** The mood and accent in use before a chosen Jul or Halloween; they come back when it ends. */
     val moodBeforeSeason: app.stova.core.theme.VisualTheme? = null,
     val accentBeforeSeason: Accent? = null,
@@ -116,6 +118,8 @@ fun FocusEffect.resolved(): FocusEffect = if (this == FocusEffect.RING) FocusEff
 @Serializable enum class SpotlightSource { LIBRARY, MOVIES, SERIES, FAVORITES }
 @Serializable enum class HeroTitle { LOGO, TITLE }
 @Serializable enum class ClockSize { NORMAL, LARGE }
+@Serializable enum class HomeRows { ONE, TWO, SCROLLING }
+@Serializable enum class HomeRowInset(val dp: Int) { LOW(32), BALANCED(48), HIGH(72) }
 @Serializable enum class RowFormat { POSTER, WIDE, LARGE_WIDE, SMALL_WIDE, ICON }
 
 /** Null format/size inherit the row's original format and the global artwork size. */

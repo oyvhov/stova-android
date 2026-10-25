@@ -43,6 +43,7 @@ import app.stova.core.theme.LocalAppearance
 import app.stova.profiles.AppStyle
 import app.stova.profiles.RowFormat
 import app.stova.home.LocalRowStyle
+import app.stova.home.LocalArtworkScale
 import app.stova.home.artworkDimensions
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.StovaShapes
@@ -69,8 +70,9 @@ fun AppTile(
     val format = style.format ?: if (prefs.appStyle == AppStyle.ICON) RowFormat.ICON else RowFormat.WIDE
     val iconStyle = format == RowFormat.ICON
     val dimensions = artworkDimensions(format, style.size ?: prefs.cardSize)
-    val height = dimensions.height.dp
-    val width = dimensions.width.dp
+    val fit = LocalArtworkScale.current
+    val height = (dimensions.height * fit).dp
+    val width = (dimensions.width * fit).dp
     val packs by art.iconPacks.packs.collectAsStateWithLifecycle()
     val artwork by produceState<AppArtwork?>(null, app, art, prefs.iconPack, iconStyle, iconOverride, packs) {
         value = null

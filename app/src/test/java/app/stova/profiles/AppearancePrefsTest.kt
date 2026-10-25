@@ -22,13 +22,23 @@ class AppearancePrefsTest {
         assertEquals(Accent.LIME, old.accent)
         assertEquals(ClockMode.H24, old.clock)
         assertEquals(RowSpacing.NORMAL, old.rowSpacing)
+        assertEquals(HomeRows.ONE, old.homeRows)
+        assertEquals(HomeRowInset.LOW, old.homeRowInset)
     }
 
     @Test fun allChoicesSurviveJson() {
         val prefs = AppearancePrefs(cardSize = ArtworkSize.LARGE, showTitles = true, appStyle = AppStyle.ICON, appTileBackground = false,
             movieStyle = MovieStyle.WIDE, heroSize = HeroSize.LARGE, showOverview = true, showGenres = false,
             spotlightTime = SpotlightTime.SLOW, backdropDimming = BackdropDimming.LIGHT, corners = Corners.SHARP,
-            focusEffect = FocusEffect.ZOOM, accent = Accent.OCEAN, clock = ClockMode.H12, rowSpacing = RowSpacing.AIRY)
+            focusEffect = FocusEffect.ZOOM, accent = Accent.OCEAN, clock = ClockMode.H12, rowSpacing = RowSpacing.AIRY,
+            homeRows = HomeRows.TWO, homeRowInset = HomeRowInset.HIGH)
         assertEquals(prefs, Json.decodeFromString<AppearancePrefs>(Json.encodeToString(prefs)))
+    }
+
+    @Test fun everyRowPresentationSurvivesJsonWithoutChangingOtherPreferences() {
+        HomeRows.entries.forEach { mode -> HomeRowInset.entries.forEach { inset ->
+            val prefs = AppearancePrefs(homeRows = mode, homeRowInset = inset, cardSize = ArtworkSize.LARGE)
+            assertEquals(prefs, Json.decodeFromString<AppearancePrefs>(Json.encodeToString(prefs)))
+        } }
     }
 }

@@ -32,8 +32,9 @@ import coil3.request.ImageRequest
  val rowStyle=LocalRowStyle.current
  val format=rowStyle.format ?: if(poster) RowFormat.POSTER else RowFormat.WIDE
  val dimensions=artworkDimensions(format,rowStyle.size ?: prefs.cardSize)
- val width=dimensions.width.dp
- val height=dimensions.height.dp
+ val fit=app.stova.home.LocalArtworkScale.current
+ val width=(dimensions.width*fit).dp
+ val height=(dimensions.height*fit).dp
  val usePoster=format==RowFormat.POSTER
  val density=LocalDensity.current;val context=LocalContext.current
  val artUrl=if(usePoster) item.art.poster ?: item.art.wide else item.art.wide ?: item.art.poster

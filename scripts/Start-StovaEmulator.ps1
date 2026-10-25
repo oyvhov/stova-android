@@ -17,7 +17,7 @@ if (-not (Test-Path "$env:ANDROID_AVD_HOME\Stova_TV.avd")) {
 
 $args = @('-avd', 'Stova_TV', '-port', '5580', '-no-snapshot-save', '-no-boot-anim', '-gpu', 'auto')
 if (-not $EmulatorWindow) { $args += '-no-window' }
-Start-Process -FilePath "$sdk\emulator\emulator.exe" -ArgumentList $args -WindowStyle Minimized `
+Start-Process -FilePath "$sdk\emulator\emulator.exe" -ArgumentList $args -WindowStyle $(if ($Headless) { 'Hidden' } else { 'Minimized' }) `
     -RedirectStandardOutput 'C:\Launcher\.superpowers\emulator-out.log' -RedirectStandardError 'C:\Launcher\.superpowers\emulator-err.log'
 
 & $adb -s $serial wait-for-device

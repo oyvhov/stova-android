@@ -116,7 +116,7 @@ class AppearanceRenderingTest {
     }
 
     @Test fun homeUsesMovieStyleHeroSizeAndRowSpacing() {
-        var prefs by mutableStateOf(AppearancePrefs())
+        var prefs by mutableStateOf(AppearancePrefs(homeRows = HomeRows.SCROLLING))
         val row = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, listOf(film), false)
         compose.setContent { StovaTheme(appearance = prefs, reduceMotion = true) {
             val ctx = LocalContext.current
@@ -146,7 +146,7 @@ class AppearanceRenderingTest {
 
     @Test fun largePosterRowOverrideKeepsTheBottomTvSafeEdge() {
         val row = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, listOf(film), false)
-        compose.setContent { StovaTheme(reduceMotion = true) {
+        compose.setContent { StovaTheme(reduceMotion = true, appearance = AppearancePrefs(homeRows = HomeRows.SCROLLING)) {
             val ctx = LocalContext.current
             HomeContent(listOf(row), null, row.key, AppArtCache(ctx), PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {},
                 topBar = { app.stova.navigation.TopBar(Profile("p", "Demo", AvatarColor.LIME), {}, {}, {}) },

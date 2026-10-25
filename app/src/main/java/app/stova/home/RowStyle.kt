@@ -5,6 +5,8 @@ import app.stova.profiles.*
 
 val LocalRowStyle = staticCompositionLocalOf { RowStyle() }
 val LocalRowHasFocus = staticCompositionLocalOf { false }
+/** Layout-only fitting for a two-row deck; saved artwork choices remain unchanged. */
+val LocalArtworkScale = staticCompositionLocalOf { 1f }
 
 fun defaultRowFormat(key: HomeRowKey, p: AppearancePrefs): RowFormat = when {
     key == HomeRowKey.APPS && p.appStyle == AppStyle.ICON -> RowFormat.ICON

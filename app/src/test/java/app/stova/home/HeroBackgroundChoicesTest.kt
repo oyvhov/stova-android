@@ -31,7 +31,7 @@ class HeroBackgroundChoicesTest {
 
     @Test fun heroOffRemovesHeroAndLetsRowsStartHigh() {
         val row = HomeRowUi.Media(HomeRowKey.continueWatching("a"), account, MediaRowKind.CONTINUE, listOf(item), false)
-        compose.setContent { StovaTheme(appearance = AppearancePrefs(heroSize = HeroSize.OFF), reduceMotion = true) {
+        compose.setContent { StovaTheme(appearance = AppearancePrefs(heroSize = HeroSize.OFF, homeRows = HomeRows.SCROLLING), reduceMotion = true) {
             val context = LocalContext.current
             HomeContent(listOf(row), null, row.key, AppArtCache(context), PackageManagerAppCatalog(context,emptySet()),
                 {}, {}, {}, {}, spotlight = SpotlightEntry(item,account,false))
