@@ -174,7 +174,9 @@ import kotlin.math.ceil
             }
         }
         if(status==HaStatus.NOT_CONFIGURED) {Text(stringResource(R.string.ha_setup_instruction));return@Column}
-        if(feedback!=null) Text(stringResource(if(feedback==HaFeedback.FAILED) R.string.ha_v2_failed else R.string.ha_v2_done),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        androidx.compose.animation.Crossfade(feedback, animationSpec = app.stova.core.theme.stovaMotion.fade(), label = "ha-feedback") { shown ->
+            if(shown!=null) Text(stringResource(if(shown==HaFeedback.FAILED) R.string.ha_v2_failed else R.string.ha_v2_done),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         if(cards.isEmpty()) {
             Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(32.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 Icon(StovaIcons.Home,null,Modifier.size(40.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
