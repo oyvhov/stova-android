@@ -21,19 +21,21 @@ class SeasonalMediaTest {
         val acc = accounts.add("p",ServerInfo(ServerKind.JELLYFIN,"s","S","v","http://jf"),AuthResult("t","u","U"))
         val item = MediaItem("h",acc.id,ItemType.MOVIE,"Night",art=ItemArt(backdrop="b"))
         var fail = false
+        var now = 1_000L
         val client = object : MediaServerClient {
             override suspend fun resume() = emptyList<MediaItem>()
             override suspend fun nextUp() = emptyList<MediaItem>()
             override suspend fun latest(endpoint: Endpoint) = emptyList<MediaItem>()
             override suspend fun seasonal(season: Season): List<MediaItem> { if(fail) throw MediaError.Server(500); return listOf(item) }
         }
-        val repo = MediaRepository(accounts,{client},tmp.root.resolve("snapshots"),backgroundScope,io)
+        val repo = MediaRepository(accounts,{client},tmp.root.resolve("snapshots"),backgroundScope,io,clock={ now })
         repo.rows("p",Season.HALLOWEEN).first(); repo.refresh("p")
         val row = repo.rows("p",Season.HALLOWEEN).first().single()
         assertEquals(MediaRowKind.HALLOWEEN,row.kind)
         val cold = MediaRepository(accounts,{client},tmp.root.resolve("snapshots"),backgroundScope,io)
         assertEquals(listOf(item),cold.rows("p",Season.HALLOWEEN).first().single().items)
-        fail = true; repo.refresh("p")
+        // Season rows refresh hourly; the failing fetch is the one an hour later.
+        fail = true; now += 61 * 60 * 1000L; repo.refresh("p")
         assertTrue(repo.rows("p",Season.HALLOWEEN).first().single().offline)
         assertTrue(repo.rows("p",Season.NONE).first().isEmpty())
         assertTrue(repo.rows("p",Season.CHRISTMAS).first().isEmpty())
