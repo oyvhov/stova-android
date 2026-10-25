@@ -41,11 +41,15 @@ class IconPickerTest {
             compose.waitForIdle()
             assertNotEquals(before, prefs)
             row.assertIsFocused()
+            val stepped = prefs
+            // Left leads back to the section list and keeps the value; OK steps like Right.
             row.performKeyInput { pressKey(Key.DirectionLeft) }
             compose.waitForIdle()
-            assertEquals(label, before, prefs)
+            assertEquals(label, stepped, prefs)
+            compose.runOnIdle { prefs = before }
+            row.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
             row.performKeyInput { pressKey(Key.Enter) }
-            assertNotEquals(before, prefs)
+            assertEquals(label, stepped, prefs)
         }
         assertEquals(packs.single().packageName, prefs.iconPack)
         assertEquals(IconColor.ACCENT, prefs.iconColor)

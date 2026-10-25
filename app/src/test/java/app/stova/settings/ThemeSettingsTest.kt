@@ -30,7 +30,8 @@ class ThemeSettingsTest {
             row.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
             row.performKeyInput { pressKey(key) }
         }
-        for(mood in VisualTheme.entries.drop(1)+VisualTheme.FOREST) {
+        // The mood row holds the plain moods only; Jul and Halloween live in the season row.
+        for(mood in listOf(VisualTheme.MIDNIGHT,VisualTheme.CINEMA,VisualTheme.PLUM,VisualTheme.FOREST)) {
             step("Tema"); assertEquals(mood,p.visualTheme)
         }
         assertEquals(SeasonChoice.NONE,p.seasonChoice)
@@ -45,8 +46,8 @@ class ThemeSettingsTest {
         step("Sesong"); assertEquals(SeasonChoice.NONE,p.seasonChoice)
         assertEquals(VisualTheme.FOREST,p.visualTheme)
         step("Sesongpynt"); assertEquals(SeasonalDecor.OFF,p.seasonalDecor)
-        step("Sesongpynt",Key.DirectionLeft); assertEquals(SeasonalDecor.FULL,p.seasonalDecor)
-        step("Sesongpynt",Key.Enter); assertEquals(SeasonalDecor.OFF,p.seasonalDecor)
+        step("Sesongpynt",Key.DirectionLeft); assertEquals(SeasonalDecor.OFF,p.seasonalDecor)
+        step("Sesongpynt",Key.Enter); assertEquals(SeasonalDecor.CALM,p.seasonalDecor)
         compose.onNodeWithText("Førehandsvising").assertExists()
     }
 }

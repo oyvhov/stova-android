@@ -45,4 +45,17 @@ class SeasonCalendarTest {
         assertNull(Season.CHRISTMAS.daysUntilPeak(LocalDate.of(2027,1,1)))
         assertNull(Season.CHRISTMAS.daysUntilPeak(LocalDate.of(2026,6,1)))
     }
+
+    // Review finding 4, and the Shield freeze: browsing moods during Halloween turned the calendar
+    // off and flipped the season on every press.
+    @org.junit.Test fun browsingMoodsKeepsTheCalendarSeason() {
+        val calendar = AppearancePrefs(seasonChoice = SeasonChoice.CALENDAR)
+        val midnight = calendar.seasonal(java.time.LocalDate.of(2026, 10, 25)).withMood(app.stova.core.theme.VisualTheme.MIDNIGHT)
+        org.junit.Assert.assertEquals(SeasonChoice.CALENDAR, midnight.seasonChoice)
+        org.junit.Assert.assertEquals(app.stova.core.theme.VisualTheme.MIDNIGHT, midnight.visualTheme)
+        org.junit.Assert.assertEquals(null, midnight.seasonOverlay)
+        org.junit.Assert.assertEquals(Season.HALLOWEEN, midnight.seasonal(java.time.LocalDate.of(2026, 10, 25)).season())
+        val fixed = SeasonChoice.CHRISTMAS.applyTo(AppearancePrefs(seasonChoice = SeasonChoice.NONE))
+        org.junit.Assert.assertEquals(SeasonChoice.NONE, fixed.withMood(app.stova.core.theme.VisualTheme.PLUM).seasonChoice)
+    }
 }

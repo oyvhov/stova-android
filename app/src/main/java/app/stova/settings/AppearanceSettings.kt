@@ -101,14 +101,10 @@ fun AppearanceSettingsContent(
         color = MaterialTheme.colorScheme.onSurfaceVariant)
     SettingsGroup(stringResource(R.string.theme_group)) {
         GroupHint(R.string.custom_theme_hint)
-        Choice(R.string.theme_mood, p.visualTheme, VisualTheme.entries, themeLabels,
-            preview = { ThemeSwatches(p.visualTheme) }) { theme ->
-            onChange(when(theme) {
-                VisualTheme.NOEL -> SeasonChoice.CHRISTMAS.applyTo(p)
-                VisualTheme.HALLOWEEN -> SeasonChoice.HALLOWEEN.applyTo(p)
-                else -> p.copy(visualTheme=theme, seasonChoice=SeasonChoice.NONE, seasonOverlay=null)
-            })
-        }
+        // Plain moods only: browsing them never flips the season (Jul and Halloween are in Sesong).
+        val mood = p.visualTheme.takeIf { it in app.stova.profiles.PLAIN_MOODS } ?: VisualTheme.FOREST
+        Choice(R.string.theme_mood, mood, app.stova.profiles.PLAIN_MOODS, app.stova.profiles.PLAIN_MOODS.map { themeLabels[it.ordinal] },
+            preview = { ThemeSwatches(mood) }) { theme -> onChange(p.withMood(theme)) }
         Choice(R.string.appearance_accent, p.accent, Accent.entries, accentLabels,
             preview = { AccentSwatches(p.accent) }) { onChange(p.copy(accent = it)) }
         Choice(R.string.theme_season, p.seasonChoice, SeasonChoice.entries,

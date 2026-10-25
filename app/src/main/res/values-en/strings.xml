@@ -302,7 +302,7 @@
     <string name="appearance_movie">Movie</string>
     <string name="appearance_series">Series</string>
     <string name="appearance_star_score">★ %1$s</string>
-    <string name="appearance_choice_hint">Use ←/→ or OK to change a value. Up/down selects a row.</string>
+    <string name="appearance_choice_hint">→ or OK changes a value. ← goes back to the menu. Up/down selects a row.</string>
     <string name="appearance_choice_value">‹ %1$s ›</string>
     <string name="appearance_background">Background</string>
     <string name="appearance_hero_size">Hero size</string>

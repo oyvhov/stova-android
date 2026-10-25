@@ -60,3 +60,16 @@ fun Season.daysUntilPeak(date: LocalDate): Int? {
     }
     return ChronoUnit.DAYS.between(date, peak).toInt().takeIf { it in 0..31 }
 }
+
+/** The moods a person picks as a base; Jul and Halloween come from the season row instead. */
+val PLAIN_MOODS = VisualTheme.entries.filter { it != VisualTheme.NOEL && it != VisualTheme.HALLOWEEN }
+
+/**
+ * A new base mood. Browsing moods never touches the season: with the calendar on it stays on and
+ * lays its season over the new mood; a fixed Jul or Halloween ends, since its mood was replaced.
+ */
+fun AppearancePrefs.withMood(theme: VisualTheme): AppearancePrefs {
+    val stored = withoutCalendarSeason()
+    return stored.copy(visualTheme = theme, seasonOverlay = null,
+        seasonChoice = if (stored.seasonChoice == SeasonChoice.CALENDAR) SeasonChoice.CALENDAR else SeasonChoice.NONE)
+}

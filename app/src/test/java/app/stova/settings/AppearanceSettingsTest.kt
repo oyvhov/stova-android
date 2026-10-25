@@ -41,10 +41,14 @@ class AppearanceSettingsTest {
             val before = prefs
             row.performKeyInput { pressKey(Key.DirectionRight) }
             assertNotEquals("Right changes $label", before, prefs)
+            val stepped = prefs
+            // Left leaves the row for the section list; it never changes a value (review finding 3).
             row.performKeyInput { pressKey(Key.DirectionLeft) }
-            assertEquals("Left reverses $label", before, prefs)
+            assertEquals("Left keeps $label", stepped, prefs)
+            compose.runOnIdle { prefs = before }
+            row.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
             row.performKeyInput { pressKey(Key.Enter) }
-            assertNotEquals("OK changes $label", before, prefs)
+            assertEquals("OK steps $label like Right", stepped, prefs)
         }
         assertEquals(ArtworkSize.LARGE, prefs.cardSize)
         assertTrue(prefs.showTitles)

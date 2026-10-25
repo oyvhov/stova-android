@@ -38,7 +38,7 @@ internal val accentLabels = listOf(R.string.appearance_lime,R.string.appearance_
 internal fun ThemeSwatches(selected: VisualTheme) {
     val outline = MaterialTheme.colorScheme.onSurface
     Canvas(Modifier.size(108.dp,22.dp).clearAndSetSemantics { }) {
-        VisualTheme.entries.forEachIndexed { index, mood ->
+        app.stova.profiles.PLAIN_MOODS.forEachIndexed { index, mood ->
             val x=index*18*density
             listOf(mood.background,mood.surface,mood.raised).forEachIndexed { stripe,color ->
                 drawRect(color,Offset(x,stripe*6*density+2*density),Size(13*density,6*density))

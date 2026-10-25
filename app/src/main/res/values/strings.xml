@@ -302,7 +302,7 @@
     <string name="appearance_movie">Film</string>
     <string name="appearance_series">Serie</string>
     <string name="appearance_star_score">★ %1$s</string>
-    <string name="appearance_choice_hint">←/→ eller OK byter verdi. Opp/ned vel neste rad.</string>
+    <string name="appearance_choice_hint">→ eller OK byter verdi. ← går tilbake til menyen. Opp/ned vel neste rad.</string>
     <string name="appearance_choice_value">‹ %1$s ›</string>
     <string name="appearance_background">Bakgrunn</string>
     <string name="appearance_hero_size">Herostorleik</string>

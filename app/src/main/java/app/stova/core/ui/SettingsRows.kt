@@ -116,10 +116,10 @@ fun SettingsChoiceRow(title: String, value: String, preview: (@Composable () -> 
     val shape = MaterialTheme.shapes.medium
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).focusOutline(source, shape).clip(shape)
         .semantics { stateDescription = value }
+        // Right and OK step forward and wrap; Left is left alone, so it leads back to the section list.
         .onPreviewKeyEvent { event ->
-            val step = when (event.key) { Key.DirectionLeft -> -1; Key.DirectionRight -> 1; else -> 0 }
-            if (step == 0) false else {
-                if (event.type == KeyEventType.KeyDown) onStep(step)
+            if (event.key != Key.DirectionRight) false else {
+                if (event.type == KeyEventType.KeyDown) onStep(1)
                 true
             }
         }
