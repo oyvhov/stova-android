@@ -33,6 +33,24 @@ Kjelder: `C:\JellyBin\reelstack-android\docs\DESIGN_SYSTEM.md`, `docs\LAYOUT.md`
   `Warning #D48E8E`, `Outline #646E63`, `Divider #3D443C`. Avatarfargane er Spole sine åtte
   kulørar, desaturerte (sjå `AvatarColor` i `core/theme/Tokens.kt`). Tekst held minst 6:1 mot
   `Surface`.
+- **Tema (Tema v1):** Skog (standard), Midnatt, Kino, Plomme, Jul og Halloween er profilstyrte
+  stemningar i `core/theme/VisualTheme`. Skog beheld Stova sine dempa verdiar ovanfor; dei andre
+  bruker Spole sine background/surface/raised/muted/mutedHigh/outline/outlineHigh/divider-verdiar.
+  `StovaTheme` set alle Material-flater og nøytralar, også for dialogar, Smarthus, toppfelt og scrim.
+- **Ti aksentar:** Lime, Hav, Iris, Korall, Gull, Mint, Rose, Perle, Kristtorn og Gresskar. Dei åtte
+  vanlege er Stova sine dempa avatarfargar; Kristtorn/Gresskar er Spole sine sesongaksentar. Alle
+  held minst 7:1 mot bakgrunnen i alle seks tema. Tal, sjangrar og pyntmerke bruker nøytralar.
+- **Sesong:** Ingen / **Etter kalenderen** / Jul / Halloween. Kalenderen er Halloween 20.10–1.11
+  og jul 1.12–13.1. Han legg Halloween + Gresskar eller Jul + Kristtorn over den lagra stemninga,
+  og overlaget blir aldri lagra. Eit anna profilval lagra under sesongen bevarer det underliggjande
+  temaet. Datoen blir kontrollert kvart minutt medan appen er synleg, og straks ved retur.
+- **Sesongpynt:** Av / Roleg / **Mykje**. Av held berre fargane. Roleg viser eit nøytralt gresskar
+  eller snøfnugg ved klokka, ei helsing i tom spotlight og ei lågmeld nedteljing fram til
+  Halloween/julaftan (høgst 31 dagar). Mykje legg til 12 glør eller 18 snøfnugg over høgre del av
+  kunsten og ein Halloween-edderkopp etter 45 s utan brukaraktivitet. Fast frø, éin Canvas og
+  høgst 20 oppdateringar/s; klokka blir berre lesen i teiknefasen. Alt som rører seg stoppar ved
+  redusert rørsle, når Heim blir lukka, og når lifecycle går under STARTED. Pynt har ingen
+  skjermlesartekst eller fokusmål. Ingen blur eller nye HA-filer.
 - **Aksenten er berre handling.** Aksenten blir brukt på val, framdrift og direkte handlingar,
   aldri på tal, typemerke eller kjeldenamn. «Ny sesong» følgjer òg den valde aksenten (Utsjånad v2). Ingen skarpe eller metta fargar.
 - **Hjørne:** fem runde steg, 4 / 8 / 12 / 16 / 24 dp. Profilvalet «Skarpe» gir 0 dp
@@ -121,7 +139,9 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   følgjer ikkje fokus. Han roterer roleg gjennom vakre filmar og seriar frå heile biblioteket:
   tilfeldige titlar med backdrop (dei med clearlogo først), opptil 30, og eitt nytt utval kvar
   2. time. Seriar der sesong 2 eller seinare har hatt premiere dei siste 45 dagane kjem først,
-  merka «Ny sesong». Aldri episodekunst, episodenummer eller tenestemerke i heroen.
+  merka «Ny sesong». Medan ein sesong gjeld, kjem sesongtitlar med backdrop først, deretter
+  det vanlege utvalet; kvar tittel blir vist éin gong per konto. Aldri episodekunst, episodenummer
+  eller tenestemerke i heroen.
   - Innhald (Utsjånad v2): teksten står øvst til venstre rett under toppfeltet. Clearlogo er
     høgst 320 × 72 dp og får transparent kant trimma; utan logo blir tittelen vist i
     `headlineMedium`. Små, matte kantlinjepillar viser «Ny sesong» når det gjeld, stjernescore,
@@ -147,6 +167,14 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   3. Nyleg lagt til · Filmar
   4. Nyleg lagt til · Seriar
   5. Hald fram i andre appar (Watch Next)
+
+  I ein sesong kjem òg «Halloween» (gresskar) eller «Jul» (snøfnugg) per mediekonto. Halloween
+  hentar `Tags=halloween` og `Genres=Horror|Skrekk` kvar for seg og slår saman med OR, utan duplikat.
+  Jul hentar `Tags=christmas`. Begge bruker rekursive `Items` for Movie/Series, med same
+  Jellyfin-/Emby-fallback som andre bibliotekspørjingar. Sesongrada blir lagra i snapshotet,
+  merka fråkopla ved feil, og kan sorterast/skjulast som andre rader. Rader frå ein annan sesong
+  blir ikkje viste. Det vanlege spotlight-utvalet ligg framleis i snapshotet; sesongprioriteringa
+  blir avleidd frå den bufra sesongrada, også utan nett.
 
   Profilen kan slå av og sortere rader i Innstillingar → Heim. Ei tom rad blir ikkje vist.
   Radoverskrifta er namnet på rada («Hald fram», «Nyleg lagt til · Filmar»), følgt av
@@ -203,7 +231,10 @@ Grupper (som i Spole sine innstillingar):
 - **Heim:** rader av/på og rekkjefølgje, bakgrunnsrotasjon av/på.
 - **Smarthus:** HA-tilkopling (hushald), kortutval og rekkjefølgje for profilen.
 - **Home-knappen:** status for tilgjengetenesta og adb-oppskrifta (sjå 9).
-- **Utsjånad:** profilstyrte val i gruppene Heim, Kort, Bakgrunn, Farge og fokus, og Klokke.
+- **Utsjånad:** profilstyrte val i gruppene Tema, Heim, Kort, Bakgrunn, Farge og fokus, og Klokke.
+  Tema ligg øvst med Tema, Aksentfarge, Sesong og Sesongpynt. Alle seks tema og ti aksentar har
+  små fargeprøver i valrada; eit lite førehandsvisingskort viser effektiv stemning, aksent og
+  sesongmerke. Eit direkte temaval slår av kalenderen; eit sesongtema vel òg sesongaksenten.
   Ei rad er eitt D-pad-stopp med namnet til venstre og gjeldande verdi med piler til høgre.
   Venstre går til førre verdi; høgre og OK går til neste, med omløp. Opp/ned flyttar fokus.
   Endringar blir lagra straks for den aktive profilen. Barneprofilar har same sperre som resten
@@ -215,6 +246,10 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 
 | Gruppe | Val | Verdiar og verknad |
 |---|---|---|
+| Tema | Tema | **Skog** / Midnatt / Kino / Plomme / Jul / Halloween; alle Material-roller og scrimen |
+| Tema | Aksentfarge | **Lime** / Hav / Iris / Korall / Gull / Mint / Rose / Perle / Kristtorn / Gresskar; ≥ 7:1 mot alle temabakgrunnar |
+| Tema | Sesong | Ingen / **Etter kalenderen** / Jul / Halloween; kalenderoverlegg blir ikkje lagra |
+| Tema | Sesongpynt | Av / Roleg / **Mykje**; rørsle stoppar automatisk ved redusert rørsle og utanfor synleg Heim |
 | Heim | Herostorleik | **Kompakt** / Stor; fast høgd per profilval, meir plass til biletet i Stor |
 | Heim | Omtale i heroen | **Av** / På; opptil to linjer |
 | Heim | Sjangrar i heroen | **På** / Av; typen står først |
@@ -226,7 +261,6 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Kort | Nyleg lagt til · Filmar | **Plakat** / Breie kort |
 | Kort | Hjørne | **Runde** / Skarpe |
 | Bakgrunn | Bakgrunnsdemping | Lys / **Middels** / Mørk; Mørk bevarer den tidlegare scrimen |
-| Farge og fokus | Aksentfarge | **Lime** / Hav / Iris / Korall / Gull / Mint; dempa AvatarColor-token, ring, framdrift og «Ny sesong» |
 | Farge og fokus | Fokuseffekt | **Ring** / Ring + forstørring (1,05); redusert rørsle slår av forstørringa |
 | Klokke | Klokkeformat | **24 t** / 12 t / Skjult; skjult fjernar òg klokkesloten |
 

@@ -1,3 +1,10 @@
+# Tema v1 ferdig
+2026-10-25: Heile `docs/briefs/2026-10-25-tema-v1.md` er fullført på `appearance-v2` i appearance-worktreet; plan `2026-10-25-tema-v1.md` er ferdig. Ingen påbyrja steg står att.
+Seks tema, ti aksentar, kalenderoverlegg utan persistens, pyntnivå, lifecycle-/rørslesperra Canvas og 45 s edderkopp, sesongrad i snapshot, sesongprioritert spotlight og temagruppe med fargeprøver/førehandsvising er implementerte.
+Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'`: 340/340, 0 hoppa over, AppScreensTest 25/25, DesignRulesTest 4/4; lint 0 feil (23 åtvaringar, 1 hint), debug-APK OK.
+Seks visuelt kontrollerte bilete ligg i `docs/images/tema-{halloween,jul,midnatt-hav,kino-perle,skog,innstillingar}.png`; evidens og kostnadsoverslag i `docs/verification/tema-v1.md`. Spesifikasjonen §2, §5.1 og §5.4 er oppdatert.
+Ingen emulatorinstallasjon, Shield-test, push, Spole-endring eller endring av HA-filer. Ekte serverar/fjernkontroll/Shield er ikkje verifiserte; brukarens to ucommitta bestillingsfiler er urørte. Ingen spørsmål.
+
 # Utsjånad v2 ferdig
 2026-10-25: Heile `docs/briefs/2026-10-25-utsjanad-v2.md` er fullført i appearance-worktreet, greina `appearance-v2`; plan `2026-10-25-appearance-v2.md` er ferdig. Ingen påbyrja steg står att.
 Hero v2, kort utan titlar som standard, 14 profilval med D-pad, profilpersistens, klokke, aksent/fokus og lettare scrim er implementerte. Ekstra tett hero med omtale har to faktisk synlege linjer; radene flyttar seg ikkje ved spotlight-byte.
