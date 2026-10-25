@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.stova.media.SpotlightEntry
 import app.stova.profiles.Profile
+import app.stova.profiles.season
+import app.stova.profiles.seasonal
 import app.stova.profiles.ProfileSession
 import app.stova.profiles.StartFocus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,6 +34,12 @@ class HomeViewModel(
     sources: List<HomeRowSource>,
     spotlightSource: (Profile) -> Flow<List<SpotlightEntry>> = { flowOf(emptyList()) },
 ) : ViewModel() {
+    private val calendarDate = MutableStateFlow(java.time.LocalDate.now())
+    fun setCalendarDate(date: java.time.LocalDate) { calendarDate.value = date }
+    // Only a profile or effective season change restarts media, never an unrelated appearance edit.
+    private val seasonalProfile = combine(session.active, calendarDate) { profile, date ->
+        profile?.copy(appearance = profile.appearance.seasonal(date))
+    }.distinctUntilChangedBy { it?.id to it?.appearance?.season() }
     private val focusedState = MutableStateFlow<FocusedTarget?>(null)
     val focused: StateFlow<FocusedTarget?> = focusedState
     private val rotation = MutableStateFlow(true)
@@ -44,8 +52,7 @@ class HomeViewModel(
     /** Remembers the card for focus restore; the hero and backdrop follow the spotlight, not focus. */
     fun focus(target: FocusedTarget) { focusedState.value = target }
 
-    private val spotlightPool: Flow<List<SpotlightEntry>> = session.active
-        .distinctUntilChangedBy { it?.id }
+    private val spotlightPool: Flow<List<SpotlightEntry>> = seasonalProfile
         .flatMapLatest { profile -> if (profile == null) flowOf(emptyList()) else spotlightSource(profile) }
         .distinctUntilChanged()
 
@@ -72,8 +79,7 @@ class HomeViewModel(
      * look like "empty", or the empty state flashes on every cold start. Restarts the sources only
      * when another profile becomes active, not on every pref edit.
      */
-    private val available: StateFlow<List<HomeRowUi>?> = session.active
-        .distinctUntilChangedBy { it?.id }
+    private val available: StateFlow<List<HomeRowUi>?> = seasonalProfile
         .flatMapLatest { profile ->
             flow {
                 emit(null)

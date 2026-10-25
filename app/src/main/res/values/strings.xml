@@ -261,4 +261,32 @@
     <string name="appearance_24h">24 t</string>
     <string name="appearance_12h">12 t</string>
     <string name="appearance_hidden">Skjult</string>
+    <!-- Tema -->
+    <string name="theme_group">Tema</string>
+    <string name="theme_mood">Tema</string>
+    <string name="theme_forest">Skog</string>
+    <string name="theme_midnight">Midnatt</string>
+    <string name="theme_cinema">Kino</string>
+    <string name="theme_plum">Plomme</string>
+    <string name="theme_christmas">Jul</string>
+    <string name="theme_halloween">Halloween</string>
+    <string name="theme_rose">Rose</string>
+    <string name="theme_pearl">Perle</string>
+    <string name="theme_holly">Kristtorn</string>
+    <string name="theme_pumpkin">Gresskar</string>
+    <string name="theme_season">Sesong</string>
+    <string name="theme_none">Ingen</string>
+    <string name="theme_calendar">Etter kalenderen</string>
+    <string name="theme_decor">Sesongpynt</string>
+    <string name="theme_calm">Roleg</string>
+    <string name="theme_full">Mykje</string>
+    <string name="theme_preview">Førehandsvising</string>
+    <string name="theme_greeting_halloween">God Halloween</string>
+    <string name="theme_greeting_christmas">God jul</string>
+    <string name="theme_countdown_halloween">%1$d dagar til Halloween</string>
+    <string name="theme_countdown_christmas">%1$d dagar til julaftan</string>
+    <string name="theme_peak_halloween">Halloween i dag</string>
+    <string name="theme_peak_christmas">Julaftan i dag</string>
+    <string name="theme_one_halloween">1 dag til Halloween</string>
+    <string name="theme_one_christmas">1 dag til julaftan</string>
 </resources>

@@ -5,6 +5,12 @@ interface MediaServerClient {
  suspend fun resume(): List<MediaItem>
  suspend fun nextUp(): List<MediaItem>
  suspend fun latest(endpoint: Endpoint): List<MediaItem>
+ /** Separate requests provide tag OR genre, never the server's tag AND genre intersection. */
+ suspend fun seasonal(season: app.stova.profiles.Season): List<MediaItem> = when(season) {
+  app.stova.profiles.Season.NONE -> emptyList()
+  app.stova.profiles.Season.CHRISTMAS -> latest(Endpoint.CHRISTMAS_TAG)
+  app.stova.profiles.Season.HALLOWEEN -> (latest(Endpoint.HALLOWEEN_TAG) + latest(Endpoint.HALLOWEEN_GENRE)).distinctBy { it.id }.take(20)
+ }
  suspend fun items(ids: List<String>): List<MediaItem> = emptyList()
 }
 class JellyfinEmbyClient(private val account: MediaAccount, private val token: String, private val http: OkHttpClient, private val identity: ClientIdentity): MediaServerClient {

@@ -10,6 +10,7 @@ value class HomeRowKey(val value: String) {
     companion object {
         val APPS = HomeRowKey("apps")
         val WATCH_NEXT = HomeRowKey("watch_next")
+        fun seasonal(accountId: String, season: app.stova.profiles.Season) = HomeRowKey("${season.name.lowercase()}:$accountId")
         fun continueWatching(accountId: String) = HomeRowKey("continue:$accountId")
         fun latestMovies(accountId: String) = HomeRowKey("latest_movies:$accountId")
         fun latestSeries(accountId: String) = HomeRowKey("latest_series:$accountId")

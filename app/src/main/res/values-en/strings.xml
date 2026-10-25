@@ -261,4 +261,32 @@
     <string name="appearance_24h">24 h</string>
     <string name="appearance_12h">12 h</string>
     <string name="appearance_hidden">Hidden</string>
+    <!-- Tema -->
+    <string name="theme_group">Theme</string>
+    <string name="theme_mood">Theme</string>
+    <string name="theme_forest">Forest</string>
+    <string name="theme_midnight">Midnight</string>
+    <string name="theme_cinema">Cinema</string>
+    <string name="theme_plum">Plum</string>
+    <string name="theme_christmas">Christmas</string>
+    <string name="theme_halloween">Halloween</string>
+    <string name="theme_rose">Rose</string>
+    <string name="theme_pearl">Pearl</string>
+    <string name="theme_holly">Holly</string>
+    <string name="theme_pumpkin">Pumpkin</string>
+    <string name="theme_season">Season</string>
+    <string name="theme_none">None</string>
+    <string name="theme_calendar">Follow calendar</string>
+    <string name="theme_decor">Seasonal decorations</string>
+    <string name="theme_calm">Calm</string>
+    <string name="theme_full">Full</string>
+    <string name="theme_preview">Preview</string>
+    <string name="theme_greeting_halloween">Happy Halloween</string>
+    <string name="theme_greeting_christmas">Merry Christmas</string>
+    <string name="theme_countdown_halloween">%1$d days to Halloween</string>
+    <string name="theme_countdown_christmas">%1$d days to Christmas Eve</string>
+    <string name="theme_peak_halloween">Halloween today</string>
+    <string name="theme_peak_christmas">Christmas Eve today</string>
+    <string name="theme_one_halloween">1 day to Halloween</string>
+    <string name="theme_one_christmas">1 day to Christmas Eve</string>
 </resources>

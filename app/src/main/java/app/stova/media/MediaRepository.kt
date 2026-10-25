@@ -3,6 +3,7 @@ import app.stova.core.storage.JsonFileStore
 import app.stova.media.model.*
 import app.stova.media.net.*
 import app.stova.home.*
+import app.stova.profiles.Season
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -17,6 +18,7 @@ const val SPOTLIGHT_REFRESH_MILLIS = 2 * 60 * 60 * 1000L
 
 class MediaRepository(private val accounts: MediaAccountRepository,private val clientFor: suspend (MediaAccount) -> MediaServerClient?,private val snapshotDir: File,private val scope: CoroutineScope,private val io: CoroutineDispatcher=Dispatchers.IO,private val clock: () -> Long=System::currentTimeMillis) {
  private class Slot(val store: JsonFileStore<MediaSnapshot>) {
+  var season: Season = Season.NONE
   val mutex=Mutex();val rows=MutableStateFlow<List<HomeRowUi.Media>?>(null)
   val spotlight=MutableStateFlow<List<SpotlightEntry>>(emptyList());var spotlightAt=0L
  }
@@ -35,19 +37,20 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    }
   };return slot
  }
- fun rows(profileId:String): Flow<List<HomeRowUi.Media>> = flow {
+ fun rows(profileId:String, season: Season = Season.NONE): Flow<List<HomeRowUi.Media>> = flow {
   val slot=loaded(profileId)
-  emit(visible(slot.rows.value.orEmpty(),accounts.forProfile(profileId).first()))
+  slot.season=season
+  emit(visible(slot.rows.value.orEmpty(),accounts.forProfile(profileId).first()).filter { it.kind.season == Season.NONE || it.kind.season == season })
   val refresh=scope.launch { refresh(profileId) }
-  try { emitAll(combine(slot.rows.filterNotNull(),accounts.forProfile(profileId)) { rows,active -> visible(rows,active) }) }
+  try { emitAll(combine(slot.rows.filterNotNull(),accounts.forProfile(profileId)) { rows,active -> visible(rows,active).filter { it.kind.season == Season.NONE || it.kind.season == season } }) }
   finally { refresh.cancel() }
  }.distinctUntilChanged()
  /** The hero's titles; served from the snapshot at once, refreshed alongside the rows. */
- fun spotlight(profileId:String): Flow<List<SpotlightEntry>> = flow {
+ fun spotlight(profileId:String, season: Season = Season.NONE): Flow<List<SpotlightEntry>> = flow {
   val slot=loaded(profileId)
-  emitAll(combine(slot.spotlight,accounts.forProfile(profileId)) { entries,active ->
+  emitAll(combine(slot.spotlight,slot.rows.filterNotNull(),accounts.forProfile(profileId)) { entries,rows,active ->
    val valid=active.filterNot { it.needsSignIn }.associateBy { it.id }
-   entries.mapNotNull { entry -> valid[entry.account.id]?.let { entry.copy(account=it) } }
+   seasonalSpotlight(entries.mapNotNull { entry -> valid[entry.account.id]?.let { entry.copy(account=it) } },visible(rows,active),season)
   })
  }.distinctUntilChanged()
  private fun visible(rows:List<HomeRowUi.Media>,active:List<MediaAccount>): List<HomeRowUi.Media> {
@@ -58,6 +61,7 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
  suspend fun refresh(profileId:String) {
   val slot=loaded(profileId)
   slot.mutex.withLock {
+   val season=slot.season
    val list=accounts.forProfile(profileId).first().filterNot { it.needsSignIn }.sortedWith(compareBy({it.kind},{it.serverName}))
    // Never fetched, stale, or a clock that went backwards: fetch the spotlight again.
    val now=clock();val spotlightDue=slot.spotlightAt==0L || now-slot.spotlightAt !in 0 until SPOTLIGHT_REFRESH_MILLIS
@@ -69,11 +73,15 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
      withTimeoutOrNull(10_000) {
       val client=clientFor(account) ?: throw MediaError.Unauthorized()
       val resume=client.resume();val next=client.nextUp()
-      val rows=listOf(
+      val seasonal=if(season==Season.NONE) emptyList() else orElse(cached.filter { it.kind.season==season }) {
+       val items=client.seasonal(season)
+       listOf(HomeRowUi.Media(HomeRowKey.seasonal(account.id,season),account,if(season==Season.HALLOWEEN) MediaRowKind.HALLOWEEN else MediaRowKind.CHRISTMAS,items,false))
+      }
+      val rows=(listOf(
        HomeRowUi.Media(HomeRowKey.continueWatching(account.id),account,MediaRowKind.CONTINUE,mergeContinue(resume,next),false),
        HomeRowUi.Media(HomeRowKey.latestMovies(account.id),account,MediaRowKind.LATEST_MOVIES,client.latest(Endpoint.LATEST_MOVIES),false),
        HomeRowUi.Media(HomeRowKey.latestSeries(account.id),account,MediaRowKind.LATEST_SERIES,client.latest(Endpoint.LATEST_SERIES),false)
-      ).filter { it.items.isNotEmpty() }
+      )+seasonal).filter { it.items.isNotEmpty() }
       // A spotlight failure never costs the rows; the cached titles stay until the next try.
       val spotlight=if(!spotlightDue) null else orElse(null) {
        val seasons=orElse(emptyList()) { client.latest(Endpoint.NEW_SEASONS) }

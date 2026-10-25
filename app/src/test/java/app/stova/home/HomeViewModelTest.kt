@@ -5,6 +5,9 @@ import app.stova.core.storage.JsonFileStore
 import app.stova.core.theme.AvatarColor
 import app.stova.media.SpotlightEntry
 import app.stova.media.model.*
+import app.stova.profiles.Season
+import app.stova.profiles.SeasonChoice
+import app.stova.profiles.season
 import app.stova.profiles.ProfileRepository
 import app.stova.profiles.ProfileSession
 import app.stova.profiles.ProfilesFile
@@ -122,5 +125,27 @@ class HomeViewModelTest {
         val vm = spotlightVm("a", "b")
         vm.focus(FocusedTarget.Media(MediaItem("ep", "a", ItemType.EPISODE, "Episode", art = ItemArt(backdrop = "b-ep")), account))
         assertEquals("a", vm.spotlight.value?.item?.id)
+    }
+
+    @Test fun calendarAndManualSeasonChangesReloadRowsAndSpotlightWithoutSavingTheOverlay() = runTest(UnconfinedTestDispatcher()) {
+        val repo = ProfileRepository(JsonFileStore(tmp.root.resolve("seasons.json"), ProfilesFile.serializer(), ProfilesFile(), UnconfinedTestDispatcher(testScheduler)))
+        val id = repo.create("A", AvatarColor.LIME, false).id
+        val session = ProfileSession(repo, backgroundScope).also { it.enter(id) }
+        val rowSeasons = mutableListOf<app.stova.profiles.Season>()
+        val spotSeasons = mutableListOf<app.stova.profiles.Season>()
+        val source = HomeRowSource { profile -> rowSeasons += profile.appearance.season(); flowOf(emptyList()) }
+        val vm = HomeViewModel(session, listOf(source)) { profile -> spotSeasons += profile.appearance.season(); flowOf(emptyList()) }
+        backgroundScope.launch { vm.spotlight.collect {} }
+        vm.setCalendarDate(java.time.LocalDate.of(2026,10,25))
+        assertEquals(Season.HALLOWEEN,rowSeasons.last())
+        vm.setCalendarDate(java.time.LocalDate.of(2026,11,2))
+        assertEquals(Season.NONE,rowSeasons.last())
+        assertEquals(rowSeasons,spotSeasons)
+        val count = rowSeasons.size
+        repo.update(id) { it.copy(appearance=it.appearance.copy(showTitles=true)) }
+        assertEquals(count,rowSeasons.size)
+        repo.update(id) { it.copy(appearance=SeasonChoice.CHRISTMAS.applyTo(it.appearance)) }
+        assertEquals(Season.CHRISTMAS,rowSeasons.last())
+        assertEquals(rowSeasons,spotSeasons)
     }
 }

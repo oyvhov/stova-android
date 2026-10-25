@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
     }
 }
 
-enum class Season { NONE, CHRISTMAS, HALLOWEEN;
+@Serializable enum class Season { NONE, CHRISTMAS, HALLOWEEN;
     fun applyTo(value: AppearancePrefs): AppearancePrefs = when (this) {
         NONE -> value
         CHRISTMAS -> value.copy(visualTheme = VisualTheme.NOEL, accent = Accent.HOLLY)
