@@ -9,6 +9,10 @@ import app.stova.profiles.seasonal
 import app.stova.profiles.ProfileSession
 import app.stova.profiles.StartFocus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +31,9 @@ import kotlinx.coroutines.flow.stateIn
 
 /** How long each spotlight title holds the hero before the next one fades in. */
 const val SPOTLIGHT_MILLIS = 12_000L
+
+/** How long a run of season changes settles before the media rows restart. */
+const val SEASON_SETTLE_MILLIS = 600L
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel(
@@ -87,15 +94,31 @@ class HomeViewModel(
      * look like "empty", or the empty state flashes on every cold start. Restarts the sources only
      * when another profile becomes active, not on every pref edit.
      */
-    private val available: StateFlow<List<HomeRowUi>?> = seasonalProfile
+    private val available: StateFlow<List<HomeRowUi>?> = session.active
+        .distinctUntilChangedBy { it?.id }
         .flatMapLatest { profile ->
             flow {
                 emit(null)
                 if (profile == null || sources.isEmpty()) emit(emptyList())
-                else emitAll(combine(sources.map { it.rows(profile) }) { parts -> parts.toList().flatten() })
+                // A season change restarts only the sources that depend on it, never the app scan.
+                else emitAll(combine(sources.map { source ->
+                    if (!source.followsSeason) source.rows(profile)
+                    else settledSeason(profile.id).flatMapLatest { source.rows(it) }
+                }) { parts -> parts.toList().flatten() })
             }
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /**
+     * The profile with its season laid over: the first value at once, and a run of changes (fast
+     * presses through Theme) only once it settles, so the media refresh starts once, not per press.
+     */
+    @OptIn(FlowPreview::class)
+    private fun settledSeason(profileId: String): Flow<Profile> {
+        var first = true
+        return seasonalProfile.filterNotNull().filter { it.id == profileId }
+            .debounce { if (first) { first = false; 0L } else SEASON_SETTLE_MILLIS }
+    }
 
     val rows: StateFlow<List<HomeRowUi>?> = combine(available, session.active) { rows, profile ->
         if (profile == null || rows == null) null

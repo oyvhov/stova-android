@@ -353,7 +353,7 @@ private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, 
     val index = row.apps.indexOfFirst { it.label == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     Column {
-        if (LocalRowStyle.current.showTitle) RowHeader(stringResource(R.string.row_favorite_apps)) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
+        if (LocalRowStyle.current.showTitle) RowHeader(stringResource(if (row.favorites) R.string.row_favorite_apps else R.string.row_apps)) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
         LazyRow(Modifier.focusRestorer(), state = state,
             contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
             horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.cardSpacing.dp.dp)) {

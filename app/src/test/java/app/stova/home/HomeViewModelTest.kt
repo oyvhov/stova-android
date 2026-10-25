@@ -8,6 +8,7 @@ import app.stova.media.model.*
 import app.stova.profiles.Season
 import app.stova.profiles.SeasonChoice
 import app.stova.profiles.season
+import app.stova.profiles.Profile
 import app.stova.profiles.ProfileRepository
 import app.stova.profiles.ProfileSession
 import app.stova.profiles.ProfilesFile
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -133,18 +135,23 @@ class HomeViewModelTest {
         val session = ProfileSession(repo, backgroundScope).also { it.enter(id) }
         val rowSeasons = mutableListOf<app.stova.profiles.Season>()
         val spotSeasons = mutableListOf<app.stova.profiles.Season>()
-        val source = HomeRowSource { profile -> rowSeasons += profile.appearance.season(); flowOf(emptyList()) }
+        // The media source: it follows the season, after a run of changes has settled.
+        val source = object : HomeRowSource {
+            override val followsSeason = true
+            override fun rows(profile: Profile) = flowOf(emptyList<HomeRowUi>()).also { rowSeasons += profile.appearance.season() }
+        }
+        fun settle() = advanceTimeBy(SEASON_SETTLE_MILLIS + 1)
         val vm = HomeViewModel(session, listOf(source)) { profile -> spotSeasons += profile.appearance.season(); flowOf(emptyList()) }
         backgroundScope.launch { vm.spotlight.collect {} }
-        vm.setCalendarDate(java.time.LocalDate.of(2026,10,25))
+        vm.setCalendarDate(java.time.LocalDate.of(2026,10,25)); settle()
         assertEquals(Season.HALLOWEEN,rowSeasons.last())
-        vm.setCalendarDate(java.time.LocalDate.of(2026,11,2))
+        vm.setCalendarDate(java.time.LocalDate.of(2026,11,2)); settle()
         assertEquals(Season.NONE,rowSeasons.last())
         assertEquals(rowSeasons,spotSeasons)
         val count = rowSeasons.size
-        repo.update(id) { it.copy(appearance=it.appearance.copy(showTitles=true)) }
+        repo.update(id) { it.copy(appearance=it.appearance.copy(showTitles=true)) }; settle()
         assertEquals(count,rowSeasons.size)
-        repo.update(id) { it.copy(appearance=SeasonChoice.CHRISTMAS.applyTo(it.appearance)) }
+        repo.update(id) { it.copy(appearance=SeasonChoice.CHRISTMAS.applyTo(it.appearance)) }; settle()
         assertEquals(Season.CHRISTMAS,rowSeasons.last())
         assertEquals(rowSeasons,spotSeasons)
     }
@@ -160,5 +167,32 @@ class HomeViewModelTest {
         assertEquals("second",vm.spotlight.value?.item?.id)
         vm.setCalendarDate(java.time.LocalDate.of(2026,10,25))
         assertEquals("halloween",vm.spotlight.value?.item?.id)
+    }
+
+    // The Shield froze when a fast press through Theme reached Halloween or Christmas: every season
+    // change restarted every source, the app scan and the media refresh included, once per press.
+    @Test fun aSeasonBurstRestartsOnlyTheMediaSourceAndOnlyOnce() = runTest(UnconfinedTestDispatcher()) {
+        val repo = ProfileRepository(JsonFileStore(tmp.root.resolve("p.json"), ProfilesFile.serializer(), ProfilesFile(), UnconfinedTestDispatcher(testScheduler)))
+        val id = repo.create("A", AvatarColor.LIME, false).id
+        val session = ProfileSession(repo, backgroundScope).also { it.enter(id) }
+        var appStarts = 0; var mediaStarts = 0
+        val apps = HomeRowSource { appStarts++; flowOf(listOf(HomeRowUi.Apps(HomeRowKey.APPS, listOf(app)))) }
+        val media = object : HomeRowSource {
+            override val followsSeason = true
+            override fun rows(profile: Profile) = kotlinx.coroutines.flow.flow { mediaStarts++; emit(emptyList<HomeRowUi>()) }
+        }
+        val vm = HomeViewModel(session, listOf(apps, media))
+        vm.setCalendarDate(java.time.LocalDate.of(2026, 6, 1))
+        advanceUntilIdle()
+        val settled = mediaStarts
+        for (choice in listOf(SeasonChoice.CHRISTMAS, SeasonChoice.HALLOWEEN,
+                SeasonChoice.NONE, SeasonChoice.CHRISTMAS)) {
+            repo.update(id) { it.copy(appearance = choice.applyTo(it.appearance)) }
+            advanceTimeBy(120)
+        }
+        advanceUntilIdle()
+        assertEquals(1, appStarts)
+        assertEquals(settled + 1, mediaStarts)
+        assertEquals(listOf(HomeRowKey.APPS), vm.rows.value!!.map { it.key })
     }
 }

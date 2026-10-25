@@ -47,7 +47,8 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   val slot=loaded(profileId)
   slot.season=season
   emit(visible(slot.rows.value.orEmpty(),accounts.forProfile(profileId).first()).filter { it.kind.season == Season.NONE || it.kind.season == season })
-  val refresh=scope.launch { refresh(profileId) }
+  // Off the main thread: parsing and the snapshot write must never stall the screen.
+  val refresh=scope.launch(io) { refresh(profileId) }
   try { emitAll(combine(slot.rows.filterNotNull(),accounts.forProfile(profileId)) { rows,active -> visible(rows,active).filter { it.kind.season == Season.NONE || it.kind.season == season } }) }
   finally { refresh.cancel() }
  }.distinctUntilChanged()
