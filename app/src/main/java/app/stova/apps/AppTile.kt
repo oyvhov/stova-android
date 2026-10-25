@@ -81,13 +81,15 @@ fun AppTile(
             if (event.type == KeyEventType.KeyUp && event.key == Key.Menu) { onLongClick(); true } else false
         }.combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick, onClick = onClick)) {
         Box(Modifier.size(width, height).focusOutline(source, shape, zoom = true).clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
+            .background(if (prefs.appTileBackground) MaterialTheme.colorScheme.surfaceVariant else androidx.compose.ui.graphics.Color.Transparent), contentAlignment = Alignment.Center) {
             val image = artwork
             if (image != null) {
                 val centered = if (image.packIcon) prefs.iconFill == IconFill.CENTER else iconStyle
                 Image(image.bitmap, contentDescription = null, contentScale = if (centered) ContentScale.Fit else ContentScale.Crop,
                     colorFilter = if (image.monochrome && prefs.iconColor == IconColor.ACCENT) ColorFilter.tint(MaterialTheme.colorScheme.primary) else null,
-                    modifier = if (centered) Modifier.size(height * if (image.packIcon) 0.82f else 0.65f) else Modifier.fillMaxSize())
+                    modifier = if (centered && image.packIcon && image.bitmap.width > image.bitmap.height)
+                        Modifier.fillMaxSize().padding(12.dp)
+                    else if (centered) Modifier.size(height * if (image.packIcon) 0.82f else 0.65f) else Modifier.fillMaxSize())
             } else {
                 IconAndName(app, art, iconStyle)
             }

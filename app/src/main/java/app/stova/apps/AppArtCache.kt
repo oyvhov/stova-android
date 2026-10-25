@@ -45,6 +45,7 @@ class AppArtCache(
                 val name = iconPacks.index(pack).components[key]
                 if (name != null) packIcon(pack, name)?.let { return AppArtwork(it, true, isMonochrome(pack, name)) }
                 if (isSpole(app)) {
+                    if (pack.projectivy) return AppArtwork(packIcon(pack, ProjectivyIcons.SPOLE)!!, true, false)
                     val line = packStyle(pack)
                     return AppArtwork(spole(line, false)!!, true, line)
                 }
@@ -55,7 +56,14 @@ class AppArtCache(
     }
 
     suspend fun packIcon(pack: IconPack, name: String): ImageBitmap? = cached("p:${pack.cacheKey}:$name") {
-        iconPacks.drawable(pack, name)?.toBitmap(PACK_PX, PACK_PX)?.also {
+        val bitmap = if (pack.projectivy && name == ProjectivyIcons.SPOLE) app.stova.core.theme.projectivySpoleArtwork(context)
+            else iconPacks.drawable(pack, name)?.let { drawable ->
+                val width = drawable.intrinsicWidth.coerceAtLeast(1)
+                val height = drawable.intrinsicHeight.coerceAtLeast(1)
+                val scale = PACK_PX.toFloat() / maxOf(width, height)
+                drawable.toBitmap((width * scale).toInt().coerceAtLeast(1), (height * scale).toInt().coerceAtLeast(1))
+            }
+        bitmap?.also {
             monochrome.put("${pack.cacheKey}:$name", pack.monochrome || bitmapIsMonochrome(it))
         }
     }

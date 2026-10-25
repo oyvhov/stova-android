@@ -62,8 +62,9 @@ class IconPackRepository(private val source: IconPackSource, private val directo
                         } catch (_: IOException) { }
                     }
                 }
-                memory[pack.cacheKey] = loaded
-                loaded
+                val supplemented = if (pack.projectivy) loaded.copy(drawables = (loaded.drawables + ProjectivyIcons.SPOLE).distinct().sorted()) else loaded
+                memory[pack.cacheKey] = supplemented
+                supplemented
             }
         }
     }

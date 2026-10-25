@@ -5,7 +5,9 @@ import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -71,7 +73,8 @@ fun RemoteTextField(
     var typing by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
-    OutlinedTextField(
+    val colors = MaterialTheme.colorScheme
+    TextField(
         state,
         modifier.onFocusChanged { if (!it.isFocused) typing = false }.onPreviewKeyEvent { event ->
             if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
@@ -92,5 +95,14 @@ fun RemoteTextField(
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction, showKeyboardOnFocus = typing),
         onKeyboardAction = onImeAction?.let { action -> KeyboardActionHandler { action() } },
         lineLimits = TextFieldLineLimits.SingleLine,
+        shape = MaterialTheme.shapes.medium,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = colors.surfaceVariant,
+            unfocusedContainerColor = colors.surface,
+            focusedIndicatorColor = colors.onSurfaceVariant,
+            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+            focusedLabelColor = colors.onSurface,
+            cursorColor = colors.onSurface,
+        ),
     )
 }

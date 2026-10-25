@@ -62,7 +62,7 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
     }
 
     SettingsGroup(stringResource(R.string.settings_home)) {
-        app.stova.core.ui.SettingsNavRow(stringResource(R.string.custom_home_appearance), stringResource(R.string.custom_home_appearance_hint), onClick = onEditAppearance)
+        app.stova.core.ui.SettingsNavRow(stringResource(R.string.custom_home_appearance), value = stringResource(R.string.custom_home_appearance_hint), onClick = onEditAppearance)
         SettingsSwitchRow(stringResource(R.string.home_backdrop_rotation), prefs.backdropRotation, { enabled -> save { it.copy(backdropRotation = enabled) } })
         SettingsSwitchRow(
             stringResource(R.string.home_start_on_apps),

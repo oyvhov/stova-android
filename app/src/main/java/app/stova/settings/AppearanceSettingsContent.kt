@@ -74,7 +74,7 @@ fun AppearanceSettingsContent(
         Choice(R.string.custom_background_source, p.backgroundSource, BackgroundSource.entries,
             listOf(R.string.custom_spotlight, R.string.custom_fixed_image, R.string.custom_theme_surface)) { onChange(p.copy(backgroundSource = it)) }
         if (p.backgroundSource == BackgroundSource.FIXED) app.stova.core.ui.SettingsNavRow(
-            stringResource(R.string.custom_pick_background), p.fixedBackground?.title, onClick = onPickBackground)
+            stringResource(R.string.custom_pick_background), value = p.fixedBackground?.title, onClick = onPickBackground)
         Choice(R.string.custom_spotlight_source, p.spotlightSource, SpotlightSource.entries,
             listOf(R.string.custom_whole_library, R.string.custom_only_movies, R.string.custom_only_series, R.string.custom_favorites)) { onChange(p.copy(spotlightSource = it)) }
         Choice(R.string.appearance_dimming, p.backdropDimming, BackdropDimming.entries, listOf(R.string.appearance_light, R.string.appearance_medium, R.string.appearance_dark)) { onChange(p.copy(backdropDimming = it)) }

@@ -24,6 +24,18 @@ import org.robolectric.annotation.Config
 class AppearanceSettingsTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun projectivyStartsTransparentAndCardBackgroundCanBeEnabledAgain() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        compose.setContent { StovaTheme(appearance=prefs) {
+            IconPackSettingsContent(prefs,listOf(app.stova.apps.IconPack(app.stova.apps.ProjectivyIcons.PACKAGE,"Projectivy Icon Pack",119))) { prefs=it }
+        } }
+        compose.onNodeWithText("Ikonpakke").performClick()
+        assertEquals(app.stova.apps.ProjectivyIcons.PACKAGE,prefs.iconPack)
+        assertFalse(prefs.appTileBackground)
+        compose.onNodeWithText("Bakgrunn på appkort").performClick()
+        assertTrue(prefs.appTileBackground)
+    }
+
     @Test fun everyChoiceChangesItsPreferenceWithDpadAndOk() {
         var prefs by mutableStateOf(AppearancePrefs())
         compose.setContent { StovaTheme(appearance = prefs) {

@@ -53,7 +53,7 @@ fun BackgroundPicker(search: suspend (String) -> List<SpotlightEntry>, onSelect:
                 results!!.isEmpty() -> Text(stringResource(R.string.custom_library_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 else -> LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(results!!, key = { "${it.account.id}:${it.item.id}" }) { entry ->
-                        SettingsNavRow(entry.item.title, entry.account.serverName) { onSelect(entry) }
+                        SettingsNavRow(entry.item.title, value = entry.account.serverName) { onSelect(entry) }
                     }
                 }
             }

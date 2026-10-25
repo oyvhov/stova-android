@@ -1,3 +1,10 @@
+# Projectivy og originalt transparent Spole-merke – fullført
+2026-10-25: Plan `2026-10-25-projectivy-spole.md` er fullført. Offisiell Projectivy Icon Pack 1.1.9 er installert separat og vald på emulator-5580; appkortbakgrunn er Av. Pakka sine 953 mappingar / 899 ikon blir brukte, pluss Stova sitt eige Spole-supplement i veljaren.
+Eigaren bad om originalen: endeleg Spole SVG/PNG/Android-vektor bevarer dei seks originale stiane og transformasjonane frå Spole sitt TV-banner; berre bakgrunnen er fjerna. Sjå `docs/icons/PROJECTIVY.md`. Breie logoar bevarer sideforholdet.
+588/588 testar inkludert native skjermprøver, 0 hoppa over; lint 0 feil (38 åtvaringar, 1 hint), debug-bygg OK. Endeleg APK er installert med -r: SHA-256 `1569035b96db6e5d7d4d8840233d874515418759c93c4c01013fde52205cf361`.
+Rapport: `docs/verification/projectivy-spole.md`. Spole/YouTube utan kortbakgrunn og søkbart `stova_spole` er prøvde med ekte appar. Favorittar/overstyringar er uendra; berre bestilt ikonpakke/bakgrunn er endra i profilen, kontofila er byteidentisk. Ingen HA-styring.
+Tekstfelt har no fylt flate/nøytral understrek, også i ikonveljaren; eiga raud/grøn pikselprøve dekkjer at aksentramma er borte. Ingen påbyrja steg står att, ingen push eller Shield-installasjon. Fysisk fjernkontroll er ikkje prøvd i denne runden.
+
 # Roleg fokus og redigerbar framside – fullført; Projectivy er neste
 2026-10-25: Plan `2026-10-25-soft-focus-home-editing.md` er fullført. Svakt løft er standard i kort og menyar; gamle RING-profilar får same vising. Radnamn/storleik/kjeldevising kan endrast frå Heim og Innstillingar; hero-fakta er valfrie.
 583/583 testar inkludert skjermprøver, 0 hoppa over; lint 0 feil (38 åtvaringar, 1 hint), debug-bygg OK. Rapport: `docs/verification/soft-focus-home-editing.md`. Oppdatert på emulator-5580 med ekte data, ikkje Shield; ingen push.

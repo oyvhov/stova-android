@@ -64,6 +64,7 @@ Kjelder: `C:\JellyBin\reelstack-android\docs\DESIGN_SYSTEM.md`, `docs\LAYOUT.md`
   kunstforma; menyar tvingar ikkje fram ring. Forstørring skjer berre i `graphicsLayer`.
   Lys opp dempar nabokorta 28 % i aktiv rad. Redusert rørsle bevarer lysare flate, utan
   løft eller skalering og utan å leggje til ring. Gamal `strongFocus` bevarer 4 dp som eige tilgjengeval.
+  Tekstfelt har lysare fylt flate og nøytral understrek, også i søk og overskrifteditoren.
 - **Rørsle:** `StovaMotion` eig raske overgangar på 150 ms, inngangar på 240 ms,
   spotlight-utgang på 360 ms og roleg bakgrunn/spotlight-inngang på 900 ms. Fokus er
   110/180 ms. Berre laganimasjonar for alfa, skala og forskyving; inga ny kontinuerleg rørsle,
@@ -235,6 +236,10 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   Manglande kunst viser tittelen inne i plasshaldaren. Fokuseffekten følgjer berre kunsten.
   Radformat kan overstyrast til Plakat (2:3), Brei (16:9), Stor brei (1,2×), Liten brei (0,8×)
   eller Ikon (kvadrat). Storleik S/M/L gjeld oppå formatet. Vassrett avstand er 8/16/24 dp.
+  Appkort kan visast utan bakgrunnsflate. Val av Projectivy Icon Pack byrjar transparent;
+  brukaren kan slå bakgrunnen på att. Breie pakkelogoar bevarer originalt sideforhold.
+  Spole-supplementet for Projectivy bruker det originale TV-merket og wordmark-stiane på
+  transparent lerret. Det følgjer Stova, er søkbart som `stova_spole` og fungerer for release/debug.
 - **Framdrift:** Tynn 2 dp / Tjukk 4 dp (standard) / Skjult i vald aksent for påbyrja titlar.
 - **OK** på ein tittel opnar detaljsida i Spole. **Lang OK / Meny** opnar ein liten handlingsmeny:
   «Spel», «Detaljar i Spole».

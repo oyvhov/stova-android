@@ -78,7 +78,7 @@ fun SettingsSwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Un
 }
 
 @Composable
-fun SettingsNavRow(title: String, value: String? = null, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun SettingsNavRow(title: String, modifier: Modifier = Modifier, value: String? = null, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.medium
     Row(

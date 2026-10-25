@@ -23,6 +23,46 @@ class IconArtworkTest {
     private val jellyfin = InstalledApp("org.jellyfin.mobile/.MainActivity", "org.jellyfin.mobile", ".MainActivity", "Jellyfin", true)
     private val spole = InstalledApp("app.reelstack/.MainActivity", "app.reelstack", ".MainActivity", "Spole", true)
 
+    @Test fun projectivyExportKeepsTheOriginalProductionPathsInBothFormats() {
+        val svg=java.io.File("../docs/icons/spole-projectivy.svg").readText()
+        val vector=java.io.File("src/main/res/drawable/ic_spole_projectivy.xml").readText()
+        val paths=Regex(""" d="([^"]+)"""").findAll(svg).map { it.groupValues[1] }.toList()
+        assertEquals(6,paths.size)
+        assertEquals(paths,Regex("""android:pathData="([^"]+)"""").findAll(vector).map { it.groupValues[1] }.toList())
+        assertTrue(svg.contains("translate(42 43) scale(0.59 0.59)"))
+        assertTrue(svg.contains("translate(118 76) scale(1 1)"))
+        assertFalse("no background path",svg.contains("M0,0 H320 V180"))
+    }
+
+    @Test @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun projectivySpoleSupplementIsAWideTransparentWordmarkForBothPackages() = runTest {
+        val source=FakeIconPackSource().apply { packs=listOf(IconPack("dev.projectivy.blueprint.app","Projectivy Icon Pack",119)) }
+        val art=AppArtCache(context,iconPacks=IconPackRepository(source,tmp.root))
+        val prefs=AppearancePrefs(iconPack=source.packs.single().packageName)
+        assertTrue(ProjectivyIcons.SPOLE in art.iconPacks.index(source.packs.single()).drawables)
+        for(pkg in listOf("app.reelstack","app.reelstack.debug")) {
+            val image=art.artwork(spole.copy(packageName=pkg),prefs)!!
+            assertEquals(16f/9f,image.bitmap.width.toFloat()/image.bitmap.height,0.01f)
+            val pixels=IntArray(image.bitmap.width*image.bitmap.height)
+            image.bitmap.readPixels(pixels)
+            assertEquals("no baked background",0,android.graphics.Color.alpha(pixels[0]))
+            assertTrue(image.packIcon)
+            assertFalse("brand and white lettering retain their own colours",image.monochrome)
+        }
+        val manual=art.artwork(spole,AppearancePrefs(),IconOverride(ProjectivyIcons.PACKAGE,ProjectivyIcons.SPOLE))!!
+        assertEquals(16f/9f,manual.bitmap.width.toFloat()/manual.bitmap.height,0.01f)
+    }
+
+    @Test fun widePackLogosKeepTheirAspectRatio() = runTest {
+        val fake=FakeIconPackSource()
+        val source=object:IconPackSource by fake {
+            override fun drawable(pack:IconPack,name:String,density:Int)=android.graphics.drawable.BitmapDrawable(context.resources,
+                android.graphics.Bitmap.createBitmap(320,180,android.graphics.Bitmap.Config.ARGB_8888))
+        }
+        val image=AppArtCache(context,iconPacks=IconPackRepository(source,tmp.root)).packIcon(fake.packs.single(),"wide")!!
+        assertEquals(16f/9f,image.width.toFloat()/image.height,0.01f)
+    }
+
     @Test @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
     fun submissionSvgAndAndroidVectorMatchAndFitTheArcticonsRectangleIncludingStroke() {
         val svg = java.io.File("../docs/icons/spole-arcticons.svg").readText()

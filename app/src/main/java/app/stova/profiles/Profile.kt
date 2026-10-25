@@ -50,6 +50,7 @@ data class AppearancePrefs(
     val cardSize: ArtworkSize = ArtworkSize.MEDIUM,
     val showTitles: Boolean = false,
     val appStyle: AppStyle = AppStyle.BANNER,
+    val appTileBackground: Boolean = true,
     val movieStyle: MovieStyle = MovieStyle.POSTER,
     val heroSize: HeroSize = HeroSize.COMPACT,
     val showOverview: Boolean = false,

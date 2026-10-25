@@ -62,7 +62,7 @@ fun ProfileSettings(container: AppContainer, profile: Profile) {
     }
 
     SettingsGroup(stringResource(R.string.settings_me)) {
-        SettingsNavRow(stringResource(R.string.profile_name_and_colour), profile.name) { editSelf = true }
+        SettingsNavRow(stringResource(R.string.profile_name_and_colour), value = profile.name) { editSelf = true }
         if (profile.pin == null) {
             SettingsNavRow(stringResource(R.string.pin_set)) { pinStep = PinStep.NEW }
         } else {
@@ -77,7 +77,7 @@ fun ProfileSettings(container: AppContainer, profile: Profile) {
     }
     SettingsGroup(stringResource(R.string.settings_profiles)) {
         file?.profiles.orEmpty().filter { it.id != profile.id }.forEach { other ->
-            SettingsNavRow(other.name, stringResource(if (other.kid) R.string.profile_kid else R.string.profile_adult)) {
+            SettingsNavRow(other.name, value = stringResource(if (other.kid) R.string.profile_kid else R.string.profile_adult)) {
                 detailId = other.id
             }
         }

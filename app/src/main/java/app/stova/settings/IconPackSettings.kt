@@ -22,7 +22,11 @@ fun IconPackSettingsContent(p: AppearancePrefs, packs: List<IconPack>, groupTitl
         val unavailable = stringResource(R.string.icon_pack_unavailable, p.iconPack.orEmpty())
         val label = packs.firstOrNull { it.packageName == p.iconPack }?.label ?: if (p.iconPack == null) none else unavailable
         SettingsChoiceRow(stringResource(R.string.icon_pack), label) { step ->
-            onChange(p.copy(iconPack = choices[Math.floorMod(index + step, choices.size)]))
+            val selected = choices[Math.floorMod(index + step, choices.size)]
+            onChange(p.copy(iconPack = selected, appTileBackground = if (selected == app.stova.apps.ProjectivyIcons.PACKAGE) false else p.appTileBackground))
+        }
+        SettingsChoiceRow(stringResource(R.string.icon_tile_background), stringResource(if (p.appTileBackground) R.string.appearance_on else R.string.appearance_off)) {
+            onChange(p.copy(appTileBackground = !p.appTileBackground))
         }
         SettingsChoiceRow(stringResource(R.string.icon_color), stringResource(if (p.iconColor == IconColor.ORIGINAL) R.string.icon_original else R.string.icon_accent)) {
             onChange(p.copy(iconColor = if (p.iconColor == IconColor.ORIGINAL) IconColor.ACCENT else IconColor.ORIGINAL))

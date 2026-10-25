@@ -546,4 +546,5 @@
     <string name="custom_hero_age">Show age rating in hero</string>
     <string name="custom_hero_ratings">Show ratings in hero</string>
     <string name="custom_hero_new_season">Show new season in hero</string>
+    <string name="icon_tile_background">App card background</string>
 </resources>

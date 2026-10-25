@@ -44,6 +44,8 @@ rad- og tittel-id-ar som nøklar.
   Feila henting kan prøvast att ved neste retur etter 30 sekund, også utan bufra rader.
 - Smalare spotlight-utval blir brukte om att i to timar. Nye kontoar og sesongbyte kan oppdatere tidlegare.
 - Applista deler pakkeskanning og pakkelyttar. Ikonpakkar blir oppdaga når dei blir etterspurde.
+  Breie pakkeikon bevarer sideforholdet. Projectivy blir installert separat; `ProjectivyIcons`
+  legg til eit eige transparent Spole-merke i Stova sin katalog utan å endre tredjepartspakken.
 - HA-socketen treng synlege Heim-brikker eller ein open Smarthus-/legg-til-flyt. Bakgrunn og tapt behov har ein kort fråkoplingsfrist.
 - Heim abonnerer på høgst tre synlege HA-brikker; Smarthus abonnerer på korta i dashbordet.
 - HA-registeret blir brukt om att i seks timar. Historikk og prognosar blir delte mellom kort og panel.
@@ -67,6 +69,7 @@ oppstart direkte på ei medierad.
 Felles fokus er svakt løft, 2,5 % forstørring på kunst og 1,5 % på kontrollar, og lysare flate.
 Gamalt standardval `RING` blir lese som `LIFT`; ei synleg ramme krev valet `OUTLINE` eller
 `RING_ZOOM`. Redusert rørsle bevarer flateforskjellen utan løft eller skalering. Menyar tvingar ikkje fram ring.
+Tekstfelt bruker fylt flate og nøytral understrek ved fokus; dei lagar ikkje ei aksentramme rundt feltet.
 Dialogvindauget godtek OK/Enter berre når trykket byrja med ein ny KeyDown i det vindauget.
 Repetisjonar og slepp frå eit langt trykk på kortet bak blir etne opp, utan å sperre neste
 vanlege trykk. Eigarskap til trykket blir rydda når vindauget mister fokus.

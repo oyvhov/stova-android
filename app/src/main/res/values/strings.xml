@@ -546,4 +546,5 @@
     <string name="custom_hero_age">Vis aldersgrense i heroen</string>
     <string name="custom_hero_ratings">Vis vurderingar i heroen</string>
     <string name="custom_hero_new_season">Vis ny sesong i heroen</string>
+    <string name="icon_tile_background">Bakgrunn på appkort</string>
 </resources>

@@ -24,7 +24,7 @@ internal val sizeLabels = listOf(R.string.appearance_small, R.string.appearance_
 fun RowStyleChoices(style: RowStyle, defaultFormat: RowFormat, globalSize: ArtworkSize, defaultTitle: String = "", hasSource: Boolean = true, onChange: (RowStyle) -> Unit) {
     var editing by remember { mutableStateOf(false) }
     val headingButton = remember { FocusRequester() }
-    app.stova.core.ui.SettingsNavRow(stringResource(R.string.custom_edit_heading), style.heading(defaultTitle),
+    app.stova.core.ui.SettingsNavRow(stringResource(R.string.custom_edit_heading), value = style.heading(defaultTitle),
         onClick = { editing = true }, modifier = Modifier.focusRequester(headingButton))
     if (editing) RowHeadingEditor(style.title, defaultTitle, onSave = { title ->
         onChange(style.withHeading(title)); editing = false

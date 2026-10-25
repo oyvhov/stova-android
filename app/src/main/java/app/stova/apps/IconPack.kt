@@ -4,8 +4,15 @@ import android.graphics.drawable.Drawable
 import kotlinx.serialization.Serializable
 
 data class IconPack(val packageName: String, val label: String, val versionCode: Long, val updatedAt: Long = 0) {
+    val projectivy: Boolean get() = packageName == ProjectivyIcons.PACKAGE
     val monochrome: Boolean get() = packageName.startsWith("com.donnnno.arcticons")
     val cacheKey: String get() = "$packageName:$versionCode:$updatedAt"
+}
+
+/** Stova-owned supplement; the separately installed third-party APK stays untouched. */
+object ProjectivyIcons {
+    const val PACKAGE = "dev.projectivy.blueprint.app"
+    const val SPOLE = "stova_spole"
 }
 
 /** Blocking platform boundary; the repository calls it only on IO. Tests need no installed pack. */

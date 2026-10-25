@@ -10,6 +10,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,7 @@ class SoftFocusScreensTest {
         val source=MutableInteractionSource()
         var prefs by mutableStateOf(AppearancePrefs(focusEffect=FocusEffect.RING))
         var accent=0
+        val field=FocusRequester()
         compose.setContent { StovaTheme(appearance=prefs) {
             accent=MaterialTheme.colorScheme.primary.toArgb()
             Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(48.dp),
@@ -49,7 +52,9 @@ class SoftFocusScreensTest {
                     .background(MaterialTheme.colorScheme.surfaceVariant,MaterialTheme.shapes.medium).padding(24.dp)) { Text("Artwork") }
                 Box(Modifier.size(400.dp,56.dp).focusOutline(source,MaterialTheme.shapes.medium)
                     .background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.medium).padding(16.dp)) { Text("Menu choice") }
+                RemoteTextField("spole",{},"Search",Modifier.width(400.dp).focusRequester(field))
             }
+            LaunchedEffect(Unit) { field.requestFocus() }
         } }
         val before=BitmapFactory.decodeFile(compose.saveScreen("focus-calm-unfocused").path)
         TestScope(UnconfinedTestDispatcher()).launch { source.emit(FocusInteraction.Focus()) }
