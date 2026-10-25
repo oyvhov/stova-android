@@ -23,6 +23,9 @@ interface HaConnection {
     fun entitySnapshots(entityIds: Set<String>): Flow<Map<String, HaEntity>> =
         entities.map { live -> live.filterKeys { it in entityIds } }.dropWhile { it.isEmpty() }
     fun watch(entityIds: Set<String>)
+    /** Pages that need live data while shown hold the connection; with no holder and no watched id the socket rests. */
+    fun hold() {}
+    fun release() {}
     suspend fun callService(domain: String, service: String, entityId: String, data: JsonObject = JsonObject(emptyMap())): Boolean
     suspend fun history(entityId: String, hours: Int = 24): List<Pair<Long, Double>>
     suspend fun states(): List<HaEntity>
@@ -38,7 +41,8 @@ class HaSocket(
     private val auth: HaAuth,
     private val address: suspend () -> HaAddress?,
     private val scope: CoroutineScope,
-    private val backoff: List<Long> = listOf(1_000, 2_000, 4_000, 8_000, 16_000, 30_000),
+    private val backoff: List<Long> = listOf(1_000, 2_000, 4_000, 8_000, 16_000, 30_000, 60_000, 120_000, 300_000),
+    private val graceMillis: Long = 30_000,
 ) : HaConnection {
     private val http = http.newBuilder().pingInterval(30, TimeUnit.SECONDS).build()
     private val mutableStatus = MutableStateFlow(HaStatus.NOT_CONFIGURED)
@@ -52,6 +56,9 @@ class HaSocket(
     private val inbox = Channel<suspend () -> Unit>(Channel.UNLIMITED)
     private var socket: WebSocket? = null
     private var running = false
+    private var holders = 0
+    private var resting: Job? = null
+    private val demanded get() = watched.isNotEmpty() || holders > 0
     private var generation = 0
     private var nextId = 1
     private var subscription: Int? = null
@@ -65,6 +72,8 @@ class HaSocket(
     private val priceMutex=Mutex()
     private var priceResponse:JsonObject?=null
     private var pricesAt=0L
+    private val histories = HaReadCache<List<Pair<Long, Double>>>()
+    private val forecasts = HaReadCache<List<ForecastDay>>()
     /** Integrations Home Assistant has loaded (`get_config` components); null until first known. */
     private val components=MutableStateFlow<Set<String>?>(null)
     @Volatile private var homeZone=ZoneId.systemDefault()
@@ -79,9 +88,9 @@ class HaSocket(
     private fun post(action: suspend () -> Unit) { inbox.trySend(action) }
     fun start() = post {
         stopping?.cancel(); stopping = null; running = true
-        if (socket == null && reconnect?.isActive != true && status.value != HaStatus.SIGNED_OUT) connect()
+        reconcileDemand()
     }
-    fun stop(graceMillis: Long = 30_000) = post {
+    fun stop(graceMillis: Long = this.graceMillis) = post {
         stopping?.cancel()
         stopping = scope.launch {
             delay(graceMillis)
@@ -89,9 +98,10 @@ class HaSocket(
         }
     }
     fun reconfigure() = post {
+        histories.clear(); forecasts.clear(); components.value = null; priceResponse = null; pricesAt = 0L
         reconnect?.cancel(); disconnect(); mutableEntities.value = emptyMap(); snapshots.value = null; authFailures = 0; failures = 0
         mutableStatus.value = if (address() == null) HaStatus.NOT_CONFIGURED else HaStatus.DISCONNECTED
-        if (running) connect()
+        reconcileDemand()
     }
     override fun watch(entityIds: Set<String>) = post {
         if (entityIds != watched) {
@@ -99,6 +109,24 @@ class HaSocket(
             snapshots.value = null
             mutableEntities.value = entities.value.filterKeys { it in watched }
             if (status.value == HaStatus.CONNECTED) resubscribe()
+        }
+        reconcileDemand()
+    }
+    override fun hold() = post { holders++; reconcileDemand() }
+    override fun release() = post { holders = (holders - 1).coerceAtLeast(0); reconcileDemand() }
+
+    private suspend fun reconcileDemand() {
+        if (!running) return
+        if (demanded) {
+            resting?.cancel(); resting = null
+            if (socket == null && reconnect?.isActive != true && status.value != HaStatus.SIGNED_OUT) connect()
+        } else {
+            reconnect?.cancel(); reconnect = null
+            if (socket == null) mutableStatus.value = if (address() == null) HaStatus.NOT_CONFIGURED else HaStatus.DISCONNECTED
+            else if (resting?.isActive != true) resting = scope.launch {
+                delay(graceMillis)
+                post { if (!demanded) { disconnect(); mutableStatus.value = HaStatus.DISCONNECTED } }
+            }
         }
     }
     private fun resubscribe() {
@@ -111,7 +139,7 @@ class HaSocket(
         pending.values.forEach { it.complete(null) }; pending.clear()
     }
     private suspend fun connect() {
-        if (!running) return
+        if (!running || !demanded) return
         val target = address() ?: run { mutableStatus.value = HaStatus.NOT_CONFIGURED; return }
         mutableStatus.value = HaStatus.CONNECTING
         val token = try { auth.accessToken() }
@@ -155,7 +183,7 @@ class HaSocket(
     }
     private fun retry() {
         disconnect(); mutableStatus.value = HaStatus.DISCONNECTED
-        if (!running) return
+        if (!running || !demanded) return
         reconnect?.cancel()
         val wait = backoff[failures.coerceAtMost(backoff.lastIndex)]; failures++
         reconnect = scope.launch { delay(wait); post { if (running) connect() } }
@@ -175,9 +203,9 @@ class HaSocket(
     }
     override suspend fun callService(domain: String, service: String, entityId: String, data: JsonObject): Boolean =
         request { app.stova.ha.callService(it, domain, service, entityId, data) }?.get("success")?.jsonPrimitive?.booleanOrNull == true
-    override suspend fun history(entityId: String, hours: Int): List<Pair<Long, Double>> {
+    override suspend fun history(entityId: String, hours: Int): List<Pair<Long, Double>> = histories.get("$entityId/$hours", 300_000) {
         val response = request { historyRequest(it, entityId, Instant.now().minusSeconds(hours.toLong() * 3600)) }
-        return (response?.get("result") as? JsonObject)?.let { parseHistory(it, entityId) }.orEmpty()
+        (response?.get("result") as? JsonObject)?.let { parseHistory(it, entityId) }.orEmpty()
     }
     override suspend fun states(): List<HaEntity> = withContext(Dispatchers.Default) { (request(::getStates)?.get("result") as? JsonArray)?.let(::parseStates)
         ?: throw java.io.IOException("HA states unavailable") }
@@ -193,10 +221,12 @@ class HaSocket(
         // Thousands of entries: parse off the main thread the socket's callers run on.
         else withContext(Dispatchers.Default) { parseRegistry(results[0]!!, results[1]!!, results[2]!!) }
     }
-    override suspend fun forecast(entityId: String): List<ForecastDay> =
+    override suspend fun forecast(entityId: String): List<ForecastDay> = forecasts.get("$entityId/daily", 900_000) {
         (request { forecastRequest(it, entityId) }?.get("result") as? JsonObject)?.let { parseForecast(it, entityId) }.orEmpty()
-    override suspend fun hourlyForecast(entityId:String):List<ForecastDay> =
+    }
+    override suspend fun hourlyForecast(entityId:String):List<ForecastDay> = forecasts.get("$entityId/hourly", 900_000) {
         (request {forecastRequest(it,entityId,"hourly")}?.get("result") as? JsonObject)?.let {parseForecast(it,entityId,24)}.orEmpty()
+    }
     /** Never ask an integration that is not there; unknown after 10 s counts as absent. */
     private suspend fun hasIntegration(domain:String)=
         withTimeoutOrNull(10_000) {components.filterNotNull().first()}?.contains(domain)==true
