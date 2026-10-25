@@ -76,6 +76,44 @@ class SettingsLayoutFocusTest {
         compose.onNodeWithText("HOME 0").assertIsFocused()
     }
 
+    @Test fun linksBetweenPanesEnterTheDestinationWithoutFallingBackToProfile() {
+        compose.setContent {
+            var selected by remember { mutableStateOf(SettingsSection.PROFILE) }
+            StovaTheme(reduceMotion = true) {
+                SettingsLayout(selected, { selected = it }, {}) { section, open ->
+                    when (section) {
+                        SettingsSection.HOME -> StovaButton("Home appearance", { open(SettingsSection.APPEARANCE) })
+                        SettingsSection.APPEARANCE -> StovaButton("Edit rows", { open(SettingsSection.HOME) })
+                        else -> StovaButton("Profile control", {})
+                    }
+                }
+            }
+        }
+        tab("Heim").performClick()
+        repeat(3) {
+            compose.onNodeWithText("Home appearance").assertIsFocused()
+                .performKeyInput { pressKey(Key.DirectionCenter) }
+            compose.onNodeWithText("Edit rows").assertIsFocused()
+                .performKeyInput { pressKey(Key.DirectionCenter) }
+        }
+        compose.onNodeWithText("Home appearance").assertIsFocused()
+    }
+
+    @Test fun clickingACrossLinkAlsoKeepsTheDestinationSelected() {
+        compose.setContent {
+            var selected by remember { mutableStateOf(SettingsSection.HOME) }
+            StovaTheme(reduceMotion = true) {
+                SettingsLayout(selected, { selected = it }, {}) { section, open ->
+                    if (section == SettingsSection.HOME) StovaButton("Home appearance", { open(SettingsSection.APPEARANCE) })
+                    else StovaButton("${section.name} control", {})
+                }
+            }
+        }
+        compose.onNodeWithText("Home appearance").performClick()
+        tab("Utsjånad").assertIsSelected()
+        compose.onNodeWithText("APPEARANCE control").assertIsFocused()
+    }
+
     @Test fun scrolledContentReturnsToItsSelectedTabAndVerticalEdgesStayInside() {
         render()
         tab("Profil").performKeyInput { pressKey(Key.DirectionRight) }

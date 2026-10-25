@@ -25,7 +25,14 @@ internal fun SettingsLayout(
     val pane = remember { FocusRequester() }
     var enterSection by remember { mutableStateOf<SettingsSection?>(null) }
     fun select(section: SettingsSection) { enterSection = null; onSelect(section) }
-    fun enter(section: SettingsSection) { onSelect(section); enterSection = section }
+    fun enter(section: SettingsSection) {
+        // Cross-links can remove the currently focused control. Park focus on the stable
+        // destination tab first; otherwise Compose falls back to the first tab (Profile),
+        // whose onFocused selects Profile before the new pane has attached.
+        tabs.getValue(section).requestFocus()
+        onSelect(section)
+        enterSection = section
+    }
 
     LaunchedEffect(Unit) { tabs.getValue(selected).requestFocus() }
     LaunchedEffect(enterSection, selected) {
