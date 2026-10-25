@@ -293,4 +293,25 @@
     </plurals>
     <string name="theme_peak_halloween">Halloween today</string>
     <string name="theme_peak_christmas">Christmas Eve today</string>
+
+    <!-- Ikonpakke -->
+    <string name="icon_pack_group">App icons</string>
+    <string name="icon_pack">Icon pack</string>
+    <string name="icon_pack_none">None</string>
+    <string name="icon_pack_unavailable">Unavailable (%1$s)</string>
+    <string name="icon_color">Colour</string>
+    <string name="icon_original">Original</string>
+    <string name="icon_accent">Accent</string>
+    <string name="icon_fill">Fill</string>
+    <string name="icon_center">Centred</string>
+    <string name="icon_crop">Crop to fill</string>
+    <string name="icon_pack_recommended">Recommended: Arcticons – free line icons from Play or F-Droid. Accent colours monochrome Arcticons icons with the theme colour.</string>
+    <string name="icon_change">Change icon</string>
+    <string name="icon_from_pack">From icon pack</string>
+    <string name="icon_reset">Reset</string>
+    <string name="icon_search">Search icons</string>
+    <string name="icon_no_packs">No icon packs are installed.</string>
+    <string name="icon_no_results">No icons found.</string>
+    <string name="icon_close">Close</string>
+    <string name="icon_loading">Loading icons …</string>
 </resources>

@@ -293,4 +293,25 @@
     </plurals>
     <string name="theme_peak_halloween">Halloween i dag</string>
     <string name="theme_peak_christmas">Julaftan i dag</string>
+
+    <!-- Ikonpakke -->
+    <string name="icon_pack_group">Appikon</string>
+    <string name="icon_pack">Ikonpakke</string>
+    <string name="icon_pack_none">Ingen</string>
+    <string name="icon_pack_unavailable">Utilgjengeleg (%1$s)</string>
+    <string name="icon_color">Farge</string>
+    <string name="icon_original">Original</string>
+    <string name="icon_accent">Aksent</string>
+    <string name="icon_fill">Fyll</string>
+    <string name="icon_center">Sentrert</string>
+    <string name="icon_crop">Fyll flata</string>
+    <string name="icon_pack_recommended">Tilrådd: Arcticons – gratis linjeikon frå Play eller F-Droid. Aksent fargar monokrome Arcticons-ikon med temafargen.</string>
+    <string name="icon_change">Endre ikon</string>
+    <string name="icon_from_pack">Frå ikonpakke</string>
+    <string name="icon_reset">Tilbakestill</string>
+    <string name="icon_search">Søk etter ikon</string>
+    <string name="icon_no_packs">Ingen ikonpakkar er installerte.</string>
+    <string name="icon_no_results">Ingen ikon funne.</string>
+    <string name="icon_close">Lukk</string>
+    <string name="icon_loading">Lastar ikon …</string>
 </resources>

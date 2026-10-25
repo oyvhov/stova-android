@@ -68,6 +68,7 @@ fun AppTile(
     val width = if (iconStyle) height else wide
     val packs by art.iconPacks.packs.collectAsStateWithLifecycle()
     val artwork by produceState<AppArtwork?>(null, app, art, prefs.iconPack, iconStyle, iconOverride, packs) {
+        value = null
         value = art.artwork(app, prefs, iconOverride)
     }
     Column(modifier.width(width).semantics { contentDescription = app.label }

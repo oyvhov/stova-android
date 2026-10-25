@@ -4,6 +4,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import app.stova.AppContainer
 import app.stova.BuildConfig
@@ -18,13 +20,14 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppearanceSettings(container: AppContainer, profile: Profile) {
     val scope = rememberCoroutineScope()
-    AppearanceSettingsContent(profile.appearance) { prefs ->
+    val packs by container.iconPacks.packs.collectAsStateWithLifecycle()
+    AppearanceSettingsContent(profile.appearance, packs) { prefs ->
         scope.launch { container.profiles.update(profile.id) { it.copy(appearance = prefs) } }
     }
 }
 
 @Composable
-fun AppearanceSettingsContent(p: AppearancePrefs, onChange: (AppearancePrefs) -> Unit) {
+fun AppearanceSettingsContent(p: AppearancePrefs, packs: List<app.stova.apps.IconPack> = emptyList(), onChange: (AppearancePrefs) -> Unit) {
     Text(stringResource(R.string.appearance_choice_hint), style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
     SettingsGroup(stringResource(R.string.theme_group)) {
@@ -44,6 +47,7 @@ fun AppearanceSettingsContent(p: AppearancePrefs, onChange: (AppearancePrefs) ->
             listOf(R.string.appearance_off,R.string.theme_calm,R.string.theme_full)) { onChange(p.copy(seasonalDecor=it)) }
         ThemePreview(p)
     }
+    IconPackSettingsContent(p, packs, onChange)
     SettingsGroup(stringResource(R.string.settings_home)) {
         Choice(R.string.appearance_hero_size, p.heroSize, HeroSize.entries, listOf(R.string.appearance_compact, R.string.appearance_large)) { onChange(p.copy(heroSize = it)) }
         Toggle(R.string.appearance_overview, p.showOverview) { onChange(p.copy(showOverview = it)) }

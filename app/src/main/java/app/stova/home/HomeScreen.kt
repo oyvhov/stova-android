@@ -50,6 +50,8 @@ fun HomeScreen(
     topBar: @Composable (List<ChipContent>) -> Unit = {},
     haRepository: HaRepository? = null,
     haConnection: HaConnection? = null,
+    profile: app.stova.profiles.Profile? = null,
+    apps: AppRepository? = null,
 ) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val refresh by rememberUpdatedState(onRefresh)
@@ -74,6 +76,7 @@ fun HomeScreen(
     val context = LocalContext.current
     val handoff = remember(context) { SpoleHandoff(context) }
     var actions by remember { mutableStateOf<FocusedTarget.Media?>(null) }
+    var appMenu by remember(profile?.id) { mutableStateOf<InstalledApp?>(null) }
     var missing by remember { mutableStateOf(false) }
     fun open(target: FocusedTarget.Media, action: SpoleAction) {
         when (handoff.open(target.account, target.item, action)) {
@@ -84,7 +87,9 @@ fun HomeScreen(
     }
     HomeContent(rows, focused, initial, art, catalog, onOpenApps, vm::focus,
         onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { topBar(chips) },
-        spotlight = spotlight)
+        spotlight = spotlight, appIconOverrides = profile?.apps?.iconOverrides.orEmpty(),
+        onAppLongClick = { app -> if (profile?.kid == false) appMenu = app })
+    appMenu?.let { app -> if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog) { appMenu = null } }
     actions?.let { target ->
         ItemActionsMenu(target.item,
             onPlay = { actions = null; open(target, SpoleAction.PLAY) },
@@ -109,6 +114,8 @@ fun HomeContent(
     onMediaLongClick: (FocusedTarget.Media) -> Unit,
     topBar: @Composable () -> Unit = {},
     spotlight: SpotlightEntry? = null,
+    appIconOverrides: Map<String, IconOverride> = emptyMap(),
+    onAppLongClick: (InstalledApp) -> Unit = {},
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
     // The last focused title survives leaving Home for Spole or another launcher page.
@@ -182,7 +189,7 @@ fun HomeContent(
                                             when (row) {
                                                 is HomeRowUi.WatchNext -> WatchNextRow(row, requester, onFocus)
                                                 is HomeRowUi.Media -> MediaRow(row, requester, restoreTarget, onFocus, onMediaClick, onMediaLongClick)
-                                                is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, restoreTarget) { onFocus(FocusedTarget.App(it)) }
+                                                is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, restoreTarget, appIconOverrides, onAppLongClick) { onFocus(FocusedTarget.App(it)) }
                                             }
                                         }
                                     }
@@ -222,7 +229,7 @@ private fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Focu
 }
 
 @Composable
-private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, onFocused: (String) -> Unit) {
+private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, iconOverrides: Map<String, IconOverride>, onLongClick: (InstalledApp) -> Unit, onFocused: (String) -> Unit) {
     val index = row.apps.indexOfFirst { it.label == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     Column {
@@ -232,8 +239,8 @@ private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, 
             horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap)) {
             itemsIndexed(row.apps, key = { _, app -> app.key }) { i, app ->
                 val modifier = if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier
-                AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = {},
-                    modifier = modifier.onFocusChanged { if (it.isFocused) onFocused(app.label) })
+                AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = { onLongClick(app) },
+                    modifier = modifier.onFocusChanged { if (it.isFocused) onFocused(app.label) }, iconOverride = iconOverrides[app.key])
             }
         }
     }

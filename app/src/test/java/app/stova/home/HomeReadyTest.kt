@@ -21,6 +21,22 @@ import org.robolectric.annotation.Config
 class HomeReadyTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun homeAppMenuKeyCallsTheSameAppActionAsLongOk() {
+        val app = app.stova.apps.InstalledApp("demo/.Main", "demo", ".Main", "Demo", true)
+        var selected: app.stova.apps.InstalledApp? = null
+        compose.setContent {
+            val context = LocalContext.current
+            StovaTheme(reduceMotion = true) {
+                HomeContent(listOf(HomeRowUi.Apps(HomeRowKey.APPS, listOf(app))), null, HomeRowKey.APPS,
+                    AppArtCache(context), PackageManagerAppCatalog(context, emptySet()), {}, {}, {}, {},
+                    onAppLongClick = { selected = it })
+            }
+        }
+        compose.onNodeWithText("Demo").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus) { it() }
+        compose.onNodeWithText("Demo").performKeyInput { pressKey(androidx.compose.ui.input.key.Key.Menu) }
+        org.junit.Assert.assertEquals(app, selected)
+    }
+
     @Test fun readyAppearsWithRenderedRowsAndDisappearsWhileLoading() {
         val rows = mutableStateOf<List<HomeRowUi>?>(null)
         compose.setContent {

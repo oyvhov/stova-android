@@ -82,6 +82,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
             Destination.HOME -> HomeScreen(
                 home, container.appArt, container.appCatalog,
                 onOpenApps = { current = Destination.APPS },
+                profile = profile, apps = container.apps,
                 onRefresh = { container.media.refresh(profile.id) },
                 haRepository = container.haRepository,
                 haConnection = container.haSocket,

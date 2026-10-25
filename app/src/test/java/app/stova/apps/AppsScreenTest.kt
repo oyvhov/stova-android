@@ -10,6 +10,15 @@ import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
@@ -46,11 +55,11 @@ class AppsScreenTest {
         JsonFileStore(tmp.root.resolve("p.json"), ProfilesFile.serializer(), ProfilesFile(), Dispatchers.Unconfined),
     )
 
-    private fun show(profiles: ProfileRepository, initial: Profile, catalog: AppCatalog) {
+    private fun show(profiles: ProfileRepository, initial: Profile, catalog: AppCatalog, art: AppArtCache = AppArtCache(context)) {
         val repo = AppRepository(catalog, profiles, MainScope())
         compose.setContent {
             val profile by remember { profiles.file.map { file -> file.profiles.first { it.id == initial.id } } }.collectAsState(initial)
-            StovaTheme { AppsScreen(repo, profile, AppArtCache(context), catalog) }
+            StovaTheme(appearance = profile.appearance) { AppsScreen(repo, profile, art, catalog) }
         }
     }
 
@@ -81,6 +90,48 @@ class AppsScreenTest {
         compose.onNodeWithText("Legg til i favorittar").performClick()
         compose.waitForIdle()
         assertEquals(listOf(banan.key), runBlocking { profiles.file.first().profiles.first().apps.favorites })
+    }
+
+    @Test fun menuKeyCanResetOnlyThisProfilesIcon() {
+        val profiles = profiles()
+        val icon = IconOverride("com.donnnno.arcticons", "vlc")
+        val adult = runBlocking {
+            val a = profiles.create("A", AvatarColor.LIME, false)
+            profiles.update(a.id) { it.copy(apps = it.apps.copy(iconOverrides = mapOf(banan.key to icon))) }
+        }
+        val other = runBlocking {
+            val b = profiles.create("B", AvatarColor.OCEAN, false)
+            profiles.update(b.id) { it.copy(apps = it.apps.copy(iconOverrides = mapOf(banan.key to icon))) }
+        }
+        show(profiles, adult, FakeAppCatalog(listOf(banan)))
+        val tile = compose.onNodeWithText("Banan")
+        tile.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+        tile.performKeyInput { pressKey(Key.Menu) }
+        compose.onNodeWithText("Endre ikon").performClick()
+        compose.onNodeWithText("Frå ikonpakke").assertIsDisplayed()
+        compose.onNodeWithText("Tilbakestill").performClick()
+        compose.waitForIdle()
+        val loaded = runBlocking { profiles.current().profiles }
+        assertTrue(loaded.first { it.id == adult.id }.apps.iconOverrides.isEmpty())
+        assertEquals(icon, loaded.first { it.id == other.id }.apps.iconOverrides[banan.key])
+    }
+
+    @Test fun longOkMenuSelectsAndPersistsAnIcon() {
+        val profiles = profiles()
+        val adult = runBlocking { profiles.create("A", AvatarColor.LIME, false) }
+        val source = FakeIconPackSource().apply { catalog = """<item drawable="vlc"/>""" }
+        val art = AppArtCache(context, iconPacks = IconPackRepository(source, tmp.root.resolve("icons")))
+        show(profiles, adult, FakeAppCatalog(listOf(banan)), art)
+        compose.onNodeWithText("Banan").performTouchInput { longClick() }
+        compose.onNodeWithText("Endre ikon").performClick()
+        compose.onNodeWithText("Frå ikonpakke").performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Søk etter ikon").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Søk etter ikon").performTextInput("vlc")
+        compose.waitUntil(5_000) { compose.onAllNodes(hasText("vlc") and !hasSetTextAction()).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasText("vlc") and !hasSetTextAction()).performClick()
+        compose.waitUntil(5_000) { runBlocking { profiles.current().profiles.first().apps.iconOverrides[banan.key] != null } }
+        assertEquals(IconOverride(source.packs.single().packageName, "vlc"), runBlocking { profiles.current().profiles.first().apps.iconOverrides[banan.key] })
+        assertTrue(runBlocking { profiles.current().profiles.first().apps.favorites.isEmpty() })
     }
 
     @Test fun opensAtTopWithFavorites() {
