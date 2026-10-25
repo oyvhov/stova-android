@@ -119,6 +119,30 @@ class ProfileRepository(
         store.update { it.copy(lastProfileId = id) }
     }
 
+    suspend fun resetAppearance(id: String) {
+        update(id) { it.copy(appearance = AppearancePrefs(), home = HomePrefs()) }
+    }
+
+    /** Atomic copy; account-specific row IDs must be translated for the destination library. */
+    suspend fun copyAppearance(targetId: String, sourceId: String, rowKeys: Map<app.stova.home.HomeRowKey, app.stova.home.HomeRowKey> = emptyMap()) {
+        store.update { file ->
+            val source = file.profiles.first { it.id == sourceId }
+            require(file.profiles.any { it.id == targetId })
+            fun mapped(key: app.stova.home.HomeRowKey) = rowKeys[key] ?: key.takeIf {
+                it == app.stova.home.HomeRowKey.APPS || it == app.stova.home.HomeRowKey.WATCH_NEXT
+            }
+            val home = source.home.copy(
+                rowOrder = source.home.rowOrder.mapNotNull(::mapped).distinct(),
+                hiddenRows = source.home.hiddenRows.mapNotNull(::mapped).toSet(),
+                rowFormats = source.home.rowFormats.mapNotNull { (key, value) -> mapped(key)?.let { it to value } }.toMap(),
+            )
+            // A fixed image belongs to its account. The destination chooses its own permitted title.
+            val appearance = source.appearance.withoutCalendarSeason().copy(fixedBackground = null,
+                backgroundSource = if (source.appearance.backgroundSource == BackgroundSource.FIXED) BackgroundSource.SPOTLIGHT else source.appearance.backgroundSource)
+            file.copy(profiles = file.profiles.map { if (it.id == targetId) it.copy(appearance = appearance, home = home) else it })
+        }
+    }
+
     suspend fun setStartInLastProfile(enabled: Boolean) {
         store.update { it.copy(startInLastProfile = enabled) }
     }

@@ -19,11 +19,13 @@ import app.stova.core.ui.SettingsSwitchRow
 import app.stova.profiles.*
 import app.stova.profiles.Profile
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun AppearanceSettings(container: AppContainer, profile: Profile) {
     val scope = rememberCoroutineScope()
     val packs by container.iconPacks.packs.collectAsStateWithLifecycle()
+    val profiles by container.profiles.file.collectAsStateWithLifecycle(initialValue = ProfilesFile())
     var picking by remember(profile.id) { mutableStateOf(false) }
     AppearanceSettingsContent(profile.appearance, packs, onPickBackground = { picking = true }) { prefs ->
         scope.launch { container.profiles.update(profile.id) { it.copy(appearance = prefs) } }
@@ -36,6 +38,22 @@ fun AppearanceSettings(container: AppContainer, profile: Profile) {
                 fixedBackground = BackgroundTitle(entry.account.id, entry.item.id, entry.item.title))) }
         }
     }, { picking = false })
+    AppearanceProfileActions(profiles.profiles.filter { it.id != profile.id },
+        onReset = { scope.launch { container.profiles.resetAppearance(profile.id) } },
+        onCopy = { sourceId -> scope.launch {
+            val source = profiles.profiles.firstOrNull { it.id == sourceId } ?: return@launch
+            val accounts = container.mediaAccounts.all.first()
+            val sourceAccounts = accounts.filter { it.profileId == sourceId }
+            val targetAccounts = accounts.filter { it.profileId == profile.id }
+            val keys = (source.home.rowOrder + source.home.hiddenRows + source.home.rowFormats.keys).distinct()
+            val mapping = keys.mapNotNull { key ->
+                val prefix = key.value.substringBefore(':')
+                val sourceAccount = sourceAccounts.firstOrNull { it.id == key.value.substringAfter(':', "") }
+                val target = targetAccounts.firstOrNull { it.serverId == sourceAccount?.serverId && it.kind == sourceAccount.kind }
+                target?.let { key to app.stova.home.HomeRowKey("$prefix:${it.id}") }
+            }.toMap()
+            container.profiles.copyAppearance(profile.id, sourceId, mapping)
+        } })
 }
 
 @Composable

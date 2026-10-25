@@ -134,6 +134,14 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
     val scope = rememberCoroutineScope()
     var confirm by remember { mutableStateOf(false) }
     var refused by remember { mutableStateOf(false) }
+    var appearance by remember(other.id) { mutableStateOf(false) }
+    BackHandler(enabled = appearance) { appearance = false }
+    if (appearance) {
+        Text(other.name, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
+        StovaButton(stringResource(R.string.profile_cancel), { appearance = false })
+        AppearanceSettings(container, other)
+        return
+    }
     Text(other.name, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
     if (other.kid) {
         SettingsGroup(stringResource(R.string.profile_kid)) {
@@ -142,6 +150,7 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
         }
     }
     SettingsGroup(stringResource(R.string.settings_profile)) {
+        SettingsNavRow(stringResource(R.string.settings_appearance)) { appearance = true }
         SettingsNavRow(stringResource(R.string.profile_delete)) { confirm = true }
     }
     if (refused) {

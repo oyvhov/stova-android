@@ -491,4 +491,10 @@
     <string name="custom_only_series">Series only</string>
     <string name="custom_favorites">Favorites</string>
     <string name="custom_background_motion">Gentle background motion</string>
+    <string name="custom_reset">Reset appearance</string>
+    <string name="custom_reset_confirm">Reset appearance?</string>
+    <string name="custom_reset_hint">Theme, appearance and row layout return to defaults.</string>
+    <string name="custom_copy">Copy appearance from profile</string>
+    <string name="custom_copy_hint">Choose a profile to copy. Choose a fixed background again from your own library.</string>
+    <string name="custom_profile_hint">Appearance applies to this profile.</string>
 </resources>

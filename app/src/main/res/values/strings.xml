@@ -491,4 +491,10 @@
     <string name="custom_only_series">Berre seriar</string>
     <string name="custom_favorites">Favorittar</string>
     <string name="custom_background_motion">Roleg bakgrunnsrørsle</string>
+    <string name="custom_reset">Tilbakestill utsjånad</string>
+    <string name="custom_reset_confirm">Tilbakestill utsjånad?</string>
+    <string name="custom_reset_hint">Tema, utsjånad og radoppsett går tilbake til standard.</string>
+    <string name="custom_copy">Kopier utsjånad frå profil</string>
+    <string name="custom_copy_hint">Vel profilen du vil kopiere frå. Fast bakgrunn vel du på nytt i ditt eige bibliotek.</string>
+    <string name="custom_profile_hint">Utsjånaden gjeld berre denne profilen.</string>
 </resources>

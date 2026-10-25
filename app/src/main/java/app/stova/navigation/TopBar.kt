@@ -68,19 +68,19 @@ fun TopBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        val rowScope = this
-        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { leading(rowScope) }
         val appearance = app.stova.core.theme.LocalAppearance.current
+        val rowScope = this
+        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { if (appearance.showHaChips) leading(rowScope) }
         if (appearance.seasonalDecor != app.stova.profiles.SeasonalDecor.OFF) {
-            if (androidx.compose.ui.platform.LocalDensity.current.fontScale < 1.5f)
+            if (appearance.showCountdown && androidx.compose.ui.platform.LocalDensity.current.fontScale < 1.5f)
                 app.stova.home.SeasonalCountdown(appearance.season())
             app.stova.home.SeasonalMark(appearance.season())
         }
         Clock(Modifier.padding(end = 16.dp))
-        if(onSmartHome!=null) TopBarButton(StovaIcons.Home,stringResource(R.string.nav_smart_home),onSmartHome)
-        TopBarButton(StovaIcons.Apps, stringResource(R.string.nav_apps), onApps)
+        if(onSmartHome!=null && appearance.showSmartHomeButton) TopBarButton(StovaIcons.Home,stringResource(R.string.nav_smart_home),onSmartHome)
+        if (appearance.showAppsButton) TopBarButton(StovaIcons.Apps, stringResource(R.string.nav_apps), onApps)
         TopBarButton(StovaIcons.Settings, stringResource(R.string.nav_settings), onSettings)
-        ProfileButton(profile, onProfile)
+        if (appearance.showProfile) ProfileButton(profile, onProfile)
     }
 }
 
