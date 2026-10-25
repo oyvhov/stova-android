@@ -40,7 +40,6 @@ fun StovaApp(container: AppContainer) {
     val date = app.stova.core.theme.currentSeasonDate()
     StovaTheme(
         reduceMotion = active?.appearance?.reduceMotion ?: false,
-        strongFocus = active?.appearance?.strongFocus ?: false,
         appearance = active?.appearance ?: app.stova.profiles.AppearancePrefs(),
         date = date,
     ) {

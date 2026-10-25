@@ -173,7 +173,7 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
 private fun EditorDialog(onDismiss: () -> Unit, content: @Composable () -> Unit) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(
-            Modifier.background(MaterialTheme.colorScheme.surface, RoundedCornerShape(StovaShapes.ExtraLarge))
+            Modifier.background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.extraLarge)
                 .padding(32.dp)
                 .width(600.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),

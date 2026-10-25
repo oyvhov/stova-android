@@ -88,7 +88,7 @@ fun TopBar(
 private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(StovaShapes.ExtraLarge)
+    val shape = MaterialTheme.shapes.extraLarge
     val millis = if (LocalReduceMotion.current) 0 else 140
     val labelAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(millis))
     Box(

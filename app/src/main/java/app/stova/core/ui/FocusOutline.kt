@@ -20,6 +20,9 @@ import androidx.compose.ui.unit.dp
 import app.stova.core.theme.LocalReduceMotion
 import app.stova.core.theme.LocalStrongFocus
 import app.stova.core.theme.StovaLayout
+import app.stova.core.theme.LocalAppearance
+import app.stova.home.LocalRowHasFocus
+import app.stova.profiles.FocusEffect
 
 /** An accent ring inside the artwork. Optional zoom changes only drawing, never row layout.
  * Animation state is read in drawing/layer phases; reduced motion applies the ring immediately.
@@ -28,17 +31,23 @@ import app.stova.core.theme.StovaLayout
 fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean = false): Modifier {
     val focused by source.collectIsFocusedAsState()
     val reduceMotion = LocalReduceMotion.current
+    val effect = LocalAppearance.current.focusEffect
+    val dim = zoom && effect == FocusEffect.LIGHT_UP && LocalRowHasFocus.current && !focused
+    val brightness = animateFloatAsState(if (dim) 0.55f else 1f,
+        tween(if (reduceMotion) 0 else StovaLayout.FocusFadeMillis), label = "focus-brightness")
+    // Controls always retain their ring. Artwork uses the selected effect.
+    val showRing = !zoom || effect == FocusEffect.RING || effect == FocusEffect.RING_ZOOM
     val alpha = animateFloatAsState(
-        targetValue = if (focused) 1f else 0f,
+        targetValue = if (focused && showRing) 1f else 0f,
         animationSpec = tween(if (reduceMotion) 0 else StovaLayout.FocusFadeMillis),
         label = "focus-outline",
     )
     val scale = animateFloatAsState(
-        if (zoom && focused && !reduceMotion && app.stova.core.theme.LocalAppearance.current.focusEffect == app.stova.profiles.FocusEffect.ZOOM) 1.05f else 1f,
+        if (zoom && focused && !reduceMotion && (effect == FocusEffect.ZOOM || effect == FocusEffect.RING_ZOOM)) 1.05f else 1f,
         tween(if (reduceMotion) 0 else StovaLayout.TransitionMillis), label = "focus-scale")
     val color = MaterialTheme.colorScheme.primary
-    val width = if (LocalStrongFocus.current) 4.dp else 3.dp
-    return graphicsLayer { scaleX = scale.value; scaleY = scale.value }.drawWithCache {
+    val width = if (LocalStrongFocus.current) 4.dp else LocalAppearance.current.ringWidth.dp.dp
+    return graphicsLayer { scaleX = scale.value; scaleY = scale.value; this.alpha = brightness.value }.drawWithCache {
         val stroke = width.toPx()
         val edge = stroke / 2
         val outline = shape.createOutline(

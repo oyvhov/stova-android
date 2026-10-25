@@ -91,7 +91,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
 @Composable
 private fun SectionTab(label: String, selected: Boolean, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(StovaShapes.Large)
+    val shape = MaterialTheme.shapes.large
     Box(
         Modifier.fillMaxWidth()
             .heightIn(min = 56.dp)

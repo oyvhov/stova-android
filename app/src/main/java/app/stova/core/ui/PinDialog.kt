@@ -125,7 +125,7 @@ fun PinPanel(
 
     Column(
         modifier
-            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(StovaShapes.ExtraLarge))
+            .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.extraLarge)
             .padding(32.dp)
             .width(panelWidth)
             .verticalScroll(rememberScrollState())

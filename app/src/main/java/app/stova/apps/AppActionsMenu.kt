@@ -43,7 +43,7 @@ fun AppActionsMenu(
     Dialog(onDismissRequest = onDismiss) {
         Column(
             Modifier.width(360.dp)
-                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(StovaShapes.ExtraLarge))
+                .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.extraLarge)
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),

@@ -139,19 +139,19 @@ class AppearanceRenderingTest {
     @Test fun accentAndCornersReachTheTheme() {
         var prefs by mutableStateOf(AppearancePrefs(seasonChoice = SeasonChoice.NONE))
         var primary = Color.Unspecified
-        var round = false
+        var radius = 0f
         compose.setContent { StovaTheme(appearance = prefs) {
             primary = MaterialTheme.colorScheme.primary
-            round = MaterialTheme.shapes.medium.topStart.toPx(androidx.compose.ui.geometry.Size(100f,100f), androidx.compose.ui.platform.LocalDensity.current) > 0f
+            radius = with(androidx.compose.ui.platform.LocalDensity.current) { MaterialTheme.shapes.medium.topStart.toPx(androidx.compose.ui.geometry.Size(100f,100f), this).toDp().value }
         } }
         Accent.entries.forEach { accent ->
             compose.runOnIdle { prefs = prefs.copy(accent = accent) }
             compose.waitForIdle()
             assertEquals(accent.color, primary)
         }
-        assertTrue(round)
-        compose.runOnIdle { prefs = prefs.copy(corners = Corners.SHARP) }
+        assertEquals(20f, radius, 0.01f)
+        compose.runOnIdle { prefs = prefs.copy(cornerRadius = CornerRadius.SHARP) }
         compose.waitForIdle()
-        assertFalse(round)
+        assertEquals(4f, radius, 0.01f)
     }
 }

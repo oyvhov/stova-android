@@ -37,7 +37,7 @@ fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
         Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Column(
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(StovaShapes.Large))
+                .clip(MaterialTheme.shapes.large)
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -50,7 +50,7 @@ fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
 @Composable
 fun SettingsSwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit, subtitle: String? = null) {
     val source = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(StovaShapes.Medium)
+    val shape = MaterialTheme.shapes.medium
     Row(
         Modifier.fillMaxWidth()
             .heightIn(min = 56.dp)
@@ -80,7 +80,7 @@ fun SettingsSwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Un
 @Composable
 fun SettingsNavRow(title: String, value: String? = null, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(StovaShapes.Medium)
+    val shape = MaterialTheme.shapes.medium
     Row(
         Modifier.fillMaxWidth()
             .heightIn(min = 56.dp)
