@@ -5,9 +5,13 @@ import app.stova.core.storage.JsonFileStore
 import app.stova.core.theme.AvatarColor
 import app.stova.media.SpotlightEntry
 import app.stova.media.model.*
+import app.stova.profiles.Season
+import app.stova.profiles.SeasonChoice
+import app.stova.profiles.season
 import app.stova.profiles.ProfileRepository
 import app.stova.profiles.ProfileSession
 import app.stova.profiles.ProfilesFile
+import app.stova.profiles.SpotlightTime
 import app.stova.profiles.StartFocus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -99,9 +103,62 @@ class HomeViewModelTest {
         advanceTimeBy(SPOTLIGHT_MILLIS * 5); assertEquals("a", vm.spotlight.value?.item?.id)
     }
 
+    @Test fun spotlightTimingFollowsActiveProfileAndChangesWithoutReloadingPool() = runTest(UnconfinedTestDispatcher()) {
+        val repo = ProfileRepository(JsonFileStore(tmp.root.resolve("timing.json"), ProfilesFile.serializer(), ProfilesFile(), UnconfinedTestDispatcher(testScheduler)))
+        val id = repo.create("A", AvatarColor.LIME, false).id
+        val session = ProfileSession(repo, backgroundScope).also { it.enter(id) }
+        var loads = 0
+        val vm = HomeViewModel(session, emptyList()) { loads++; flowOf(listOf(entry("a"), entry("b"))) }
+        backgroundScope.launch { vm.spotlight.collect {} }
+        for (time in listOf(SpotlightTime.FAST, SpotlightTime.SLOW, SpotlightTime.NORMAL)) {
+            repo.update(id) { it.copy(appearance = it.appearance.copy(spotlightTime = time)) }
+            val before = vm.spotlight.value
+            advanceTimeBy(time.millis - 1)
+            assertEquals(before, vm.spotlight.value)
+            advanceTimeBy(2)
+            org.junit.Assert.assertNotEquals(before, vm.spotlight.value)
+        }
+        assertEquals(1, loads)
+    }
+
     @Test fun focusingACardLeavesTheSpotlightAlone() = runTest(UnconfinedTestDispatcher()) {
         val vm = spotlightVm("a", "b")
         vm.focus(FocusedTarget.Media(MediaItem("ep", "a", ItemType.EPISODE, "Episode", art = ItemArt(backdrop = "b-ep")), account))
         assertEquals("a", vm.spotlight.value?.item?.id)
+    }
+
+    @Test fun calendarAndManualSeasonChangesReloadRowsAndSpotlightWithoutSavingTheOverlay() = runTest(UnconfinedTestDispatcher()) {
+        val repo = ProfileRepository(JsonFileStore(tmp.root.resolve("seasons.json"), ProfilesFile.serializer(), ProfilesFile(), UnconfinedTestDispatcher(testScheduler)))
+        val id = repo.create("A", AvatarColor.LIME, false).id
+        val session = ProfileSession(repo, backgroundScope).also { it.enter(id) }
+        val rowSeasons = mutableListOf<app.stova.profiles.Season>()
+        val spotSeasons = mutableListOf<app.stova.profiles.Season>()
+        val source = HomeRowSource { profile -> rowSeasons += profile.appearance.season(); flowOf(emptyList()) }
+        val vm = HomeViewModel(session, listOf(source)) { profile -> spotSeasons += profile.appearance.season(); flowOf(emptyList()) }
+        backgroundScope.launch { vm.spotlight.collect {} }
+        vm.setCalendarDate(java.time.LocalDate.of(2026,10,25))
+        assertEquals(Season.HALLOWEEN,rowSeasons.last())
+        vm.setCalendarDate(java.time.LocalDate.of(2026,11,2))
+        assertEquals(Season.NONE,rowSeasons.last())
+        assertEquals(rowSeasons,spotSeasons)
+        val count = rowSeasons.size
+        repo.update(id) { it.copy(appearance=it.appearance.copy(showTitles=true)) }
+        assertEquals(count,rowSeasons.size)
+        repo.update(id) { it.copy(appearance=SeasonChoice.CHRISTMAS.applyTo(it.appearance)) }
+        assertEquals(Season.CHRISTMAS,rowSeasons.last())
+        assertEquals(rowSeasons,spotSeasons)
+    }
+
+    @Test fun enteringASeasonStartsWithItsLeadingTitleEvenIfTheOldPoolWasMidRotation() = runTest(UnconfinedTestDispatcher()) {
+        val vm = HomeViewModel(session(backgroundScope, StartFocus.FIRST_MEDIA_ROW), emptyList()) { profile ->
+            flowOf(if(profile.appearance.season()==Season.HALLOWEEN) listOf(entry("halloween"),entry("ordinary"))
+                else listOf(entry("first"),entry("second")))
+        }
+        vm.setCalendarDate(java.time.LocalDate.of(2026,11,2))
+        backgroundScope.launch { vm.spotlight.collect {} }
+        advanceTimeBy(SPOTLIGHT_MILLIS+1)
+        assertEquals("second",vm.spotlight.value?.item?.id)
+        vm.setCalendarDate(java.time.LocalDate.of(2026,10,25))
+        assertEquals("halloween",vm.spotlight.value?.item?.id)
     }
 }

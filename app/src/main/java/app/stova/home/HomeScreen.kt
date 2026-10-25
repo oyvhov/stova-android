@@ -50,6 +50,8 @@ fun HomeScreen(
     topBar: @Composable (List<ChipContent>) -> Unit = {},
     haRepository: HaRepository? = null,
     haConnection: HaConnection? = null,
+    profile: app.stova.profiles.Profile? = null,
+    apps: AppRepository? = null,
 ) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val refresh by rememberUpdatedState(onRefresh)
@@ -74,6 +76,7 @@ fun HomeScreen(
     val context = LocalContext.current
     val handoff = remember(context) { SpoleHandoff(context) }
     var actions by remember { mutableStateOf<FocusedTarget.Media?>(null) }
+    var appMenu by remember(profile?.id) { mutableStateOf<InstalledApp?>(null) }
     var missing by remember { mutableStateOf(false) }
     fun open(target: FocusedTarget.Media, action: SpoleAction) {
         when (handoff.open(target.account, target.item, action)) {
@@ -84,7 +87,9 @@ fun HomeScreen(
     }
     HomeContent(rows, focused, initial, art, catalog, onOpenApps, vm::focus,
         onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { topBar(chips) },
-        spotlight = spotlight)
+        spotlight = spotlight, appIconOverrides = profile?.apps?.iconOverrides.orEmpty(),
+        onAppLongClick = { app -> if (profile?.kid == false) appMenu = app })
+    appMenu?.let { app -> if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog) { appMenu = null } }
     actions?.let { target ->
         ItemActionsMenu(target.item,
             onPlay = { actions = null; open(target, SpoleAction.PLAY) },
@@ -109,7 +114,10 @@ fun HomeContent(
     onMediaLongClick: (FocusedTarget.Media) -> Unit,
     topBar: @Composable () -> Unit = {},
     spotlight: SpotlightEntry? = null,
+    appIconOverrides: Map<String, IconOverride> = emptyMap(),
+    onAppLongClick: (InstalledApp) -> Unit = {},
 ) {
+    val appearance = app.stova.core.theme.LocalAppearance.current
     // The last focused title survives leaving Home for Spole or another launcher page.
     val restoreTarget = remember { focused }
     val restoreRow = rows?.firstOrNull { row ->
@@ -124,13 +132,24 @@ fun HomeContent(
     val firstItem = remember { FocusRequester() }
     var placedRow by remember { mutableStateOf<HomeRowKey?>(null) }
     var viewerMoved by remember { mutableStateOf(false) }
+    Box(Modifier.fillMaxSize()) {
+    SeasonalScene(Modifier.matchParentSize())
     Column(Modifier.fillMaxSize().onPreviewKeyEvent { if (it.type == KeyEventType.KeyDown) viewerMoved = true; false }.semantics {
         // Automation marker, not user-facing copy. Null rows mean sources are still loading.
         if (rows != null) contentDescription = "home-ready"
     }) {
         topBar()
         BoxWithConstraints(Modifier.weight(1f)) {
-            val heroHeight = maxHeight * 0.45f
+            val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+            val ratio = appearance.cardSize.width / 248f
+            val artworkHeight = if (appearance.movieStyle == app.stova.profiles.MovieStyle.POSTER) StovaLayout.PosterHeight * ratio else StovaLayout.WideHeight * ratio
+            val rowHeight = appearance.rowSpacing.top.dp + 25.dp * fontScale + StovaLayout.SectionBottom + artworkHeight +
+                (if (appearance.showTitles) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp
+            // Fixed for these profile/font choices, independent of each spotlight title. Reserve
+            // room for a whole row; even a large poster's optional caption must remain reachable.
+            val baseHeroHeight = if (fontScale >= 1.5f) maxHeight * (appearance.heroSize.fraction + 0.16f)
+                else minOf(maxHeight * appearance.heroSize.fraction, (maxHeight - rowHeight).coerceAtLeast(0.dp))
+            val heroHeight = if (appearance.showOverview && fontScale < 1.5f) maxOf(baseHeroHeight, 208.dp) else baseHeroHeight
             Column {
                 // A fixed height: the rows never move when the spotlight turns to a longer title.
                 HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
@@ -170,7 +189,7 @@ fun HomeContent(
                                             when (row) {
                                                 is HomeRowUi.WatchNext -> WatchNextRow(row, requester, onFocus)
                                                 is HomeRowUi.Media -> MediaRow(row, requester, restoreTarget, onFocus, onMediaClick, onMediaLongClick)
-                                                is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, restoreTarget) { onFocus(FocusedTarget.App(it)) }
+                                                is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, restoreTarget, appIconOverrides, onAppLongClick) { onFocus(FocusedTarget.App(it)) }
                                             }
                                         }
                                     }
@@ -181,6 +200,7 @@ fun HomeContent(
                 }
             }
         }
+    }
     }
 }
 
@@ -200,7 +220,7 @@ private fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Focu
             horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap)) {
             itemsIndexed(row.items, key = { _, item -> item.id }) { i, item ->
                 val target = FocusedTarget.Media(item, row.account)
-                MediaCard(item, row.kind == MediaRowKind.LATEST_MOVIES,
+                MediaCard(item, row.kind == MediaRowKind.LATEST_MOVIES && app.stova.core.theme.LocalAppearance.current.movieStyle == app.stova.profiles.MovieStyle.POSTER,
                     { onClick(target) }, { onLongClick(target) }, { onFocus(target) },
                     if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
             }
@@ -209,7 +229,7 @@ private fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Focu
 }
 
 @Composable
-private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, onFocused: (String) -> Unit) {
+private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, iconOverrides: Map<String, IconOverride>, onLongClick: (InstalledApp) -> Unit, onFocused: (String) -> Unit) {
     val index = row.apps.indexOfFirst { it.label == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     Column {
@@ -219,8 +239,8 @@ private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, 
             horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap)) {
             itemsIndexed(row.apps, key = { _, app -> app.key }) { i, app ->
                 val modifier = if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier
-                AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = {},
-                    modifier = modifier.onFocusChanged { if (it.isFocused) onFocused(app.label) })
+                AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = { onLongClick(app) },
+                    modifier = modifier.onFocusChanged { if (it.isFocused) onFocused(app.label) }, iconOverride = iconOverrides[app.key])
             }
         }
     }

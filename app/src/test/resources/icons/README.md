@@ -1,0 +1,1 @@
+Appfilter-utdrag frå Arcticons-Team/Arcticons, commit 2ff828c82e65f9792c750996bceac5e96a697eee, app/src/main/assets/appfilter.xml. To uendra item-linjer. Prosjektkode GPL-3.0; ikon CC BY-SA 4.0. Kjelda er berre lesen.

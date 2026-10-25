@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -20,13 +21,11 @@ import app.stova.core.theme.LocalReduceMotion
 import app.stova.core.theme.LocalStrongFocus
 import app.stova.core.theme.StovaLayout
 
-/**
- * Keyboard and remote focus, drawn and nothing else: a 3 dp line (4 dp with strong focus) in the
- * text colour, inside the element's own shape. No scale, no glow, no shadow and no change of size,
- * so a focused card never pushes its neighbours. Only the draw phase reads the fade.
+/** An accent ring inside the artwork. Optional zoom changes only drawing, never row layout.
+ * Animation state is read in drawing/layer phases; reduced motion applies the ring immediately.
  */
 @Composable
-fun Modifier.focusOutline(source: InteractionSource, shape: Shape): Modifier {
+fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean = false): Modifier {
     val focused by source.collectIsFocusedAsState()
     val reduceMotion = LocalReduceMotion.current
     val alpha = animateFloatAsState(
@@ -34,9 +33,12 @@ fun Modifier.focusOutline(source: InteractionSource, shape: Shape): Modifier {
         animationSpec = tween(if (reduceMotion) 0 else StovaLayout.FocusFadeMillis),
         label = "focus-outline",
     )
-    val color = MaterialTheme.colorScheme.onSurface
+    val scale = animateFloatAsState(
+        if (zoom && focused && !reduceMotion && app.stova.core.theme.LocalAppearance.current.focusEffect == app.stova.profiles.FocusEffect.ZOOM) 1.05f else 1f,
+        tween(if (reduceMotion) 0 else StovaLayout.TransitionMillis), label = "focus-scale")
+    val color = MaterialTheme.colorScheme.primary
     val width = if (LocalStrongFocus.current) 4.dp else 3.dp
-    return drawWithCache {
+    return graphicsLayer { scaleX = scale.value; scaleY = scale.value }.drawWithCache {
         val stroke = width.toPx()
         val edge = stroke / 2
         val outline = shape.createOutline(

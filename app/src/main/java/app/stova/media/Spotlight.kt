@@ -4,7 +4,7 @@ import java.time.LocalDate
 import kotlinx.serialization.Serializable
 
 /** One title the home hero shows while it rotates: a film or a series, never an episode. */
-data class SpotlightEntry(val item: MediaItem, val account: MediaAccount, val newSeason: Boolean)
+data class SpotlightEntry(val item: MediaItem, val account: MediaAccount, val newSeason: Boolean, val season: app.stova.profiles.Season = app.stova.profiles.Season.NONE)
 @Serializable data class SnapshotSpotlight(val accountId: String, val item: MediaItem, val newSeason: Boolean)
 
 const val SPOTLIGHT_LIMIT = 30
@@ -37,4 +37,15 @@ fun spotlightEntries(account: MediaAccount, pool: List<MediaItem>, seasons: List
     val rest = pool.filter { (it.type == ItemType.MOVIE || it.type == ItemType.SERIES) && it.art.backdrop != null && it.id !in taken }
         .distinctBy { it.id }.sortedBy { it.art.logo == null }.map { SpotlightEntry(it, account, newSeason = false) }
     return (fresh + rest).take(SPOTLIGHT_LIMIT)
+}
+
+/** The seasonal shelf leads; the complete ordinary pool follows, with each account kept distinct. */
+fun seasonalSpotlight(pool: List<SpotlightEntry>, rows: List<app.stova.home.HomeRowUi.Media>, season: app.stova.profiles.Season): List<SpotlightEntry> {
+    if (season == app.stova.profiles.Season.NONE) return pool
+    val seasonal = rows.filter { it.kind.season == season }.flatMap { row ->
+        row.items.filter { (it.type == ItemType.MOVIE || it.type == ItemType.SERIES) && it.art.backdrop != null }.map { item ->
+            SpotlightEntry(item, row.account, pool.any { it.account.id == row.account.id && it.item.id == item.id && it.newSeason }, season)
+        }
+    }
+    return (seasonal + pool).distinctBy { it.account.id to it.item.id }
 }

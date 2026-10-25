@@ -36,16 +36,20 @@ class HomeLayoutTest {
         val long = SpotlightEntry(MediaItem("s1", "a", ItemType.SERIES, "Ein lang serietittel som gjerne går over to linjer",
             year = 2022, overview = "Ein lang omtale. ".repeat(20), ratings = Ratings(8.0, 91, "TV-MA")), account, newSeason = true)
         var spotlight by mutableStateOf(short)
+        var prefs by mutableStateOf(app.stova.profiles.AppearancePrefs())
         compose.setContent {
             val context = LocalContext.current
-            StovaTheme(reduceMotion = true) {
+            StovaTheme(reduceMotion = true, appearance = prefs) {
                 HomeContent(rows, null, rows.first().key, AppArtCache(context), PackageManagerAppCatalog(context, emptySet()),
                     {}, {}, {}, {}, spotlight = spotlight)
             }
         }
-        val before = compose.onNodeWithText("Fyrste").getUnclippedBoundsInRoot().top
-        compose.runOnIdle { spotlight = long }
-        compose.waitForIdle()
-        assertEquals(before, compose.onNodeWithText("Fyrste").getUnclippedBoundsInRoot().top)
+        app.stova.profiles.HeroSize.entries.forEach { size ->
+            compose.runOnIdle { prefs = prefs.copy(heroSize = size); spotlight = short }
+            val before = compose.onNodeWithText("Fyrste").getUnclippedBoundsInRoot().top
+            compose.runOnIdle { spotlight = long }
+            compose.waitForIdle()
+            assertEquals(before, compose.onNodeWithText("Fyrste").getUnclippedBoundsInRoot().top)
+        }
     }
 }

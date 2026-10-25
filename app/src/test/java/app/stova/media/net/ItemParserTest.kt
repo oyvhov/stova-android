@@ -15,6 +15,12 @@ class ItemParserTest {
         // No episode stills on cards: the series art, here its backdrop, since the series has no thumb.
         assertEquals("http://jf:8096/Items/s1/Images/Backdrop/0?maxWidth=640&tag=b1", e.art.wide)
     }
+    @Test fun genresAreRequestedAndParsedAndOldItemsHaveNone() {
+        assertTrue(ITEM_FIELDS.substringBefore("&").split(",").contains("Genres"))
+        val film = ItemParser.parseList("""[{"Id":"f","Name":"Film","Genres":["Science fiction","Thriller"]}]""", acc).single()
+        assertEquals(listOf("Science fiction", "Thriller"), film.genres)
+        assertEquals(emptyList<String>(), ItemParser.parseList("""[{"Id":"f","Name":"Film"}]""", acc).single().genres)
+    }
     @Test fun movieRatingsAndBareArray() {
         val items = ItemParser.parseList(res("jellyfin_latest_movies.json"), acc)
         assertEquals(1, items.size)

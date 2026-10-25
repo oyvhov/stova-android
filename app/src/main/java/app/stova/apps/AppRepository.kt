@@ -49,12 +49,17 @@ class AppRepository(
         prefs.copy(kidAllowed = if (allowed) prefs.kidAllowed + key else prefs.kidAllowed - key)
     }
 
+    suspend fun setIcon(profileId: String, key: String, icon: IconOverride?) = updatePrefs(profileId) { prefs ->
+        prefs.copy(iconOverrides = if (icon == null) prefs.iconOverrides - key else prefs.iconOverrides + (key to icon))
+    }
+
     /** Drops keys of apps that are gone from favourites, hidden and the kid allow-list. */
     suspend fun pruneMissing(profileId: String, installedKeys: Set<String>) = updatePrefs(profileId) { prefs ->
         prefs.copy(
             favorites = prefs.favorites.filter { it in installedKeys },
             hidden = prefs.hidden.filterTo(mutableSetOf()) { it in installedKeys },
             kidAllowed = prefs.kidAllowed.filterTo(mutableSetOf()) { it in installedKeys },
+            iconOverrides = prefs.iconOverrides.filterKeys { it in installedKeys },
         )
     }
 
@@ -66,7 +71,7 @@ class AppRepository(
     private fun reconcileIfNeeded(profile: Profile, apps: List<InstalledApp>) {
         if (apps.isEmpty()) return
         val keys = apps.mapTo(mutableSetOf()) { it.key }
-        val referenced = profile.apps.favorites + profile.apps.hidden + profile.apps.kidAllowed
+        val referenced = profile.apps.favorites + profile.apps.hidden + profile.apps.kidAllowed + profile.apps.iconOverrides.keys
         if (referenced.all { it in keys }) return
         scope.launch {
             val mapping = withContext(io) { reconcileKeys(referenced.toSet(), apps, catalog::isInstalled) }
@@ -77,6 +82,9 @@ class AppRepository(
                     favorites = prefs.favorites.mapped(),
                     hidden = prefs.hidden.toList().mapped().toSet(),
                     kidAllowed = prefs.kidAllowed.toList().mapped().toSet(),
+                    iconOverrides = prefs.iconOverrides.entries.mapNotNull { (old, icon) ->
+                        (if (old in mapping) mapping[old] else old)?.let { it to icon }
+                    }.toMap(),
                 )
             }
         }

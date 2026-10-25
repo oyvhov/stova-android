@@ -23,6 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.res.stringResource
+import app.stova.R
 import app.stova.core.theme.StovaShapes
 
 /** A group of settings on one matte surface, separated from its neighbours by fill, not lines. */
@@ -101,5 +106,31 @@ private fun RowText(title: String, subtitle: String?, modifier: Modifier) {
         if (subtitle != null) {
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+    }
+}
+
+/** A single D-pad stop. Left goes back, right and OK go forward, with wrapping at either end. */
+@Composable
+fun SettingsChoiceRow(title: String, value: String, preview: (@Composable () -> Unit)? = null, onStep: (Int) -> Unit) {
+    val source = remember { MutableInteractionSource() }
+    val shape = MaterialTheme.shapes.medium
+    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).focusOutline(source, shape).clip(shape)
+        .semantics { stateDescription = value }
+        .onPreviewKeyEvent { event ->
+            val step = when (event.key) { Key.DirectionLeft -> -1; Key.DirectionRight -> 1; else -> 0 }
+            if (step == 0) false else {
+                if (event.type == KeyEventType.KeyDown) onStep(step)
+                true
+            }
+        }
+        .clickable(source, indication = null, role = Role.Button) { onStep(1) }
+        .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface)
+        preview?.invoke()
+        Text(stringResource(R.string.appearance_choice_value, value), Modifier.weight(0.8f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

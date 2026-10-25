@@ -1,6 +1,8 @@
 package app.stova.apps
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,6 +35,7 @@ fun AppActionsMenu(
     onToggleHidden: () -> Unit,
     onAppInfo: () -> Unit,
     onDismiss: () -> Unit,
+    onChangeIcon: () -> Unit = {},
 ) {
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
@@ -40,6 +43,7 @@ fun AppActionsMenu(
         Column(
             Modifier.width(360.dp)
                 .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(StovaShapes.ExtraLarge))
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -56,6 +60,7 @@ fun AppActionsMenu(
             }
             StovaButton(stringResource(if (hidden) R.string.app_show else R.string.app_hide), { onToggleHidden(); onDismiss() }, full)
             StovaButton(stringResource(R.string.app_info), { onAppInfo(); onDismiss() }, full)
+            StovaButton(stringResource(R.string.icon_change), onChangeIcon, full)
         }
     }
 }

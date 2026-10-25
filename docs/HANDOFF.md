@@ -11,6 +11,26 @@ Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug 
 Ekte HA på emulator-5580: ti varige kort, registerrom, femdagarsvêr, Tibber-graf og Heim-brikker; to lys er tilbake på med original lysstyrke, måltemperatur er stadfesta 23,5 → 24,0 → 23,5 °C. Tryggleiksutstyr er ikkje endra.
 Rapport: `docs/verification/smarthus-v2.md`; åtte visuelt kontrollerte bilete i `docs/images/ha-v2-*.png`, originalar og kvitteringar i worktreet si `.superpowers/`.
 Ingen spørsmål eller push. Fysisk Shield, verkeleg Nordpool og tryggleiksstyring er ikkje prøvde; dei gamle release-/Shield-stega står framleis som før.
+# Ikonpakkar ferdige
+2026-10-25: Heile ikonpakkebestillinga er fullført på `appearance-v2` i appearance-worktreet; plan `2026-10-25-ikonpakke.md` er ferdig. Ingen påbyrja steg står att.
+Pakkefinning, tolerant versjonsbufra appfilter, profilval, Heim/Appar-kunst, delt appmeny og søkbar ikonveljar med profilvise overstyringar/tilbakestilling er implementerte. Ingen automatiske favorittar.
+Spole har SVG/VectorDrawable i Arcticons-stil og flat fargeutgåve; malen inkluderer strekbreidda. Arcticons og Spole er berre lesne; ingenting er sendt inn.
+Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'`: 365/365, 0 hoppa over, AppScreensTest 31/31, DesignRulesTest 4/4; lint 0 feil (23 åtvaringar, 1 hint), debug-APK OK. Sju kontrollerte bilete: `docs/images/ikonpakke-*.png`; evidens: `docs/verification/ikonpakke.md`.
+Ingen APK-nedlasting, emulatorinstallasjon eller push. Ekte installerte pakkar, fysisk fjernkontroll og Shield-ytelse er ikkje verifiserte. Brukarens to ucommitta bestillingsfiler er urørte. Ingen spørsmål.
+
+# Tema v1 ferdig
+2026-10-25: Heile `docs/briefs/2026-10-25-tema-v1.md` er fullført på `appearance-v2` i appearance-worktreet; plan `2026-10-25-tema-v1.md` er ferdig. Ingen påbyrja steg står att.
+Seks tema, ti aksentar, kalenderoverlegg utan persistens, pyntnivå, lifecycle-/rørslesperra Canvas og 45 s edderkopp, sesongrad i snapshot, sesongprioritert spotlight og temagruppe med fargeprøver/førehandsvising er implementerte.
+Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'`: 340/340, 0 hoppa over, AppScreensTest 25/25, DesignRulesTest 4/4; lint 0 feil (23 åtvaringar, 1 hint), debug-APK OK.
+Seks visuelt kontrollerte bilete ligg i `docs/images/tema-{halloween,jul,midnatt-hav,kino-perle,skog,innstillingar}.png`; evidens og kostnadsoverslag i `docs/verification/tema-v1.md`. Spesifikasjonen §2, §5.1 og §5.4 er oppdatert.
+Ingen emulatorinstallasjon, Shield-test, push, Spole-endring eller endring av HA-filer. Ekte serverar/fjernkontroll/Shield er ikkje verifiserte; brukarens to ucommitta bestillingsfiler er urørte. Ingen spørsmål.
+
+# Utsjånad v2 ferdig
+2026-10-25: Heile `docs/briefs/2026-10-25-utsjanad-v2.md` er fullført i appearance-worktreet, greina `appearance-v2`; plan `2026-10-25-appearance-v2.md` er ferdig. Ingen påbyrja steg står att.
+Hero v2, kort utan titlar som standard, 14 profilval med D-pad, profilpersistens, klokke, aksent/fokus og lettare scrim er implementerte. Ekstra tett hero med omtale har to faktisk synlege linjer; radene flyttar seg ikkje ved spotlight-byte.
+Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'`: 318/318, 0 hoppa over, AppScreensTest 19/19, DesignRulesTest 4/4, lint 0 feil (23 åtvaringar, 1 hint), debug-APK OK.
+Fem visuelt kontrollerte 1920 × 1080-bilete: `docs/images/appearance-{default,large-titles,small-icons,light,ocean}.png`; full evidens i `docs/verification/appearance-v2.md`. Spesifikasjonen §2, §5.1, §5.4 og §6 er oppdatert.
+Ingen emulatorinstallasjon, Shield-test, push eller endring av HA-/SmartHome-filer. Ingen spørsmål. Brukaren si nye, ucommitta `docs/briefs/2026-10-25-tema-v1.md` er urørt.
 
 # Spotlight og innlogging på emulatoren
 2026-10-25: Spotlight og innlogging er gjort i `polish` på `polish-cache` og snøggspola inn i `plan-2-media`. Siste commit er `cc217b8`.

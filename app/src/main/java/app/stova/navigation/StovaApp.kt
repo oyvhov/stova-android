@@ -25,6 +25,7 @@ import app.stova.home.HomeViewModel
 import app.stova.core.theme.StovaTheme
 import app.stova.core.ui.PinDialog
 import app.stova.profiles.Profile
+import app.stova.profiles.season
 import app.stova.profiles.ProfileGate
 import app.stova.profiles.leavingNeedsAdultPin
 import app.stova.settings.SettingsScreen
@@ -34,9 +35,12 @@ import app.stova.settings.SettingsScreen
 fun StovaApp(container: AppContainer) {
     val profile by container.session.active.collectAsStateWithLifecycle()
     val active = profile
+    val date = app.stova.core.theme.currentSeasonDate()
     StovaTheme(
         reduceMotion = active?.appearance?.reduceMotion ?: false,
         strongFocus = active?.appearance?.strongFocus ?: false,
+        appearance = active?.appearance ?: app.stova.profiles.AppearancePrefs(),
+        date = date,
     ) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             if (active == null) {
@@ -67,7 +71,9 @@ private fun MainShell(container: AppContainer, profile: Profile) {
             container.session.leave()
         }
     }
-    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id) } }
+    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season()) } }
+    val date = app.stova.core.theme.LocalSeasonDate.current
+    LaunchedEffect(home, date) { home.setCalendarDate(date) }
     val spotlight by home.spotlight.collectAsStateWithLifecycle()
     // No side rail: home is the whole screen, and Apps and Settings are pages that Back closes.
     Box(Modifier.fillMaxSize().testTag("screen-${current.name}")) {
@@ -76,6 +82,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
             Destination.HOME -> HomeScreen(
                 home, container.appArt, container.appCatalog,
                 onOpenApps = { current = Destination.APPS },
+                profile = profile, apps = container.apps,
                 onRefresh = { container.media.refresh(profile.id) },
                 haRepository = container.haRepository,
                 haConnection = container.haSocket,

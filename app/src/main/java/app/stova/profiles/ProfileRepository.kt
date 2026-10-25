@@ -43,7 +43,8 @@ class ProfileRepository(
         lateinit var updated: Profile
         store.update { file ->
             val existing = file.profiles.firstOrNull { it.id == id } ?: throw NoSuchElementException(id)
-            updated = transform(existing).copy(id = id)
+            val changed = transform(existing)
+            updated = changed.copy(id = id, appearance = changed.appearance.withoutCalendarSeason())
             file.copy(profiles = file.profiles.map { if (it.id == id) updated else it })
         }
         return updated

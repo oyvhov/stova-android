@@ -1,4 +1,5 @@
 package app.stova.media.ui
+import androidx.compose.foundation.border
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,21 +18,25 @@ import java.text.NumberFormat
 import java.util.Locale
 fun communityText(score:Double,locale:Locale):String=String.format(locale,"%.1f",score)
 fun criticText(percent:Int,locale:Locale):String=NumberFormat.getPercentInstance(locale).format(percent/100.0)
-@Composable fun RatingRow(ratings:Ratings,modifier:Modifier=Modifier) {
+/** Small, opaque matte pills keep facts readable even over white artwork. */
+@Composable fun FactPill(text: String, content: (@Composable () -> Unit)? = null) {
+ Row(Modifier.background(MaterialTheme.colorScheme.background,MaterialTheme.shapes.extraSmall)
+  .then(Modifier.border(1.dp,MaterialTheme.colorScheme.outline,MaterialTheme.shapes.extraSmall))
+  .padding(horizontal=6.dp,vertical=2.dp),horizontalArrangement=Arrangement.spacedBy(4.dp),verticalAlignment=Alignment.CenterVertically) {
+  content?.invoke()
+  Text(text,style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurface)
+ }
+}
+@Composable fun RatingRow(ratings:Ratings,modifier:Modifier=Modifier,year:Int?=null) {
  val locale=LocalLocale.current.platformLocale
- Row(modifier,horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
-  ratings.community?.let { score ->
-   Row(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=Alignment.CenterVertically) {
-    Text(stringResource(R.string.rating_tmdb),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-    Text(communityText(score,locale),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface)
+ Row(modifier,horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=Alignment.CenterVertically) {
+  ratings.community?.takeIf { it in 0.0..10.0 }?.let { FactPill(stringResource(R.string.appearance_star_score,communityText(it,locale))) }
+  year?.let { FactPill(it.toString()) }
+  ratings.official?.let { FactPill(it) }
+  ratings.criticPercent?.takeIf { it in 0..100 }?.let { score ->
+   FactPill(criticText(score,locale)) {
+    Image(painterResource(R.drawable.ic_tomato),null,Modifier.size(14.dp),colorFilter=ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant))
    }
   }
-  ratings.criticPercent?.let { score ->
-   Row(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=Alignment.CenterVertically) {
-    Image(painterResource(R.drawable.ic_tomato),null,Modifier.size(20.dp),colorFilter=ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant))
-    Text(criticText(score,locale),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface)
-   }
-  }
-  ratings.official?.let { Text(it,Modifier.background(MaterialTheme.colorScheme.surfaceVariant,MaterialTheme.shapes.extraSmall).padding(horizontal=6.dp,vertical=2.dp),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurface) }
  }
 }

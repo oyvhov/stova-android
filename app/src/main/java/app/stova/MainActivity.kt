@@ -14,6 +14,11 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private val container get() = (application as StovaApplication).container
 
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        app.stova.home.SeasonalInput.report()
+    }
+
     override fun onStart() {
         super.onStart()
         container.haSocket.start()

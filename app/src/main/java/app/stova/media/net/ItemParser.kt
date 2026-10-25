@@ -32,6 +32,7 @@ object ItemParser {
    Ratings(obj.text("CommunityRating")?.toDoubleOrNull(),obj.text("CriticRating")?.toDoubleOrNull()?.toInt(),obj.text("OfficialRating")),
    obj.obj("UserData").text("PlayedPercentage")?.toFloatOrNull()?.takeIf { it>0 && it<100 }?.div(100f),
    ItemArt(backdropId?.let { parent -> backdropTag?.let { ImageUrls.backdrop(base,parent,it) } },logo,poster,wide),
-   obj.text("PremiereDate")?.take(10))
+   obj.text("PremiereDate")?.take(10),
+   (obj.field("Genres") as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank) } ?: emptyList())
  }
 }

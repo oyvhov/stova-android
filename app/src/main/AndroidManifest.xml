@@ -15,6 +15,11 @@
 
     <!-- Package visibility for the app list, without QUERY_ALL_PACKAGES. -->
     <queries>
+        <intent><action android:name="org.adw.launcher.THEMES" /></intent>
+        <intent><action android:name="com.novalauncher.THEME" /></intent>
+        <intent><action android:name="org.adw.ActivityStarter.THEMES" /></intent>
+        <intent><action android:name="com.gau.go.launcherex.theme" /></intent>
+        <intent><action android:name="org.adw.launcher.icons.ACTION_PICK_ICON" /></intent>
         <package android:name="app.reelstack" />
         <package android:name="app.reelstack.debug" />
         <intent>

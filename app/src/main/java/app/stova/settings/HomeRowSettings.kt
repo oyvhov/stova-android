@@ -106,6 +106,8 @@ fun rowLabel(key: HomeRowKey): String = when (key) {
     HomeRowKey.APPS -> stringResource(R.string.row_favorite_apps)
     HomeRowKey.WATCH_NEXT -> stringResource(R.string.row_watch_next)
     else -> when {
+        key.value.startsWith("halloween:") -> stringResource(R.string.theme_halloween)
+        key.value.startsWith("christmas:") -> stringResource(R.string.theme_christmas)
         key.value.startsWith("continue:") -> stringResource(R.string.row_continue)
         key.value.startsWith("latest_movies:") -> stringResource(R.string.row_latest_movies)
         key.value.startsWith("latest_series:") -> stringResource(R.string.row_latest_series)

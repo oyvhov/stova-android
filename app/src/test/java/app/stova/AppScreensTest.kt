@@ -1,5 +1,9 @@
 package app.stova
 
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.dp
+
+import coil3.request.transformations
 import android.content.ComponentName
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -8,8 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.semantics.SemanticsActions
 import app.stova.home.*
 import app.stova.ha.HaEntity
 import app.stova.ha.HaStatus
@@ -24,7 +33,8 @@ import app.stova.media.model.*
 import app.stova.background.BackdropLayer
 import app.stova.core.theme.StovaTheme
 import app.stova.navigation.TopBar
-import app.stova.profiles.Profile
+import app.stova.profiles.*
+import app.stova.apps.InstalledApp
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -155,27 +165,45 @@ class AppScreensTest {
         return file.absolutePath
     }
 
-    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList(), brightTop: Boolean = false) {
+    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList(), brightTop: Boolean = false, appearance: AppearancePrefs = AppearancePrefs(), showApps: Boolean = false, seasonalShowcase: Boolean = false, packArt: app.stova.apps.AppArtCache? = null, packApps: List<InstalledApp>? = null) {
         val backdrop = demoArt("demo-landscape", android.graphics.Color.rgb(79, 95, 88), brightTop)
+        val logoFile = File(rule.activity.cacheDir, "demo-logo.png")
+        val logo = Bitmap.createBitmap(900, 300, Bitmap.Config.ARGB_8888)
+        Canvas(logo).drawText("FJORDLYS", 60f, 210f, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.rgb(233, 233, 226); textSize = 150f; typeface = android.graphics.Typeface.DEFAULT_BOLD
+        })
+        logoFile.outputStream().use { logo.compress(Bitmap.CompressFormat.PNG, 100, it) }
         val second = demoArt("demo-evening", android.graphics.Color.rgb(68, 77, 95))
         val account = MediaAccount("demo-account", "demo-profile", ServerKind.JELLYFIN, "demo-server", "Demoarkiv", "https://demo.invalid", "demo-user", "Demo")
         val item = MediaItem("demo-film", account.id, ItemType.MOVIE, "Fjordlys", year = 2024, runtimeMinutes = 112,
-            overview = "Ei ferd gjennom stille fjordar og opne landskap. Vegen vidare byr på nye møte og ukjende stader.",
-            ratings = Ratings(7.84, 91, "12"), progress = 0.405f, art = ItemArt(backdrop = backdrop, poster = backdrop, wide = backdrop))
+            genres = listOf("Drama", "Eventyr"), overview = "Ei ferd gjennom stille fjordar og opne landskap. Vegen vidare byr på nye møte og ukjende stader.",
+            ratings = Ratings(7.84, 91, "12"), progress = 0.405f, art = ItemArt(backdrop = backdrop, logo = logoFile.absolutePath, poster = backdrop, wide = backdrop))
         val items = listOf(item, item.copy(id = "demo-film-2", title = "Vegen vidare", art = ItemArt(backdrop = second, poster = second, wide = second)), item.copy(id = "demo-film-3", title = "Nordavind"))
         val kind = if (poster) MediaRowKind.LATEST_MOVIES else MediaRowKind.CONTINUE
         val key = if (poster) HomeRowKey.latestMovies(account.id) else HomeRowKey.continueWatching(account.id)
-        val rows = listOf(HomeRowUi.Media(key, account, kind, items, false),
+        val date = java.time.LocalDate.of(2026,10,25)
+        val activeSeason = appearance.activeSeason(date)
+        val seasonalRow = if (seasonalShowcase && activeSeason != Season.NONE) listOf(HomeRowUi.Media(
+            HomeRowKey.seasonal(account.id,activeSeason),account,
+            if(activeSeason==Season.HALLOWEEN) MediaRowKind.HALLOWEEN else MediaRowKind.CHRISTMAS,items,false)) else emptyList()
+        val apps = if (showApps) packApps ?: appearanceApps() else emptyList()
+        val rows = seasonalRow + (if (showApps) listOf(HomeRowUi.Apps(HomeRowKey.APPS, apps)) else emptyList()) + listOf(HomeRowUi.Media(key, account, kind, items, false),
             HomeRowUi.Media(HomeRowKey.latestSeries(account.id), account, MediaRowKind.LATEST_SERIES,
                 listOf(item.copy(id = "demo-episode", type = ItemType.EPISODE, seriesName = "Fjordlys", season = 1, episode = 2)), false))
+        runBlocking {
+            val loader = coil3.SingletonImageLoader.get(rule.activity)
+            loader.execute(coil3.request.ImageRequest.Builder(rule.activity).data(logoFile.absolutePath).size(800,240).transformations(app.stova.media.ui.TrimTransparent()).build())
+        }
         rule.runOnUiThread {
             rule.activity.setContent {
-                StovaTheme(reduceMotion = true) {
+                StovaTheme(reduceMotion = !seasonalShowcase, appearance = appearance, date = date) {
+                    val inputMode = androidx.compose.ui.platform.LocalInputModeManager.current
+                    SideEffect { inputMode.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
                     val density = LocalDensity.current
                     CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
                         Box(Modifier.fillMaxSize()) {
                             BackdropLayer(backdrop)
-                            HomeContent(rows, FocusedTarget.Media(item, account), key, container.appArt, container.appCatalog,
+                            HomeContent(rows, if (showApps) FocusedTarget.App(apps.first().label) else FocusedTarget.Media(item, account), if (showApps) HomeRowKey.APPS else seasonalRow.firstOrNull()?.key ?: key, packArt ?: container.appArt, container.appCatalog,
                                 {}, {}, {}, {}, topBar = {
                                     TopBar(Profile("demo-profile", "Demo", AvatarColor.LIME), {}, {}, {},
                                         onSmartHome = if (chips.isNotEmpty()) ({}) else null,
@@ -187,7 +215,8 @@ class AppScreensTest {
             }
         }
         rule.waitForIdle()
-        rule.onNodeWithText("7,8").assertIsDisplayed()
+        if(seasonalShowcase) { rule.mainClock.advanceTimeBy(1_200); rule.waitForIdle() }
+        rule.onNodeWithText("★ 7,8").assertIsDisplayed()
         rule.onNodeWithText(app.stova.media.ui.criticText(91, java.util.Locale.forLanguageTag("nn"))).assertExists()
         // Decode the same sized requests into Coil's memory cache before taking the window image.
         runBlocking {
@@ -197,6 +226,141 @@ class AppScreensTest {
             }
         }
         rule.waitForIdle()
+        val label = if(showApps) apps.first().label else "Fjordlys"
+        rule.onAllNodes(hasContentDescription(label) and hasClickAction())[0].performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+        rule.onAllNodes(hasContentDescription(label) and hasClickAction())[0].assertIsFocused()
+        rule.mainClock.advanceTimeBy(if(seasonalShowcase) 1_200 else 250)
+        rule.waitForIdle()
+    }
+
+    private fun appearanceApps(): List<InstalledApp> {
+        val pm = shadowOf(rule.activity.packageManager)
+        return listOf("Stova" to R.drawable.tv_banner, "Jellyfin" to R.drawable.ic_jellyfin, "Emby" to R.drawable.ic_emby).map { (label, image) ->
+            val pkg = rule.activity.packageName
+            val activity = "demo.$label.Main"
+            val info = pm.addActivityIfNotPresent(ComponentName(pkg, activity))
+            info.applicationInfo = rule.activity.applicationInfo
+            info.banner = image
+            info.icon = image
+            InstalledApp("$pkg/$activity", pkg, activity, label, true).also { app ->
+                runBlocking {
+                    org.junit.Assert.assertNotNull(container.appArt.banner(app))
+                    org.junit.Assert.assertNotNull(container.appArt.icon(app))
+                }
+            }
+        }
+    }
+
+    private fun iconPackHome(prefs: AppearancePrefs, name: String): Bitmap {
+        val source = DemoLineIconPack()
+        val art = app.stova.apps.AppArtCache(rule.activity, iconPacks = app.stova.apps.IconPackRepository(source, File(rule.activity.cacheDir, "demo-pack")))
+        val apps = source.apps
+        runBlocking {
+            art.iconPacks.refresh()
+            apps.forEach { org.junit.Assert.assertNotNull(art.artwork(it, prefs)) }
+        }
+        renderMediaHome(appearance = prefs, showApps = true, packArt = art, packApps = apps)
+        val file = rule.saveScreen(name)
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+        if (prefs.iconPack != null && prefs.iconColor == IconColor.ACCENT) {
+            val theme = prefs.seasonal(java.time.LocalDate.of(2026,10,25))
+            val accent = app.stova.core.theme.stovaColorScheme(theme.visualTheme, theme.accent).primary
+            val expected = accent.toArgb()
+            val bounds = rule.onNode(hasContentDescription("Spole") and hasClickAction()).fetchSemanticsNode().boundsInRoot
+            var tinted = 0
+            // Ignore the focus ring: count accent pixels only within the artwork interior.
+            for (y in bounds.top.toInt()+16 until bounds.bottom.toInt()-16) for (x in bounds.left.toInt()+16 until bounds.right.toInt()-16) {
+                if (bitmap.getPixel(x,y) == expected) tinted++
+            }
+            assertTrue("The Spole supplement must actually be decoded and tinted ($tinted pixels)", tinted > 120)
+        }
+        return bitmap
+    }
+
+    @Test fun iconPackAccentForest() {
+        iconPackHome(AppearancePrefs(iconPack = DemoLineIconPack.PACK, iconColor = IconColor.ACCENT, seasonChoice = SeasonChoice.NONE), "ikonpakke-vanleg")
+    }
+    @Test fun iconPackAccentHalloween() {
+        iconPackHome(SeasonChoice.HALLOWEEN.applyTo(AppearancePrefs(iconPack = DemoLineIconPack.PACK, iconColor = IconColor.ACCENT, seasonalDecor = SeasonalDecor.CALM)), "ikonpakke-halloween")
+    }
+    @Test fun iconPackSquareTiles() {
+        iconPackHome(AppearancePrefs(iconPack = DemoLineIconPack.PACK, iconColor = IconColor.ACCENT, appStyle = AppStyle.ICON, seasonChoice = SeasonChoice.NONE), "ikonpakke-ikonstil")
+    }
+    @Test fun iconPackCropToFill() {
+        iconPackHome(AppearancePrefs(iconPack = DemoLineIconPack.PACK, iconFill = IconFill.CROP, seasonChoice = SeasonChoice.NONE), "ikonpakke-fyll")
+    }
+    @Test fun spoleWithoutIconPack() {
+        val source = DemoLineIconPack()
+        val art = app.stova.apps.AppArtCache(rule.activity)
+        runBlocking { org.junit.Assert.assertNotNull(art.artwork(source.apps.first(), AppearancePrefs())) }
+        renderMediaHome(appearance = AppearancePrefs(seasonChoice = SeasonChoice.NONE), showApps = true, packArt = art, packApps = listOf(source.apps.first()))
+        rule.saveScreen("ikonpakke-spole-banner")
+    }
+    @Test fun iconPackPickerAndSettings() {
+        val source = DemoLineIconPack()
+        val prefs = AppearancePrefs(iconPack = DemoLineIconPack.PACK, iconColor = IconColor.ACCENT, seasonChoice = SeasonChoice.NONE)
+        val art = app.stova.apps.AppArtCache(rule.activity, iconPacks = app.stova.apps.IconPackRepository(source, File(rule.activity.cacheDir, "demo-pack")))
+        runBlocking { art.iconPacks.refresh(); art.iconPacks.index(source.installed().single()).drawables.forEach { art.packIcon(source.installed().single(),it) } }
+        rule.runOnUiThread { rule.activity.setContent { StovaTheme(appearance = prefs) {
+            androidx.compose.foundation.layout.Column(Modifier.fillMaxSize().padding(48.dp)) {
+                app.stova.settings.IconPackSettingsContent(prefs, source.installed()) {}
+            }
+        } } }
+        rule.saveScreen("ikonpakke-innstillingar")
+        rule.runOnUiThread { rule.activity.setContent { StovaTheme(appearance = prefs) { app.stova.apps.IconPicker(art, DemoLineIconPack.PACK, {}, {}) } } }
+        rule.onNodeWithText("Søk etter ikon").assertExists()
+        val windows = android.view.inspector.WindowInspector.getGlobalWindowViews()
+        assertTrue("The picker must have its own dialog window", windows.size > 1)
+        rule.saveScreen("ikonpakke-veljar", windows.last())
+    }
+
+    @Test fun appearanceDefault() {
+        renderMediaHome(showApps = true)
+        rule.saveScreen("appearance-default")
+    }
+
+    @Test fun appearanceLargeWithTitles() {
+        renderMediaHome(appearance = AppearancePrefs(cardSize = CardSize.LARGE, showTitles = true, heroSize = HeroSize.LARGE))
+        rule.saveScreen("appearance-large-titles")
+    }
+
+    @Test fun appearanceSmallIcons() {
+        renderMediaHome(appearance = AppearancePrefs(cardSize = CardSize.SMALL, appStyle = AppStyle.ICON), showApps = true)
+        rule.saveScreen("appearance-small-icons")
+    }
+
+    @Test fun appearanceLightDimming() {
+        renderMediaHome(appearance = AppearancePrefs(backdropDimming = BackdropDimming.LIGHT), brightTop = true)
+        rule.saveScreen("appearance-light")
+    }
+
+    @Test fun appearanceOverviewHasTwoReadableLines() {
+        renderMediaHome(appearance = AppearancePrefs(showOverview = true, cardSize = CardSize.LARGE, showTitles = true))
+        rule.onNodeWithText("Ei ferd gjennom stille fjordar og opne landskap. Vegen vidare byr på nye møte og ukjende stader.").assertIsDisplayed()
+        rule.saveScreen("appearance-overview")
+    }
+
+    @Test fun appearanceOceanAccent() {
+        renderMediaHome(appearance = AppearancePrefs(accent = Accent.OCEAN, seasonChoice = SeasonChoice.NONE))
+        val bitmap = BitmapFactory.decodeFile(rule.saveScreen("appearance-ocean").absolutePath)
+        val card = rule.onAllNodes(hasContentDescription("Fjordlys") and hasClickAction())[0].fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertEquals("Ocean focus ring follows the artwork", AvatarColor.OCEAN.argb.toInt(), bitmap.getPixel(card.left.toInt()+2, card.top.toInt()+40))
+    }
+
+    @Test fun dimmingChoicesChangeThePictureAndKeepTextReadable() {
+        val lightness = mutableListOf<Double>()
+        for (level in BackdropDimming.entries) {
+            renderMediaHome(appearance = AppearancePrefs(backdropDimming = level), brightTop = true)
+            val bitmap = BitmapFactory.decodeFile(rule.saveScreen("appearance-contrast-${level.name.lowercase()}").absolutePath)
+            lightness += ColorUtils.calculateLuminance(bitmap.getPixel(1320, 380))
+            val foreground = android.graphics.Color.rgb(233, 233, 226)
+            val muted = android.graphics.Color.rgb(154, 162, 153)
+            assertTrue("$level: hero text", ColorUtils.calculateContrast(foreground, bitmap.getPixel(880, 410)) >= 4.5)
+            assertTrue("$level: genre line", ColorUtils.calculateContrast(muted, bitmap.getPixel(880, 410)) >= 4.5)
+            assertTrue("$level: top bar", ColorUtils.calculateContrast(foreground, bitmap.getPixel(1900, 96)) >= 4.5)
+        }
+        assertTrue("Light must reveal more art than medium: $lightness", lightness[0] > lightness[1])
+        assertTrue("Medium must reveal more art than dark: $lightness", lightness[1] > lightness[2])
     }
 
     @Test fun homeWithHeroScoreAndMediaRows() {
@@ -217,7 +381,7 @@ class AppScreensTest {
         rule.onNodeWithText("Smarthus").assertIsDisplayed()
         rule.onNodeWithText("Hald fram").assertIsDisplayed()
         rule.onNodeWithText("Nyleg lagt til · Seriar").assertIsDisplayed()
-        rule.onNodeWithText("2024 · 1 t 52 min").assertIsDisplayed()
+        rule.onNodeWithText("2024").assertIsDisplayed()
         rule.onNodeWithText("12").assertIsDisplayed()
         rule.saveScreen("12-home-media-ha")
     }
@@ -237,12 +401,12 @@ class AppScreensTest {
         val contrast = ColorUtils.calculateContrast(foreground, skyBehindTopBar)
         assertTrue("Top bar contrast over bright art: $contrast (expected >= 6)", contrast >= 6.0)
         // Bright sky at 35% width, below the top scrim and clear of text/mountains.
-        val skyBehindHero = bitmap.getPixel(672, 340)
+        val skyBehindHero = bitmap.getPixel(880, 410)
         val muted = android.graphics.Color.rgb(154, 162, 153)
         assertTrue("Hero text contrast over bright art", ColorUtils.calculateContrast(foreground, skyBehindHero) >= 6.0)
         assertTrue("Hero metadata/score contrast over bright art", ColorUtils.calculateContrast(muted, skyBehindHero) >= 4.5)
-        // Just above the final words of the first overview line, near the column's right edge.
-        assertTrue("Entire overview must remain readable", ColorUtils.calculateContrast(foreground, bitmap.getPixel(1180, 400)) >= 6.0)
+        // The reduced scrim must leave the artwork clear across the right half.
+        assertTrue("Middle-right art stays visible", ColorUtils.calculateLuminance(bitmap.getPixel(1320, 380)) > 0.3)
         // The additional scrim ends at 30%; the right-side sky below it stays bright.
         assertTrue("Bright fixture must actually be loaded", ColorUtils.calculateLuminance(bitmap.getPixel(1900, 380)) > 0.6)
     }
@@ -270,5 +434,44 @@ class AppScreensTest {
         renderMediaHome(fontScale = 2f)
         rule.onAllNodesWithText("Demoarkiv")[0].assertIsDisplayed()
         rule.saveScreen("11-home-media-font-2")
+    }
+
+    @Test fun temaHalloweenFullFollowsOctoberCalendar() {
+        rule.mainClock.autoAdvance=false
+        renderMediaHome(appearance=AppearancePrefs(),seasonalShowcase=true)
+        rule.onNodeWithText("Halloween").assertIsDisplayed()
+        rule.saveScreen("tema-halloween")
+    }
+    @Test fun temaChristmasFull() {
+        rule.mainClock.autoAdvance=false
+        renderMediaHome(appearance=SeasonChoice.CHRISTMAS.applyTo(AppearancePrefs()),seasonalShowcase=true)
+        rule.onNodeWithText("Jul").assertIsDisplayed()
+        rule.saveScreen("tema-jul")
+    }
+    @Test fun temaMidnightOcean() {
+        renderMediaHome(appearance=AppearancePrefs(visualTheme=app.stova.core.theme.VisualTheme.MIDNIGHT,accent=Accent.OCEAN,seasonChoice=SeasonChoice.NONE))
+        rule.saveScreen("tema-midnatt-hav")
+    }
+    @Test fun temaCinemaPearl() {
+        renderMediaHome(appearance=AppearancePrefs(visualTheme=app.stova.core.theme.VisualTheme.CINEMA,accent=Accent.PEARL,seasonChoice=SeasonChoice.NONE))
+        rule.saveScreen("tema-kino-perle")
+    }
+    @Test fun temaForestWithoutSeason() {
+        renderMediaHome(appearance=AppearancePrefs(seasonChoice=SeasonChoice.NONE))
+        rule.onNodeWithText("Halloween").assertDoesNotExist()
+        rule.saveScreen("tema-skog")
+    }
+
+    @Test fun temaSettingsPreview() {
+        runBlocking {
+            val p = container.profiles.create("Demo", AvatarColor.LIME, false)
+            container.profiles.update(p.id) { it.copy(appearance=SeasonChoice.HALLOWEEN.applyTo(it.appearance)) }
+            container.session.enter(p.id)
+        }
+        rule.waitForIdle()
+        rule.onAllNodesWithText("Innstillingar")[0].performClick()
+        rule.onNodeWithText("Utsjånad").performClick()
+        rule.onNodeWithText("Sesongpynt").assertIsDisplayed()
+        rule.saveScreen("tema-innstillingar")
     }
 }

@@ -14,6 +14,27 @@ import androidx.compose.ui.unit.dp
  * language. The stroke colour is a placeholder; `Icon` tints it.
  */
 object StovaIcons {
+    val Pumpkin by lazy { icon("pumpkin") {
+        moveTo(12f, 7f); quadTo(11.8f, 4.6f, 12.8f, 3.2f)
+        moveTo(12.4f, 5.2f); quadTo(15.2f, 2.9f, 17.4f, 4.9f); quadTo(14.8f, 6.5f, 12.4f, 5.2f)
+        moveTo(12f, 7f); curveTo(17f, 6f, 21f, 8.5f, 21f, 13.5f)
+        curveTo(21f, 18.5f, 17f, 21f, 12f, 21f); curveTo(7f, 21f, 3f, 18.5f, 3f, 13.5f)
+        curveTo(3f, 8.5f, 7f, 6f, 12f, 7f); close()
+        moveTo(8.8f, 7.4f); quadTo(6.6f, 14f, 8.8f, 20.6f)
+        moveTo(15.2f, 7.4f); quadTo(17.4f, 14f, 15.2f, 20.6f)
+    } }
+    val Snowflake by lazy { icon("snowflake") {
+        repeat(6) { arm ->
+            val angle = Math.toRadians(arm * 60.0 - 90.0)
+            val dx = kotlin.math.cos(angle).toFloat(); val dy = kotlin.math.sin(angle).toFloat()
+            moveTo(12f, 12f); lineTo(12f + dx * 9f, 12f + dy * 9f)
+            for (side in listOf(-1f, 1f)) {
+                val turn = angle + side * Math.toRadians(40.0)
+                moveTo(12f + dx * 5.6f, 12f + dy * 5.6f)
+                lineTo(12f + dx * 5.6f + kotlin.math.cos(turn).toFloat() * 3f, 12f + dy * 5.6f + kotlin.math.sin(turn).toFloat() * 3f)
+            }
+        }
+    } }
     val Light by lazy { icon("light") {
         moveTo(8f, 16f); curveTo(8f, 13f, 5f, 12f, 5f, 8f); curveTo(5f, 0f, 19f, 0f, 19f, 8f); curveTo(19f, 12f, 16f, 13f, 16f, 16f); close()
         moveTo(9f, 20f); lineTo(15f, 20f); moveTo(10f, 23f); lineTo(14f, 23f)

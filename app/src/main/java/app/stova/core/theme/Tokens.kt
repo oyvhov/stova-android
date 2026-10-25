@@ -23,6 +23,9 @@ object StovaColors {
     val Caution = Color(0xFFD8B97E)
     val Warning = Color(0xFFD48E8E)
     val Outline = Color(0xFF646E63)
+    val Ember = Color(0xFFFFA74F)
+    val Snow = Color(0xFFE8F2FF)
+    val Spider = Color(0xFFD8D1E9)
     val Divider = Color(0xFF3D443C)
 }
 
@@ -66,3 +69,14 @@ enum class AvatarColor(val argb: Long) {
 }
 
 val AvatarColor.color: Color get() = Color(argb)
+
+/** Appearance accents share the same muted palette as profile avatars. */
+val app.stova.profiles.Accent.color: Color get() = when (this) {
+    app.stova.profiles.Accent.HOLLY -> Color(0xFFF6806C)
+    app.stova.profiles.Accent.PUMPKIN -> Color(0xFFFFA74F)
+    else -> AvatarColor.valueOf(name).color
+}
+
+val app.stova.profiles.Accent.container: Color get() =
+    if (this == app.stova.profiles.Accent.LIME) StovaColors.PrimaryContainer
+    else androidx.compose.ui.graphics.lerp(StovaColors.Ink, color, 0.18f)

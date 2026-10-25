@@ -17,12 +17,15 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.delay
 
-fun clockText(epochMillis: Long, zone: ZoneId, locale: Locale): String =
-    DateTimeFormatter.ofPattern("HH:mm", locale).withZone(zone).format(Instant.ofEpochMilli(epochMillis))
+fun clockText(epochMillis: Long, zone: ZoneId, locale: Locale, mode: app.stova.profiles.ClockMode = app.stova.profiles.ClockMode.H24): String =
+    if (mode == app.stova.profiles.ClockMode.HIDDEN) "" else
+    DateTimeFormatter.ofPattern(if (mode == app.stova.profiles.ClockMode.H12) "h:mm a" else "HH:mm", locale).withZone(zone).format(Instant.ofEpochMilli(epochMillis))
 
 /** 24-hour clock that wakes once a minute, on the minute, and never otherwise recomposes. */
 @Composable
 fun Clock(modifier: Modifier = Modifier, clock: () -> Long = System::currentTimeMillis) {
+    val mode = app.stova.core.theme.LocalAppearance.current.clock
+    if (mode == app.stova.profiles.ClockMode.HIDDEN) return
     var now by remember { mutableLongStateOf(clock()) }
     LifecycleResumeEffect(Unit) {
         now = clock()
@@ -35,7 +38,7 @@ fun Clock(modifier: Modifier = Modifier, clock: () -> Long = System::currentTime
         }
     }
     Text(
-        clockText(now, ZoneId.systemDefault(), LocalLocale.current.platformLocale),
+        clockText(now, ZoneId.systemDefault(), LocalLocale.current.platformLocale, mode),
         style = MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.onSurface,
         modifier = modifier,
