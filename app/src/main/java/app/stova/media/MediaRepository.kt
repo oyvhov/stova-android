@@ -20,6 +20,8 @@ const val SPOTLIGHT_REFRESH_MILLIS = 2 * 60 * 60 * 1000L
 /** Spotlight and season rows query the whole library; they get longer than the rows, and their own clock. */
 const val EXTRA_TIMEOUT_MILLIS = 20_000L
 const val SEASONAL_REFRESH_MILLIS = 60 * 60 * 1000L
+/** A return to Home never refetches rows younger than this; Home's 5-minute loop is the only scheduler. */
+const val REFRESH_MIN_AGE_MILLIS = 5 * 60 * 1000L
 
 class MediaRepository(private val accounts: MediaAccountRepository,private val clientFor: suspend (MediaAccount) -> MediaServerClient?,private val snapshotDir: File,private val scope: CoroutineScope,private val io: CoroutineDispatcher=Dispatchers.IO,private val clock: () -> Long=System::currentTimeMillis) {
  private class Slot(val store: JsonFileStore<MediaSnapshot>) {
@@ -27,6 +29,8 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   val mutex=Mutex();val rows=MutableStateFlow<List<HomeRowUi.Media>?>(null)
   val spotlight=MutableStateFlow<List<SpotlightEntry>>(emptyList());var spotlightAt=0L
   var seasonalAt=0L;var seasonalFor: Season = Season.NONE
+  /** The last attempt, and the season and accounts it was for: a new account or season is never made to wait. */
+  var refreshedAt=0L;var refreshedFor: Pair<Season,List<String>>?=null
  }
  private class Fetched(val rows: List<HomeRowUi.Media>,val spotlight: List<SpotlightEntry>,val spotlightOk: Boolean,val seasonalOk: Boolean=true)
  private val slots=ConcurrentHashMap<String,Slot>()
@@ -121,13 +125,17 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   return rows.mapNotNull { row -> valid[row.account.id]?.let { row.copy(account=it) } }.filter { it.items.isNotEmpty() }
  }
  private suspend fun <T> orElse(fallback: T,block: suspend () -> T): T = try { block() } catch(e: CancellationException) { throw e } catch(_: Exception) { fallback }
- suspend fun refresh(profileId:String) {
+ suspend fun refresh(profileId:String,minAgeMillis:Long=REFRESH_MIN_AGE_MILLIS) {
   val slot=loaded(profileId)
   slot.mutex.withLock {
    val season=slot.season
    val list=accounts.forProfile(profileId).first().filterNot { it.needsSignIn }.sortedWith(compareBy({it.kind},{it.serverName}))
+   val now=clock();val key=season to list.map { it.id }
+   // Young enough, and for the same season and accounts: a return to Home asks the servers nothing.
+   if(slot.refreshedAt!=0L && now-slot.refreshedAt in 0 until minAgeMillis && slot.refreshedFor==key) return
+   slot.refreshedAt=now;slot.refreshedFor=key
    // Never fetched, stale, or a clock that went backwards: fetch the spotlight again.
-   val now=clock();val spotlightDue=slot.spotlightAt==0L || now-slot.spotlightAt !in 0 until SPOTLIGHT_REFRESH_MILLIS
+   val spotlightDue=slot.spotlightAt==0L || now-slot.spotlightAt !in 0 until SPOTLIGHT_REFRESH_MILLIS
    // Season rows query the whole library too: once an hour, and again when the season changes.
    val seasonalDue=season!=Season.NONE && (slot.seasonalFor!=season || slot.seasonalAt==0L || now-slot.seasonalAt !in 0 until SEASONAL_REFRESH_MILLIS)
    val today=Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate()

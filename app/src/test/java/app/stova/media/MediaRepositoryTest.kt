@@ -158,4 +158,36 @@ class MediaRepositoryTest {
   assertEquals(app.stova.profiles.SpotlightSource.FAVORITES,requested)
   assertEquals(listOf(favorite),pool.map { it.item })
  }
+ // Lean core 1: every return to Home refetched all four requests per account, and a cold start did it twice.
+ private fun countingClient(a:MediaAccount,fetches:MutableList<String>)=object:MediaServerClient {
+  override suspend fun resume():List<MediaItem> { fetches+=a.id;return listOf(item(a)) }
+  override suspend fun nextUp()=emptyList<MediaItem>()
+  override suspend fun latest(endpoint:Endpoint)=emptyList<MediaItem>()
+ }
+ @Test fun returningToHomeWithinTheRefreshAgeFetchesNothing()=runTest {
+  val a=accounts();add(a,ServerKind.JELLYFIN);val fetches=mutableListOf<String>();var now=1_000L
+  val r=MediaRepository(a,{ countingClient(it,fetches) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ now })
+  backgroundScope.launch { r.rows("p").collect {} };testScheduler.runCurrent()
+  r.refresh("p");r.refresh("p")
+  assertEquals("Home's rows and two returns to Home",1,fetches.size)
+  now+=REFRESH_MIN_AGE_MILLIS;r.refresh("p");assertEquals(2,fetches.size)
+  r.refresh("p",minAgeMillis=0);assertEquals("an explicit refresh never waits",3,fetches.size)
+ }
+ @Test fun aNewAccountIsFetchedWithoutWaiting()=runTest {
+  val a=accounts();val j=add(a,ServerKind.JELLYFIN);val fetches=mutableListOf<String>()
+  val r=MediaRepository(a,{ countingClient(it,fetches) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ 1_000L })
+  r.refresh("p");val e=add(a,ServerKind.EMBY);r.refresh("p")
+  assertEquals(listOf(j.id),fetches.take(1));assertEquals(setOf(j.id,e.id),fetches.drop(1).toSet());assertEquals(3,fetches.size)
+ }
+ @Test fun aSeasonSwitchIsFetchedWithoutWaiting()=runTest {
+  val a=accounts();add(a,ServerKind.JELLYFIN);var seasonalCalls=0
+  val client=object:MediaServerClient {
+   override suspend fun resume()=emptyList<MediaItem>();override suspend fun nextUp()=emptyList<MediaItem>();override suspend fun latest(endpoint:Endpoint)=emptyList<MediaItem>()
+   override suspend fun seasonal(season:app.stova.profiles.Season):List<MediaItem> { seasonalCalls++;return emptyList() }
+  }
+  val r=MediaRepository(a,{ client },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ 1_000L })
+  r.refresh("p")
+  r.rows("p",app.stova.profiles.Season.HALLOWEEN).first();r.refresh("p")
+  assertEquals(1,seasonalCalls)
+ }
 }
