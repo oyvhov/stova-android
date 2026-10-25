@@ -77,6 +77,9 @@ class WatchNextReader(private val resolver: ContentResolver, private val hasPerm
             trySend(Unit)
             awaitClose { if (registered) resolver.unregisterContentObserver(observer) }
         }
-        return merge(changes, requests).mapLatest { read() }
+        return requests.onStart { emit(Unit) }.flatMapLatest {
+            // Keep listening for a permission grant, without observing a provider we cannot read.
+            if (hasPermission()) changes.mapLatest { read() } else flow { emit(read()) }
+        }
     }
 }

@@ -9,9 +9,27 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 @RunWith(AndroidJUnit4::class) @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
 class WatchNextReaderTest {
  private val context:android.content.Context=androidx.test.core.app.ApplicationProvider.getApplicationContext()
+    @Test fun missingPermissionRegistersNoObserverAndGrantStartsObservation() = runTest {
+        var allowed = false
+        val resolver = context.contentResolver
+        val shadow = org.robolectric.Shadows.shadowOf(resolver)
+        val uri = android.media.tv.TvContract.WatchNextPrograms.CONTENT_URI
+        org.robolectric.shadows.ShadowContentResolver.registerProviderInternal(android.media.tv.TvContract.AUTHORITY, provider())
+        val reader = WatchNextReader(resolver, { allowed }, "app.stova")
+        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) { reader.observe().collect {} }
+        testScheduler.runCurrent()
+        assertTrue(shadow.getContentObservers(uri).isEmpty())
+        allowed = true
+        reader.refresh()
+        reader.status.first { it is WatchNextResult.Available }
+        assertEquals(1, shadow.getContentObservers(uri).size)
+        job.cancel()
+    }
     private fun cursor(vararg rows: Array<Any?>) = MatrixCursor(arrayOf(BaseColumns._ID, "package_name", "title", "episode_title", "poster_art_uri", "intent_uri", "last_playback_position_millis", "duration_millis", "last_engagement_time_utc_millis")).apply { rows.forEach(::addRow) }
     @Test fun mapsAndFilters() {
         val entries = mapWatchNext(cursor(
