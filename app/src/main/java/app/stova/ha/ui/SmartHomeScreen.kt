@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 
 @Composable fun SmartHomeScreen(container:AppContainer,profile:Profile) {
     val cards by container.haRepository.cards.collectAsStateWithLifecycle()
-    val entities by container.haSocket.entities.collectAsStateWithLifecycle()
+    val entities by container.haRepository.entities.collectAsStateWithLifecycle()
     val status by container.haSocket.status.collectAsStateWithLifecycle()
     val household by container.household.data.collectAsStateWithLifecycle(initialValue=null)
     val scope=rememberCoroutineScope()

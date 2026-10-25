@@ -2,6 +2,7 @@ package app.stova.ha
 
 import kotlinx.serialization.json.*
 
+@kotlinx.serialization.Serializable
 data class HaEntity(val id: String, val state: String, val attributes: JsonObject, val lastChanged: Long, val lastUpdated: Long)
 
 object EntityStateDecoder {

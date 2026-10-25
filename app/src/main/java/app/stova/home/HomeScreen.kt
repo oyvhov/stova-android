@@ -55,7 +55,7 @@ fun HomeScreen(
     }
     val chips = if (haRepository != null && haConnection != null) {
         val cards by haRepository.homeCards.collectAsStateWithLifecycle()
-        val entities by haConnection.entities.collectAsStateWithLifecycle()
+        val entities by haRepository.entities.collectAsStateWithLifecycle()
         val locale = LocalConfiguration.current.locales[0]
         cards.map { chipText(it, entities[it.entityId], locale) }
     } else emptyList()

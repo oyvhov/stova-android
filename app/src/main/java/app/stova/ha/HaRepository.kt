@@ -3,14 +3,53 @@ package app.stova.ha
 import app.stova.ha.cards.*
 import app.stova.profiles.*
 import java.util.UUID
+import app.stova.core.storage.JsonFileStore
+import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class HaRepository(private val socket: HaConnection, private val session: ProfileSession, private val profiles: ProfileRepository, scope: CoroutineScope) {
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+class HaRepository(private val socket: HaConnection, private val session: ProfileSession, private val profiles: ProfileRepository, scope: CoroutineScope,
+    private val cache: JsonFileStore<HaSnapshot>? = null,
+) {
+    private val mutableEntities = MutableStateFlow<Map<String, HaEntity>>(emptyMap())
+    val entities = mutableEntities.asStateFlow()
     val cards: StateFlow<List<CardConfig>> = session.active.map { it?.dashboard.orEmpty() }.stateIn(scope, SharingStarted.Eagerly, emptyList())
     val homeCards: StateFlow<List<CardConfig>> = cards.map { it.filter(CardConfig::onHome).take(3) }.stateIn(scope, SharingStarted.Eagerly, emptyList())
-    init { scope.launch { session.active.map { it?.dashboard.orEmpty().map(CardConfig::entityId).toSet() }.distinctUntilChanged().collect(socket::watch) } }
+    init {
+        val writes = Channel<HaSnapshot>(Channel.CONFLATED)
+        scope.launch {
+            for (snapshot in writes) {
+                try { cache?.update { snapshot } } catch (_: IOException) { /* Keep the live UI usable if disk is full. */ }
+                // Conflate updates while waiting, preserving the most recent value for the next write.
+                delay(5_000)
+            }
+        }
+        scope.launch {
+            var previousProfileId: String? = null
+            session.active.map { it?.id to it?.dashboard.orEmpty() }.distinctUntilChanged().collectLatest { (profileId, cards) ->
+                val ids = cards.map(CardConfig::entityId).toSet()
+                socket.watch(ids)
+                val retained = if (profileId == previousProfileId) entities.value.filterKeys { it in ids } else emptyMap()
+                mutableEntities.value = retained
+                previousProfileId = profileId
+                val stored = cache?.current()
+                val saved = stored?.takeIf { it.profileId == profileId }?.entities.orEmpty().filterKeys { it in ids } + retained
+                mutableEntities.value = saved
+                if (profileId != null && stored?.profileId != null) {
+                    val pruned = HaSnapshot(profileId, snapshotEntities(cards, saved))
+                    if (pruned != stored) writes.trySend(pruned)
+                }
+                socket.entitySnapshots(ids).collect { selected ->
+                    mutableEntities.value = selected
+                    if (cache != null) writes.trySend(HaSnapshot(profileId, snapshotEntities(cards, selected)))
+                }
+            }
+        }
+    }
     private suspend fun edit(change: (List<CardConfig>) -> List<CardConfig>) {
         val active = session.active.value?.takeUnless { it.kid } ?: return
         profiles.update(active.id) { it.copy(dashboard = change(it.dashboard)) }

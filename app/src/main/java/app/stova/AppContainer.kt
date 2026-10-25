@@ -98,7 +98,8 @@ class AppContainer(
     val haAuth = HaAuth(haHttp, secrets, ::haAddress)
     private val haScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val haSocket = HaSocket(haHttp, haAuth, ::haAddress, haScope)
-    val haRepository = HaRepository(haSocket, session, profiles, appScope)
+    val haRepository = HaRepository(haSocket, session, profiles, appScope,
+        JsonFileStore(File(appContext.filesDir, "ha-cache.json"), HaSnapshot.serializer(), HaSnapshot()))
     val haImages by lazy {
         coil3.ImageLoader.Builder(appContext).components {
             add(coil3.network.okhttp.OkHttpNetworkFetcherFactory(callFactory = { haHttp }))

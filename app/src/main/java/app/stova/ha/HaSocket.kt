@@ -14,6 +14,9 @@ enum class HaStatus { NOT_CONFIGURED, DISCONNECTED, CONNECTING, CONNECTED, SIGNE
 interface HaConnection {
     val status: StateFlow<HaStatus>
     val entities: StateFlow<Map<String, HaEntity>>
+    /** Received snapshots, excluding the uninitialised empty StateFlow value. */
+    fun entitySnapshots(entityIds: Set<String>): Flow<Map<String, HaEntity>> =
+        entities.map { live -> live.filterKeys { it in entityIds } }.dropWhile { it.isEmpty() }
     fun watch(entityIds: Set<String>)
     suspend fun callService(domain: String, service: String, entityId: String, data: JsonObject = JsonObject(emptyMap())): Boolean
     suspend fun history(entityId: String, hours: Int = 24): List<Pair<Long, Double>>
@@ -32,12 +35,17 @@ class HaSocket(
     override val status = mutableStatus.asStateFlow()
     private val mutableEntities = MutableStateFlow<Map<String, HaEntity>>(emptyMap())
     override val entities = mutableEntities.asStateFlow()
+    private data class WatchedEntities(val ids: Set<String>, val values: Map<String, HaEntity>)
+    private val snapshots = MutableStateFlow<WatchedEntities?>(null)
+    override fun entitySnapshots(entityIds: Set<String>): Flow<Map<String, HaEntity>> =
+        snapshots.filterNotNull().filter { it.ids == entityIds }.map { it.values }
     private val inbox = Channel<suspend () -> Unit>(Channel.UNLIMITED)
     private var socket: WebSocket? = null
     private var running = false
     private var generation = 0
     private var nextId = 1
     private var subscription: Int? = null
+    private var awaitingSnapshot = true
     private var watched = emptySet<String>()
     private var failures = 0
     private var authFailures = 0
@@ -64,13 +72,14 @@ class HaSocket(
         }
     }
     fun reconfigure() = post {
-        reconnect?.cancel(); disconnect(); mutableEntities.value = emptyMap(); authFailures = 0; failures = 0
+        reconnect?.cancel(); disconnect(); mutableEntities.value = emptyMap(); snapshots.value = null; authFailures = 0; failures = 0
         mutableStatus.value = if (address() == null) HaStatus.NOT_CONFIGURED else HaStatus.DISCONNECTED
         if (running) connect()
     }
     override fun watch(entityIds: Set<String>) = post {
         if (entityIds != watched) {
             watched = entityIds.toSet()
+            snapshots.value = null
             mutableEntities.value = entities.value.filterKeys { it in watched }
             if (status.value == HaStatus.CONNECTED) resubscribe()
         }
@@ -78,6 +87,7 @@ class HaSocket(
     private fun resubscribe() {
         subscription?.let { socket?.send(unsubscribe(nextId++, it)) }
         subscription = if (watched.isEmpty()) null else nextId++.also { socket?.send(subscribeEntities(it, watched)) }
+        awaitingSnapshot = true
     }
     private fun disconnect() {
         generation++; socket?.cancel(); socket = null; subscription = null
@@ -111,7 +121,11 @@ class HaSocket(
                         }
                         "event" -> if (message["id"]?.jsonPrimitive?.intOrNull == subscription) {
                             val event = message["event"] as? JsonObject ?: continue
-                            mutableEntities.value = EntityStateDecoder.apply(entities.value, event).filterKeys { it in watched }
+                            val previous = if (awaitingSnapshot) emptyMap() else entities.value
+                            mutableEntities.value = EntityStateDecoder.apply(previous, event).filterKeys { it in watched }
+                            awaitingSnapshot = false
+                            // Even an empty first response is authoritative: cached entities may have been deleted.
+                            snapshots.value = WatchedEntities(watched, mutableEntities.value)
                         }
                         "result" -> message["id"]?.jsonPrimitive?.intOrNull?.let { pending.remove(it)?.complete(message) }
                     }
