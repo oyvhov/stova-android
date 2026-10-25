@@ -1,3 +1,10 @@
+# Ferdig: fokus/navigering og Spole-tittellenkje på Shield
+2026-10-25: Stova-plan `2026-10-25-directional-focus.md` og Shield-installasjonsplanen er fullførte, kodecommit 9784990. Glød er fjerna; faste fokusvegar i Heim, Innstillingar og Smarthus er prøvde med tastar og ekte data.
+609/609 Stova-testar med skjermprøver, 0 skip; lint 0 feil (39 åtvaringar, 1 hint). Stova a05d0c47931a9f57a8e1e25f1a5fae134f6bd09c89ba09bf1483e47478e75297 er installert/verifisert på emulator-5580 og Shield. Rapport: `docs/verification/directional-focus.md`.
+Spole beta22/159 frå kjeldecommit 830cd4d i `C:/JellyBin/spole-launcher-link` er installert med same eigarnøkkel; einingshash f309682bc23f04535877fe0a54624950037d234893f1b77b86957788447351e8. 1293 testar bestått, 1 LAN-skip, lint utan feil. Faktisk Stova-kort → rett detaljside er verifisert varm/kald etter eigaren si innlogging, utan avspeling.
+Kontoar/favorittar er bevarte. Eigaren endra app-radformat under prøvinga; sluttkontrollen viser berre det feltet endra. Smarthus har ekte kort på emulator, tomt dashbord på Shield. Touch-hald og D-pad i appmeny er prøvde; fysisk halde-OK er ikkje generert av ADB-prøva.
+Ingen kjende påbyrja steg står att, ingen push/publisering, HA-styring eller datatømming. Shield er sett tilbake til Stova og frigjeven til eigaren. Tre underagentar deltok; alle bygg/einingsprøver er ferdige.
+
 # Stova utan glød og med faste fokusvegar – installert; Spole beta22 under bygg
 2026-10-25: Plan `2026-10-25-directional-focus.md` er fullført. Heim, Innstillingar og Smarthus har eksplisitte fokusvegar; fokusskuggen er heilt fjerna. Tre underagentar deltok; hovudagenten eigde samla QA.
 609/609 testar inkludert skjermprøver, 0 hoppa over; lint 0 feil (39 åtvaringar, 1 hint), debug-bygg OK. Endeleg APK a05d0c47931a9f57a8e1e25f1a5fae134f6bd09c89ba09bf1483e47478e75297 er installert med -r på emulator-5580 og Shield; installerte hash-ar er like.

@@ -78,6 +78,27 @@ Eigaren sine radformat på Shield vart endra mellom den tidlegare ikoninstallasj
 denne runden; dei er bevarte. Ingen datatømming, avinstallasjon, endring av standardlauncher
 eller publisering/push.
 
-Spole-tittellenkja blir sluttverifisert separat i `C:/JellyBin/spole-launcher-link`:
-direkte varm/kald lenkje fungerer etter eigaren si innlogging, medan faktisk korttrykk
-avdekte ein ekstra Android-task-overgang som blir retta i lokal beta22.
+Eigaren endra òg app-radformat under sluttutprøvinga. Etter koordinert fjernkontrollpause er
+sluttkontrollen lik før-kontrollen på alle andre profilfelt og favorittar; berre
+`home.rowFormats.apps.format` er endra. Kontofila har framleis same SHA-256.
+
+## Spole-kortopning – endeleg prøve
+
+Spole beta22/159 er installert på Shield med same eigarnøkkel og `install -r`.
+APK-hash på eininga er `f309682bc23f04535877fe0a54624950037d234893f1b77b86957788447351e8`;
+opphavleg installasjonstid 10.09.2026 er bevart. Kjeldecommit: `830cd4d` i
+`C:/JellyBin/spole-launcher-link`.
+
+Beta21 opna direkte varm/kald ADB-lenkje, men faktisk Stova-korttrykk kunne hente fram
+Spole-framsida. Android kan levere rå lenkje til ein eksisterande hovudaktivitet ved
+gjenbruk av oppgåva. Beta22 validerer slike lenkjer gjennom same konto-/sessionsgrense,
+og den kortliva mottakaren har separat task-affinity.
+
+Faktisk fokusert «One Battle After Another» i Stova → OK → rett detaljside er prøvd både
+med Spole alt køyrande og etter `force-stop` av Spole. Kvar prøve ventar forbi oppstartsbiletet
+og krev både rett tittellogo og detaljkontrollen «Trailer»; Jellyfin og «Hald fram · 143 min att»
+er synlege. Ingen avspeling. Back frå detaljsida viser Spole si framside; Stova er deretter sett
+fram att med eksplisitt appstart. Dette blir ikkje framstilt som direkte Back-retur til Stova.
+
+Spole-sluttkontroll: 1293 testar bestått, 1 eksisterande LAN-test hoppa over, lint 0 feil,
+signert release-bygg OK. Full rapport og lokalt artefaktarkiv finst i Spole-worktree-et.
