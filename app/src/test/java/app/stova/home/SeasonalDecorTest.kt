@@ -62,6 +62,40 @@ class SeasonalDecorTest {
         assertTrue(clock!!.value>moving)
         assertTrue(clock!!.value<moving+2f)
     }
+    // Review finding 8: with the defaults Home redrew 20 times a second all day from 20 Oct to 13 Jan.
+    @Test fun idleHomeFadesTheParticlesAndTheClockRestsUntilTheNextKey() {
+        var clock: SeasonalClock?=null
+        compose.mainClock.autoAdvance=false
+        compose.setContent { StovaTheme(appearance=SeasonChoice.CHRISTMAS.applyTo(AppearancePrefs())) {
+            clock=rememberSeasonalClock()
+            Text("Clock")
+        } }
+        compose.mainClock.advanceTimeBy(((SEASON_REST_SECONDS+SEASON_FADE_SECONDS)*1_000).toLong()+500)
+        val resting=clock!!.time.value
+        assertEquals(0f,clock!!.presence)
+        compose.mainClock.advanceTimeBy(5_000)
+        assertEquals("no frames while resting",resting,clock!!.time.value)
+        compose.runOnIdle { SeasonalInput.report() }
+        compose.mainClock.advanceTimeBy(500)
+        assertTrue("a key wakes the clock",clock!!.time.value>resting)
+        assertTrue("and the particles fade back in, never pop",clock!!.presence in 0.01f..0.99f)
+        compose.mainClock.advanceTimeBy(3_000)
+        assertEquals(1f,clock!!.presence)
+    }
+    @Test fun presenceFadesOutOnlyAfterTheRest() {
+        assertEquals(1f,seasonalPresence(idleSeconds=0f,awakeSeconds=10f))
+        assertEquals(1f,seasonalPresence(idleSeconds=SEASON_REST_SECONDS,awakeSeconds=500f))
+        assertTrue(seasonalPresence(SEASON_REST_SECONDS+SEASON_FADE_SECONDS/2,500f) in 0.4f..0.6f)
+        assertEquals(0f,seasonalPresence(SEASON_REST_SECONDS+SEASON_FADE_SECONDS,500f))
+        assertEquals(0f,seasonalPresence(idleSeconds=0f,awakeSeconds=0f))
+        assertTrue("the spider has dropped before the rest",SEASON_REST_SECONDS>50f)
+    }
+    @Test fun aKeyWindsTheSpiderUpInsteadOfMakingItVanish() {
+        assertEquals(1f,spiderShown(idleSeconds=0f,retractFrom=1f,sinceKey=0f))
+        assertTrue(spiderShown(0f,1f,SPIDER_RETRACT_SECONDS/2) in 0.4f..0.6f)
+        assertEquals(0f,spiderShown(0f,1f,SPIDER_RETRACT_SECONDS))
+        assertEquals(spiderDrop(48f),spiderShown(48f,0f,48f))
+    }
     @Test fun levelsAndIdleSpiderHaveExplicitLimits() {
         for(season in Season.entries) for(decor in SeasonalDecor.entries) for(reduce in listOf(false,true)) for(started in listOf(false,true)) {
             assertEquals(season!=Season.NONE && decor==SeasonalDecor.FULL && !reduce && started, seasonalMotionEnabled(season,decor,reduce,started))
