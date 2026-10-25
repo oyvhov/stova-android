@@ -1,6 +1,8 @@
 # Starts Stova's own TV emulator (Stova_TV, API 30 Android TV, port 5580) and waits until it has
 # booted. Never touches Spole's emulators (5560/5562/5564). Creates the AVD on first use.
-param([switch]$Headless)
+# By default the screen is shown in scrcpy (mouse and keyboard), not the emulator's own window.
+# -EmulatorWindow: the emulator's own window instead. -Headless: no window at all (automation).
+param([switch]$Headless, [switch]$EmulatorWindow)
 $ErrorActionPreference = 'Stop'
 $env:ANDROID_AVD_HOME = 'C:\Launcher\.avd'
 $env:ANDROID_SDK_ROOT = 'C:\Android\sdk'
@@ -14,7 +16,7 @@ if (-not (Test-Path "$env:ANDROID_AVD_HOME\Stova_TV.avd")) {
 }
 
 $args = @('-avd', 'Stova_TV', '-port', '5580', '-no-snapshot-save', '-no-boot-anim', '-gpu', 'auto')
-if ($Headless) { $args += '-no-window' }
+if (-not $EmulatorWindow) { $args += '-no-window' }
 Start-Process -FilePath "$sdk\emulator\emulator.exe" -ArgumentList $args -WindowStyle Minimized `
     -RedirectStandardOutput 'C:\Launcher\.superpowers\emulator-out.log' -RedirectStandardError 'C:\Launcher\.superpowers\emulator-err.log'
 
@@ -25,3 +27,4 @@ while ((& $adb -s $serial shell getprop sys.boot_completed 2>$null) -ne '1') {
     Start-Sleep -Seconds 3
 }
 Write-Output "Stova_TV er klar på $serial."
+if (-not $Headless -and -not $EmulatorWindow) { & "$PSScriptRoot\Show-StovaScreen.ps1" -Serial $serial }

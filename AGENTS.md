@@ -30,7 +30,7 @@ kan ta over frå kvarandre midt i ein plan.
 - Har du superpowers-skills (`subagent-driven-development` eller `executing-plans`), bruk dei.
   Elles: gjer oppgåvene i rekkjefølgje sjølv.
 - Alle Gradle-kall: `pwsh -NoProfile -File scripts/gradle.ps1 <tasks>`. Han set ASCII-sti for Gradle-heim og temp, sidan brukarmappa inneheld «Ø».
-- Emulator: berre `Stova_TV` på port 5580 (`scripts/Start-StovaEmulator.ps1`) og Shield via `adb connect <ip>:5555`. **Aldri** installer Stova eller køyr testar på emulator-5560, -5562 eller -5564. Dei tilhøyrer Spole og har ekte brukardata.
+- Emulator: berre `Stova_TV` på port 5580 (`scripts/Start-StovaEmulator.ps1`; skjermen blir vist i scrcpy med mus og tastatur, sjå `scripts/Show-StovaScreen.ps1`, som òg fungerer mot Shield med `-Serial <ip>:5555`) og Shield via `adb connect <ip>:5555`. **Aldri** installer Stova eller køyr testar på emulator-5560, -5562 eller -5564. Dei tilhøyrer Spole og har ekte brukardata.
 - Design: ingen glas eller blur, ingen fargelitteralar utanfor `core/theme`, og lime berre for handling. `DesignRulesTest` må alltid vere grøn.
 - UI-tekst på nynorsk i `res/values`, engelsk i `res/values-en`. Ingen hardkoda tekst.
 - Ikkje publiser noko (GitHub-repo, release eller Pages) og ikkje push utan at brukaren ber om det.
