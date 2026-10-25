@@ -74,7 +74,7 @@ android {
 androidComponents.finalizeDsl { extension ->
     listOf("debug", "nonMinifiedRelease", "benchmarkRelease").forEach { variant ->
         extension.sourceSets.getByName(variant).apply {
-            manifest.srcFile("src/performance/AndroidManifest.xml")
+            manifest.srcFile(if (variant == "debug") "src/debug/AndroidManifest.xml" else "src/performance/AndroidManifest.xml")
         }
     }
 }

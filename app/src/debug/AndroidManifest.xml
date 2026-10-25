@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity android:name="app.stova.performance.PerformanceSeedActivity" android:exported="true" />
+        <activity android:name="app.stova.ha.HaVerificationActivity" android:exported="true" />
+    </application>
+</manifest>
