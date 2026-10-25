@@ -209,4 +209,19 @@ class MediaRepositoryTest {
   home().also { testScheduler.runCurrent() }.cancel()
   assertEquals(2,queries)
  }
+ // Lean core 3: without an account, or with nothing new, every 5-minute refresh rewrote snapshots/<id>.json.
+ @Test fun noAccountsWritesNoSnapshot()=runTest {
+  val r=MediaRepository(accounts(),{ client(it) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))
+  r.refresh("p")
+  assertFalse(tmp.root.resolve("snapshots/p.json").exists())
+ }
+ @Test fun anUnchangedRefreshLeavesTheSnapshotAlone()=runTest {
+  val a=accounts();add(a,ServerKind.JELLYFIN);var now=1_000L
+  val r=MediaRepository(a,{ client(it) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ now })
+  r.refresh("p");val file=tmp.root.resolve("snapshots/p.json");assertTrue(file.exists())
+  // The store keeps its value in memory, so a word written from outside only survives if nothing is written back.
+  file.writeText("untouched")
+  now+=REFRESH_MIN_AGE_MILLIS;r.refresh("p")
+  assertEquals("untouched",file.readText())
+ }
 }

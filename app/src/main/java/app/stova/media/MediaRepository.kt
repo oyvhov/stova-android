@@ -151,6 +151,8 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    // Young enough, and for the same season and accounts: a return to Home asks the servers nothing.
    if(slot.refreshedAt!=0L && now-slot.refreshedAt in 0 until minAgeMillis && slot.refreshedFor==key) return
    slot.refreshedAt=now;slot.refreshedFor=key
+   // Nobody to ask: the rows stay as the accounts filter leaves them, and the snapshot is not touched.
+   if(list.isEmpty()) return
    // Never fetched, stale, or a clock that went backwards: fetch the spotlight again.
    val spotlightDue=slot.spotlightAt==0L || now-slot.spotlightAt !in 0 until SPOTLIGHT_REFRESH_MILLIS
    // Season rows query the whole library too: once an hour, and again when the season changes.
@@ -206,8 +208,11 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    if(spotlightDue && fetched.all { it.spotlightOk }) slot.spotlightAt=now
    if(seasonalDue && fetched.all { it.seasonalOk }) { slot.seasonalAt=now;slot.seasonalFor=season }
    slot.rows.value=current;slot.spotlight.value=spotlight
-   slot.store.update { it.copy(rows=current.map { row -> SnapshotRow(row.key,row.account.id,row.kind,row.items) },savedAt=now,
-    spotlight=spotlight.map { entry -> SnapshotSpotlight(entry.account.id,entry.item,entry.newSeason) },spotlightAt=slot.spotlightAt) }
+   // Most refreshes find nothing new; the snapshot is written only when it would read differently.
+   val saved=slot.store.current()
+   val next=saved.copy(rows=current.map { row -> SnapshotRow(row.key,row.account.id,row.kind,row.items) },
+    spotlight=spotlight.map { entry -> SnapshotSpotlight(entry.account.id,entry.item,entry.newSeason) },spotlightAt=slot.spotlightAt)
+   if(next!=saved) slot.store.update { it.copy(rows=next.rows,spotlight=next.spotlight,spotlightAt=next.spotlightAt,savedAt=now) }
   }
  }
 }
