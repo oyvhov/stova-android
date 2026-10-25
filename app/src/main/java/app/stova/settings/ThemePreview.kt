@@ -72,10 +72,10 @@ internal fun ThemePreview(stored: AppearancePrefs, entry: app.stova.media.Spotli
         val dimensions = app.stova.home.artworkDimensions(row.format ?: app.stova.home.defaultRowFormat(sampleKey,p),row.size ?: p.cardSize)
         val source = remember { MutableInteractionSource() }
         val sibling = remember { MutableInteractionSource() }
-        LaunchedEffect(source) { source.emit(FocusInteraction.Focus()) }
+        LaunchedEffect(source) { withFrameNanos { }; source.emit(FocusInteraction.Focus()) }
         Box(Modifier.fillMaxWidth().testTag("appearance-preview").clip(MaterialTheme.shapes.large)
             .background(ink).border(1.dp,MaterialTheme.colorScheme.outlineVariant,MaterialTheme.shapes.large)) {
-            if (backdrop != null) AsyncImage(backdrop,null,Modifier.matchParentSize(),contentScale=ContentScale.Crop)
+            if (backdrop != null) AsyncImage(backdrop,null,Modifier.matchParentSize().testTag("preview-backdrop"),contentScale=ContentScale.Crop)
             else Canvas(Modifier.matchParentSize().clearAndSetSemantics { }) {
                 drawRect(p.visualTheme.surface)
                 val mountain = Path().apply {

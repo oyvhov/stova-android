@@ -50,7 +50,7 @@ fun Clock(modifier: Modifier = Modifier, clock: () -> Long = System::currentTime
     )
     if (prefs.showDate) Text(
         DateTimeFormatter.ofPattern("EEE d. MMM", LocalLocale.current.platformLocale).withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(now)),
-        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.testTag("top-date"),
     )
     }

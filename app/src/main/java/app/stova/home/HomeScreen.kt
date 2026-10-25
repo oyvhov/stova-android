@@ -133,12 +133,12 @@ fun HomeContent(
     onAppLongClick: (InstalledApp) -> Unit = {},
     homePrefs: HomePrefs = HomePrefs(),
     onHomeChange: (HomePrefs) -> Unit = {},
-    canEditRows: Boolean = true,
+    canEditRows: Boolean = false,
     onMediaPlay: (FocusedTarget.Media) -> Unit = onMediaClick,
     appActions: (@Composable (InstalledApp, @Composable () -> Unit, () -> Unit) -> Unit)? = null,
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
-    val scope = rememberCoroutineScope()
+    val rowTargets = remember { mutableStateMapOf<HomeRowKey, FocusedTarget>() }
     var menuRow by remember { mutableStateOf<HomeRowUi?>(null) }
     var menuMedia by remember { mutableStateOf<FocusedTarget.Media?>(null) }
     var menuApp by remember { mutableStateOf<InstalledApp?>(null) }
@@ -146,6 +146,8 @@ fun HomeContent(
     var hiddenRow by remember { mutableStateOf<HomeRowKey?>(null) }
     var returnRow by remember { mutableStateOf<HomeRowKey?>(null) }
     var focusReturn by remember { mutableIntStateOf(0) }
+    var undoFocused by remember { mutableStateOf(false) }
+    val currentRows by rememberUpdatedState(rows)
     val requesters = remember { mutableMapOf<HomeRowKey, FocusRequester>() }
     fun restore(key: HomeRowKey?) { returnRow = key; focusReturn++ }
     fun closeMenu() { val key = menuRow?.key; menuRow = null; menuMedia = null; menuApp = null; restore(key) }
@@ -157,7 +159,12 @@ fun HomeContent(
             if (runCatching { requester.requestFocus() }.getOrDefault(false)) return@LaunchedEffect
         }
     }
-    LaunchedEffect(hiddenRow) { if (hiddenRow != null) { delay(8_000); hiddenRow = null } }
+    LaunchedEffect(hiddenRow) {
+        val hidden = hiddenRow ?: return@LaunchedEffect
+        delay(8_000)
+        hiddenRow = null
+        if (undoFocused) restore(currentRows.orEmpty().firstOrNull { it.key != hidden }?.key)
+    }
     // The last focused title survives leaving Home for Spole or another launcher page.
     val restoreTarget = remember { focused }
     val restoreRow = rows?.firstOrNull { row ->
@@ -204,7 +211,7 @@ fun HomeContent(
                 artworkDimensions(style.format ?: defaultRowFormat(row.key, appearance), style.size ?: appearance.cardSize).height
             }?.dp ?: StovaLayout.WideHeight
             val rowHeight = appearance.rowSpacing.top.dp + 25.dp * fontScale + StovaLayout.SectionBottom + artworkHeight +
-                (if (appearance.showTitles) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp
+                (if (appearance.showTitles) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp + StovaLayout.TvSafeEdge
             // Fixed for these profile/font choices, independent of each spotlight title. Reserve
             // room for a whole row; even a large poster's optional caption must remain reachable.
             val baseHeroHeight = if (fontScale >= 1.5f) maxHeight * (appearance.heroSize.fraction + 0.16f)
@@ -241,13 +248,13 @@ fun HomeContent(
                                 itemsIndexed(rows, key = { _, row -> row.key.value }) { index, row ->
                                     val requester = if (row.key == restoreRow) firstItem else null
                                     CompositionLocalProvider(LocalBringIntoViewSpec provides rowSpec) {
-                                        val rowRequester = requesters.getOrPut(row.key) { FocusRequester() }
+                                        val rowRequester = remember(row.key) { requesters.getOrPut(row.key) { FocusRequester() } }
                                         val style = homePrefs.rowFormats[row.key] ?: RowStyle()
                                         var hasFocus by remember { mutableStateOf(false) }
                                         LaunchedEffect(movingRow, index) {
                                             if (movingRow == row.key) listState.scrollToItem(index)
                                         }
-                                        Box(Modifier.focusRequester(rowRequester).focusRestorer().onFocusChanged { state ->
+                                        Box(Modifier.focusRestorer().onFocusChanged { state ->
                                             hasFocus = state.hasFocus
                                             if (state.hasFocus) scope.launch {
                                                 if (reduceMotion) listState.scrollToItem(index) else listState.animateScrollToItem(index)
@@ -257,14 +264,16 @@ fun HomeContent(
                                           CompositionLocalProvider(LocalRowStyle provides style,
                                             LocalRowHasFocus provides hasFocus) {
                                             val rowMenu: () -> Unit = { if (canEditRows) menuRow = row }
+                                            val rowTarget = rowTargets[row.key] ?: restoreTarget
+                                            val trackFocus: (FocusedTarget) -> Unit = { rowTargets[row.key] = it; onFocus(it) }
                                             when (row) {
-                                                is HomeRowUi.WatchNext -> WatchNextRow(row, requester, onFocus, rowMenu)
-                                                is HomeRowUi.Media -> MediaRow(row, requester, restoreTarget, onFocus, onMediaClick, { target ->
+                                                is HomeRowUi.WatchNext -> WatchNextRow(row, requester, trackFocus, rowMenu, rowRequester, rowTarget)
+                                                is HomeRowUi.Media -> MediaRow(row, requester, rowTarget, trackFocus, onMediaClick, { target ->
                                                     if (canEditRows) { menuMedia = target; rowMenu() } else onMediaLongClick(target)
-                                                })
-                                                is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, restoreTarget, appIconOverrides, { app ->
+                                                }, rowRequester)
+                                                is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, rowTarget, appIconOverrides, { app ->
                                                     if (canEditRows) { menuApp = app; rowMenu() } else onAppLongClick(app)
-                                                }) { onFocus(FocusedTarget.App(it)) }
+                                                }, rowRequester) { trackFocus(FocusedTarget.App(it)) }
                                             }
                                           }
                                             }
@@ -283,7 +292,7 @@ fun HomeContent(
                 Text(stringResource(R.string.custom_row_hidden), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 StovaButton(stringResource(R.string.custom_undo), {
                     onHomeChange(homePrefs.copy(hiddenRows = homePrefs.hiddenRows - hidden)); hiddenRow = null; restore(hidden)
-                })
+                }, Modifier.onFocusChanged { undoFocused = it.hasFocus })
             }
         }
     }
@@ -293,7 +302,8 @@ fun HomeContent(
             RowMenuSection(row.key, homePrefs, onHomeChange,
                 onMove = { movingRow = row.key; closeMenu() },
                 onHide = {
-                    onHomeChange(homePrefs.copy(hiddenRows = homePrefs.hiddenRows + row.key))
+                    onHomeChange(homePrefs.copy(hiddenRows = homePrefs.hiddenRows + row.key,
+                        rowOrder = (homePrefs.rowOrder + rows.orEmpty().map { it.key }).distinct()))
                     hiddenRow = row.key; closeMenu()
                     restore(rows.orEmpty().firstOrNull { it.key != row.key }?.key)
                 })
@@ -318,7 +328,7 @@ private val StayPut = object : BringIntoViewSpec {
 
 @Composable
 private fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: FocusedTarget?,
-    onFocus: (FocusedTarget) -> Unit, onClick: (FocusedTarget.Media) -> Unit, onLongClick: (FocusedTarget.Media) -> Unit) {
+    onFocus: (FocusedTarget) -> Unit, onClick: (FocusedTarget.Media) -> Unit, onLongClick: (FocusedTarget.Media) -> Unit, returnFocus: FocusRequester?) {
     val index = row.items.indexOfFirst { it.id == (restore as? FocusedTarget.Media)?.item?.id }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     Column {
@@ -330,14 +340,15 @@ private fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Focu
                 val target = FocusedTarget.Media(item, row.account)
                 MediaCard(item, row.kind == MediaRowKind.LATEST_MOVIES && app.stova.core.theme.LocalAppearance.current.movieStyle == app.stova.profiles.MovieStyle.POSTER,
                     { onClick(target) }, { onLongClick(target) }, { onFocus(target) },
-                    if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
+                    (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
+                        .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier))
             }
         }
     }
 }
 
 @Composable
-private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, iconOverrides: Map<String, IconOverride>, onLongClick: (InstalledApp) -> Unit, onFocused: (String) -> Unit) {
+private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, iconOverrides: Map<String, IconOverride>, onLongClick: (InstalledApp) -> Unit, returnFocus: FocusRequester?, onFocused: (String) -> Unit) {
     val index = row.apps.indexOfFirst { it.label == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     Column {
@@ -346,7 +357,8 @@ private fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, 
             contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
             horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.cardSpacing.dp.dp)) {
             itemsIndexed(row.apps, key = { _, app -> app.key }) { i, app ->
-                val modifier = if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier
+                val modifier = (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
+                    .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier)
                 AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = { onLongClick(app) },
                     modifier = modifier.onFocusChanged { if (it.isFocused) onFocused(app.label) }, iconOverride = iconOverrides[app.key])
             }
@@ -368,8 +380,10 @@ private fun EmptyHome(onOpenApps: () -> Unit) {
 }
 
 @Composable
-private fun WatchNextRow(row: HomeRowUi.WatchNext, focus: FocusRequester?, onFocus: (FocusedTarget) -> Unit, onLongClick: () -> Unit) {
+private fun WatchNextRow(row: HomeRowUi.WatchNext, focus: FocusRequester?, onFocus: (FocusedTarget) -> Unit, onLongClick: () -> Unit,
+    returnFocus: FocusRequester?, restore: FocusedTarget?) {
     val context = LocalContext.current
+    val index = row.entries.indexOfFirst { it.title == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
     Column {
         if (LocalRowStyle.current.showTitle) RowHeader(stringResource(R.string.row_watch_next)) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
         LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
@@ -386,7 +400,8 @@ private fun WatchNextRow(row: HomeRowUi.WatchNext, focus: FocusRequester?, onFoc
                         Toast.makeText(context, R.string.app_open_failed, Toast.LENGTH_SHORT).show()
                     }
                 }, onFocused = { onFocus(FocusedTarget.App(entry.title)) },
-                    modifier = if (i == 0 && focus != null) Modifier.focusRequester(focus) else Modifier, onLongClick = onLongClick)
+                    modifier = (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
+                        .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier), onLongClick = onLongClick)
             }
         }
     }

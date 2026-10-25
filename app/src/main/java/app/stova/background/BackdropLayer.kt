@@ -48,7 +48,12 @@ private fun backdropRequest(context:Context,url:String)=ImageRequest.Builder(con
  }
  Box(modifier.fillMaxSize().background(ink)) {
   Crossfade(shown,modifier=Modifier.graphicsLayer { scaleX=scale.value;scaleY=scale.value },animationSpec=tween(if(LocalReduceMotion.current) 0 else 900),label="backdrop") { image ->
-   if(image!=null) AsyncImage(backdropRequest(context,image),null,imageLoader,Modifier.fillMaxSize().testTag("backdrop:$image"),contentScale=ContentScale.Crop)
+   if(image!=null) {
+    var ready by remember(image) { mutableStateOf(false) }
+    AsyncImage(backdropRequest(context,image),null,imageLoader,
+     Modifier.fillMaxSize().then(if(ready) Modifier.testTag("backdrop:$image") else Modifier),
+     contentScale=ContentScale.Crop,onSuccess={ ready=true })
+   }
   }
   Canvas(Modifier.fillMaxSize()) {
    // Keep a readable left column, then release the picture well before the right half.

@@ -33,10 +33,10 @@ fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean
     val reduceMotion = LocalReduceMotion.current
     val effect = LocalAppearance.current.focusEffect
     val dim = zoom && effect == FocusEffect.LIGHT_UP && LocalRowHasFocus.current && !focused
-    val brightness = animateFloatAsState(if (dim) 0.55f else 1f,
+    val brightness = animateFloatAsState(if (dim) 0.72f else 1f,
         tween(if (reduceMotion) 0 else StovaLayout.FocusFadeMillis), label = "focus-brightness")
     // Controls always retain their ring. Artwork uses the selected effect.
-    val showRing = !zoom || effect == FocusEffect.RING || effect == FocusEffect.RING_ZOOM
+    val showRing = !zoom || effect == FocusEffect.RING || effect == FocusEffect.RING_ZOOM || (reduceMotion && effect == FocusEffect.ZOOM)
     val alpha = animateFloatAsState(
         targetValue = if (focused && showRing) 1f else 0f,
         animationSpec = tween(if (reduceMotion) 0 else StovaLayout.FocusFadeMillis),
@@ -46,8 +46,10 @@ fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean
         if (zoom && focused && !reduceMotion && (effect == FocusEffect.ZOOM || effect == FocusEffect.RING_ZOOM)) 1.05f else 1f,
         tween(if (reduceMotion) 0 else StovaLayout.TransitionMillis), label = "focus-scale")
     val color = MaterialTheme.colorScheme.primary
+    val ink = MaterialTheme.colorScheme.background
     val width = if (LocalStrongFocus.current) 4.dp else LocalAppearance.current.ringWidth.dp.dp
-    return graphicsLayer { scaleX = scale.value; scaleY = scale.value; this.alpha = brightness.value }.drawWithCache {
+    return graphicsLayer { scaleX = scale.value; scaleY = scale.value }.drawWithCache {
+        val artOutline = shape.createOutline(size, layoutDirection, this)
         val stroke = width.toPx()
         val edge = stroke / 2
         val outline = shape.createOutline(
@@ -58,6 +60,8 @@ fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean
         val style = Stroke(stroke)
         onDrawWithContent {
             drawContent()
+            // Dim the art itself, keeping it opaque over the wallpaper.
+            if (brightness.value < 0.999f) drawOutline(artOutline, SolidColor(ink.copy(alpha = 1f - brightness.value)))
             val a = alpha.value
             if (a > 0.001f) {
                 inset(edge) { drawOutline(outline, SolidColor(color.copy(alpha = a)), style = style) }

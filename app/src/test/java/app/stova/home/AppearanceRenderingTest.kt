@@ -116,6 +116,21 @@ class AppearanceRenderingTest {
         assertTrue(compose.onNodeWithText("Film · Drama").getUnclippedBoundsInRoot().bottom <= header.top)
     }
 
+    @Test fun largePosterRowOverrideKeepsTheBottomTvSafeEdge() {
+        val row = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, listOf(film), false)
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            val ctx = LocalContext.current
+            HomeContent(listOf(row), null, row.key, AppArtCache(ctx), PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {},
+                topBar = { app.stova.navigation.TopBar(Profile("p", "Demo", AvatarColor.LIME), {}, {}, {}) },
+                spotlight = SpotlightEntry(film, account, false),
+                homePrefs = HomePrefs(rowFormats = mapOf(row.key to RowStyle(RowFormat.POSTER, ArtworkSize.LARGE))))
+        } }
+        val art = compose.onNodeWithContentDescription("Fjordlys").getUnclippedBoundsInRoot()
+        assertTrue("Whole large poster must remain inside the 48 dp safe edge: $art", art.bottom <= 492.dp)
+        val heading = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot()
+        assertTrue(compose.onNodeWithText("Film · Drama").getUnclippedBoundsInRoot().bottom <= heading.top)
+    }
+
     @Test fun denseHeroWithLongFactsAndOverviewStaysAboveTheRowHeader() {
         val item = film.copy(title = "Ein svært lang tittel om ei ferd gjennom fjordane og eit ukjent landskap langt mot nord",
             year = 2024, ratings = Ratings(7.8, 91, "TV-MA"), genres = listOf("Science fiction", "Drama", "Eventyr", "Thriller", "Mystery", "Adventure"), overview = "Ei lang omtale av ei ferd gjennom fjordar og opne landskap. ".repeat(5))

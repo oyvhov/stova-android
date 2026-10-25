@@ -81,9 +81,6 @@
     <string name="row_move_down">Flytt ned</string>
     <string name="row_watch_next">Hald fram i andre appar</string>
     <string name="appearance_reduce_motion">Reduser rørsle</string>
-    <string name="appearance_reduce_motion_hint">Ingen krysstoning eller rotasjon</string>
-    <string name="appearance_strong_focus">Kraftig fokus</string>
-    <string name="appearance_strong_focus_hint">Tjukkare fokusramme</string>
     <string name="about_version">Stova %1$s</string>
 
     <string name="settings_home_button">Home-knappen</string>
@@ -307,10 +304,7 @@
     <string name="appearance_star_score">★ %1$s</string>
     <string name="appearance_choice_hint">←/→ eller OK byter verdi. Opp/ned vel neste rad.</string>
     <string name="appearance_choice_value">‹ %1$s ›</string>
-    <string name="appearance_cards">Kort</string>
     <string name="appearance_background">Bakgrunn</string>
-    <string name="appearance_color_focus">Farge og fokus</string>
-    <string name="appearance_clock">Klokke</string>
     <string name="appearance_hero_size">Herostorleik</string>
     <string name="appearance_overview">Omtale i heroen</string>
     <string name="appearance_genres">Sjangrar i heroen</string>
@@ -527,4 +521,5 @@
     <string name="custom_show_apps">Vis Appar-knapp</string>
     <string name="custom_show_smart_home">Vis Smarthus-knapp</string>
     <string name="custom_show_profile">Vis profilbilete</string>
+    <string name="custom_back">Tilbake</string>
 </resources>

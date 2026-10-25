@@ -61,7 +61,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
     var section by rememberSaveable { mutableStateOf(SettingsSection.PROFILE) }
     val contentScroll = rememberScrollState()
     Row(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-        Column(Modifier.width(260.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.width(260.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 stringResource(R.string.nav_settings),
                 style = MaterialTheme.typography.headlineMedium,
@@ -95,7 +95,7 @@ private fun SectionTab(label: String, selected: Boolean, onClick: () -> Unit) {
     val shape = MaterialTheme.shapes.large
     Box(
         Modifier.fillMaxWidth()
-            .heightIn(min = 56.dp)
+            .heightIn(min = 48.dp)
             .focusOutline(source, shape)
             .clip(shape)
             .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)

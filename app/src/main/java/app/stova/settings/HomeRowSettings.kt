@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import app.stova.watchnext.WatchNextResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
@@ -36,11 +37,21 @@ import app.stova.home.*
 import kotlinx.coroutines.launch
 
 @Composable
-fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewModel) {
+fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewModel? = null) {
     val scope = rememberCoroutineScope()
-    val available by home.availableRows.collectAsStateWithLifecycle()
+    val accountFlow = remember(profile.id) { container.mediaAccounts.forProfile(profile.id) }
+    val accounts by accountFlow.collectAsStateWithLifecycle(initialValue = emptyList())
+    val stored = profile.home.rowOrder + profile.home.hiddenRows + profile.home.rowFormats.keys
+    val known = (listOf(HomeRowKey.APPS) + accounts.flatMap { account ->
+        listOf(HomeRowKey.continueWatching(account.id), HomeRowKey.latestMovies(account.id), HomeRowKey.latestSeries(account.id)) +
+            profile.appearance.season().takeUnless { it == Season.NONE }?.let { listOf(HomeRowKey.seasonal(account.id, it)) }.orEmpty()
+    } + stored).distinct()
+    val available = if (home != null) {
+        val loaded by home.availableRows.collectAsStateWithLifecycle()
+        (loaded + stored).distinct()
+    } else known
     val watchNext by container.watchNext.status.collectAsStateWithLifecycle()
-    LaunchedEffect(container.watchNext) { container.watchNext.read() }
+    LaunchedEffect(container.watchNext, profile.kid) { if (!profile.kid) container.watchNext.read() }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (!granted) container.watchNext.permissionDenied()
         scope.launch { container.watchNext.read(); container.watchNext.refresh() }
@@ -59,7 +70,7 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
             stringResource(R.string.home_start_on_apps_hint),
         )
     }
-    SettingsGroup(stringResource(R.string.row_watch_next)) {
+    if (!profile.kid) SettingsGroup(stringResource(R.string.row_watch_next)) {
         when (val state = watchNext) {
             is WatchNextResult.Available -> Text(stringResource(R.string.watch_next_available), color = MaterialTheme.colorScheme.onSurfaceVariant)
             is WatchNextResult.Unavailable -> {

@@ -29,7 +29,8 @@ class RowEditingTest {
     private val second = HomeRowKey.latestMovies("a")
     private val all = listOf(first, second).mapIndexed { i, key -> HomeRowUi.Media(key, account,
         if (i == 0) MediaRowKind.CONTINUE else MediaRowKind.LATEST_MOVIES,
-        listOf(MediaItem("$i", "a", ItemType.MOVIE, "Film $i")), false) }
+        listOf(MediaItem("$i", "a", ItemType.MOVIE, "Film $i")) +
+            if (i == 0) listOf(MediaItem("extra", "a", ItemType.MOVIE, "Ekstra")) else emptyList(), false) }
 
     private fun render(onSaved: (HomePrefs) -> Unit = {}) {
         compose.setContent {
@@ -38,7 +39,7 @@ class RowEditingTest {
             val rows = arrangeRows(all.map { it.key }, home).map { key -> all.first { it.key == key } }
             StovaTheme(reduceMotion = true) {
                 HomeContent(rows, null, first, AppArtCache(context), PackageManagerAppCatalog(context, emptySet()),
-                    {}, {}, {}, {}, homePrefs = home, onHomeChange = { home = it; onSaved(it) })
+                    {}, {}, {}, {}, homePrefs = home, onHomeChange = { home = it; onSaved(it) }, canEditRows = true)
             }
         }
         compose.waitForIdle()
@@ -85,5 +86,24 @@ class RowEditingTest {
         compose.onNodeWithText("Vis radtittel").performClick()
         assertEquals(RowStyle(RowFormat.LARGE_WIDE, ArtworkSize.LARGE, false), saved.rowFormats[first])
         assertNull(saved.rowFormats[second])
+    }
+
+    @Test fun dismissingMenuAndFinishingMoveRestoreTheSameCard() {
+        render()
+        compose.onNodeWithContentDescription("Ekstra").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithContentDescription("Ekstra").performKeyInput { pressKey(Key.Menu) }
+        compose.onNodeWithText("Flytt rada").performClick()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.Enter) }
+        compose.onNodeWithContentDescription("Ekstra").assertIsFocused()
+    }
+
+    @Test fun undoRestoresTheHiddenCardEvenAfterFocusMovedToAnotherRow() {
+        render()
+        compose.onNodeWithContentDescription("Ekstra").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithContentDescription("Ekstra").performKeyInput { pressKey(Key.Menu) }
+        compose.onNodeWithText("Skjul rada").performClick()
+        compose.onNodeWithContentDescription("Film 1").assertIsFocused()
+        compose.onNodeWithText("Angre").performClick()
+        compose.onNodeWithContentDescription("Ekstra").assertIsFocused()
     }
 }

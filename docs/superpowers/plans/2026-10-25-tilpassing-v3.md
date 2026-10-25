@@ -11,3 +11,5 @@ Bestilling: `docs/briefs/2026-10-25-tilpassing-v3.md`. Berre appearance-worktree
 - [ ] 7. Minst åtte skjermbilete, visuell vurdering, sluttkontroll og dokumentasjon.
 
 Ingen superpowers-planferdigheiter er tilgjengelege; oppgåvene blir gjorde i rekkjefølgje av éin agent.
+
+Visuell etterkontroll: rett radfokus etter flytt/angre, ugjennomsiktig Lys opp, vaksenredigering av barnet sine rader, 48 dp nedre TV-kant og ferdig lasta bilete ved opptak er verifiserte.

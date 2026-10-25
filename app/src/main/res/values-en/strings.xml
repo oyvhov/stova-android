@@ -81,9 +81,6 @@
     <string name="row_move_down">Move down</string>
     <string name="row_watch_next">Continue in other apps</string>
     <string name="appearance_reduce_motion">Reduce motion</string>
-    <string name="appearance_reduce_motion_hint">No crossfades or rotation</string>
-    <string name="appearance_strong_focus">Strong focus</string>
-    <string name="appearance_strong_focus_hint">Thicker focus outline</string>
     <string name="about_version">Stova %1$s</string>
 
     <string name="settings_home_button">Home button</string>
@@ -307,10 +304,7 @@
     <string name="appearance_star_score">★ %1$s</string>
     <string name="appearance_choice_hint">Use ←/→ or OK to change a value. Up/down selects a row.</string>
     <string name="appearance_choice_value">‹ %1$s ›</string>
-    <string name="appearance_cards">Cards</string>
     <string name="appearance_background">Background</string>
-    <string name="appearance_color_focus">Color and focus</string>
-    <string name="appearance_clock">Clock</string>
     <string name="appearance_hero_size">Hero size</string>
     <string name="appearance_overview">Hero overview</string>
     <string name="appearance_genres">Hero genres</string>
@@ -527,4 +521,5 @@
     <string name="custom_show_apps">Show Apps button</string>
     <string name="custom_show_smart_home">Show Smart home button</string>
     <string name="custom_show_profile">Show profile picture</string>
+    <string name="custom_back">Back</string>
 </resources>
