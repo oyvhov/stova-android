@@ -30,7 +30,7 @@ fun cardTypesFor(entity: HaEntity): List<CardType> = when (entity.id.substringBe
     "switch", "input_boolean", "fan" -> listOf(CardType.TOGGLE)
     "climate" -> listOf(CardType.CLIMATE)
     "sensor" -> if (isEnergyPrice(entity)) listOf(CardType.ENERGY_PRICE, CardType.SENSOR) else listOf(CardType.SENSOR)
-    "binary_sensor" -> listOf(CardType.SENSOR)
+    "binary_sensor", "alarm_control_panel" -> listOf(CardType.SENSOR)
     "weather" -> listOf(CardType.WEATHER)
     "media_player" -> listOf(CardType.MEDIA_PLAYER)
     "scene", "script" -> listOf(CardType.SCENE)

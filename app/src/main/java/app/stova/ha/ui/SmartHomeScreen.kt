@@ -42,6 +42,7 @@ import kotlin.math.ceil
     val registry by container.haRepository.registry.collectAsStateWithLifecycle()
     val pending by container.haRepository.pending.collectAsStateWithLifecycle()
     val feedback by container.haRepository.feedback.collectAsStateWithLifecycle()
+    val completed by container.haRepository.completed.collectAsStateWithLifecycle()
     val status by container.haSocket.status.collectAsStateWithLifecycle()
     val household by container.household.data.collectAsStateWithLifecycle(initialValue=null)
     val scope=rememberCoroutineScope()
@@ -56,11 +57,12 @@ import kotlin.math.ceil
         onHome={card->container.haRepository.setOnHome(card.id,!card.onHome)},
         onRemove={card->scope.launch {container.haRepository.remove(card.id)}},
         onConfigure={card->scope.launch {container.haRepository.configure(card.id,card.size,card.name,card.icon,card.favorite)}},
-        registry=registry,pending=pending,feedback=feedback,connection=container.haSocket)
+        registry=registry,pending=pending,feedback=feedback,connection=container.haSocket,completed=completed)
     if(adding && !profile.kid) Dialog({adding=false},properties=DialogProperties(usePlatformDefaultWidth=false)) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(StovaLayout.TvSafeEdge)) {AddCardFlow(container) {adding=false}}
     }
-    CardDialogHost(dialog,entities,container.haSocket,images,!canControl(profile),{call,id->scope.launch {container.haRepository.perform(call,id,profile)}},{dialog=null})
+    CardDialogHost(dialog,entities,container.haSocket,images,!canControl(profile),{call,id->scope.launch {container.haRepository.perform(call,id,profile)}},{dialog=null},room=dialog?.let {registry.entities[it.entityId]?.room},
+        name=cards.find {it.entityId==dialog?.entityId}?.name,send={call,id->container.haRepository.perform(call,id,profile)})
 }
 
 /** Rendering works from HaSnapshot before the network is ready. */
@@ -70,7 +72,7 @@ import kotlin.math.ceil
     onDialog:(CardDialog)->Unit={},onMove:(CardConfig,Int)->Unit={_,_->},onWide:(CardConfig)->Unit={},
     onHome:suspend (CardConfig)->Boolean={true},onRemove:(CardConfig)->Unit={},
     onConfigure:(CardConfig)->Unit={},registry:HaRegistry=HaRegistry(),pending:Set<String> = emptySet(),
-    feedback:HaFeedback?=null,connection:HaConnection?=null,
+    feedback:HaFeedback?=null,connection:HaConnection?=null,completed:Set<String> = emptySet(),
 ) {
     var editing by remember(profile.id) {mutableStateOf(false)}
     var menuId by remember(profile.id) {mutableStateOf<String?>(null)}
@@ -136,7 +138,7 @@ import kotlin.math.ceil
                                 visible="band-${band.first().card.id}" in visible,
                                 onEdit=if(editing) {{menuId=card.id;restoreId=card.id}} else null,
                                 onMenu=if(!profile.kid) {{menuId=card.id;restoreId=card.id}} else null,
-                                pending=card.entityId in pending,connection=connection,
+                                pending=card.entityId in pending,connection=connection,completed=card.entityId in completed,
                                 room=if(section.favorites) registry.entities[card.entityId]?.room else null,
                                 modifier=Modifier.weight(1f).bringIntoViewRequester(intoView).onFocusChanged {
                                     if(it.isFocused) scope.launch {intoView.bringIntoView()}

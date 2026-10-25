@@ -20,7 +20,7 @@ import kotlinx.coroutines.*
 fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCall)->Unit,openDialog:(CardDialog)->Unit,
     images:HaImageSource?=null,visible:Boolean=true,onEdit:(()->Unit)?=null,onMenu:(()->Unit)?=null,
     pending:Boolean=false,connection:HaConnection?=null,modifier:Modifier=Modifier,room:String?=null,
-    onMove:((Int)->Unit)?=null,editing:Boolean=false) {
+    onMove:((Int)->Unit)?=null,editing:Boolean=false,completed:Boolean=false) {
     val unavailable=stateText(entity)==StateText.Unavailable
     var history by remember(config.entityId) {mutableStateOf(emptyList<Double>())}
     var forecast by remember(config.entityId) {mutableStateOf(emptyList<ForecastDay>())}
@@ -87,7 +87,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
             CardType.WEATHER -> WeatherCard(shown,forecast,config.size,connection?.timeZone ?: java.time.ZoneId.systemDefault())
             CardType.ENERGY_PRICE -> EnergyPriceCard(energy?.copy(state=shown.state) ?: shown,connection?.timeZone ?: java.time.ZoneId.systemDefault())
             CardType.MEDIA_PLAYER -> MediaPlayerCard(shown,true,{},config.size)
-            CardType.SCENE -> SceneCard()
+            CardType.SCENE -> if(completed) CardValue(stringResource(app.stova.R.string.ha_action_ran)) else SceneCard()
             CardType.CAMERA -> CameraCard(shown,images,visible,config.size)
             CardType.COVER -> {CardValue(entityStateLabel(shown));shown.attributes.number("current_position")?.let {CardDetail(stringResource(R.string.ha_percent,it.toInt()))}}
             CardType.LOCK -> CardValue(entityStateLabel(shown))

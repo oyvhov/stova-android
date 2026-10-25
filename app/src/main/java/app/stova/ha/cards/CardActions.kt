@@ -26,8 +26,15 @@ internal fun JsonObject.number(key: String): Double? = (get(key) as? JsonPrimiti
 /** Predict only state/attributes affected by this call. Server snapshots remain authoritative. */
 fun optimisticEntity(entity: HaEntity, call: ServiceCall): HaEntity = when (call.service) {
     "toggle" -> entity.copy(state=if(entity.state=="on") "off" else "on")
-    "turn_on", "turn_off" -> entity.copy(state=if(call.service=="turn_on") "on" else "off",
+    "turn_on", "turn_off" -> if(entity.id.substringBefore('.') in setOf("scene","script")) entity else entity.copy(state=if(call.service=="turn_on") "on" else "off",
         attributes=if(call.data.number("brightness_pct")!=null) JsonObject(entity.attributes + ("brightness" to JsonPrimitive(call.data.number("brightness_pct")!! * 255 / 100))) else entity.attributes)
-    "set_temperature", "volume_set" -> entity.copy(attributes=JsonObject(entity.attributes+call.data))
+    "media_play_pause" -> entity.copy(state=if(entity.state=="playing") "paused" else "playing")
+    "media_play" -> entity.copy(state="playing")
+    "media_pause" -> entity.copy(state="paused")
+    "set_hvac_mode" -> entity.copy(state=call.data["hvac_mode"]?.jsonPrimitive?.content ?: entity.state)
+    "set_cover_position" -> entity.copy(attributes=JsonObject(entity.attributes+("current_position" to call.data.getValue("position"))))
+    "set_temperature", "volume_set", "set_percentage", "set_direction", "set_preset_mode", "select_source" -> entity.copy(attributes=JsonObject(entity.attributes+call.data))
+    "lock" -> entity.copy(state="locked")
+    "unlock" -> entity.copy(state="unlocked")
     else -> entity
 }

@@ -63,8 +63,8 @@ class CardV2UiTest {
         var calls=0
         val climate=e("climate.a","heat","""{"temperature":23.5,"current_temperature":25}""")
         compose.setContent {StovaTheme {CardDialogHost(CardDialog.Climate(climate.id),mapOf(climate.id to climate),FakeHaConnection(),null,false,{_,_->calls++},{})}}
-        compose.onNodeWithText("Mindre").performSemanticsAction(SemanticsActions.RequestFocus)
-        compose.onNodeWithText("Mindre").performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithTag("slider-temperature").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithTag("slider-temperature").performKeyInput {pressKey(Key.DirectionDown)}
         assertEquals(0,calls)
     }
     @Test fun mediaCardIsOneNavigationTarget() {

@@ -60,10 +60,10 @@ class HaCardTest {
         val calls=mutableListOf<ServiceCall>()
         compose.mainClock.autoAdvance=false
         compose.setContent { StovaTheme { CardDialogHost(CardDialog.Brightness("light.stove"),mapOf("light.stove" to entity(attrs="""{"brightness":128}""")),app.stova.ha.FakeHaConnection(),null,false,{call,_->calls+=call},{}) } }
-        compose.onNodeWithText("Meir").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
-        compose.onNodeWithText("Meir").performKeyInput { pressKey(Key.DirectionRight);pressKey(Key.DirectionRight) }
+        compose.onNodeWithTag("slider-brightness").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        compose.onNodeWithTag("slider-brightness").performKeyInput { pressKey(Key.DirectionRight);pressKey(Key.DirectionRight) }
         compose.mainClock.advanceTimeBy(100); assertTrue(calls.isEmpty())
         compose.mainClock.advanceTimeBy(400); compose.waitForIdle()
-        assertEquals(listOf(brightnessCall(70)),calls)
+        assertEquals(listOf(brightnessCall(52)),calls)
     }
 }
