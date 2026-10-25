@@ -5,6 +5,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import app.stova.AppContainer
@@ -21,13 +24,22 @@ import kotlinx.coroutines.launch
 fun AppearanceSettings(container: AppContainer, profile: Profile) {
     val scope = rememberCoroutineScope()
     val packs by container.iconPacks.packs.collectAsStateWithLifecycle()
-    AppearanceSettingsContent(profile.appearance, packs) { prefs ->
+    var picking by remember(profile.id) { mutableStateOf(false) }
+    AppearanceSettingsContent(profile.appearance, packs, onPickBackground = { picking = true }) { prefs ->
         scope.launch { container.profiles.update(profile.id) { it.copy(appearance = prefs) } }
     }
+    if (picking) BackgroundPicker({ container.media.searchBackgrounds(profile.id, it) }, { entry ->
+        picking = false
+        scope.launch {
+            container.media.rememberBackground(profile.id, entry)
+            container.profiles.update(profile.id) { it.copy(appearance = it.appearance.copy(backgroundSource = BackgroundSource.FIXED,
+                fixedBackground = BackgroundTitle(entry.account.id, entry.item.id, entry.item.title))) }
+        }
+    }, { picking = false })
 }
 
 @Composable
-fun AppearanceSettingsContent(p: AppearancePrefs, packs: List<app.stova.apps.IconPack> = emptyList(), onChange: (AppearancePrefs) -> Unit) {
+fun AppearanceSettingsContent(p: AppearancePrefs, packs: List<app.stova.apps.IconPack> = emptyList(), onPickBackground: () -> Unit = {}, onChange: (AppearancePrefs) -> Unit) {
     Text(stringResource(R.string.appearance_choice_hint), style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
     SettingsGroup(stringResource(R.string.theme_group)) {
@@ -49,7 +61,8 @@ fun AppearanceSettingsContent(p: AppearancePrefs, packs: List<app.stova.apps.Ico
     }
     IconPackSettingsContent(p, packs, onChange)
     SettingsGroup(stringResource(R.string.settings_home)) {
-        Choice(R.string.appearance_hero_size, p.heroSize, HeroSize.entries, listOf(R.string.appearance_compact, R.string.appearance_large)) { onChange(p.copy(heroSize = it)) }
+        Choice(R.string.appearance_hero_size, p.heroSize, HeroSize.entries, listOf(R.string.appearance_off, R.string.appearance_compact, R.string.appearance_large)) { onChange(p.copy(heroSize = it)) }
+        Choice(R.string.custom_hero_title, p.heroTitle, HeroTitle.entries, listOf(R.string.custom_logo, R.string.custom_always_title)) { onChange(p.copy(heroTitle = it)) }
         Toggle(R.string.appearance_overview, p.showOverview) { onChange(p.copy(showOverview = it)) }
         Toggle(R.string.appearance_genres, p.showGenres) { onChange(p.copy(showGenres = it)) }
         Choice(R.string.appearance_spotlight_time, p.spotlightTime, SpotlightTime.entries, listOf(R.string.appearance_8s, R.string.appearance_12s, R.string.appearance_20s)) { onChange(p.copy(spotlightTime = it)) }
@@ -63,7 +76,14 @@ fun AppearanceSettingsContent(p: AppearancePrefs, packs: List<app.stova.apps.Ico
         Choice(R.string.appearance_corners, p.corners, Corners.entries, listOf(R.string.appearance_round, R.string.appearance_sharp)) { onChange(p.copy(corners = it)) }
     }
     SettingsGroup(stringResource(R.string.appearance_background)) {
+        Choice(R.string.custom_background_source, p.backgroundSource, BackgroundSource.entries,
+            listOf(R.string.custom_spotlight, R.string.custom_fixed_image, R.string.custom_theme_surface)) { onChange(p.copy(backgroundSource = it)) }
+        if (p.backgroundSource == BackgroundSource.FIXED) app.stova.core.ui.SettingsNavRow(
+            stringResource(R.string.custom_pick_background), p.fixedBackground?.title, onPickBackground)
+        Choice(R.string.custom_spotlight_source, p.spotlightSource, SpotlightSource.entries,
+            listOf(R.string.custom_whole_library, R.string.custom_only_movies, R.string.custom_only_series, R.string.custom_favorites)) { onChange(p.copy(spotlightSource = it)) }
         Choice(R.string.appearance_dimming, p.backdropDimming, BackdropDimming.entries, listOf(R.string.appearance_light, R.string.appearance_medium, R.string.appearance_dark)) { onChange(p.copy(backdropDimming = it)) }
+        Toggle(R.string.custom_background_motion, p.backgroundMotion) { onChange(p.copy(backgroundMotion = it)) }
     }
     SettingsGroup(stringResource(R.string.appearance_color_focus)) {
         Choice(R.string.appearance_focus_effect, p.focusEffect, FocusEffect.entries, listOf(R.string.appearance_ring, R.string.appearance_zoom)) { onChange(p.copy(focusEffect = it)) }

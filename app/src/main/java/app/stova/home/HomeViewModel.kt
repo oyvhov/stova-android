@@ -53,7 +53,10 @@ class HomeViewModel(
     /** Remembers the card for focus restore; the hero and backdrop follow the spotlight, not focus. */
     fun focus(target: FocusedTarget) { focusedState.value = target }
 
-    private val spotlightPool: Flow<List<SpotlightEntry>> = seasonalProfile
+    private val spotlightPool: Flow<List<SpotlightEntry>> = combine(seasonalProfile,
+        session.active.map { it?.appearance?.spotlightSource }.distinctUntilChanged()) { profile, source ->
+            profile?.copy(appearance = profile.appearance.copy(spotlightSource = source ?: app.stova.profiles.SpotlightSource.LIBRARY))
+        }
         .flatMapLatest { profile ->
             val key = profile?.let { it.id to it.appearance.season() }
             if (key != spotlightProfileSeason) { spotlightIndex = 0; spotlightProfileSeason = key }
@@ -77,7 +80,7 @@ class HomeViewModel(
                 }
             }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), null)
 
     /**
      * Null until every source has answered for the current profile: "not loaded yet" must never

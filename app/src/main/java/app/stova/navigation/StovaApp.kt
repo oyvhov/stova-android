@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.produceState
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -74,13 +75,21 @@ private fun MainShell(container: AppContainer, profile: Profile) {
             container.session.leave()
         }
     }
-    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season()) } }
+    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season(), it.appearance.spotlightSource) } }
     val date = app.stova.core.theme.LocalSeasonDate.current
     LaunchedEffect(home, date) { home.setCalendarDate(date) }
-    val spotlight by home.spotlight.collectAsStateWithLifecycle()
     // No side rail: home is the whole screen, and Apps and Settings are pages that Back closes.
     Box(Modifier.fillMaxSize().testTag("screen-${current.name}")) {
-        if (current == Destination.HOME) app.stova.background.BackdropLayer(spotlight?.item?.art?.backdrop)
+        if (current == Destination.HOME) {
+            val spotlight by home.spotlight.collectAsStateWithLifecycle()
+            val fixedFlow = remember(profile.id, profile.appearance.fixedBackground, profile.appearance.backgroundSource) {
+                if (profile.appearance.backgroundSource == app.stova.profiles.BackgroundSource.FIXED)
+                    container.media.fixedBackground(profile.id, profile.appearance.fixedBackground)
+                else kotlinx.coroutines.flow.flowOf(null)
+            }
+            val fixed by fixedFlow.collectAsStateWithLifecycle(initialValue = null)
+            app.stova.background.BackdropLayer(app.stova.background.backgroundUrl(profile.appearance, spotlight?.item?.art?.backdrop, fixed?.item?.art?.backdrop))
+        }
         when (current) {
             Destination.HOME -> HomeScreen(
                 home, container.appArt, container.appCatalog,

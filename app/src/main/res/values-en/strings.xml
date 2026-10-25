@@ -472,4 +472,23 @@
     <string name="custom_move_hint">Up/down moves the row · OK or Back finishes</string>
     <string name="custom_row_hidden">Row hidden</string>
     <string name="custom_undo">Undo</string>
+    <string name="custom_pick_background">Choose background title</string>
+    <string name="custom_search_titles">Search library</string>
+    <string name="custom_library_loading">Loading titles …</string>
+    <string name="custom_library_empty">No titles with background artwork</string>
+    <string name="custom_library_failed">Could not load the library</string>
+    <string name="custom_retry">Try again</string>
+    <string name="custom_hero_title">Logo or title</string>
+    <string name="custom_logo">Logo when available</string>
+    <string name="custom_always_title">Always title</string>
+    <string name="custom_background_source">Background source</string>
+    <string name="custom_spotlight">Spotlight</string>
+    <string name="custom_fixed_image">Fixed image</string>
+    <string name="custom_theme_surface">Solid theme</string>
+    <string name="custom_spotlight_source">Spotlight source</string>
+    <string name="custom_whole_library">Whole library</string>
+    <string name="custom_only_movies">Movies only</string>
+    <string name="custom_only_series">Series only</string>
+    <string name="custom_favorites">Favorites</string>
+    <string name="custom_background_motion">Gentle background motion</string>
 </resources>

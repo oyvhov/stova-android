@@ -1,6 +1,8 @@
 package app.stova.background
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import app.stova.core.theme.LocalReduceMotion
@@ -21,20 +24,30 @@ import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import android.content.Context
 import androidx.compose.runtime.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 private fun backdropRequest(context:Context,url:String)=ImageRequest.Builder(context).data(url).size(1920,1080).build()
-@Composable fun BackdropLayer(url:String?,modifier:Modifier=Modifier,imageLoader:ImageLoader=SingletonImageLoader.get(LocalContext.current)) {
+@Composable fun BackdropLayer(url:String?,modifier:Modifier=Modifier,imageLoader:ImageLoader=SingletonImageLoader.get(LocalContext.current),visible:Boolean=true) {
  val ink=MaterialTheme.colorScheme.background
- val dimming=app.stova.core.theme.LocalAppearance.current.backdropDimming
+ val prefs=app.stova.core.theme.LocalAppearance.current
+ val dimming=prefs.backdropDimming
  val context=LocalContext.current
  // The next title fades in only once its image is decoded, so a change never dips to the bare
  // background; a failed load keeps the current picture.
  var shown by remember { mutableStateOf<String?>(null) }
+ val lifecycle by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
+ val moving=backgroundCanMove(prefs,visible && lifecycle.isAtLeast(Lifecycle.State.STARTED)) && !LocalReduceMotion.current
+ val scale=remember { Animatable(1f) }
+ LaunchedEffect(moving,shown,prefs.spotlightTime) {
+  scale.snapTo(1f)
+  if(moving && shown!=null) scale.animateTo(1.04f,tween(prefs.spotlightTime.millis.toInt(),easing=LinearEasing))
+ }
  LaunchedEffect(url,imageLoader) {
   if(url==null) shown=null
   else if(imageLoader.execute(backdropRequest(context,url)) is SuccessResult) shown=url
  }
  Box(modifier.fillMaxSize().background(ink)) {
-  Crossfade(shown,animationSpec=tween(if(LocalReduceMotion.current) 0 else 900),label="backdrop") { image ->
+  Crossfade(shown,modifier=Modifier.graphicsLayer { scaleX=scale.value;scaleY=scale.value },animationSpec=tween(if(LocalReduceMotion.current) 0 else 900),label="backdrop") { image ->
    if(image!=null) AsyncImage(backdropRequest(context,image),null,imageLoader,Modifier.fillMaxSize().testTag("backdrop:$image"),contentScale=ContentScale.Crop)
   }
   Canvas(Modifier.fillMaxSize()) {

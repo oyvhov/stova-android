@@ -4,6 +4,8 @@ import app.stova.media.model.*
 import app.stova.media.net.*
 import app.stova.home.*
 import app.stova.profiles.Season
+import app.stova.profiles.SpotlightSource
+import app.stova.profiles.BackgroundTitle
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -48,13 +50,62 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   finally { refresh.cancel() }
  }.distinctUntilChanged()
  /** The hero's titles; served from the snapshot at once, refreshed alongside the rows. */
- fun spotlight(profileId:String, season: Season = Season.NONE): Flow<List<SpotlightEntry>> = flow {
+ fun spotlight(profileId:String, season: Season = Season.NONE, source: SpotlightSource = SpotlightSource.LIBRARY): Flow<List<SpotlightEntry>> = flow {
   val slot=loaded(profileId)
-  emitAll(combine(slot.spotlight,slot.rows.filterNotNull(),accounts.forProfile(profileId)) { entries,rows,active ->
+  val pool: Flow<List<SpotlightEntry>> = if(source==SpotlightSource.LIBRARY) slot.spotlight else flow {
+   emit(slot.spotlight.value.filter { acceptsSpotlight(it.item,source) })
+   while(true) {
+    val selected=accounts.forProfile(profileId).first().filterNot { it.needsSignIn }
+    val result=supervisorScope { selected.map { account -> async {
+     withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(null) {
+      clientFor(account)?.spotlight(source)?.filter { acceptsSpotlight(it,source) }?.map { item ->
+       SpotlightEntry(item,account,slot.spotlight.value.any { it.account.id==account.id && it.item.id==item.id && it.newSeason })
+      }
+     } }
+    } }.awaitAll() }
+    if(result.any { it!=null }) emit(result.filterNotNull().flatten())
+    delay(SPOTLIGHT_REFRESH_MILLIS)
+   }
+  }
+  emitAll(combine(pool,slot.rows.filterNotNull(),accounts.forProfile(profileId)) { entries,rows,active ->
    val valid=active.filterNot { it.needsSignIn }.associateBy { it.id }
-   seasonalSpotlight(entries.mapNotNull { entry -> valid[entry.account.id]?.let { entry.copy(account=it) } },visible(rows,active),season)
+   seasonalSpotlight(entries.mapNotNull { entry -> valid[entry.account.id]?.let { entry.copy(account=it) } },
+    visible(rows,active).map { it.copy(items=it.items.filter { item -> acceptsSpotlight(item,source) }) },season)
   })
  }.distinctUntilChanged()
+
+ /** Search all connected libraries, with the snapshot available when a server is offline. */
+ suspend fun searchBackgrounds(profileId:String,query:String): List<SpotlightEntry> {
+  val slot=loaded(profileId)
+  val active=accounts.forProfile(profileId).first().filterNot { it.needsSignIn }
+  val cached=slot.spotlight.value+slot.rows.value.orEmpty().flatMap { row -> row.items.map { SpotlightEntry(it,row.account,false) } }
+  val remote=supervisorScope { active.map { account -> async {
+   withTimeoutOrNull(10_000) { orElse(emptyList()) { clientFor(account)?.searchTitles(query).orEmpty().map { SpotlightEntry(it,account,false) } } }.orEmpty()
+  } }.awaitAll().flatten() }
+  return (remote+cached).filter { it.account.id in active.map { a -> a.id } && it.item.art.backdrop!=null &&
+   (it.item.type==ItemType.MOVIE || it.item.type==ItemType.SERIES) && it.item.title.contains(query.trim(),ignoreCase=true) }
+   .distinctBy { it.account.id to it.item.id }.sortedBy { it.item.title.lowercase() }
+ }
+
+ suspend fun rememberBackground(profileId:String,entry:SpotlightEntry) {
+  val slot=loaded(profileId)
+  slot.store.update { it.copy(backgrounds=(it.backgrounds.filterNot { saved -> saved.accountId==entry.account.id && saved.item.id==entry.item.id }+
+   SnapshotSpotlight(entry.account.id,entry.item,false)).takeLast(12)) }
+ }
+
+ @OptIn(ExperimentalCoroutinesApi::class)
+ fun fixedBackground(profileId:String,title:BackgroundTitle?): Flow<SpotlightEntry?> = flow {
+  if(title==null) { emit(null);return@flow }
+  val slot=loaded(profileId)
+  emitAll(accounts.forProfile(profileId).mapLatest { active ->
+   val account=active.firstOrNull { it.id==title.accountId && !it.needsSignIn } ?: return@mapLatest null
+   val cached=slot.store.current().backgrounds.firstOrNull { it.accountId==account.id && it.item.id==title.itemId }?.item
+    ?: slot.spotlight.value.firstOrNull { it.account.id==account.id && it.item.id==title.itemId }?.item
+   if(cached!=null) SpotlightEntry(cached,account,false) else withTimeoutOrNull(10_000) { orElse(null) {
+    clientFor(account)?.items(listOf(title.itemId))?.firstOrNull()?.let { SpotlightEntry(it,account,false) }
+   } }
+  })
+ }
  private fun visible(rows:List<HomeRowUi.Media>,active:List<MediaAccount>): List<HomeRowUi.Media> {
   val valid=active.filterNot { it.needsSignIn }.associateBy { it.id }
   return rows.mapNotNull { row -> valid[row.account.id]?.let { row.copy(account=it) } }.filter { it.items.isNotEmpty() }
@@ -112,8 +163,8 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    val spotlight=fetched.flatMap { it.spotlight }.filter { it.account.id in valid }.sortedByDescending { it.newSeason }
    if(spotlightDue && fetched.all { it.spotlightOk }) slot.spotlightAt=now
    slot.rows.value=current;slot.spotlight.value=spotlight
-   slot.store.update { MediaSnapshot(current.map { SnapshotRow(it.key,it.account.id,it.kind,it.items) },now,
-    spotlight.map { SnapshotSpotlight(it.account.id,it.item,it.newSeason) },slot.spotlightAt) }
+   slot.store.update { it.copy(rows=current.map { row -> SnapshotRow(row.key,row.account.id,row.kind,row.items) },savedAt=now,
+    spotlight=spotlight.map { entry -> SnapshotSpotlight(entry.account.id,entry.item,entry.newSeason) },spotlightAt=slot.spotlightAt) }
   }
  }
 }

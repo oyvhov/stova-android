@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
   else -> app.stova.profiles.Season.NONE
  }
 }
-@Serializable data class MediaSnapshot(val rows: List<SnapshotRow> = emptyList(),val savedAt: Long=0,val spotlight: List<SnapshotSpotlight> = emptyList(),val spotlightAt: Long=0)
+@Serializable data class MediaSnapshot(val rows: List<SnapshotRow> = emptyList(),val savedAt: Long=0,val spotlight: List<SnapshotSpotlight> = emptyList(),val spotlightAt: Long=0,val backgrounds: List<SnapshotSpotlight> = emptyList())
 @Serializable data class SnapshotRow(val key: HomeRowKey,val accountId: String,val kind: MediaRowKind,val items: List<MediaItem>)
 fun mergeContinue(resume: List<MediaItem>,nextUp: List<MediaItem>,limit: Int=20): List<MediaItem> {
  val ids=resume.mapTo(mutableSetOf()) { it.id }

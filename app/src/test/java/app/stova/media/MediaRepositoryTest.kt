@@ -112,4 +112,29 @@ class MediaRepositoryTest {
   val r=MediaRepository(a,{client(it)},tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))
   assertEquals(1,r.rows("p").first().size);a.remove(j.id);assertTrue(r.rows("p").first().isEmpty())
  }
+ @Test fun fixedBackgroundSurvivesColdStartAndRefreshButNotAccountRemoval()=runTest {
+  val a=accounts();val account=add(a,ServerKind.JELLYFIN);val io=UnconfinedTestDispatcher(testScheduler)
+  val r=MediaRepository(a,{client(it)},tmp.root.resolve("snapshots"),backgroundScope,io)
+  val entry=SpotlightEntry(spot(account),account,false)
+  val title=app.stova.profiles.BackgroundTitle(account.id,entry.item.id,entry.item.title)
+  r.rememberBackground("p",entry);r.refresh("p")
+  val cold=MediaRepository(a,{awaitCancellation()},tmp.root.resolve("snapshots"),backgroundScope,io)
+  assertEquals(entry,cold.fixedBackground("p",title).first())
+  a.remove(account.id)
+  assertNull(cold.fixedBackground("p",title).first())
+ }
+ @Test fun favoritesSourceQueriesServerWithoutLosingSeasonMetadata()=runTest {
+  val a=accounts();val account=add(a,ServerKind.JELLYFIN);var requested:app.stova.profiles.SpotlightSource?=null
+  val favorite=spot(account).copy(favorite=true)
+  val client=object:MediaServerClient {
+   override suspend fun resume()=emptyList<MediaItem>()
+   override suspend fun nextUp()=emptyList<MediaItem>()
+   override suspend fun latest(endpoint:Endpoint)=emptyList<MediaItem>()
+   override suspend fun spotlight(source:app.stova.profiles.SpotlightSource):List<MediaItem> { requested=source;return listOf(favorite,spot(account).copy(id="other")) }
+  }
+  val r=MediaRepository(a,{client},tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))
+  val pool=r.spotlight("p",source=app.stova.profiles.SpotlightSource.FAVORITES).first { it.isNotEmpty() }
+  assertEquals(app.stova.profiles.SpotlightSource.FAVORITES,requested)
+  assertEquals(listOf(favorite),pool.map { it.item })
+ }
 }

@@ -11,6 +11,13 @@ const val SPOTLIGHT_LIMIT = 30
 /** A season counts as new for this long after it premiered. */
 const val NEW_SEASON_DAYS = 45L
 
+fun acceptsSpotlight(item: MediaItem, source: app.stova.profiles.SpotlightSource): Boolean = when(source) {
+    app.stova.profiles.SpotlightSource.LIBRARY -> true
+    app.stova.profiles.SpotlightSource.MOVIES -> item.type == ItemType.MOVIE
+    app.stova.profiles.SpotlightSource.SERIES -> item.type == ItemType.SERIES
+    app.stova.profiles.SpotlightSource.FAVORITES -> item.favorite
+}
+
 private fun freshSeasons(seasons: List<MediaItem>, today: LocalDate) = seasons.filter { season ->
     val premiered = season.premiered?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
     season.type == ItemType.SEASON && (season.season ?: 0) >= 2 && season.seriesId != null && season.art.backdrop != null &&

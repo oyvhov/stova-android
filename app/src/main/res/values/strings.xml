@@ -472,4 +472,23 @@
     <string name="custom_move_hint">Opp/ned flyttar rada · OK eller Tilbake avsluttar</string>
     <string name="custom_row_hidden">Rada er skjult</string>
     <string name="custom_undo">Angre</string>
+    <string name="custom_pick_background">Vel bakgrunnstittel</string>
+    <string name="custom_search_titles">Søk i biblioteket</string>
+    <string name="custom_library_loading">Hentar titlar …</string>
+    <string name="custom_library_empty">Ingen titlar med bakgrunnsbilete</string>
+    <string name="custom_library_failed">Kunne ikkje hente biblioteket</string>
+    <string name="custom_retry">Prøv igjen</string>
+    <string name="custom_hero_title">Logo eller tittel</string>
+    <string name="custom_logo">Logo når han finst</string>
+    <string name="custom_always_title">Alltid tittel</string>
+    <string name="custom_background_source">Bakgrunnskjelde</string>
+    <string name="custom_spotlight">Spotlight</string>
+    <string name="custom_fixed_image">Fast bilete</string>
+    <string name="custom_theme_surface">Einsfarga tema</string>
+    <string name="custom_spotlight_source">Spotlight-kjelde</string>
+    <string name="custom_whole_library">Heile biblioteket</string>
+    <string name="custom_only_movies">Berre filmar</string>
+    <string name="custom_only_series">Berre seriar</string>
+    <string name="custom_favorites">Favorittar</string>
+    <string name="custom_background_motion">Roleg bakgrunnsrørsle</string>
 </resources>

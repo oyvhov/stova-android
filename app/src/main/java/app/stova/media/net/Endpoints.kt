@@ -1,6 +1,21 @@
 package app.stova.media.net
 import app.stova.media.model.ServerKind
 import java.net.URLEncoder
+import app.stova.profiles.SpotlightSource
+
+private fun libraryCandidates(kind: ServerKind, userId: String, query: String): List<String> {
+ val u=URLEncoder.encode(userId,"UTF-8")
+ return if(kind==ServerKind.EMBY) listOf("Users/$u/Items?$query") else listOf("Items?userId=$u&$query","Users/$u/Items?$query")
+}
+
+fun spotlightCandidates(kind: ServerKind, userId: String, source: SpotlightSource): List<String> {
+ val types=when(source) { SpotlightSource.MOVIES -> "Movie"; SpotlightSource.SERIES -> "Series"; else -> "Movie,Series" }
+ val filter=if(source==SpotlightSource.FAVORITES) "&Filters=IsFavorite" else ""
+ return libraryCandidates(kind,userId,"IncludeItemTypes=$types&Recursive=true&SortBy=Random&ImageTypes=Backdrop$filter&$ITEM_FIELDS&Limit=30")
+}
+
+fun titleSearchCandidates(kind: ServerKind, userId: String, query: String): List<String> = libraryCandidates(kind,userId,
+ "IncludeItemTypes=Movie,Series&Recursive=true&ImageTypes=Backdrop&SearchTerm=${URLEncoder.encode(query.trim(),"UTF-8")}&SortBy=SortName&$ITEM_FIELDS&Limit=60")
 enum class Endpoint { RESUME, NEXT_UP, LATEST_MOVIES, LATEST_SERIES, SPOTLIGHT, NEW_SEASONS, HALLOWEEN_TAG, HALLOWEEN_GENRE, CHRISTMAS_TAG }
 const val ITEM_FIELDS = "Fields=Overview,ProductionYear,RunTimeTicks,OfficialRating,CommunityRating,CriticRating,Genres,ParentId,SeriesId&EnableUserData=true&EnableImageTypes=Primary,Backdrop,Logo,Thumb&ImageTypeLimit=1"
 const val ITEM_QUERY = "$ITEM_FIELDS&Limit=20"

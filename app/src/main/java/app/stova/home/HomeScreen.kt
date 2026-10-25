@@ -79,7 +79,8 @@ fun HomeScreen(
     val spotlight by vm.spotlight.collectAsStateWithLifecycle()
     val reduceMotion = LocalReduceMotion.current
     val rotationEnabled = vm.rotationEnabled()
-    LaunchedEffect(reduceMotion, rotationEnabled) { vm.setSpotlightRotation(!reduceMotion && rotationEnabled) }
+    val heroEnabled = app.stova.core.theme.LocalAppearance.current.heroSize != HeroSize.OFF
+    LaunchedEffect(reduceMotion, rotationEnabled, heroEnabled) { vm.setSpotlightRotation(!reduceMotion && rotationEnabled && heroEnabled) }
     val context = LocalContext.current
     val handoff = remember(context) { SpoleHandoff(context) }
     var actions by remember { mutableStateOf<FocusedTarget.Media?>(null) }
@@ -197,18 +198,20 @@ fun HomeContent(
             style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         BoxWithConstraints(Modifier.weight(1f)) {
             val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
-            val ratio = appearance.cardSize.width / 248f
-            val artworkHeight = if (appearance.movieStyle == app.stova.profiles.MovieStyle.POSTER) StovaLayout.PosterHeight * ratio else StovaLayout.WideHeight * ratio
+            val artworkHeight = rows.orEmpty().maxOfOrNull { row ->
+                val style = homePrefs.rowFormats[row.key] ?: RowStyle()
+                artworkDimensions(style.format ?: defaultRowFormat(row.key, appearance), style.size ?: appearance.cardSize).height
+            }?.dp ?: StovaLayout.WideHeight
             val rowHeight = appearance.rowSpacing.top.dp + 25.dp * fontScale + StovaLayout.SectionBottom + artworkHeight +
                 (if (appearance.showTitles) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp
             // Fixed for these profile/font choices, independent of each spotlight title. Reserve
             // room for a whole row; even a large poster's optional caption must remain reachable.
             val baseHeroHeight = if (fontScale >= 1.5f) maxHeight * (appearance.heroSize.fraction + 0.16f)
                 else minOf(maxHeight * appearance.heroSize.fraction, (maxHeight - rowHeight).coerceAtLeast(0.dp))
-            val heroHeight = if (appearance.showOverview && fontScale < 1.5f) maxOf(baseHeroHeight, 208.dp) else baseHeroHeight
+            val heroHeight = if (appearance.heroSize == HeroSize.OFF) 0.dp else if (appearance.showOverview && fontScale < 1.5f) maxOf(baseHeroHeight, 208.dp) else baseHeroHeight
             Column {
                 // A fixed height: the rows never move when the spotlight turns to a longer title.
-                HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
+                if (appearance.heroSize != HeroSize.OFF) HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
                 when {
                     rows == null -> Unit
                     rows.isEmpty() -> EmptyHome(onOpenApps)
