@@ -4,6 +4,14 @@
 Sluttkontroll: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → 252/252 bestått, ingen hoppa over; DesignRulesTest 3/3; lint 0 feil (20 åtvaringar, 1 hint); debug-APK OK.
 Ingen påbyrja steg står att. Ekte fjernkontroll/Shield er ikkje verifisert; ingen spørsmål, ingen push og ingen arbeid i andre worktrear.
 Skjermbiletet `app/build/screens/minor-pin-font-2.png` er generert og visuelt kontrollert; «Slett» held éi linje.
+2026-10-25: Plan 5 oppgåve 2 og 3, og dokumentasjonsdelen av oppgåve 5 steg 1, er fullførte i `C:/Launcher/.worktrees/plan-5` på `plan-5-perf`.
+Baseline Profile/benchmark: `8409d65`; måleskript: `7da6b7c`; oppsettdokument, README, tre emulatorbilete og målerapport er med i denne dokumentasjonscommitten.
+Sluttkontroll `testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'`: 233/233 bestått, 0 hoppa over, DesignRulesTest 3/3, lint 0 feil (22 åtvaringar, 1 hint), debug-APK OK. Sjølvtest 24/24; profil og benchmark kvar 1/1 relevant test bestått.
+Emulator (debug-signert benchmarkRelease): kald 313,50 ms, varm 98 ms, hakking 3,66 %, PSS 67,30 MiB; startupbenchmark TTID-median 232,454 ms. `emulator-5582` er slått av med `emu kill`.
+Ingen påbyrja arbeid står att innanfor bestillinga. Brukaren må gjere signering/passord, Shield-målingar og oppsettkontroll, oppdateringstest og produksjonsrelease/hash; oppgåve 1 og 4 og resten av 5 er urørte. Versjonen er framleis 0.1.0.
+Avvik står under Plan 5 nedanfor og i `docs/verification/plan-5-emulator.md`. Ingen spørsmål, ingen tag, ingen push eller publisering.
+
+## Før Plan 5
 
 2026-10-25: Samanslåingsoppgåve 1–3 er fullførte på `plan-2-media` i `C:/Launcher/.worktrees/plan-2`; Plan 2 og Plan 4 er bevarte.
 Merge: `a568e8b`. Aldersgrense med raud/grøn TDD: `3865293`; HeroPanelTest er òg oppdatert til éi alderspille.
@@ -114,3 +122,16 @@ Funn 3 er dokumentert med regresjonstest i `c0e3d9f`; testen var grøn før prod
 Funn 10: Android fortel ikkje om ei avslått teneste vart slått av av systemet eller av brukaren. Automatisk aktivering ved oppstart er difor fjerna, saman med den unyttige adb-grant-oppskrifta i UI-et; brukaren slår tenesta på i Android-innstillingane. Spesifikasjonen er oppdatert med denne avgjerda.
 
 Sluttverifikasjon: 252/252 bestått (inkludert skjermtestane), DesignRulesTest 3/3, lint 0 feil / 20 åtvaringar / 1 hint, assembleDebug OK. Ingen emulator eller Shield er brukt. Arbeidstreet er reint etter overleveringscommit.
+## Plan 5
+
+- 2026-10-25: Arbeidet er avgrensa til `C:/Launcher/.worktrees/plan-5`, grein `plan-5-perf`. Brukarønsket går framfor standardregelen om port 5580: berre `emulator-5582` er brukt. Oppgåve 1 og 4 blir hoppa over; ingen produksjonsrelease, signeringsnøkkel eller tag blir laga.
+- Oppgåve 2: Det bestilte API 34-TV-biletet `x86_64` finst ikkje i SDK-registeret (`sdkmanager` feila, og `--list` stadfesta det). AVD `Stova_TV34` er derfor laga med `system-images;android-34;android-tv;x86`, i `C:/Launcher/.avd`, på port 5582 med `-no-snapshot-save`. Også dette er eit produksjonsbilete utan root; API 34 kan generere profilen utan root.
+- Oppgåve 2: Benchmark/Baseline Profile-plugin 1.4.1 og ProfileInstaller 1.4.1 er brukte med compileSdk 36. Pluginen krev AGP-kompatibilitetsflagget `android.newDsl=false`; innebygd Kotlin er bevart. Ein eventuell AGP 10-oppgradering må oppgradere profilpluginen og fjerne flagget.
+- Oppgåve 2: Eit emulatoravgrensa demoinnsteg ligg berre i debug, nonMinifiedRelease og benchmarkRelease. Produksjonsrelease får det ikkje. Éin fiktiv profil og Jellyfin-konto, lokale bilete og bufra rader gjer køyringa repeterbar utan verkelege tenester. Generatoren rullar med D-pad og opnar topplinjehandlingane med ein selector som blir slått opp ved aktivering; UiObject2 gav stale-node-feil under fokus-animasjon.
+- Oppgåve 2: `HomeReadyTest` gjekk frå AssertionError utan markør til 1/1 bestått. Profilgenerering og startupbenchmark er begge grøne (éin relevant test per køyring; den andre regelen blir medvite hoppa over). Profilen har 21 708 linjer, 334 med `Lapp/stova/home/`, og ingen reglar for demoinnsteget. Startupbenchmark: 10 iterasjonar, median `timeToInitialDisplayMs` 232,454 ms (min 206,374; maks 329,551). Verktøyvariantane er debug-signerte av profilpluginen; `assembleRelease` er ikkje køyrd.
+- Oppgåve 3: `Measure-Stova.ps1 -SelfTest` er utvikla raud/grøn og bestod 24/24 kontrollar. Skriptet krev eksplisitt serie, avviser alle andre emulatorportar, ventar på `home-ready`, gir feil ved manglande data og kode 1 ved brote budsjett. Første integrasjonskøyring avdekte 32-bits overflyt i Android-shellen sin nanosekundaritmetikk; PowerShell si monotone `Stopwatch` styrer no dei 30 sekunda. D-pad-sekvensen har eigne grensetestar.
+- Oppgåve 3: Målt på R8-minifisert, ikkje-debuggbar `benchmarkRelease` med Android Debug-sertifikat (ingen produksjonsrelease eller Stova-nøkkel): kaldstartmedian 313,50 ms (10 prøver), varm Home 98 ms, hakking 3,66 %, PSS 67,30 MiB. 147 tastetrykk over 30,14 s. Alle fire radene OK, avslutningskode 0. Dette er funksjonskontroll på emulator; Shield-budsjetta er ikkje godkjende. PSS bruker KiB/1024. Varmmålet er `am start -W` si TotalTime.
+
+- Oppgåve 5 steg 1: `docs/SHIELD_SETUP.md` og `README.md` er skrivne på nynorsk. Tre bilete frå emulator-5582 med demodata ligg i `docs/images/home.png`, `apps.png` og `smarthome.png` og er visuelt kontrollerte; ingen personlege namn, adresser eller token er synlege. Målerapport og repeterbare kommandoar ligg i `docs/verification/plan-5-emulator.md`. Dei seks lokale dokumentasjonslenkjene verkar.
+- Oppgåve 5: Berre dokumentasjon og bilete er fullførte etter bestillinga. Versjonsauke, signering, oppdatering over eldre signert installasjon, fysisk Shield-oppsett, produksjonsrelease/storleik/hash og tag er ikkje gjorde. Ingen `assembleRelease`, push eller publisering. Emulatoren vart slått av med `adb -s emulator-5582 emu kill` (OK).
+- Sluttkontroll: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → BUILD SUCCESSFUL, 233/233 bestått, 0 hoppa over, DesignRulesTest 3/3; lint 0 feil, 22 åtvaringar og 1 hint. Debug-APK bygd. Ingen nye kodeendringar etter denne kontrollen.

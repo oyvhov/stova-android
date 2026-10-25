@@ -12,6 +12,8 @@ import androidx.compose.ui.focus.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -127,7 +129,10 @@ fun HomeContent(
     LaunchedEffect(restoreRow, rows) {
         if (restoreRow != null && !placedFocus) placedFocus = runCatching { firstItem.requestFocus() }.isSuccess
     }
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().semantics {
+        // Automation marker, not user-facing copy. Null rows mean sources are still loading.
+        if (rows != null) contentDescription = "home-ready"
+    }) {
         topBar()
         BoxWithConstraints(Modifier.weight(1f)) {
             val heroHeight = maxHeight * 0.45f

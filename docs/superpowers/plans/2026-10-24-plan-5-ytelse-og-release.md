@@ -10,6 +10,9 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-24-stova-launcher-design.md` §3, §9, §13
 
+## Avgrensing for økta 2026-10-25
+
+Brukaren har bestilt oppgåve 2 og 3 og dokumentasjonsdelen av oppgåve 5 (steg 1). Oppgåve 1 og 4, produksjonsrelease, versjonsauke, oppdateringstest, Shield-verifisering og tag er utsette. Berre `emulator-5582` / `Stova_TV34` er tillaten i denne økta. SDK-registeret manglar API 34-TV `x86_64`; `x86` er brukt. Sjå `docs/HANDOFF.md` under Plan 5 og `docs/verification/plan-5-emulator.md` for køyrde kommandoar og resultat.
 ## Global Constraints
 
 - Alle Global Constraints frå Plan 1–4 gjeld.
@@ -79,21 +82,21 @@ git add app/build.gradle.kts .gitignore && git commit -m "build: release signing
     4. Opne Appar via topplinja, deretter Smarthus om det finst.
   - `class StartupBenchmark { @Test fun coldStartup() }` med `StartupMode.COLD`, `CompilationMode.Partial(BaselineProfileMode.Require)` og 10 iterasjonar.
   - `HomeScreen` set `Modifier.semantics { contentDescription = "home-ready" }` på rotboksen når første rader er teikna (og berre då). Dette blir brukt av generatoren og måleskriptet.
-  - Generatoren treng ei eining med `adb root`. Stova_TV (`android-tv`-biletet) støttar det. Om ikkje, lag ein API 34-TV-AVD (`system-images;android-34;android-tv;x86_64`) med same skript og port 5582.
+  - Generatoren treng `adb root` før API 33. API 34 støttar generering utan root. Stova_TV (API 30) og Stova_TV34 (API 34) er produksjonsbilete utan root. For denne økta er Stova_TV34 laga med `system-images;android-34;android-tv;x86` på port 5582; `x86_64` finst ikkje i SDK-registeret.
 
-- [ ] **Step 1: Skriv generatoren og benchmarken, og legg til `home-ready`-markøren**
+- [x] **Step 1: Skriv generatoren og benchmarken, og legg til `home-ready`-markøren**
 
-- [ ] **Step 2: Generer profilen på Stova_TV med seed-data (éin profil, éin Jellyfin-konto)**
+- [x] **Step 2: Generer profilen på Stova_TV34 med seed-data (éin profil, éin Jellyfin-konto)**
 
-Run: `$env:ANDROID_SERIAL='emulator-5580'; adb root; pwsh -NoProfile -File scripts/gradle.ps1 :app:generateReleaseBaselineProfile`
+Run: `$env:ANDROID_SERIAL='emulator-5582'; pwsh -NoProfile -File scripts/gradle.ps1 :app:generateReleaseBaselineProfile`
 Expected: BUILD SUCCESSFUL. `baseline-prof.txt` finst og inneheld linjer med `Lapp/stova/home/`.
 
-- [ ] **Step 3: Køyr benchmarken**
+- [x] **Step 3: Køyr benchmarken**
 
 Run: `pwsh -NoProfile -File scripts/gradle.ps1 :baselineprofile:connectedBenchmarkReleaseAndroidTest`
 Expected: PASS. Rapporten viser `timeToInitialDisplayMs`. Noter medianen i commit-meldinga.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A && git commit -m "perf: baseline profile generator, startup benchmark and profile installer"
@@ -118,24 +121,24 @@ git add -A && git commit -m "perf: baseline profile generator, startup benchmark
     4. **PSS:** `dumpsys meminfo $Package` på heim etter 10 s ro.
   - `-SelfTest` køyrer dei tre parse-funksjonane mot innebygde eksempeltekstar og skriv `SELFTEST OK`, eller avsluttar med kode 1.
 
-- [ ] **Step 1: Skriv skriptet med `-SelfTest` først**
+- [x] **Step 1: Skriv skriptet med `-SelfTest` først**
 
 Eksempeltekstar i skriptet:
 - `"Status: ok`nLaunchState: COLD`nTotalTime: 812`nWaitTime: 830"` → 812
 - `"Total frames rendered: 1200`nJanky frames: 36 (3.00%)"` → 3.0
 - `"           TOTAL PSS:   187654            TOTAL RSS:   250000"` → 187654
 
-- [ ] **Step 2: Køyr sjølvtesten**
+- [x] **Step 2: Køyr sjølvtesten**
 
 Run: `pwsh -NoProfile -File scripts/Measure-Stova.ps1 -SelfTest`
 Expected: `SELFTEST OK`, kode 0.
 
-- [ ] **Step 3: Køyr mot Stova_TV med release-bygget installert**
+- [x] **Step 3: Køyr mot Stova_TV34 med debug-signert benchmarkRelease installert**
 
-Run: `adb -s emulator-5580 install -r app/build/outputs/apk/release/app-release.apk; pwsh -NoProfile -File scripts/Measure-Stova.ps1 -Serial emulator-5580`
+Run: `adb -s emulator-5582 install -r app/build/outputs/apk/benchmarkRelease/app-benchmarkRelease.apk; pwsh -NoProfile -File scripts/Measure-Stova.ps1 -Serial emulator-5582`
 Expected: tabellen blir skriven (emulatortal er berre for å teste skriptet, ikkje for budsjettet).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/Measure-Stova.ps1 && git commit -m "perf: Shield measurement script for startup, jank and memory budgets"
@@ -202,13 +205,13 @@ git add -A && git commit -m "perf: meet Shield budgets (see docs/verification/pl
     Med tydeleg åtvaring: «Ikkje slå av systemlauncheren (`pm disable-user`). Nokre einingar startar ikkje då.»
   - `README.md`: kort produktomtale, skjermbilete (`docs/images/`), krav og lenkje til oppsettet.
 
-- [ ] **Step 1: Skriv dokumenta og ta skjermbilete på Stova_TV med demodata**
+- [x] **Step 1: Skriv dokumenta og ta skjermbilete på Stova_TV med demodata**
 
-Run: `adb -s emulator-5580 exec-out screencap -p > docs/images/home.png` (og `smarthome.png`, `apps.png`). Skjermbileta skal ikkje innehalde namn, adresser eller tokens.
+Run: `adb -s emulator-5582 exec-out screencap -p > docs/images/home.png` (og `smarthome.png`, `apps.png`). Skjermbileta skal ikkje innehalde namn, adresser eller tokens.
 
 - [ ] **Step 2: Oppdateringstest over eldre installasjon**
 
-Run: installer førre release-APK på Stova_TV, lag profil og konto, `assembleRelease` på nytt med høgare `versionCode`, og `adb -s emulator-5580 install -r app-release.apk`
+Run: installer førre release-APK på Stova_TV, lag profil og konto, `assembleRelease` på nytt med høgare `versionCode`, og `adb -s emulator-5582 install -r app-release.apk`
 Expected: `Success`. Profil, konto og HA-tilkopling er der etter oppdatering.
 
 - [ ] **Step 3: Følg `SHIELD_SETUP.md` på Shield frå steg 1 (etter `pm clear app.stova`)**

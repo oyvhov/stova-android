@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Stova"
 include(":app")
+include(":baselineprofile")
