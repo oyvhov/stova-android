@@ -1,3 +1,9 @@
+# Stoppvilkår: Plan 1 er allereie avkryssa
+2026-10-25 kl. 18:29 lokal tid: Lese AGENTS.md, arkitektur, arbeidsflyt, spesifikasjon og siste overlevering. Plan 1 har 65/65 avkryssa steg, sist oppgåve 13 steg 4; stoppar etter brukaren sitt uttrykkelege Plan 1-vilkår.
+Ingen nye kodesteg er påbyrja eller fullførte i denne økta. Plan `2026-10-25-offline-retry.md` frå førre overlevering står urørt frå første steg.
+Ingen testar, emulator- eller Shield-prøver er køyrde på nytt; eldre utsette verifiseringspunkt er uendra. Ingen ny fullført oppgåve å føre i ledgeren.
+Arbeidstreet var reint ved start. Berre denne statusen er endra; ingen push eller publisering. Ingen spørsmål til brukaren.
+
 # Fråkopla medierader og overgangsklipp – overlevert til Codex
 2026-10-25: Claude si vekegrense er på 96 %, så denne bestillinga er overlevert etter AGENTS.md. Aktuell plan: `docs/superpowers/plans/2026-10-25-offline-retry.md`; ingen steg er påbyrja.
 Claude såg «Fråkopla» på medieradene på emulator-5580 etter ein ny installasjon (HA var levande). Mistanke: `refresh` merkjer ei feila henting som fersk i fem minutt. Planen har raud test, retting, emulatorprøve og eit klipp av overgangane.
