@@ -301,7 +301,6 @@
     <string name="ha_v2_dearest">Dyrast %1$s</string>
     <string name="ha_v2_hourly">Timesnitt</string>
     <string name="ha_v2_quarter_hours">15 minutt</string>
-    <string name="ha_v2_target_adjust">Mål %1$s° · ← − / + →</string>
     <!-- Utsjånad v2 -->
     <string name="appearance_movie">Film</string>
     <string name="appearance_series">Serie</string>

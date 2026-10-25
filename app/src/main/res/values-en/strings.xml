@@ -301,7 +301,6 @@
     <string name="ha_v2_dearest">Highest %1$s</string>
     <string name="ha_v2_hourly">Hourly</string>
     <string name="ha_v2_quarter_hours">15 minutes</string>
-    <string name="ha_v2_target_adjust">Target %1$s° · ← − / + →</string>
     <!-- Utsjånad v2 -->
     <string name="appearance_movie">Movie</string>
     <string name="appearance_series">Series</string>
