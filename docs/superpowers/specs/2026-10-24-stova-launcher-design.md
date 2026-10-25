@@ -62,7 +62,7 @@ Korleis vi held tala:
 - Heim blir teikna frå eit lokalt øyeblikksbilete (JSON) før nettverket svarar. Nettverket
   oppdaterer i bakgrunnen.
 - Bilete blir alltid bedne om i visningsstorleik (`maxWidth`/`maxHeight` og `tag` frå serveren).
-- Backdrop blir lasta 250 ms etter at fokus har stoppa, ikkje for kvart steg.
+- Backdrop følgjer spotlighten, ikkje fokus: eitt bilete kvart 12. s, ferdig dekoda før det tonar inn.
 - Ingen blur, ingen skuggar på kort og ingen alfa-lag over rader.
 - Release har R8 og Baseline Profile.
 - HA-socketen og nettverksoppdateringane stoppar når Stova ikkje er synleg.
