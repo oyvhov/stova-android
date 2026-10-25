@@ -12,12 +12,16 @@ interface MediaServerClient {
   app.stova.profiles.Season.HALLOWEEN -> (latest(Endpoint.HALLOWEEN_TAG) + latest(Endpoint.HALLOWEEN_GENRE)).distinctBy { it.id }.take(20)
  }
  suspend fun items(ids: List<String>): List<MediaItem> = emptyList()
+ suspend fun spotlight(source: app.stova.profiles.SpotlightSource): List<MediaItem> = latest(Endpoint.SPOTLIGHT)
+ suspend fun searchTitles(query: String): List<MediaItem> = emptyList()
 }
 class JellyfinEmbyClient(private val account: MediaAccount, private val token: String, private val http: OkHttpClient, private val identity: ClientIdentity): MediaServerClient {
  override suspend fun resume() = latest(Endpoint.RESUME)
  override suspend fun nextUp() = latest(Endpoint.NEXT_UP)
  override suspend fun latest(endpoint: Endpoint) = load(endpointCandidates(account.kind,endpoint,account.userId))
  override suspend fun items(ids: List<String>) = if(ids.isEmpty()) emptyList() else load(idsCandidates(account.kind,account.userId,ids))
+ override suspend fun spotlight(source: app.stova.profiles.SpotlightSource) = load(spotlightCandidates(account.kind,account.userId,source))
+ override suspend fun searchTitles(query: String) = load(titleSearchCandidates(account.kind,account.userId,query))
  private suspend fun load(candidates: List<String>): List<MediaItem> {
   val header=authHeader(account.kind,identity,token)
   for(path in candidates) {

@@ -10,6 +10,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -38,7 +41,6 @@ fun StovaApp(container: AppContainer) {
     val date = app.stova.core.theme.currentSeasonDate()
     StovaTheme(
         reduceMotion = active?.appearance?.reduceMotion ?: false,
-        strongFocus = active?.appearance?.strongFocus ?: false,
         appearance = active?.appearance ?: app.stova.profiles.AppearancePrefs(),
         date = date,
     ) {
@@ -54,6 +56,7 @@ fun StovaApp(container: AppContainer) {
 
 @Composable
 private fun MainShell(container: AppContainer, profile: Profile) {
+    val scope = rememberCoroutineScope()
     var current by rememberSaveable { mutableStateOf(Destination.HOME) }
     var smartHomeCardId by remember(profile.id) {mutableStateOf<String?>(null)}
     val file by container.profiles.file.collectAsStateWithLifecycle(initialValue = null)
@@ -73,7 +76,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         }
     }
     val context = androidx.compose.ui.platform.LocalContext.current
-    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season()) } }
+    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season(), it.appearance.spotlightSource) } }
     val date = app.stova.core.theme.LocalSeasonDate.current
     LaunchedEffect(home, date) { home.setCalendarDate(date) }
     // Kept here, not in the layer: a return to Home shows the same picture at once, not a fade from ink.
@@ -83,13 +86,20 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         // Collected only on Home: the spotlight's rotation ticks while Home is on screen, nowhere else.
         if (current == Destination.HOME) {
             val spotlight by home.spotlight.collectAsStateWithLifecycle()
-            app.stova.background.BackdropLayer(spotlight?.item?.art?.backdrop, state = backdrop)
+            val fixedFlow = remember(profile.id, profile.appearance.fixedBackground, profile.appearance.backgroundSource) {
+                if (profile.appearance.backgroundSource == app.stova.profiles.BackgroundSource.FIXED)
+                    container.media.fixedBackground(profile.id, profile.appearance.fixedBackground)
+                else kotlinx.coroutines.flow.flowOf(null)
+            }
+            val fixed by fixedFlow.collectAsStateWithLifecycle(initialValue = null)
+            app.stova.background.BackdropLayer(app.stova.background.backgroundUrl(profile.appearance, spotlight?.item?.art?.backdrop, fixed?.item?.art?.backdrop), state = backdrop)
         }
         when (current) {
             Destination.HOME -> HomeScreen(
                 home, container.appArt, container.appCatalog,
                 onOpenApps = { current = Destination.APPS },
                 profile = profile, apps = container.apps,
+                onHomeChange = { prefs -> scope.launch { container.profiles.update(profile.id) { it.copy(home = prefs) } } },
                 onRefresh = { container.media.refresh(profile.id) },
                 haRepository = container.haRepository,
                 haConnection = container.haSocket,

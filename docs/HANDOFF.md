@@ -4,6 +4,12 @@ Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug 
 Ekte HA på emulator-5580: PH av/på og 222 → 224 → 222/255; mål 23,5 → 24,0 → 23,5 °C. Ferske HA-svar stadfestar alle fem relevante einingar tilbake; ti kort og tre Heim-brikker er identiske med før prøva.
 Ti visuelt kontrollerte ekte bilete: `docs/images/ha-v2-handling-*.png`. Rapport: `docs/verification/smarthus-handlingar.md`; TDD-ledger og tilbakeføringskvitteringar ligg lokalt i `.superpowers/`.
 Eit anna bygg avløyste APK-en under prøva; vårt bygg vart installert på nytt og kontrollert med SHA-256. Ingen spørsmål eller push. Alarm, opplåsing og garasje er berre testa med falske einingar; fysisk Shield er ikkje verifisert. Forbodne filer er urørte.
+# Tilpassing v3 ferdig
+2026-10-25: Heile bestillinga i `docs/briefs/2026-10-25-tilpassing-v3.md` er fullført på `appearance-v2` i appearance-worktreet; alle sju steg i planen er avkryssa. Ingen påbyrja steg står att.
+Direkte radredigering på Heim, radformat/storleik/tittel, bue/fokus/framdrift, hero/bakgrunn/spotlight, toppfelt, reset/kopi, barneprofilredigering og åtte grupper med fast live førehandsvising er implementerte. Siste kodecommit: `a60fded`.
+Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug -Pstova.screens=true`: 487/487, 0 hoppa over; AppScreensTest 40/40, DesignRulesTest 4/4; lint 0 feil (35 åtvaringar, 1 hint), debug-APK OK.
+Ni visuelt kontrollerte 1920 × 1080-bilete: `docs/images/tilpassing-*.png`. Rapport med stiar, TDD-evidens og vurdering: `docs/verification/tilpassing-v3.md`; spesifikasjonen §2, §5.1 og §5.4 er oppdatert.
+Ingen spørsmål, emulatorinstallasjon eller push; `app/src/main/java/app/stova/ha/**` er urørt. Fysisk fjernkontroll, ekte mediebibliotek og Shield-ytelse er ikkje verifiserte her.
 
 # Smarthus v2 – finpuss fullført
 2026-10-25: Heile finpussbestillinga er fullført i `ha-v2`; ingen påbyrja steg står att. Spesifikasjonen §5.2 og finpussplanen er oppdaterte.

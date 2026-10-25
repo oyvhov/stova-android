@@ -41,6 +41,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.stova.core.theme.LocalAppearance
 import app.stova.profiles.AppStyle
+import app.stova.profiles.RowFormat
+import app.stova.home.LocalRowStyle
+import app.stova.home.artworkDimensions
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.StovaShapes
 import app.stova.core.ui.focusOutline
@@ -62,10 +65,12 @@ fun AppTile(
     val prefs = LocalAppearance.current
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.medium
-    val iconStyle = prefs.appStyle == AppStyle.ICON
-    val wide = prefs.cardSize.width.dp
-    val height = wide * 9 / 16
-    val width = if (iconStyle) height else wide
+    val style = LocalRowStyle.current
+    val format = style.format ?: if (prefs.appStyle == AppStyle.ICON) RowFormat.ICON else RowFormat.WIDE
+    val iconStyle = format == RowFormat.ICON
+    val dimensions = artworkDimensions(format, style.size ?: prefs.cardSize)
+    val height = dimensions.height.dp
+    val width = dimensions.width.dp
     val packs by art.iconPacks.packs.collectAsStateWithLifecycle()
     val artwork by produceState<AppArtwork?>(null, app, art, prefs.iconPack, iconStyle, iconOverride, packs) {
         value = null

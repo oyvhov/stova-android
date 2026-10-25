@@ -11,6 +11,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.Alignment
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -24,8 +27,9 @@ fun clockText(epochMillis: Long, zone: ZoneId, locale: Locale, mode: app.stova.p
 /** 24-hour clock that wakes once a minute, on the minute, and never otherwise recomposes. */
 @Composable
 fun Clock(modifier: Modifier = Modifier, clock: () -> Long = System::currentTimeMillis) {
-    val mode = app.stova.core.theme.LocalAppearance.current.clock
-    if (mode == app.stova.profiles.ClockMode.HIDDEN) return
+    val prefs = app.stova.core.theme.LocalAppearance.current
+    val mode = prefs.clock
+    if (mode == app.stova.profiles.ClockMode.HIDDEN && !prefs.showDate) return
     var now by remember { mutableLongStateOf(clock()) }
     LifecycleResumeEffect(Unit) {
         now = clock()
@@ -37,12 +41,19 @@ fun Clock(modifier: Modifier = Modifier, clock: () -> Long = System::currentTime
             now = clock()
         }
     }
-    Text(
+    Column(modifier, horizontalAlignment = Alignment.End) {
+    if (mode != app.stova.profiles.ClockMode.HIDDEN) Text(
         clockText(now, ZoneId.systemDefault(), LocalLocale.current.platformLocale, mode),
-        style = MaterialTheme.typography.titleLarge,
+        style = if (prefs.clockSize == app.stova.profiles.ClockSize.LARGE) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.onSurface,
-        modifier = modifier,
+        modifier = Modifier.testTag("top-clock"),
     )
+    if (prefs.showDate) Text(
+        DateTimeFormatter.ofPattern("EEE d. MMM", LocalLocale.current.platformLocale).withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(now)),
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.testTag("top-date"),
+    )
+    }
 }
 
 private const val MINUTE = 60_000L

@@ -75,14 +75,6 @@ fun stovaColorScheme(theme: VisualTheme, accent: app.stova.profiles.Accent) = St
     outline = theme.outline, outlineVariant = theme.divider, inverseOnSurface = theme.background,
 )
 
-private val StovaMaterialShapes = Shapes(
-    extraSmall = RoundedCornerShape(StovaShapes.ExtraSmall),
-    small = RoundedCornerShape(StovaShapes.Small),
-    medium = RoundedCornerShape(StovaShapes.Medium),
-    large = RoundedCornerShape(StovaShapes.Large),
-    extraLarge = RoundedCornerShape(StovaShapes.ExtraLarge),
-)
-
 private val StovaTypography = stovaTypography()
 
 @Composable
@@ -96,15 +88,15 @@ fun StovaTheme(
     val shown = appearance.seasonal(date)
     MaterialTheme(
         colorScheme = stovaColorScheme(shown.visualTheme, shown.accent),
-        shapes = if (appearance.corners == Corners.SHARP) Shapes(
-            RoundedCornerShape(0.dp), RoundedCornerShape(0.dp), RoundedCornerShape(0.dp),
-            RoundedCornerShape(0.dp), RoundedCornerShape(0.dp)) else StovaMaterialShapes,
+        shapes = RoundedCornerShape(appearance.cornerRadius.dp.dp).let { shape ->
+            Shapes(shape, shape, shape, shape, shape)
+        },
         typography = StovaTypography,
     ) {
         CompositionLocalProvider(
             LocalContentColor provides StovaColors.Text,
             LocalReduceMotion provides (reduceMotion || appearance.reduceMotion),
-            LocalStrongFocus provides (strongFocus || appearance.strongFocus),
+            LocalStrongFocus provides strongFocus,
             LocalAppearance provides shown,
             LocalSeasonDate provides date,
             content = content,

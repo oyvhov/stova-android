@@ -29,9 +29,11 @@ class AppearanceSettingsTest {
         compose.setContent { StovaTheme(appearance = prefs) {
             Column(Modifier.verticalScroll(rememberScrollState())) { AppearanceSettingsContent(prefs) { prefs = it } }
         } }
-        val choices = listOf("Herostorleik", "Omtale i heroen", "Sjangrar i heroen", "Spotlight-tid", "Radavstand",
+        val choices = listOf("Herostorleik", "Logo eller tittel", "Omtale i heroen", "Sjangrar i heroen", "Spotlight-tid", "Radavstand",
             "Kortstorleik", "Titlar under kort", "Appstil", "Nyleg lagt til · Filmar", "Hjørne", "Bakgrunnsdemping",
-            "Aksentfarge", "Fokuseffekt", "Klokkeformat")
+            "Aksentfarge", "Fokuseffekt", "Klokkeformat", "Kortavstand", "Ringbreidd", "Framdriftsstrek", "Bakgrunnskjelde",
+            "Spotlight-kjelde", "Roleg bakgrunnsrørsle", "Vis dato", "Vis HA-brikker", "Vis sesongnedteljing", "Vis Appar-knapp",
+            "Vis Smarthus-knapp", "Vis profilbilete", "Klokkestorleik")
         choices.forEach { label ->
             val row = compose.onNodeWithText(label).performScrollTo()
             row.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
@@ -53,10 +55,24 @@ class AppearanceSettingsTest {
         assertFalse(prefs.showGenres)
         assertEquals(SpotlightTime.SLOW, prefs.spotlightTime)
         assertEquals(BackdropDimming.DARK, prefs.backdropDimming)
-        assertEquals(Corners.SHARP, prefs.corners)
+        assertEquals(CornerRadius.EXTRA_ROUND, prefs.cornerRadius)
         assertEquals(Accent.OCEAN, prefs.accent)
         assertEquals(FocusEffect.ZOOM, prefs.focusEffect)
         assertEquals(ClockMode.H12, prefs.clock)
         assertEquals(RowSpacing.AIRY, prefs.rowSpacing)
+    }
+
+    @Test fun pageHasEightExplainedGroupsAndPreviewChangesWithHero() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        compose.setContent { StovaTheme(appearance = prefs) {
+            Column(Modifier.verticalScroll(rememberScrollState())) { AppearanceSettingsContent(prefs) { prefs = it } }
+        } }
+        listOf("Tema", "Heim og hero", "Kort og rader", "Bakgrunn", "Fokus", "Toppfelt", "Ikon", "Profil").forEach {
+            compose.onAllNodesWithText(it)[0].performScrollTo().assertExists()
+        }
+        compose.onNodeWithTag("appearance-preview").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("preview-hero",useUnmergedTree=true).assertExists()
+        compose.runOnIdle { prefs = prefs.copy(heroSize = HeroSize.OFF) }
+        compose.onNodeWithTag("preview-hero",useUnmergedTree=true).assertDoesNotExist()
     }
 }

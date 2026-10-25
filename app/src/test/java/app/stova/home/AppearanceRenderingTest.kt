@@ -116,6 +116,21 @@ class AppearanceRenderingTest {
         assertTrue(compose.onNodeWithText("Film · Drama").getUnclippedBoundsInRoot().bottom <= header.top)
     }
 
+    @Test fun largePosterRowOverrideKeepsTheBottomTvSafeEdge() {
+        val row = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, listOf(film), false)
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            val ctx = LocalContext.current
+            HomeContent(listOf(row), null, row.key, AppArtCache(ctx), PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {},
+                topBar = { app.stova.navigation.TopBar(Profile("p", "Demo", AvatarColor.LIME), {}, {}, {}) },
+                spotlight = SpotlightEntry(film, account, false),
+                homePrefs = HomePrefs(rowFormats = mapOf(row.key to RowStyle(RowFormat.POSTER, ArtworkSize.LARGE))))
+        } }
+        val art = compose.onNodeWithContentDescription("Fjordlys").getUnclippedBoundsInRoot()
+        assertTrue("Whole large poster must remain inside the 48 dp safe edge: $art", art.bottom <= 492.dp)
+        val heading = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot()
+        assertTrue(compose.onNodeWithText("Film · Drama").getUnclippedBoundsInRoot().bottom <= heading.top)
+    }
+
     @Test fun denseHeroWithLongFactsAndOverviewStaysAboveTheRowHeader() {
         val item = film.copy(title = "Ein svært lang tittel om ei ferd gjennom fjordane og eit ukjent landskap langt mot nord",
             year = 2024, ratings = Ratings(7.8, 91, "TV-MA"), genres = listOf("Science fiction", "Drama", "Eventyr", "Thriller", "Mystery", "Adventure"), overview = "Ei lang omtale av ei ferd gjennom fjordar og opne landskap. ".repeat(5))
@@ -139,19 +154,19 @@ class AppearanceRenderingTest {
     @Test fun accentAndCornersReachTheTheme() {
         var prefs by mutableStateOf(AppearancePrefs(seasonChoice = SeasonChoice.NONE))
         var primary = Color.Unspecified
-        var round = false
+        var radius = 0f
         compose.setContent { StovaTheme(appearance = prefs) {
             primary = MaterialTheme.colorScheme.primary
-            round = MaterialTheme.shapes.medium.topStart.toPx(androidx.compose.ui.geometry.Size(100f,100f), androidx.compose.ui.platform.LocalDensity.current) > 0f
+            radius = with(androidx.compose.ui.platform.LocalDensity.current) { MaterialTheme.shapes.medium.topStart.toPx(androidx.compose.ui.geometry.Size(100f,100f), this).toDp().value }
         } }
         Accent.entries.forEach { accent ->
             compose.runOnIdle { prefs = prefs.copy(accent = accent) }
             compose.waitForIdle()
             assertEquals(accent.color, primary)
         }
-        assertTrue(round)
-        compose.runOnIdle { prefs = prefs.copy(corners = Corners.SHARP) }
+        assertEquals(20f, radius, 0.01f)
+        compose.runOnIdle { prefs = prefs.copy(cornerRadius = CornerRadius.SHARP) }
         compose.waitForIdle()
-        assertFalse(round)
+        assertEquals(4f, radius, 0.01f)
     }
 }

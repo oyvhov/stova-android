@@ -52,7 +52,7 @@ class BackdropLayerTest {
         gates[a] = kotlinx.coroutines.CompletableDeferred()
         compose.runOnIdle { onHome = true }
         compose.waitForIdle()
-        compose.onNodeWithTag("backdrop:$a").assertExists()
+        compose.onNodeWithTag("backdrop-target:$a").assertExists()
     }
 
     @Test fun keepsTheShownBackdropUntilTheNextHasLoaded() {

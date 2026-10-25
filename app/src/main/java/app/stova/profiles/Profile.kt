@@ -34,6 +34,7 @@ data class HomePrefs(
     val rowOrder: List<HomeRowKey> = emptyList(),
     val hiddenRows: Set<HomeRowKey> = emptySet(),
     val backdropRotation: Boolean = true,
+    val rowFormats: Map<HomeRowKey, RowStyle> = emptyMap(),
 )
 
 @Serializable
@@ -63,6 +64,23 @@ data class AppearancePrefs(
     val visualTheme: app.stova.core.theme.VisualTheme = app.stova.core.theme.VisualTheme.FOREST,
     val seasonChoice: SeasonChoice = SeasonChoice.CALENDAR,
     val seasonalDecor: SeasonalDecor = SeasonalDecor.FULL,
+    // Legacy fields above remain readable. New fields win when both versions are present.
+    val cornerRadius: CornerRadius = if (corners == Corners.SHARP) CornerRadius.SHARP else CornerRadius.ROUND,
+    val ringWidth: RingWidth = if (strongFocus) RingWidth.THICK else RingWidth.NORMAL,
+    val cardSpacing: CardSpacing = CardSpacing.NORMAL,
+    val progressStyle: ProgressStyle = ProgressStyle.THICK,
+    val backgroundSource: BackgroundSource = BackgroundSource.SPOTLIGHT,
+    val fixedBackground: BackgroundTitle? = null,
+    val spotlightSource: SpotlightSource = SpotlightSource.LIBRARY,
+    val heroTitle: HeroTitle = HeroTitle.LOGO,
+    val backgroundMotion: Boolean = false,
+    val showDate: Boolean = false,
+    val showHaChips: Boolean = true,
+    val showCountdown: Boolean = true,
+    val showAppsButton: Boolean = true,
+    val showSmartHomeButton: Boolean = true,
+    val showProfile: Boolean = true,
+    val clockSize: ClockSize = ClockSize.NORMAL,
     @kotlinx.serialization.Transient val seasonOverlay: SeasonOverlay? = null,
 )
 
@@ -71,14 +89,30 @@ data class AppearancePrefs(
 @Serializable enum class IconColor { ORIGINAL, ACCENT }
 @Serializable enum class IconFill { CENTER, CROP }
 @Serializable enum class MovieStyle { POSTER, WIDE }
-@Serializable enum class HeroSize(val fraction: Float) { COMPACT(0.40f), LARGE(0.52f) }
+@Serializable enum class HeroSize(val fraction: Float) { OFF(0f), COMPACT(0.40f), LARGE(0.52f) }
 @Serializable enum class SpotlightTime(val millis: Long) { FAST(8_000), NORMAL(12_000), SLOW(20_000) }
 @Serializable enum class BackdropDimming { LIGHT, MEDIUM, DARK }
 @Serializable enum class Corners { ROUND, SHARP }
-@Serializable enum class FocusEffect { RING, ZOOM }
+@Serializable enum class FocusEffect { RING, ZOOM, RING_ZOOM, LIGHT_UP }
 @Serializable enum class Accent { LIME, OCEAN, IRIS, CORAL, GOLD, MINT, ROSE, PEARL, HOLLY, PUMPKIN }
 @Serializable enum class ClockMode { H24, H12, HIDDEN }
 @Serializable enum class RowSpacing(val top: Int) { TIGHT(12), NORMAL(22), AIRY(34) }
+
+@Serializable enum class CornerRadius(val dp: Int) { SHARP(4), SOFT(12), ROUND(20), EXTRA_ROUND(28) }
+@Serializable enum class RingWidth(val dp: Int) { THIN(2), NORMAL(3), THICK(4) }
+@Serializable enum class CardSpacing(val dp: Int) { TIGHT(8), NORMAL(16), AIRY(24) }
+@Serializable enum class ProgressStyle(val dp: Int) { THIN(2), THICK(4), HIDDEN(0) }
+@Serializable enum class BackgroundSource { SPOTLIGHT, FIXED, THEME }
+@Serializable enum class SpotlightSource { LIBRARY, MOVIES, SERIES, FAVORITES }
+@Serializable enum class HeroTitle { LOGO, TITLE }
+@Serializable enum class ClockSize { NORMAL, LARGE }
+@Serializable enum class RowFormat { POSTER, WIDE, LARGE_WIDE, SMALL_WIDE, ICON }
+
+/** Null format/size inherit the row's original format and the global artwork size. */
+@Serializable data class RowStyle(val format: RowFormat? = null, val size: ArtworkSize? = null, val showTitle: Boolean = true)
+
+/** IDs, rather than authenticated URLs: a removed account cannot leave its artwork behind. */
+@Serializable data class BackgroundTitle(val accountId: String, val itemId: String, val title: String)
 
 @Serializable
 data class PinFailures(val count: Int = 0, val lastFailureAt: Long = 0)

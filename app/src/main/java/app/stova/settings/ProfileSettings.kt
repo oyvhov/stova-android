@@ -134,6 +134,16 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
     val scope = rememberCoroutineScope()
     var confirm by remember { mutableStateOf(false) }
     var refused by remember { mutableStateOf(false) }
+    var appearance by remember(other.id) { mutableStateOf(false) }
+    var rows by remember(other.id) { mutableStateOf(false) }
+    val closeAppearance = { if (rows) rows = false else appearance = false }
+    BackHandler(enabled = appearance, onBack = closeAppearance)
+    if (appearance) {
+        Text(other.name, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
+        StovaButton(stringResource(R.string.custom_back), closeAppearance)
+        if (rows) HomeRowSettings(container, other) else AppearanceSettings(container, other, onEditRows = { rows = true })
+        return
+    }
     Text(other.name, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
     if (other.kid) {
         SettingsGroup(stringResource(R.string.profile_kid)) {
@@ -142,6 +152,7 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
         }
     }
     SettingsGroup(stringResource(R.string.settings_profile)) {
+        SettingsNavRow(stringResource(R.string.settings_appearance)) { appearance = true }
         SettingsNavRow(stringResource(R.string.profile_delete)) { confirm = true }
     }
     if (refused) {
@@ -173,7 +184,7 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
 private fun EditorDialog(onDismiss: () -> Unit, content: @Composable () -> Unit) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(
-            Modifier.background(MaterialTheme.colorScheme.surface, RoundedCornerShape(StovaShapes.ExtraLarge))
+            Modifier.background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.extraLarge)
                 .padding(32.dp)
                 .width(600.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),

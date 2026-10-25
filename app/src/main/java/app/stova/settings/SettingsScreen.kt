@@ -60,9 +60,10 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
         return
     }
     var section by rememberSaveable { mutableStateOf(SettingsSection.PROFILE) }
+    val contentScroll = rememberScrollState()
     Row(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-        // Scrolls: eight entries no longer fit 540 dp, and the last ones must stay reachable by focus.
-        Column(Modifier.width(260.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Scrolls: the entries no longer fit 540 dp, and the last ones must stay reachable by focus.
+        Column(Modifier.width(260.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 stringResource(R.string.nav_settings),
                 style = MaterialTheme.typography.headlineMedium,
@@ -78,7 +79,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
             SectionTab(stringResource(R.string.nav_system_settings), false) { app.stova.navigation.openSystemSettings(context) }
         }
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()),
+            Modifier.weight(1f).then(if (section == SettingsSection.APPEARANCE) Modifier.fillMaxSize() else Modifier.verticalScroll(contentScroll)),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             when (section) {
@@ -87,7 +88,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
                 SettingsSection.HOME -> HomeRowSettings(container, profile, home)
                 SettingsSection.SMART_HOME -> app.stova.ha.ui.HaSettings(container)
                 SettingsSection.HOME_BUTTON -> HomeButtonSettings(container)
-                SettingsSection.APPEARANCE -> AppearanceSettings(container, profile)
+                SettingsSection.APPEARANCE -> AppearanceSettings(container, profile, pinnedPreview = true, onEditRows = { section = SettingsSection.HOME })
                 SettingsSection.ABOUT -> AboutSettings()
             }
         }
@@ -97,10 +98,10 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
 @Composable
 private fun SectionTab(label: String, selected: Boolean, onFocused: (() -> Unit)? = null, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(StovaShapes.Large)
+    val shape = MaterialTheme.shapes.large
     Box(
         Modifier.fillMaxWidth()
-            .heightIn(min = 56.dp)
+            .heightIn(min = 48.dp)
             .onFocusChanged { if (it.isFocused) onFocused?.invoke() }
             .focusOutline(source, shape)
             .clip(shape)

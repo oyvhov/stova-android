@@ -6,6 +6,7 @@ import androidx.compose.ui.unit.dp
 import coil3.request.transformations
 import android.content.ComponentName
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,6 +15,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasClickAction
@@ -49,7 +51,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.performClick
 import org.robolectric.Shadows.shadowOf
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -165,7 +170,7 @@ class AppScreensTest {
         return file.absolutePath
     }
 
-    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList(), brightTop: Boolean = false, appearance: AppearancePrefs = AppearancePrefs(), showApps: Boolean = false, seasonalShowcase: Boolean = false, packArt: app.stova.apps.AppArtCache? = null, packApps: List<InstalledApp>? = null) {
+    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList(), brightTop: Boolean = false, appearance: AppearancePrefs = AppearancePrefs(), showApps: Boolean = false, seasonalShowcase: Boolean = false, packArt: app.stova.apps.AppArtCache? = null, packApps: List<InstalledApp>? = null, homePrefs: HomePrefs = HomePrefs(), previewSettings: Boolean = false, animateFocus: Boolean = false, waitForBackdrop: Boolean = !seasonalShowcase) {
         val backdrop = demoArt("demo-landscape", android.graphics.Color.rgb(79, 95, 88), brightTop)
         val logoFile = File(rule.activity.cacheDir, "demo-logo.png")
         val logo = Bitmap.createBitmap(900, 300, Bitmap.Config.ARGB_8888)
@@ -194,21 +199,36 @@ class AppScreensTest {
             val loader = coil3.SingletonImageLoader.get(rule.activity)
             loader.execute(coil3.request.ImageRequest.Builder(rule.activity).data(logoFile.absolutePath).size(800,240).transformations(app.stova.media.ui.TrimTransparent()).build())
         }
+        val settingsProfile = if (previewSettings) runBlocking {
+            // A controlled profile avoids the first-run gate starting Home before its snapshot exists.
+            val saved = Profile("appearance-preview","Demo",AvatarColor.LIME,appearance=appearance,home=homePrefs)
+            val mediaAccount = account.copy(profileId=saved.id)
+            app.stova.core.storage.JsonFileStore(File(rule.activity.filesDir,"media-accounts.json"),
+                MediaAccountsFile.serializer(),MediaAccountsFile()).update { MediaAccountsFile(listOf(mediaAccount)) }
+            app.stova.core.storage.JsonFileStore(File(rule.activity.filesDir,"snapshots/${saved.id}.json"),
+                MediaSnapshot.serializer(),MediaSnapshot()).update {
+                MediaSnapshot(spotlight=listOf(SnapshotSpotlight(mediaAccount.id,item.copy(accountId=mediaAccount.id),true)))
+            }
+            saved
+        } else null
         rule.runOnUiThread {
             rule.activity.setContent {
-                StovaTheme(reduceMotion = !seasonalShowcase, appearance = appearance, date = date) {
+                StovaTheme(reduceMotion = !seasonalShowcase && !animateFocus, appearance = appearance, date = date) {
                     val inputMode = androidx.compose.ui.platform.LocalInputModeManager.current
                     SideEffect { inputMode.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
                     val density = LocalDensity.current
                     CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
                         Box(Modifier.fillMaxSize()) {
-                            BackdropLayer(backdrop)
+                            if (previewSettings) Box(Modifier.matchParentSize().background(androidx.compose.material3.MaterialTheme.colorScheme.background))
+                            else BackdropLayer(app.stova.background.backgroundUrl(appearance,backdrop,second))
+                            if (previewSettings) app.stova.settings.SettingsScreen(container, settingsProfile!!,
+                                remember { HomeViewModel(container.session,emptyList()) }, {}) else
                             HomeContent(rows, if (showApps) FocusedTarget.App(apps.first().label) else FocusedTarget.Media(item, account), if (showApps) HomeRowKey.APPS else seasonalRow.firstOrNull()?.key ?: key, packArt ?: container.appArt, container.appCatalog,
                                 {}, {}, {}, {}, topBar = {
                                     TopBar(Profile("demo-profile", "Demo", AvatarColor.LIME), {}, {}, {},
                                         onSmartHome = if (chips.isNotEmpty()) ({}) else null,
                                         leading = { HomeStatusChips(chips) })
-                                }, spotlight = app.stova.media.SpotlightEntry(item, account, newSeason = true))
+                                }, spotlight = app.stova.media.SpotlightEntry(item, account, newSeason = true),homePrefs=homePrefs,canEditRows=true)
                         }
                     }
                 }
@@ -216,8 +236,10 @@ class AppScreensTest {
         }
         rule.waitForIdle()
         if(seasonalShowcase) { rule.mainClock.advanceTimeBy(1_200); rule.waitForIdle() }
-        rule.onNodeWithText("★ 7,8").assertIsDisplayed()
-        rule.onNodeWithText(app.stova.media.ui.criticText(91, java.util.Locale.forLanguageTag("nn"))).assertExists()
+        if (appearance.heroSize != HeroSize.OFF && !previewSettings) {
+            rule.onNodeWithText("★ 7,8").assertIsDisplayed()
+            rule.onNodeWithText(app.stova.media.ui.criticText(91, java.util.Locale.forLanguageTag("nn"))).assertExists()
+        }
         // Decode the same sized requests into Coil's memory cache before taking the window image.
         runBlocking {
             val loader = coil3.SingletonImageLoader.get(rule.activity)
@@ -226,11 +248,63 @@ class AppScreensTest {
             }
         }
         rule.waitForIdle()
+        if (previewSettings) {
+            rule.onNodeWithText("Utsjånad").performClick()
+            rule.waitUntil(5_000) { rule.onAllNodesWithTag("preview-backdrop",useUnmergedTree=true).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNode(hasText("Tema") and hasClickAction()).performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+            rule.mainClock.advanceTimeBy(250)
+            return
+        }
+        if (waitForBackdrop) app.stova.background.backgroundUrl(appearance,backdrop,second)?.let { expected ->
+            rule.waitUntil(5_000) { rule.onAllNodesWithTag("backdrop:$expected").fetchSemanticsNodes().isNotEmpty() }
+        }
         val label = if(showApps) apps.first().label else "Fjordlys"
         rule.onAllNodes(hasContentDescription(label) and hasClickAction())[0].performSemanticsAction(SemanticsActions.RequestFocus) { it() }
         rule.onAllNodes(hasContentDescription(label) and hasClickAction())[0].assertIsFocused()
         rule.mainClock.advanceTimeBy(if(seasonalShowcase) 1_200 else 250)
         rule.waitForIdle()
+    }
+
+    @Test fun customizationHeroOff() {
+        renderMediaHome(waitForBackdrop=true,appearance=AppearancePrefs(heroSize=HeroSize.OFF,seasonChoice=SeasonChoice.NONE))
+        rule.saveScreen("tilpassing-hero-av")
+    }
+    @Test fun customizationLargePosterRow() {
+        renderMediaHome(waitForBackdrop=true,poster=true,appearance=AppearancePrefs(seasonChoice=SeasonChoice.NONE),
+            homePrefs=HomePrefs(rowFormats=mapOf(HomeRowKey.latestMovies("demo-account") to RowStyle(RowFormat.POSTER,ArtworkSize.LARGE))))
+        rule.saveScreen("tilpassing-plakatrad-stor")
+    }
+    @Test fun customizationRoundLightUp() {
+        renderMediaHome(waitForBackdrop=true,appearance=AppearancePrefs(cornerRadius=CornerRadius.EXTRA_ROUND,focusEffect=FocusEffect.LIGHT_UP,seasonChoice=SeasonChoice.NONE))
+        rule.saveScreen("tilpassing-ekstra-rund-lys-opp")
+    }
+    @Test fun customizationTopDate() {
+        renderMediaHome(waitForBackdrop=true,appearance=AppearancePrefs(showDate=true,clockSize=ClockSize.LARGE,seasonChoice=SeasonChoice.NONE))
+        rule.saveScreen("tilpassing-toppfelt-dato")
+    }
+    @Test fun customizationMoveRow() {
+        renderMediaHome(waitForBackdrop=true,appearance=AppearancePrefs(seasonChoice=SeasonChoice.NONE))
+        rule.onAllNodes(hasContentDescription("Fjordlys") and hasClickAction())[0].performKeyInput { pressKey(androidx.compose.ui.input.key.Key.Menu) }
+        rule.onNodeWithText("Flytt rada").performClick()
+        rule.saveScreen("tilpassing-flyttemodus")
+    }
+    @Test fun customizationSettings() {
+        renderMediaHome(waitForBackdrop=true,appearance=AppearancePrefs(seasonChoice=SeasonChoice.NONE),previewSettings=true)
+        rule.saveScreen("tilpassing-innstillingar")
+    }
+    @Test fun customizationFixedBackground() {
+        renderMediaHome(waitForBackdrop=true,appearance=AppearancePrefs(backgroundSource=BackgroundSource.FIXED,heroTitle=HeroTitle.TITLE,seasonChoice=SeasonChoice.NONE))
+        rule.saveScreen("tilpassing-fast-bakgrunn")
+    }
+    @Test fun customizationMinimalTheme() {
+        renderMediaHome(waitForBackdrop=true,appearance=AppearancePrefs(heroSize=HeroSize.OFF,backgroundSource=BackgroundSource.THEME,
+            showAppsButton=false,showSmartHomeButton=false,showProfile=false,clock=ClockMode.HIDDEN,cornerRadius=CornerRadius.SHARP,seasonChoice=SeasonChoice.NONE))
+        rule.saveScreen("tilpassing-einsfarga-minimal")
+    }
+    @Test fun customizationRingZoomSmallWide() {
+        renderMediaHome(waitForBackdrop=true,appearance=AppearancePrefs(focusEffect=FocusEffect.RING_ZOOM,ringWidth=RingWidth.THICK,cardSpacing=CardSpacing.AIRY,
+            seasonChoice=SeasonChoice.NONE),homePrefs=HomePrefs(rowFormats=mapOf(HomeRowKey.continueWatching("demo-account") to RowStyle(RowFormat.SMALL_WIDE,ArtworkSize.SMALL,false))),animateFocus=true)
+        rule.saveScreen("tilpassing-ring-zoom-liten-brei")
     }
 
     private fun appearanceApps(): List<InstalledApp> {
@@ -471,7 +545,7 @@ class AppScreensTest {
         rule.waitForIdle()
         rule.onAllNodesWithText("Innstillingar")[0].performClick()
         rule.onNodeWithText("Utsjånad").performClick()
-        rule.onNodeWithText("Sesongpynt").assertIsDisplayed()
+        rule.onNodeWithText("Sesongpynt").performScrollTo().assertIsDisplayed()
         rule.saveScreen("tema-innstillingar")
     }
 }

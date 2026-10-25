@@ -36,7 +36,7 @@ fun StovaButton(
     enabled: Boolean = true,
 ) {
     val source = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(StovaShapes.Medium)
+    val shape = MaterialTheme.shapes.medium
     val colors = MaterialTheme.colorScheme
     val fill = if (primary) colors.primary else colors.surfaceVariant
     val content = if (primary) colors.onPrimary else colors.onSurface

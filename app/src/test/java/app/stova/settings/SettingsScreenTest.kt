@@ -76,6 +76,23 @@ class SettingsScreenTest {
         rule.onNodeWithText("Bakgrunnsrotasjon").assertExists()
     }
 
+    @Test fun adultCanEditKidAppearanceWithoutChangingAdult() {
+        runBlocking {
+            container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id)
+            container.profiles.create("K", AvatarColor.ROSE, true)
+        }
+        openSettings()
+        rule.onNodeWithText("K").performClick()
+        rule.onAllNodesWithText("Utsjånad")[1].performScrollTo().performClick()
+        rule.onNodeWithText("Kortstorleik").performScrollTo().performClick()
+        rule.waitUntil(5_000) { profile("K").appearance.cardSize == app.stova.profiles.ArtworkSize.LARGE }
+        assertEquals(app.stova.profiles.ArtworkSize.MEDIUM, profile("A").appearance.cardSize)
+        rule.onNodeWithText("Tilpass kvar rad").performScrollTo().performClick()
+        rule.onAllNodesWithText("Kortformat for rada")[0].performScrollTo().performClick()
+        rule.waitUntil(5_000) { profile("K").home.rowFormats[app.stova.home.HomeRowKey.APPS]?.format == app.stova.profiles.RowFormat.LARGE_WIDE }
+        assertEquals(emptyMap<app.stova.home.HomeRowKey, app.stova.profiles.RowStyle>(), profile("A").home.rowFormats)
+    }
+
     @Test fun kidSeesOnlySwitchProfile() {
         runBlocking {
             container.profiles.create("A", AvatarColor.LIME, false)

@@ -103,7 +103,7 @@ private fun LazyGridScope.header(title: Int) {
 @Composable
 private fun HiddenToggle(label: String, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(StovaShapes.Medium)
+    val shape = MaterialTheme.shapes.medium
     Text(
         label,
         style = MaterialTheme.typography.titleMedium,

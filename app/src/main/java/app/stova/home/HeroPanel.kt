@@ -24,6 +24,7 @@ import coil3.request.transformations
 @Composable fun HeroPanel(entry:SpotlightEntry?,modifier:Modifier=Modifier) {
  val large=LocalDensity.current.fontScale>=1.5f
  val prefs=app.stova.core.theme.LocalAppearance.current
+ if(prefs.heroSize==HeroSize.OFF) return
  val calm=LocalReduceMotion.current
  BoxWithConstraints(modifier.fillMaxWidth().padding(horizontal=StovaLayout.TvSafeEdge,vertical=16.dp),contentAlignment=Alignment.TopStart) {
   val logoHeight=minOf(72.dp,(maxHeight-(if(prefs.showOverview) 150.dp else 110.dp)).coerceAtLeast(24.dp))
@@ -41,7 +42,7 @@ import coil3.request.transformations
     }
     else {
      val item=current.item;val logo=item.art.logo
-     if(logo!=null) AsyncImage(ImageRequest.Builder(LocalContext.current).data(logo).size(800,240).transformations(TrimTransparent()).build(),item.title,Modifier.widthIn(max=320.dp).height(logoHeight),contentScale=ContentScale.Fit,alignment=Alignment.CenterStart)
+     if(logo!=null && prefs.heroTitle==HeroTitle.LOGO) AsyncImage(ImageRequest.Builder(LocalContext.current).data(logo).size(800,240).transformations(TrimTransparent()).build(),item.title,Modifier.widthIn(max=320.dp).height(logoHeight),contentScale=ContentScale.Fit,alignment=Alignment.CenterStart)
      else Text(item.title,style=MaterialTheme.typography.headlineMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=if(large || prefs.showOverview) 1 else 2,overflow=TextOverflow.Ellipsis)
      FlowRow(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalArrangement=Arrangement.spacedBy(6.dp),itemVerticalAlignment=Alignment.CenterVertically) {
       if(current.newSeason) Text(stringResource(R.string.spotlight_new_season),Modifier.background(MaterialTheme.colorScheme.primaryContainer,MaterialTheme.shapes.small).padding(horizontal=10.dp,vertical=3.dp),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.primary)

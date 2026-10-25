@@ -19,7 +19,7 @@ fun AndroidComposeTestRule<*, out ComponentActivity>.saveScreen(name: String, wi
     waitForIdle()
     val view = windowView
     val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-    view.draw(Canvas(bitmap))
+    runOnUiThread { view.draw(Canvas(bitmap)) }
     val out = File("build/screens/$name.png").apply { parentFile?.mkdirs() }
     out.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     return out

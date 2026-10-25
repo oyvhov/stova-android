@@ -5,7 +5,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.FocusInteraction
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
+import coil3.compose.AsyncImage
+import app.stova.core.ui.focusOutline
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -49,29 +59,60 @@ internal fun AccentSwatches(selected: Accent) {
     }
 }
 
+/** A non-interactive slice of Home: it never takes focus away from the controls. */
 @Composable
-internal fun ThemePreview(stored: AppearancePrefs) {
-    StovaTheme(appearance=stored) {
-        val p=LocalAppearance.current
-        Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background,MaterialTheme.shapes.medium)
-            .border(1.dp,MaterialTheme.colorScheme.outlineVariant,MaterialTheme.shapes.medium).padding(16.dp),
-            verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                Text(stringResource(R.string.theme_preview),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                if(p.seasonalDecor!=SeasonalDecor.OFF) SeasonalMark(p.season())
-            }
-            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                val surface=MaterialTheme.colorScheme.surface
-                val raised=MaterialTheme.colorScheme.surfaceVariant
-                val accent=MaterialTheme.colorScheme.primary
-                Canvas(Modifier.size(72.dp,40.dp).clearAndSetSemantics { }) {
-                    drawRect(surface)
-                    drawRect(raised,Offset(4*density,4*density),Size(28*density,32*density))
-                    drawRect(accent,Offset(3*density,3*density),Size(30*density,34*density),style=androidx.compose.ui.graphics.drawscope.Stroke(2*density))
+internal fun ThemePreview(stored: AppearancePrefs, entry: app.stova.media.SpotlightEntry? = null, home: HomePrefs = HomePrefs()) {
+    StovaTheme(appearance = stored) {
+        val p = LocalAppearance.current
+        val ink = MaterialTheme.colorScheme.background
+        val title = entry?.item?.title ?: stringResource(R.string.custom_preview_title)
+        val backdrop = entry?.item?.art?.backdrop.takeUnless { p.backgroundSource == BackgroundSource.THEME }
+        val sampleKey = app.stova.home.HomeRowKey.latestMovies(entry?.account?.id.orEmpty())
+        val row = home.rowFormats[sampleKey] ?: RowStyle()
+        val dimensions = app.stova.home.artworkDimensions(row.format ?: app.stova.home.defaultRowFormat(sampleKey,p),row.size ?: p.cardSize)
+        val source = remember { MutableInteractionSource() }
+        val sibling = remember { MutableInteractionSource() }
+        LaunchedEffect(source) { withFrameNanos { }; source.emit(FocusInteraction.Focus()) }
+        Box(Modifier.fillMaxWidth().testTag("appearance-preview").clip(MaterialTheme.shapes.large)
+            .background(ink).border(1.dp,MaterialTheme.colorScheme.outlineVariant,MaterialTheme.shapes.large)) {
+            if (backdrop != null) AsyncImage(backdrop,null,Modifier.matchParentSize().testTag("preview-backdrop"),contentScale=ContentScale.Crop)
+            else Canvas(Modifier.matchParentSize().clearAndSetSemantics { }) {
+                drawRect(p.visualTheme.surface)
+                val mountain = Path().apply {
+                    moveTo(size.width*.45f,size.height);lineTo(size.width*.68f,size.height*.15f)
+                    lineTo(size.width*.83f,size.height*.73f);lineTo(size.width*.94f,size.height*.34f)
+                    lineTo(size.width,size.height*.55f);lineTo(size.width,size.height);close()
                 }
-                Column {
-                    Text(stringResource(themeLabels[p.visualTheme.ordinal]),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface)
-                    Text(stringResource(accentLabels[p.accent.ordinal]),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                drawPath(mountain,p.visualTheme.raised)
+            }
+            Box(Modifier.matchParentSize().background(Brush.horizontalGradient(listOf(ink,ink.copy(alpha=.86f),ink.copy(alpha=.12f)))))
+            Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.theme_preview),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    if(p.seasonalDecor!=SeasonalDecor.OFF) SeasonalMark(p.season())
+                    Spacer(Modifier.weight(1f))
+                    Text(stringResource(themeLabels[p.visualTheme.ordinal]),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if(p.heroSize!=HeroSize.OFF) Box(Modifier.testTag("preview-hero").padding(bottom=if(p.heroSize==HeroSize.LARGE) 18.dp else 0.dp)) {
+                    val logo=entry?.item?.art?.logo
+                    if(p.heroTitle==HeroTitle.LOGO && logo!=null) AsyncImage(logo,null,Modifier.widthIn(max=180.dp).height(28.dp),contentScale=ContentScale.Fit)
+                    else Text(title,style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=1,overflow=TextOverflow.Ellipsis)
+                }
+                CompositionLocalProvider(app.stova.home.LocalRowHasFocus provides true) {
+                    Row(horizontalArrangement=Arrangement.spacedBy((p.cardSpacing.dp*.4f).dp)) {
+                        listOf(source,sibling).forEach { interaction ->
+                            Column {
+                                Box(Modifier.size((dimensions.width*.36f).dp,(dimensions.height*.36f).dp)
+                                    .focusOutline(interaction,MaterialTheme.shapes.medium,zoom=true).clip(MaterialTheme.shapes.medium)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)) {
+                                    val art=entry?.item?.art?.let { if(row.format==RowFormat.POSTER || (row.format==null && p.movieStyle==MovieStyle.POSTER)) it.poster ?: it.wide else it.wide ?: it.poster }
+                                    if(art!=null) AsyncImage(art,null,Modifier.fillMaxSize(),contentScale=ContentScale.Crop)
+                                    if(p.progressStyle.dp>0) Box(Modifier.align(Alignment.BottomStart).fillMaxWidth(.4f).height(p.progressStyle.dp.dp).background(MaterialTheme.colorScheme.primary))
+                                }
+                                if(p.showTitles) Text(title,style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurface,maxLines=1)
+                            }
+                        }
+                    }
                 }
             }
         }
