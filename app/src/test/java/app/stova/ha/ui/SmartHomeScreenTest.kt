@@ -55,6 +55,19 @@ class SmartHomeScreenTest {
         compose.onNodeWithTag("page-icon-smart-home",useUnmergedTree=true).assertIsDisplayed()
         compose.onNodeWithTag("section-icon-favorites",useUnmergedTree=true).assertIsDisplayed()
     }
+    @Test fun remoteFocusOnTheFirstCardKeepsItsGroupHeadingVisible() {
+        compose.setContent { StovaTheme(reduceMotion=true) {
+            val input = androidx.compose.ui.platform.LocalInputModeManager.current
+            SideEffect { input.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
+            SmartHomeContent(adult,List(9) { CardConfig("$it",CardType.SENSOR,"sensor.$it",name=if(it==0) "Stova" else "Kort $it",favorite=true) },
+                emptyMap(),HaStatus.CONNECTED,initialFocusId="0")
+        } }
+        compose.onNodeWithText("Stova").assertIsFocused()
+        compose.onNodeWithText("Favorittar").assertIsDisplayed()
+        compose.onRoot().performKeyInput { pressKey(androidx.compose.ui.input.key.Key.DirectionRight) }
+        compose.onNodeWithText("Kort 1").assertIsFocused()
+        compose.onNodeWithText("Favorittar").assertIsDisplayed()
+    }
     @Test fun emptyStateOffersAddForAdult() {
         var adding=false
         compose.setContent { StovaTheme { SmartHomeContent(adult,emptyList(),emptyMap(),HaStatus.CONNECTED,onAdd={adding=true}) } }

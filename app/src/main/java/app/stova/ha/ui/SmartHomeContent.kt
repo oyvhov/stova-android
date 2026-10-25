@@ -77,6 +77,19 @@ import kotlin.math.ceil
     var navigation by remember {mutableStateOf<Job?>(null)}
     var pendingCard by remember {mutableStateOf<String?>(null)}
     var navigationVersion by remember {mutableIntStateOf(0)}
+    fun listIndex(id:String):Int {
+        var index=0
+        sections.forEach {section ->
+            index++
+            packCards(section.cards).forEachIndexed {bandIndex,band ->
+                // The first band belongs with its room/favourites label. A tall card may
+                // still bring itself fully into view afterwards when both cannot fit.
+                if(band.any {it.card.id==id}) return if(bandIndex==0) index-1 else index
+                index++
+            }
+        }
+        return 0
+    }
     val firstId=cards.find {it.id==initialFocusId}?.id ?: cells.firstOrNull()?.id
     fun requestCard(id:String) {
         val target=cells.firstOrNull {it.id==id} ?: return
@@ -87,7 +100,7 @@ import kotlin.math.ceil
         navigation=scope.launch {
             try {
                 withFrameNanos { }
-                list.smoothScrollToItem(target.listIndex,scrollMotion)
+                list.smoothScrollToItem(listIndex(id),scrollMotion)
                 // A later band may not be composed until the scroll has reached layout.
                 repeat(8) {
                     if(runCatching {focus[id]?.requestFocus()}.getOrNull()==true) return@launch
@@ -115,17 +128,6 @@ import kotlin.math.ceil
             runCatching {headerFocus.requestFocus(FocusDirection.Enter)}
         }
         return true
-    }
-    fun listIndex(id:String):Int {
-        var index=0
-        sections.forEach {section ->
-            index++
-            packCards(section.cards).forEach {band ->
-                if(band.any {it.card.id==id}) return index
-                index++
-            }
-        }
-        return 0
     }
     LaunchedEffect(cards,firstId) {if(!initialFocusGiven && firstId!=null) list.scrollToItem(listIndex(firstId))}
     LaunchedEffect(menuId,overlayOpen,cards,restoreId) {
