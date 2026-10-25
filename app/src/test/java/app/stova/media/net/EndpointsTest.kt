@@ -17,6 +17,9 @@ class EndpointsTest {
     @Test fun newSeasonsAreTheNewestPremieredSeasons() = assertEquals(
         listOf("Users/u/Items?IncludeItemTypes=Season&Recursive=true&SortBy=PremiereDate&SortOrder=Descending&$ITEM_FIELDS&Limit=20"),
         endpointCandidates(ServerKind.EMBY, Endpoint.NEW_SEASONS, "u"))
+    @Test fun seriesDetailsAreFetchedByIdInOneRequest() = assertEquals(
+        listOf("Items?userId=u&Ids=s1,s2&$ITEM_FIELDS", "Users/u/Items?Ids=s1,s2&$ITEM_FIELDS"),
+        idsCandidates(ServerKind.JELLYFIN, "u", listOf("s1", "s2")))
     @Test fun headerPerKind() {
         val id = ClientIdentity("SHIELD Android TV", "dev1", "0.1.0")
         assertEquals("X-Emby-Authorization", authHeader(ServerKind.EMBY, id, "t").first)

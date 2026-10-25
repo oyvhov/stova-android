@@ -37,5 +37,15 @@ class SpotlightTest {
         assertEquals(listOf("s1"), spotlightEntries(acc, listOf(series), listOf(season("s1", 2, "2026-10-01")), today).map { it.item.id })
     }
 
+    @Test fun aNewSeasonWearsItsSeriesDetailsWhenTheyAreKnown() {
+        val series = MediaItem("s1", "a1", ItemType.SERIES, "Kystvakta", year = 2022, overview = "Livet langs kysten.",
+            ratings = Ratings(7.9), art = ItemArt(backdrop = "sb", logo = "sl"))
+        val entry = spotlightEntries(acc, emptyList(), listOf(season("s1", 3, "2026-10-10")), today, listOf(series)).single()
+        assertTrue(entry.newSeason); assertEquals(series, entry.item)
+    }
+
+    @Test fun newSeasonSeriesIdsAreTheOnesWorthDetails() =
+        assertEquals(listOf("s1"), newSeasonSeriesIds(listOf(season("s1", 3, "2026-10-10"), season("s2", 1, "2026-10-10")), today))
+
     @Test fun keepsAtMostThirty() = assertEquals(30, spotlightEntries(acc, (1..40).map { movie("m$it") }, emptyList(), today).size)
 }

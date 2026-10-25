@@ -1,6 +1,11 @@
 package app.stova.home
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.key.Key
+import app.stova.media.SpotlightEntry
+import org.junit.Assert.assertEquals
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
@@ -51,6 +56,40 @@ class HomeScrollTest {
         compose.onNode(isFocused()).assert(hasText("Andre", substring = true))
         // Minimal bring-into-view left the bottom of the card above showing as a bare bar under the hero.
         compose.onNodeWithText("Fyrste").assertIsNotDisplayed()
+    }
+
+    @Test fun startFocusMovesToTheFirstMediaRowWhenItArrivesLate() {
+        var shown by mutableStateOf(listOf(rows[1]))
+        var start by mutableStateOf(rows[1].key)
+        compose.setContent {
+            val context = LocalContext.current
+            StovaTheme(reduceMotion = true) {
+                HomeContent(shown, null, start, AppArtCache(context), PackageManagerAppCatalog(context, emptySet()), {}, {}, {}, {})
+            }
+        }
+        compose.waitForIdle()
+        compose.onNode(isFocused()).assert(hasText("Andre", substring = true))
+        compose.runOnIdle { shown = rows; start = rows[0].key }
+        compose.waitForIdle()
+        compose.onNode(isFocused()).assert(hasText("Fyrste", substring = true))
+    }
+
+    @Test fun startFocusStaysWhereTheUserWent() {
+        var shown by mutableStateOf(rows.drop(1))
+        var start by mutableStateOf(rows[1].key)
+        compose.setContent {
+            val context = LocalContext.current
+            StovaTheme(reduceMotion = true) {
+                HomeContent(shown, null, start, AppArtCache(context), PackageManagerAppCatalog(context, emptySet()), {}, {}, {}, {})
+            }
+        }
+        compose.waitForIdle()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitForIdle()
+        compose.onNode(isFocused()).assert(hasText("Tredje", substring = true))
+        compose.runOnIdle { shown = rows; start = rows[0].key }
+        compose.waitForIdle()
+        compose.onNode(isFocused()).assert(hasText("Tredje", substring = true))
     }
 
     @Test fun homeShowsNoServiceLogo() {

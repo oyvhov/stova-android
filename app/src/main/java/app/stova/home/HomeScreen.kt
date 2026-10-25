@@ -12,6 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.*
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -119,16 +122,9 @@ fun HomeContent(
         }
     }?.key ?: initial
     val firstItem = remember { FocusRequester() }
-    var placedFocus by remember { mutableStateOf(false) }
-    LaunchedEffect(restoreRow, rows) {
-        // Lazy rows compose during layout, after this effect starts; give the requester a few frames to attach.
-        repeat(10) {
-            if (restoreRow == null || placedFocus) return@LaunchedEffect
-            placedFocus = runCatching { firstItem.requestFocus(FocusDirection.Enter) }.getOrDefault(false)
-            if (!placedFocus) withFrameNanos { }
-        }
-    }
-    Column(Modifier.fillMaxSize().semantics {
+    var placedRow by remember { mutableStateOf<HomeRowKey?>(null) }
+    var viewerMoved by remember { mutableStateOf(false) }
+    Column(Modifier.fillMaxSize().onPreviewKeyEvent { if (it.type == KeyEventType.KeyDown) viewerMoved = true; false }.semantics {
         // Automation marker, not user-facing copy. Null rows mean sources are still loading.
         if (rows != null) contentDescription = "home-ready"
     }) {
@@ -136,13 +132,25 @@ fun HomeContent(
         BoxWithConstraints(Modifier.weight(1f)) {
             val heroHeight = maxHeight * 0.45f
             Column {
-                HeroPanel(spotlight, Modifier.fillMaxWidth().heightIn(min = heroHeight))
+                // A fixed height: the rows never move when the spotlight turns to a longer title.
+                HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
                 when {
                     rows == null -> Unit
                     rows.isEmpty() -> EmptyHome(onOpenApps)
                     else -> {
                         val firstRow = rows.indexOfFirst { it.key == restoreRow }.coerceAtLeast(0)
                         val listState = rememberLazyListState(initialFirstVisibleItemIndex = firstRow)
+                        LaunchedEffect(restoreRow, rows) {
+                            // Media rows can arrive after the apps row; start focus follows them until the viewer has moved.
+                            if (restoreRow == null || restoreRow == placedRow || (placedRow != null && viewerMoved)) return@LaunchedEffect
+                            // A row inserted above the visible ones is not composed yet: bring it in first.
+                            rows.indexOfFirst { it.key == restoreRow }.takeIf { it >= 0 }?.let { listState.scrollToItem(it) }
+                            // Lazy rows compose during layout, after this effect starts; give the requester a few frames to attach.
+                            repeat(10) {
+                                if (runCatching { firstItem.requestFocus(FocusDirection.Enter) }.getOrDefault(false)) { placedRow = restoreRow; return@LaunchedEffect }
+                                withFrameNanos { }
+                            }
+                        }
                         val scope = rememberCoroutineScope()
                         val reduceMotion = LocalReduceMotion.current
                         val rowSpec = LocalBringIntoViewSpec.current

@@ -4,6 +4,12 @@ import java.net.URLEncoder
 enum class Endpoint { RESUME, NEXT_UP, LATEST_MOVIES, LATEST_SERIES, SPOTLIGHT, NEW_SEASONS }
 const val ITEM_FIELDS = "Fields=Overview,ProductionYear,RunTimeTicks,OfficialRating,CommunityRating,CriticRating,ParentId,SeriesId&EnableUserData=true&EnableImageTypes=Primary,Backdrop,Logo,Thumb&ImageTypeLimit=1"
 const val ITEM_QUERY = "$ITEM_FIELDS&Limit=20"
+/** Several known items in one request, such as the series behind new seasons. */
+fun idsCandidates(kind: ServerKind, userId: String, ids: List<String>): List<String> {
+ val u=URLEncoder.encode(userId,"UTF-8");val list=ids.joinToString(",") { URLEncoder.encode(it,"UTF-8") }
+ val legacy="Users/$u/Items?Ids=$list&$ITEM_FIELDS"
+ return if(kind==ServerKind.EMBY) listOf(legacy) else listOf("Items?userId=$u&Ids=$list&$ITEM_FIELDS",legacy)
+}
 fun endpointCandidates(kind: ServerKind, endpoint: Endpoint, userId: String): List<String> {
  val u=URLEncoder.encode(userId,"UTF-8")
  if(endpoint==Endpoint.NEXT_UP) return listOf("Shows/NextUp?UserId=$u&$ITEM_QUERY")

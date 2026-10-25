@@ -79,6 +79,20 @@ class MediaRepositoryTest {
   assertEquals(listOf(item(a.forProfile("p").first().single())),r.rows("p").first().single().items)
   assertEquals(listOf("f1"),r.spotlight("p").first().map { it.item.id })
  }
+ @Test fun newSeasonsCarryTheirSeriesStory()=runTest {
+  val a=accounts();add(a,ServerKind.JELLYFIN)
+  val noon=java.time.LocalDate.of(2026,10,25).atTime(12,0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+  val season=MediaItem("se3",a.forProfile("p").first().single().id,ItemType.SEASON,"Sesong 3",seriesName="Kystvakta",seriesId="s1",season=3,premiered="2026-10-10",art=ItemArt(backdrop="b"))
+  val client=object:MediaServerClient {
+   override suspend fun resume()=emptyList<MediaItem>()
+   override suspend fun nextUp()=emptyList<MediaItem>()
+   override suspend fun latest(endpoint:Endpoint)=if(endpoint==Endpoint.NEW_SEASONS) listOf(season) else emptyList()
+   override suspend fun items(ids:List<String>)=ids.map { MediaItem(it,season.accountId,ItemType.SERIES,"Kystvakta",overview="Livet langs kysten.",art=ItemArt(backdrop="sb")) }
+  }
+  val r=MediaRepository(a,{ client },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ noon })
+  r.refresh("p");val entry=r.spotlight("p").first().single()
+  assertTrue(entry.newSeason);assertEquals("Livet langs kysten.",entry.item.overview)
+ }
  @Test fun removedAccountDropsCachedRows()=runTest {
   val a=accounts();val j=add(a,ServerKind.JELLYFIN);cached(j)
   val r=MediaRepository(a,{client(it)},tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))

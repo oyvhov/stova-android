@@ -76,7 +76,9 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
       ).filter { it.items.isNotEmpty() }
       // A spotlight failure never costs the rows; the cached titles stay until the next try.
       val spotlight=if(!spotlightDue) null else orElse(null) {
-       spotlightEntries(account,client.latest(Endpoint.SPOTLIGHT),orElse(emptyList()) { client.latest(Endpoint.NEW_SEASONS) },today)
+       val seasons=orElse(emptyList()) { client.latest(Endpoint.NEW_SEASONS) }
+       val series=orElse(emptyList()) { client.items(newSeasonSeriesIds(seasons,today)) }
+       spotlightEntries(account,client.latest(Endpoint.SPOTLIGHT),seasons,today,series)
       }
       Fetched(rows,spotlight ?: cachedSpotlight,spotlight!=null)
      } ?: Fetched(cached,cachedSpotlight,false)

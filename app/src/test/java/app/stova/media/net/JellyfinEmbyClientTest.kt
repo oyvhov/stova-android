@@ -26,6 +26,13 @@ class JellyfinEmbyClientTest {
             assertNull(other.takeRequest().getHeader("X-Emby-Authorization"))
         }
     }
+    @Test fun itemsByIdAsksOnceAndSkipsAnEmptyList() = runTest {
+        assertEquals(emptyList<MediaItem>(), client().items(emptyList()))
+        server.enqueue(MockResponse().setBody("""{"Items":[{"Id":"s1","Type":"Series","Name":"Kystvakta"}]}"""))
+        assertEquals(listOf("s1"), client().items(listOf("s1")).map { it.id })
+        assertTrue(server.takeRequest().path!!.startsWith("/Items?userId=u&Ids=s1&"))
+        assertEquals(1, server.requestCount)
+    }
     @Test fun sendsTokenHeader() = runTest {
         server.enqueue(MockResponse().setBody("[]")); client(ServerKind.EMBY).latest(Endpoint.LATEST_MOVIES)
         assertTrue(server.takeRequest().getHeader("X-Emby-Authorization")!!.contains("Token=\"tok\""))
