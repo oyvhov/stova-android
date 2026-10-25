@@ -164,7 +164,8 @@ class HaSocket(
         val response = request { historyRequest(it, entityId, Instant.now().minusSeconds(hours.toLong() * 3600)) }
         return (response?.get("result") as? JsonObject)?.let { parseHistory(it, entityId) }.orEmpty()
     }
-    override suspend fun states(): List<HaEntity> = (request(::getStates)?.get("result") as? JsonArray)?.let(::parseStates).orEmpty()
+    override suspend fun states(): List<HaEntity> = (request(::getStates)?.get("result") as? JsonArray)?.let(::parseStates)
+        ?: throw java.io.IOException("HA states unavailable")
     override suspend fun registry(): HaRegistry = coroutineScope {
         val results = HaRegistryKind.entries.map { kind -> async {
             val response = request { registryRequest(it, kind) }
