@@ -1,5 +1,6 @@
 package app.stova
 
+import coil3.request.transformations
 import android.content.ComponentName
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -8,8 +9,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.semantics.SemanticsActions
 import app.stova.home.*
 import app.stova.ha.HaEntity
 import app.stova.ha.HaStatus
@@ -24,7 +30,8 @@ import app.stova.media.model.*
 import app.stova.background.BackdropLayer
 import app.stova.core.theme.StovaTheme
 import app.stova.navigation.TopBar
-import app.stova.profiles.Profile
+import app.stova.profiles.*
+import app.stova.apps.InstalledApp
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -155,27 +162,39 @@ class AppScreensTest {
         return file.absolutePath
     }
 
-    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList(), brightTop: Boolean = false) {
+    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList(), brightTop: Boolean = false, appearance: AppearancePrefs = AppearancePrefs(), showApps: Boolean = false) {
         val backdrop = demoArt("demo-landscape", android.graphics.Color.rgb(79, 95, 88), brightTop)
+        val logoFile = File(rule.activity.cacheDir, "demo-logo.png")
+        val logo = Bitmap.createBitmap(900, 300, Bitmap.Config.ARGB_8888)
+        Canvas(logo).drawText("FJORDLYS", 60f, 210f, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.rgb(233, 233, 226); textSize = 150f; typeface = android.graphics.Typeface.DEFAULT_BOLD
+        })
+        logoFile.outputStream().use { logo.compress(Bitmap.CompressFormat.PNG, 100, it) }
         val second = demoArt("demo-evening", android.graphics.Color.rgb(68, 77, 95))
         val account = MediaAccount("demo-account", "demo-profile", ServerKind.JELLYFIN, "demo-server", "Demoarkiv", "https://demo.invalid", "demo-user", "Demo")
         val item = MediaItem("demo-film", account.id, ItemType.MOVIE, "Fjordlys", year = 2024, runtimeMinutes = 112,
-            overview = "Ei ferd gjennom stille fjordar og opne landskap. Vegen vidare byr på nye møte og ukjende stader.",
-            ratings = Ratings(7.84, 91, "12"), progress = 0.405f, art = ItemArt(backdrop = backdrop, poster = backdrop, wide = backdrop))
+            genres = listOf("Drama", "Eventyr"), overview = "Ei ferd gjennom stille fjordar og opne landskap. Vegen vidare byr på nye møte og ukjende stader.",
+            ratings = Ratings(7.84, 91, "12"), progress = 0.405f, art = ItemArt(backdrop = backdrop, logo = logoFile.absolutePath, poster = backdrop, wide = backdrop))
         val items = listOf(item, item.copy(id = "demo-film-2", title = "Vegen vidare", art = ItemArt(backdrop = second, poster = second, wide = second)), item.copy(id = "demo-film-3", title = "Nordavind"))
         val kind = if (poster) MediaRowKind.LATEST_MOVIES else MediaRowKind.CONTINUE
         val key = if (poster) HomeRowKey.latestMovies(account.id) else HomeRowKey.continueWatching(account.id)
-        val rows = listOf(HomeRowUi.Media(key, account, kind, items, false),
+        val rows = (if (showApps) listOf(HomeRowUi.Apps(HomeRowKey.APPS, appearanceApps())) else emptyList()) + listOf(HomeRowUi.Media(key, account, kind, items, false),
             HomeRowUi.Media(HomeRowKey.latestSeries(account.id), account, MediaRowKind.LATEST_SERIES,
                 listOf(item.copy(id = "demo-episode", type = ItemType.EPISODE, seriesName = "Fjordlys", season = 1, episode = 2)), false))
+        runBlocking {
+            val loader = coil3.SingletonImageLoader.get(rule.activity)
+            loader.execute(coil3.request.ImageRequest.Builder(rule.activity).data(logoFile.absolutePath).size(800,240).transformations(app.stova.media.ui.TrimTransparent()).build())
+        }
         rule.runOnUiThread {
             rule.activity.setContent {
-                StovaTheme(reduceMotion = true) {
+                StovaTheme(reduceMotion = true, appearance = appearance) {
+                    val inputMode = androidx.compose.ui.platform.LocalInputModeManager.current
+                    SideEffect { inputMode.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
                     val density = LocalDensity.current
                     CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
                         Box(Modifier.fillMaxSize()) {
                             BackdropLayer(backdrop)
-                            HomeContent(rows, FocusedTarget.Media(item, account), key, container.appArt, container.appCatalog,
+                            HomeContent(rows, if (showApps) FocusedTarget.App("Stova") else FocusedTarget.Media(item, account), if (showApps) HomeRowKey.APPS else key, container.appArt, container.appCatalog,
                                 {}, {}, {}, {}, topBar = {
                                     TopBar(Profile("demo-profile", "Demo", AvatarColor.LIME), {}, {}, {},
                                         onSmartHome = if (chips.isNotEmpty()) ({}) else null,
@@ -187,7 +206,7 @@ class AppScreensTest {
             }
         }
         rule.waitForIdle()
-        rule.onNodeWithText("7,8").assertIsDisplayed()
+        rule.onNodeWithText("★ 7,8").assertIsDisplayed()
         rule.onNodeWithText(app.stova.media.ui.criticText(91, java.util.Locale.forLanguageTag("nn"))).assertExists()
         // Decode the same sized requests into Coil's memory cache before taking the window image.
         runBlocking {
@@ -197,6 +216,72 @@ class AppScreensTest {
             }
         }
         rule.waitForIdle()
+        val label = if(showApps) "Stova" else "Fjordlys"
+        rule.onAllNodes(hasContentDescription(label) and hasClickAction())[0].performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+        rule.onAllNodes(hasContentDescription(label) and hasClickAction())[0].assertIsFocused()
+        rule.mainClock.advanceTimeBy(250)
+        rule.waitForIdle()
+    }
+
+    private fun appearanceApps(): List<InstalledApp> {
+        val pm = shadowOf(rule.activity.packageManager)
+        return listOf("Stova" to R.drawable.tv_banner, "Jellyfin" to R.drawable.ic_jellyfin, "Emby" to R.drawable.ic_emby).map { (label, image) ->
+            val pkg = rule.activity.packageName
+            val activity = "demo.$label.Main"
+            val info = pm.addActivityIfNotPresent(ComponentName(pkg, activity))
+            info.applicationInfo = rule.activity.applicationInfo
+            info.banner = image
+            info.icon = image
+            InstalledApp("$pkg/$activity", pkg, activity, label, true).also { app ->
+                runBlocking {
+                    org.junit.Assert.assertNotNull(container.appArt.banner(app))
+                    org.junit.Assert.assertNotNull(container.appArt.icon(app))
+                }
+            }
+        }
+    }
+
+    @Test fun appearanceDefault() {
+        renderMediaHome(showApps = true)
+        rule.saveScreen("appearance-default")
+    }
+
+    @Test fun appearanceLargeWithTitles() {
+        renderMediaHome(appearance = AppearancePrefs(cardSize = CardSize.LARGE, showTitles = true, heroSize = HeroSize.LARGE))
+        rule.saveScreen("appearance-large-titles")
+    }
+
+    @Test fun appearanceSmallIcons() {
+        renderMediaHome(appearance = AppearancePrefs(cardSize = CardSize.SMALL, appStyle = AppStyle.ICON), showApps = true)
+        rule.saveScreen("appearance-small-icons")
+    }
+
+    @Test fun appearanceLightDimming() {
+        renderMediaHome(appearance = AppearancePrefs(backdropDimming = BackdropDimming.LIGHT), brightTop = true)
+        rule.saveScreen("appearance-light")
+    }
+
+    @Test fun appearanceOceanAccent() {
+        renderMediaHome(appearance = AppearancePrefs(accent = Accent.OCEAN))
+        val bitmap = BitmapFactory.decodeFile(rule.saveScreen("appearance-ocean").absolutePath)
+        val card = rule.onAllNodes(hasContentDescription("Fjordlys") and hasClickAction())[0].fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertEquals("Ocean focus ring follows the artwork", AvatarColor.OCEAN.argb.toInt(), bitmap.getPixel(card.left.toInt()+2, card.top.toInt()+40))
+    }
+
+    @Test fun dimmingChoicesChangeThePictureAndKeepTextReadable() {
+        val lightness = mutableListOf<Double>()
+        for (level in BackdropDimming.entries) {
+            renderMediaHome(appearance = AppearancePrefs(backdropDimming = level), brightTop = true)
+            val bitmap = BitmapFactory.decodeFile(rule.saveScreen("appearance-contrast-${level.name.lowercase()}").absolutePath)
+            lightness += ColorUtils.calculateLuminance(bitmap.getPixel(1320, 380))
+            val foreground = android.graphics.Color.rgb(233, 233, 226)
+            val muted = android.graphics.Color.rgb(154, 162, 153)
+            assertTrue("$level: hero text", ColorUtils.calculateContrast(foreground, bitmap.getPixel(880, 410)) >= 4.5)
+            assertTrue("$level: genre line", ColorUtils.calculateContrast(muted, bitmap.getPixel(880, 410)) >= 4.5)
+            assertTrue("$level: top bar", ColorUtils.calculateContrast(foreground, bitmap.getPixel(1900, 96)) >= 4.5)
+        }
+        assertTrue("Light must reveal more art than medium: $lightness", lightness[0] > lightness[1])
+        assertTrue("Medium must reveal more art than dark: $lightness", lightness[1] > lightness[2])
     }
 
     @Test fun homeWithHeroScoreAndMediaRows() {
@@ -217,7 +302,7 @@ class AppScreensTest {
         rule.onNodeWithText("Smarthus").assertIsDisplayed()
         rule.onNodeWithText("Hald fram").assertIsDisplayed()
         rule.onNodeWithText("Nyleg lagt til · Seriar").assertIsDisplayed()
-        rule.onNodeWithText("2024 · 1 t 52 min").assertIsDisplayed()
+        rule.onNodeWithText("2024").assertIsDisplayed()
         rule.onNodeWithText("12").assertIsDisplayed()
         rule.saveScreen("12-home-media-ha")
     }
@@ -237,12 +322,12 @@ class AppScreensTest {
         val contrast = ColorUtils.calculateContrast(foreground, skyBehindTopBar)
         assertTrue("Top bar contrast over bright art: $contrast (expected >= 6)", contrast >= 6.0)
         // Bright sky at 35% width, below the top scrim and clear of text/mountains.
-        val skyBehindHero = bitmap.getPixel(672, 340)
+        val skyBehindHero = bitmap.getPixel(880, 410)
         val muted = android.graphics.Color.rgb(154, 162, 153)
         assertTrue("Hero text contrast over bright art", ColorUtils.calculateContrast(foreground, skyBehindHero) >= 6.0)
         assertTrue("Hero metadata/score contrast over bright art", ColorUtils.calculateContrast(muted, skyBehindHero) >= 4.5)
-        // Just above the final words of the first overview line, near the column's right edge.
-        assertTrue("Entire overview must remain readable", ColorUtils.calculateContrast(foreground, bitmap.getPixel(1180, 400)) >= 6.0)
+        // The reduced scrim must leave the artwork clear across the right half.
+        assertTrue("Middle-right art stays visible", ColorUtils.calculateLuminance(bitmap.getPixel(1320, 380)) > 0.3)
         // The additional scrim ends at 30%; the right-side sky below it stays bright.
         assertTrue("Bright fixture must actually be loaded", ColorUtils.calculateLuminance(bitmap.getPixel(1900, 380)) > 0.6)
     }

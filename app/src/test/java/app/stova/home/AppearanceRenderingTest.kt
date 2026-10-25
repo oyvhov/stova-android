@@ -31,8 +31,15 @@ import org.robolectric.annotation.GraphicsMode
 class AppearanceRenderingTest {
     @get:Rule val compose = createComposeRule()
     private val account = MediaAccount("a", "p", ServerKind.JELLYFIN, "s", "Demo", "https://demo.invalid", "u", "U")
+    private val artUrl by lazy {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        java.io.File(context.cacheDir, "appearance-card.png").also { file ->
+            val bitmap = android.graphics.Bitmap.createBitmap(8, 8, android.graphics.Bitmap.Config.ARGB_8888)
+            file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+        }.absolutePath
+    }
     private val film = MediaItem("f", "a", ItemType.MOVIE, "Fjordlys", overview = "Ei ferd langs kysten.",
-        genres = listOf("Drama"), art = ItemArt(wide = "missing", poster = "missing"))
+        genres = listOf("Drama"), art = ItemArt(wide = artUrl, poster = artUrl))
 
     @Test fun cardSizesTitlesAndMissingArt() {
         var prefs by mutableStateOf(AppearancePrefs())
@@ -49,6 +56,14 @@ class AppearanceRenderingTest {
         compose.onNodeWithText("Fjordlys").assertExists()
         compose.runOnIdle { prefs = prefs.copy(cardSize = CardSize.SMALL, showTitles = false) }
         compose.onNodeWithTag("wide").assertWidthIsEqualTo(200.dp)
+    }
+
+    @Test fun failedArtworkShowsTheTitleInsideThePlaceholder() {
+        compose.setContent { StovaTheme {
+            MediaCard(film.copy(art = ItemArt(wide = "file:///missing-stova-art.png")), false, {}, {}, {})
+        } }
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Fjordlys").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Fjordlys").assertIsDisplayed()
     }
 
     @Test fun appStyleUsesSquareIconsAndProportionalSizes() {
@@ -87,6 +102,18 @@ class AppearanceRenderingTest {
         assertTrue(after > before)
         compose.runOnIdle { prefs = prefs.copy(rowSpacing = RowSpacing.TIGHT) }
         assertTrue(compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot().top < after)
+    }
+
+    @Test fun largestPosterAndItsTitleFitBelowTheFixedHero() {
+        val row = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, listOf(film), false)
+        compose.setContent { StovaTheme(appearance = AppearancePrefs(cardSize = CardSize.LARGE, showTitles = true, heroSize = HeroSize.LARGE), reduceMotion = true) {
+            val ctx = LocalContext.current
+            HomeContent(listOf(row), null, row.key, AppArtCache(ctx), PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {}, spotlight = SpotlightEntry(film, account, false))
+        } }
+        val card = compose.onNodeWithContentDescription("Fjordlys").getUnclippedBoundsInRoot()
+        assertTrue("Full poster and title must fit: $card", card.bottom <= 540.dp)
+        val header = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot()
+        assertTrue(compose.onNodeWithText("Film · Drama").getUnclippedBoundsInRoot().bottom <= header.top)
     }
 
     @Test fun accentAndCornersReachTheTheme() {

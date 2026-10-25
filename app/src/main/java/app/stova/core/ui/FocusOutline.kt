@@ -21,10 +21,8 @@ import app.stova.core.theme.LocalReduceMotion
 import app.stova.core.theme.LocalStrongFocus
 import app.stova.core.theme.StovaLayout
 
-/**
- * Keyboard and remote focus, drawn and nothing else: a 3 dp line (4 dp with strong focus) in the
- * text colour, inside the element's own shape. No scale, no glow, no shadow and no change of size,
- * so a focused card never pushes its neighbours. Only the draw phase reads the fade.
+/** An accent ring inside the artwork. Optional zoom changes only drawing, never row layout.
+ * Animation state is read in drawing/layer phases; reduced motion applies the ring immediately.
  */
 @Composable
 fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean = false): Modifier {

@@ -20,6 +20,21 @@ import org.robolectric.annotation.Config
 class TopBarTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun hiddenClockRemovesOnlyTheClockSlot() {
+        val clock = SemanticsMatcher("clock text") { node ->
+            node.config.contains(androidx.compose.ui.semantics.SemanticsProperties.Text) &&
+                node.config[androidx.compose.ui.semantics.SemanticsProperties.Text].any { Regex("[0-9]+:[0-9]+.*").matches(it.text) }
+        }
+        val mode = androidx.compose.runtime.mutableStateOf(app.stova.profiles.ClockMode.HIDDEN)
+        compose.setContent { StovaTheme(appearance = app.stova.profiles.AppearancePrefs(clock = mode.value)) {
+            TopBar(Profile("a", "A", AvatarColor.LIME), {}, {}, {})
+        } }
+        compose.onNode(clock).assertDoesNotExist()
+        compose.onNodeWithText("Appar").assertIsDisplayed()
+        compose.runOnIdle { mode.value = app.stova.profiles.ClockMode.H12 }
+        compose.onNode(clock).assertIsDisplayed()
+    }
+
     @Test fun focusingLabelsKeepsAllButtonBoundsStable() {
         compose.setContent { StovaTheme {
             TopBar(Profile("a", "A", AvatarColor.LIME), {}, {}, {})

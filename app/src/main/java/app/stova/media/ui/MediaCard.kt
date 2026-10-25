@@ -30,14 +30,16 @@ import coil3.request.ImageRequest
  val width=if(poster) StovaLayout.PosterWidth*ratio else prefs.cardSize.width.dp
  val height=if(poster) StovaLayout.PosterHeight*ratio else StovaLayout.WideHeight*ratio
  val density=LocalDensity.current;val context=LocalContext.current
+ val artUrl=if(poster) item.art.poster else item.art.wide
+ var artFailed by remember(artUrl) { mutableStateOf(false) }
  val request=remember(item.art,poster,density,width,height) { ImageRequest.Builder(context).data(if(poster) item.art.poster else item.art.wide).size(with(density){width.roundToPx()},with(density){height.roundToPx()}).build() }
  // The ring frames the artwork only, so it never cuts through the title below it.
  Column(modifier.width(width).semantics { contentDescription=title }.onFocusChanged { if(it.isFocused) onFocused() }
   .onKeyEvent { if(it.key==Key.Menu && it.type==KeyEventType.KeyUp) { onLongClick();true } else false }
   .combinedClickable(source,indication=null,role=Role.Button,onClick=onClick,onLongClick=onLongClick)) {
   Box(Modifier.size(width,height).focusOutline(source,shape,zoom=true).clip(shape).background(MaterialTheme.colorScheme.surfaceVariant)) {
-   if((if(poster) item.art.poster else item.art.wide)==null) Text(title,Modifier.align(Alignment.Center).padding(12.dp),style=MaterialTheme.typography.titleSmall,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)
-   else AsyncImage(request,contentDescription=null,contentScale=ContentScale.Crop,modifier=Modifier.fillMaxSize())
+   if(artUrl.isNullOrBlank() || artFailed) Text(title,Modifier.align(Alignment.Center).padding(12.dp),style=MaterialTheme.typography.titleSmall,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)
+   else AsyncImage(request,contentDescription=null,contentScale=ContentScale.Crop,modifier=Modifier.fillMaxSize(),onError={ artFailed=true })
    if(!poster) item.progress?.let { progress -> Box(Modifier.align(Alignment.BottomStart).fillMaxWidth(progress.coerceIn(0f,1f)).height(4.dp).background(MaterialTheme.colorScheme.primary)) }
   }
   if(prefs.showTitles) Text(title,Modifier.padding(top=8.dp),style=MaterialTheme.typography.titleSmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurface)

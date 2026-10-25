@@ -54,7 +54,7 @@ class HeroPanelTest {
         compose.onNodeWithText("45", substring = true).assertDoesNotExist()
     }
 
-    @Test fun entireTextColumnStaysWithin560DpOn960DpScreen() {
+    @Test fun entireTextColumnStaysWithin400DpOn960DpScreen() {
         val title = "Fjordlys og den lange ferda gjennom fjordar og ukjende landskap"
         val overview = "Ei ferd gjennom stille fjordar og opne landskap. Vegen vidare byr på nye møte og ukjende stader."
         val item = MediaItem("m", "a", ItemType.MOVIE, title, year = 2024, runtimeMinutes = 112, overview = overview, ratings = Ratings(7.84, 91, "12"))
@@ -64,8 +64,8 @@ class HeroPanelTest {
         compose.onRoot().assertWidthIsEqualTo(960.dp)
         listOf(title, "Ny sesong", "2024", "★ 7,8", app.stova.media.ui.criticText(91, java.util.Locale.forLanguageTag("nn")), "12").forEach { text ->
             val bounds = compose.onNodeWithText(text).assertIsDisplayed().getUnclippedBoundsInRoot()
-            assertTrue("Hero text must be at most 560 dp wide: $text ($bounds)", bounds.right - bounds.left <= 560.dp)
-            assertTrue("Hero text must stay inside the 560 dp column: $text ($bounds)", bounds.left >= 48.dp && bounds.right <= 608.dp)
+            assertTrue("Hero text must be at most 400 dp wide: $text ($bounds)", bounds.right - bounds.left <= 400.dp)
+            assertTrue("Hero text must stay inside the 400 dp column: $text ($bounds)", bounds.left >= 48.dp && bounds.right <= 448.dp)
         }
     }
 }

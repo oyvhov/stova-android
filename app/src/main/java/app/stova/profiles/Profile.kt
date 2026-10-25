@@ -61,7 +61,7 @@ data class AppearancePrefs(
 @Serializable enum class CardSize(val width: Int) { SMALL(200), MEDIUM(248), LARGE(296) }
 @Serializable enum class AppStyle { BANNER, ICON }
 @Serializable enum class MovieStyle { POSTER, WIDE }
-@Serializable enum class HeroSize(val fraction: Float) { COMPACT(0.50f), LARGE(0.62f) }
+@Serializable enum class HeroSize(val fraction: Float) { COMPACT(0.40f), LARGE(0.52f) }
 @Serializable enum class SpotlightTime(val millis: Long) { FAST(8_000), NORMAL(12_000), SLOW(20_000) }
 @Serializable enum class BackdropDimming { LIGHT, MEDIUM, DARK }
 @Serializable enum class Corners { ROUND, SHARP }

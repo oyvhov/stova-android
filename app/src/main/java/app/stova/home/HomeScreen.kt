@@ -131,7 +131,15 @@ fun HomeContent(
     }) {
         topBar()
         BoxWithConstraints(Modifier.weight(1f)) {
-            val heroHeight = maxHeight * appearance.heroSize.fraction
+            val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+            val ratio = appearance.cardSize.width / 248f
+            val artworkHeight = if (appearance.movieStyle == app.stova.profiles.MovieStyle.POSTER) StovaLayout.PosterHeight * ratio else StovaLayout.WideHeight * ratio
+            val rowHeight = appearance.rowSpacing.top.dp + 25.dp * fontScale + StovaLayout.SectionBottom + artworkHeight +
+                (if (appearance.showTitles) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp
+            // Fixed for these profile/font choices, independent of each spotlight title. Reserve
+            // room for a whole row; even a large poster's optional caption must remain reachable.
+            val heroHeight = if (fontScale >= 1.5f) maxHeight * (appearance.heroSize.fraction + 0.16f)
+                else minOf(maxHeight * appearance.heroSize.fraction, (maxHeight - rowHeight).coerceAtLeast(0.dp))
             Column {
                 // A fixed height: the rows never move when the spotlight turns to a longer title.
                 HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
