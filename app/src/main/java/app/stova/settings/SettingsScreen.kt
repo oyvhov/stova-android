@@ -59,6 +59,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
         return
     }
     var section by rememberSaveable { mutableStateOf(SettingsSection.PROFILE) }
+    val contentScroll = rememberScrollState()
     Row(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
         Column(Modifier.width(260.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
@@ -72,7 +73,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
             }
         }
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()),
+            Modifier.weight(1f).then(if (section == SettingsSection.APPEARANCE) Modifier.fillMaxSize() else Modifier.verticalScroll(contentScroll)),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             when (section) {
@@ -81,7 +82,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
                 SettingsSection.HOME -> HomeRowSettings(container, profile, home)
                 SettingsSection.SMART_HOME -> app.stova.ha.ui.HaSettings(container)
                 SettingsSection.HOME_BUTTON -> HomeButtonSettings(container)
-                SettingsSection.APPEARANCE -> AppearanceSettings(container, profile)
+                SettingsSection.APPEARANCE -> AppearanceSettings(container, profile, pinnedPreview = true, onEditRows = { section = SettingsSection.HOME })
                 SettingsSection.ABOUT -> AboutSettings()
             }
         }

@@ -75,6 +75,13 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
  }.distinctUntilChanged()
 
  /** Search all connected libraries, with the snapshot available when a server is offline. */
+ fun cachedPreview(profileId:String): Flow<SpotlightEntry?> = flow {
+  val slot=loaded(profileId)
+  emitAll(combine(slot.spotlight,accounts.forProfile(profileId)) { entries,active ->
+   entries.firstOrNull { entry -> active.any { it.id==entry.account.id && !it.needsSignIn } }
+  })
+ }
+
  suspend fun searchBackgrounds(profileId:String,query:String): List<SpotlightEntry> {
   val slot=loaded(profileId)
   val active=accounts.forProfile(profileId).first().filterNot { it.needsSignIn }

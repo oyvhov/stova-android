@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
@@ -246,12 +247,12 @@ fun HomeContent(
                                         LaunchedEffect(movingRow, index) {
                                             if (movingRow == row.key) listState.scrollToItem(index)
                                         }
-                                        Box(Modifier.focusRequester(rowRequester).onFocusChanged { state ->
+                                        Box(Modifier.focusRequester(rowRequester).focusRestorer().onFocusChanged { state ->
                                             hasFocus = state.hasFocus
                                             if (state.hasFocus) scope.launch {
                                                 if (reduceMotion) listState.scrollToItem(index) else listState.animateScrollToItem(index)
                                             }
-                                        }.then(if (movingRow == row.key) Modifier.padding(horizontal = 32.dp)
+                                        }.focusGroup().then(if (movingRow == row.key) Modifier.padding(horizontal = 32.dp)
                                             .border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large) else Modifier)) {
                                           CompositionLocalProvider(LocalRowStyle provides style,
                                             LocalRowHasFocus provides hasFocus) {

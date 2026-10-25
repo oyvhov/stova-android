@@ -57,6 +57,19 @@ class SettingsScreenTest {
         assertEquals(app.stova.profiles.ArtworkSize.MEDIUM, profile("B").appearance.cardSize)
     }
 
+    @Test fun adultCanEditKidAppearanceWithoutChangingAdult() {
+        runBlocking {
+            container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id)
+            container.profiles.create("K", AvatarColor.ROSE, true)
+        }
+        openSettings()
+        rule.onNodeWithText("K").performClick()
+        rule.onAllNodesWithText("Utsjånad")[1].performScrollTo().performClick()
+        rule.onNodeWithText("Kortstorleik").performScrollTo().performClick()
+        rule.waitUntil(5_000) { profile("K").appearance.cardSize == app.stova.profiles.ArtworkSize.LARGE }
+        assertEquals(app.stova.profiles.ArtworkSize.MEDIUM, profile("A").appearance.cardSize)
+    }
+
     @Test fun kidSeesOnlySwitchProfile() {
         runBlocking {
             container.profiles.create("A", AvatarColor.LIME, false)
