@@ -29,6 +29,18 @@ sealed interface CardDialog {
     data class Camera(override val entityId:String):CardDialog
     data class Cover(override val entityId:String):CardDialog
     data class Lock(override val entityId:String):CardDialog
+    data class Controls(override val entityId:String,val type:CardType):CardDialog
+}
+
+fun controlPanel(type:CardType,id:String):CardDialog=when(type) {
+    CardType.LIGHT->CardDialog.Brightness(id)
+    CardType.CLIMATE->CardDialog.Climate(id)
+    CardType.SENSOR->CardDialog.Graph(id)
+    CardType.ENERGY_PRICE->CardDialog.Graph(id,true)
+    CardType.CAMERA->CardDialog.Camera(id)
+    CardType.COVER->CardDialog.Cover(id)
+    CardType.LOCK->CardDialog.Lock(id)
+    else->CardDialog.Controls(id,type)
 }
 
 @Composable
@@ -43,6 +55,10 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
             .heightIn(max=(windowHeight-96.dp).coerceAtLeast(160.dp)).verticalScroll(rememberScrollState())
         Column((if(energyGraph) frame.width(640.dp) else frame).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(if(energyGraph) 12.dp else 16.dp)) {
             when(dialog) {
+                is CardDialog.Controls -> {
+                    Text(entity?.let(::friendlyName) ?: dialog.entityId)
+                    CardValue(entityStateLabel(entity))
+                }
                 is CardDialog.Brightness -> {
                     var percent by remember(dialog.entityId) { mutableIntStateOf(((entity?.attributes?.number("brightness") ?: 255.0)/255*100).toInt().coerceIn(1,100)) }
                     var changed by remember(dialog.entityId) { mutableStateOf(false) }

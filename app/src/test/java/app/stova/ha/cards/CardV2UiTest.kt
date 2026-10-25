@@ -23,13 +23,13 @@ import kotlinx.serialization.json.*
 class CardV2UiTest {
     @get:Rule val compose=createComposeRule()
     private fun e(id:String,state:String="on",attrs:String="{}")=HaEntity(id,state,StovaJson.parseToJsonElement(attrs).jsonObject,0,0)
-    @Test fun focusedLightAdjustsBrightnessAndMenuAlwaysCustomises() {
+    @Test fun focusedLightNeverAdjustsBrightnessAndMenuCustomises() {
         var call:ServiceCall?=null;var menus=0
         compose.setContent {StovaTheme {HaCard(CardConfig("a",CardType.LIGHT,"light.a",name="Leselys"),e("light.a",attrs="""{"brightness":128}"""),false,{call=it},{},onMenu={menus++})}}
         compose.onNodeWithText("Leselys").performSemanticsAction(SemanticsActions.RequestFocus)
         compose.onNodeWithText("Leselys").assertIsFocused().performKeyInput {pressKey(Key.DirectionRight)}
-        compose.onNodeWithText("60 %").assertExists()
-        compose.mainClock.advanceTimeBy(400);compose.waitForIdle();assertEquals(brightnessCall(60),call)
+        compose.onNodeWithText("50 %").assertExists()
+        compose.mainClock.advanceTimeBy(400);compose.waitForIdle();assertNull(call)
         compose.onNodeWithText("Leselys").performKeyInput {pressKey(Key.Menu)}
         assertEquals(1,menus)
     }
@@ -67,11 +67,11 @@ class CardV2UiTest {
         compose.onNodeWithText("Mindre").performKeyInput {pressKey(Key.DirectionDown)}
         assertEquals(0,calls)
     }
-    @Test fun mediaButtonsCanNavigateWithoutAdjustingVolume() {
-        val media=e("media_player.a","playing","""{"volume_level":0.5}""")
+    @Test fun mediaCardIsOneNavigationTarget() {
+        val media=e("media_player.a","playing", """{"volume_level":0.5}""")
         compose.setContent {StovaTheme {HaCard(CardConfig("m",CardType.MEDIA_PLAYER,media.id),media,false,{},{})}}
-        compose.onNodeWithContentDescription("Neste spor").performSemanticsAction(SemanticsActions.RequestFocus)
-        compose.onNodeWithContentDescription("Neste spor").performKeyInput {pressKey(Key.DirectionLeft)}
-        compose.onNodeWithContentDescription("Pause").assertIsFocused()
+        compose.onNodeWithText("media_player.a").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithText("media_player.a").assertIsFocused()
+        compose.onAllNodes(isFocusable()).assertCountEquals(1)
     }
 }

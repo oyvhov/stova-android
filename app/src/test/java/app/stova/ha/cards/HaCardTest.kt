@@ -29,11 +29,11 @@ class HaCardTest {
         compose.onNodeWithText("light.stove").performClick()
         assertEquals(ServiceCall("light","toggle"),call)
     }
-    @Test fun lockedCardDoesNothingAndShowsLock() {
-        var calls=0
-        compose.setContent { StovaTheme { HaCard(CardConfig("1",CardType.LIGHT,"light.stove"),entity(),true,{calls++},{calls++}) } }
+    @Test fun lockedCardOpensReadOnlyPanelAndShowsLock() {
+        var calls=0; var dialog:CardDialog?=null
+        compose.setContent { StovaTheme { HaCard(CardConfig("1",CardType.LIGHT,"light.stove"),entity(),true,{calls++},{dialog=it}) } }
         compose.onNodeWithText("light.stove").performClick()
-        compose.onNodeWithContentDescription("Låst").assertExists(); assertEquals(0,calls)
+        compose.onNodeWithContentDescription("Låst").assertExists(); assertEquals(0,calls); assertEquals(CardDialog.Brightness("light.stove"),dialog)
     }
     @Test fun missingEntityShowsUnavailableAndCanFocus() {
         compose.setContent { StovaTheme { HaCard(CardConfig("1",CardType.SENSOR,"sensor.x"),null,false,{},{}) } }
