@@ -148,26 +148,56 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
 
 ### 5.2 Smarthus
 
-Rutenett med HA-kort i Tunet-stil, men flate: `Surface`-fylte kort, 16 dp hjørne, ikon i ei
-`Raised`-rute, stor verdi, liten etikett i `Muted` og statusbrikke øvst til høgre. Kortstorleikar:
-1 × 1 (240 × 160 dp) og 2 × 1 (496 × 160 dp). Kort og D-pad:
+Smarthus v2 (25.10.2026) er ein naturleg del av Stova. Tunet er funksjonsreferansen;
+korta brukar Stova sine matte `Surface`-flater, `MaterialTheme.shapes`, typografi og
+`focusOutline` berre rundt kortflata. Ingen skalering, glas eller blur. Ikon står i ei
+`Raised`-rute; påslåtte lys har dempa `primaryContainer` og temaaksent som handlingsfeedback.
+Verdiar, romnamn og passive statusar har nøytrale tekstfargar.
 
-| Korttype | Domene | OK | Lang OK |
+- Overskrift med tilkoplingsstatus og roleg oppsummering av lys på, innetemperatur og
+  straumpris frå korta på dashbordet. «Legg til kort» og «Rediger» ligg til høgre.
+- Favorittar kjem først, deretter seksjonar per HA-rom. Kort utan rom ligg under
+  «Andre einingar». Rekkefølgja er lagra per profil; flytting held seg innanfor seksjonen.
+- Storleikar: **S (1 × 1), M (2 × 1), L (2 × 2)**. Tre kolonnar og 16 dp mellomrom.
+  Ei to-raders pakking let to S-kort stå ved sida av eit L-kort. Radhøgd blir målt frå
+  tekstinnhaldet og kan vekse ved stor skrift; S har minst 160 dp, L minst 336 dp.
+- `CardConfig` lagrar `size`, valfritt `name` og `icon`, `favorite` og `onHome`.
+  Gamle JSON-kort med `wide=true` blir M når `size` manglar; eksplisitt `size` vinn.
+  `wide` er berre eit kompatibilitetsfelt. Ny redigering brukar `size`.
+
+| Korttype | Visning | OK | Venstre/høgre på sjølve kortet |
 |---|---|---|---|
-| Lys | `light` | av/på | lysstyrke (dialog, venstre/høgre ±10 %) |
-| Brytar | `switch`, `input_boolean`, `fan` | av/på | – |
-| Klima | `climate` | dialog: måltemperatur ±0,5 | – |
-| Sensor | `sensor`, `binary_sensor` | – | 24 t-graf (dialog) |
-| Vêr | `weather` | – | – |
-| Straumpris | `sensor` med Nordpool-attributtar | – | graf for i dag |
-| Mediaspelar | `media_player` | spel/pause | neste |
-| Scene/skript | `scene`, `script` | køyr | – |
-| Kamera | `camera` | fullskjerm-snapshot (oppdatert kvart 2. s) | – |
+| Lys | På/av, lysstyrke, eventuell kelvinverdi | av/på | lysstyrke ±10 %, samla etter 250 ms |
+| Brytar/vifte/input_boolean | På/av | av/på | vanleg fokusflytting |
+| Klima | Noverande temperatur, mål og modus | temperaturdialog | mål ±0,5 °C innan min/maks |
+| Sensor | Verdi/eining og 24 t-sparkline | 24 t-graf når numerisk | vanleg fokusflytting |
+| Binærsensor | Ord etter device class, t.d. Open/Lukka eller Rørsle/Ingen rørsle | lesing | vanleg fokusflytting |
+| Vêr | No og fem dagar med ikon og høg/låg | lesing | vanleg fokusflytting |
+| Straumpris | Søyler, noverande intervall markert, min/maks | graf med I dag/I morgon | vanleg fokusflytting |
+| Mediaspelar | Kunst, tittel/artist, spel/pause/neste og volum | spel/pause | volum ±5 % |
+| Scene/skript | Køyr | køyr med kvittering | vanleg fokusflytting |
+| Kamera | Stillbilete kvart 10. s medan synleg | fullskjerm, kvart 2. s | vanleg fokusflytting |
+| Gardin/port | Tilstand og prosent | opne/lukke/stopp-dialog | posisjon ±10 % når støtta |
+| Lås | Låst/ulåst | stadfesting før endring | vanleg fokusflytting |
 
-Kamera-snapshot blir oppdatert kvart 10. sekund medan kortet er synleg. Grafar er flate linjer i
-`Muted`/`Text`, utan fyll-gradient.
+Meny eller lang OK opnar kortmenyen for vaksne, også utan redigeringsmodus: storleik,
+flytt venstre/høgre/opp/ned, namn, ikon, Favorittar, Vis på Heim (maks tre), fjern.
+Fokus kjem tilbake til kortet etter menyen. Opp/ned i klima-dialogen navigerer; dei endrar
+ikkje temperaturen. Inne i medieknappane navigerer pilene mellom knappane.
 
-Barneprofilar ser korta, men styring er låst med mindre profilen har «Smarthus» på.
+Brytarar får optimistisk tilstand straks og eit ventemerke. Ved feil kjem den sist mottatte
+HA-tilstanden tilbake med ei roleg melding. Doble kall til same ventande eining blir avviste.
+Tenestekall er verna av `canControl`; barneprofilar utan styringsløyve kan framleis lese
+sensorhistorikk og kamera, men kan ikkje endre einingar eller kortoppsettet.
+
+Einingsveljaren ventar på CONNECTED, viser skjelett under lasting og lastar på nytt ved
+ny tilkopling. Fråkopling, lastefeil og tomme søk er ulike tilstandar. Søk treff namn,
+einings-ID og rom; flisane er sorterte på rom og namn og viser ikon, tilstand og «Lagt til».
+Gruppebrikkene er Alle, Lys, Brytarar, Klima, Sensorar, Vêr, Media, Scener, Kamera,
+Straumpris, Gardiner/port og Lås. «Vis alle» inkluderer skjulte, diagnostiske, konfigurasjons-
+og deaktiverte registereiningar; deaktiverte einingar utan tilstand blir viste som utilgjengelege.
+
+Heim-brikkene brukar dei same ikona, overstyringane, temaformene og matte flatene som korta.
 
 ### 5.3 Appar
 
@@ -264,6 +294,32 @@ Endringa i Spole er Plan 3 og blir gjord i Spole-repoet etter Spole sine eigne r
 - **Livssyklus:** socketen koplar til i `onStart` og fråkoplar 30 s etter `onStop`. Ny tilkopling
   med backoff 1, 2, 4, 8, 16, 30 s (maks). Status blir vist i Smarthus-overskrifta.
 - **Utgått access-token** blir fornya med `refresh_token` 60 s før utløp og ved `auth_invalid`.
+
+Smarthus v2 utvidar protokollen utan å endre innlogginga:
+
+- `get_states` gir katalogen; mislukka svar blir viste som lastefeil, ikkje ei tom liste.
+  `get_config` gir heimen si tidssone. Tidspunkt med `+00:00` blir lesne med
+  `OffsetDateTime`, også på Android 11.
+- `config/area_registry/list`, `config/device_registry/list` og
+  `config/entity_registry/list` gir rom og namn. Eininga sitt `area_id` går framfor
+  apparatet sitt. `hidden_by`, `disabled_by` og `entity_category` styrer standardfilteret.
+- Vêr blir henta med `weather.get_forecasts`, `type=daily` og `return_response=true`.
+  Parsinga les `result.response[entity_id].forecast`; det gamle forecast-attributtet blir
+  ikkje brukt. Vêr blir oppdatert kvart 15. minutt og ved ny tilkopling.
+- Nordpool-liknande `raw_today`/`raw_tomorrow` og numeriske `today`/`tomorrow` blir viste
+  som prisintervall. Berre prisdata blir klassifiserte som straumpris; eit vilkårleg
+  `today`-attributt (t.d. sjøtemperatur) er ikkje nok.
+- Tibber-prisar blir henta med lesehandlinga `tibber.get_prices`, utan target og med
+  `return_response=true`. Heimar blir ikkje blanda. `start_time`/`price` blir omsette til
+  intervall; øre-sensorar får same eining i grafen. Data blir delte i minnet i 15 minutt.
+  Dagen og intervalla følgjer HA-tidssona, med støtte for 15 minutt og vintertid.
+  Manglande morgondagsprisar får ei eiga melding.
+- Sensorhistorikk blir lasta berre for synlege kort, ved ny tilkopling og kvart femte
+  minutt. Kamera og alle periodiske kortjobbar stoppar når skjermen blir pausa.
+- `HaSnapshot` viser siste verdiar og nødvendige romdata før nettverket svarar. Berre
+  einingar frå den aktive profilen sine kort og ei kviteliste av visningsattributt blir
+  lagra, maks éi skriving per fem sekund. Token og kamera-/kunst-URL-ar blir aldri lagra
+  i øyeblikksbiletet. Historikk og tenesteresponsar blir fylte inn frå nettet.
 
 ## 9. Home-knappen og standard-launcher på Shield
 

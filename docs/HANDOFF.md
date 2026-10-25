@@ -1,3 +1,10 @@
+# Smarthus v2 – fullført
+2026-10-25: Bestillinga og alle seks oppgåvene i `2026-10-25-smarthus-v2.md` er fullførte i worktreet `ha-v2`; ingen påbyrja steg står att.
+Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug -Pstova.screens=true`: 329/329, 0 hoppa over; DesignRulesTest 4/4, lint 0 feil (25 åtvaringar, 1 hint), APK OK.
+Ekte HA på emulator-5580: ti varige kort, registerrom, femdagarsvêr, Tibber-graf og Heim-brikker; to lys er tilbake på med original lysstyrke, måltemperatur er stadfesta 23,5 → 24,0 → 23,5 °C. Tryggleiksutstyr er ikkje endra.
+Rapport: `docs/verification/smarthus-v2.md`; åtte visuelt kontrollerte bilete i `docs/images/ha-v2-*.png`, originalar og kvitteringar i worktreet si `.superpowers/`.
+Ingen spørsmål eller push. Fysisk Shield, verkeleg Nordpool og tryggleiksstyring er ikkje prøvde; dei gamle release-/Shield-stega står framleis som før.
+
 # Spotlight og innlogging på emulatoren
 2026-10-25: Spotlight og innlogging er gjort i `polish` på `polish-cache` og snøggspola inn i `plan-2-media`. Siste commit er `cc217b8`.
 - **Brukarønske:** ingen episodekunst eller episodenummer, ingen tenestelogo, og ein vakker hero som roterer frå biblioteket.
