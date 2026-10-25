@@ -3,6 +3,7 @@ package app.stova.settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +31,8 @@ import app.stova.home.moveItem
 import app.stova.profiles.HomePrefs
 import app.stova.profiles.Profile
 import app.stova.profiles.StartFocus
+import app.stova.profiles.*
+import app.stova.home.*
 import kotlinx.coroutines.launch
 
 @Composable
@@ -73,6 +76,9 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
         ordered, prefs.hiddenRows,
         onVisible = { key, visible -> save { it.copy(hiddenRows = if (visible) it.hiddenRows - key else it.hiddenRows + key) } },
         onMove = { key, delta -> save { it.copy(rowOrder = moveItem(ordered, key, delta)) } },
+        rowFormats = prefs.rowFormats,
+        appearance = profile.appearance,
+        onStyle = { key, style -> save { it.copy(rowFormats = if (style == RowStyle()) it.rowFormats - key else it.rowFormats + (key to style)) } },
     )
 }
 
@@ -82,6 +88,9 @@ internal fun HomeRowOrderSettings(
     hiddenRows: Set<HomeRowKey>,
     onVisible: (HomeRowKey, Boolean) -> Unit,
     onMove: (HomeRowKey, Int) -> Unit,
+    rowFormats: Map<HomeRowKey, RowStyle> = emptyMap(),
+    appearance: AppearancePrefs = AppearancePrefs(),
+    onStyle: (HomeRowKey, RowStyle) -> Unit = { _, _ -> },
 ) {
     if (ordered.isNotEmpty()) {
         SettingsGroup(stringResource(R.string.home_rows)) {
@@ -94,6 +103,7 @@ internal fun HomeRowOrderSettings(
                     StovaButton(stringResource(R.string.row_move_up), { onMove(key, -1) })
                     StovaButton(stringResource(R.string.row_move_down), { onMove(key, +1) })
                 }
+                RowStyleChoices(rowFormats[key] ?: RowStyle(), defaultRowFormat(key, appearance), appearance.cardSize) { onStyle(key, it) }
                 }
             }
         }

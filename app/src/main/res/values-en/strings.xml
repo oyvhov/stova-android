@@ -459,4 +459,17 @@
     <string name="ha_action_hint_menu">" · Menu: customise"</string>
     <string name="ha_action_all_lights">"Turn off all %1$d lights?"</string>
     <string name="ha_action_yes_off">"Yes, turn off"</string>
+    <!-- Tilpassing v3 -->
+    <string name="custom_row_section">Row</string>
+    <string name="custom_move_row">Move row</string>
+    <string name="custom_hide_row">Hide row</string>
+    <string name="custom_row_format">Row card format</string>
+    <string name="custom_row_size">Row card size</string>
+    <string name="custom_row_title">Show row title</string>
+    <string name="custom_large_wide">Large wide</string>
+    <string name="custom_small_wide">Small wide</string>
+    <string name="custom_row_inherit">Use row defaults</string>
+    <string name="custom_move_hint">Up/down moves the row · OK or Back finishes</string>
+    <string name="custom_row_hidden">Row hidden</string>
+    <string name="custom_undo">Undo</string>
 </resources>

@@ -36,6 +36,7 @@ fun AppActionsMenu(
     onAppInfo: () -> Unit,
     onDismiss: () -> Unit,
     onChangeIcon: () -> Unit = {},
+    rowActions: @Composable () -> Unit = {},
 ) {
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
@@ -61,6 +62,7 @@ fun AppActionsMenu(
             StovaButton(stringResource(if (hidden) R.string.app_show else R.string.app_hide), { onToggleHidden(); onDismiss() }, full)
             StovaButton(stringResource(R.string.app_info), { onAppInfo(); onDismiss() }, full)
             StovaButton(stringResource(R.string.icon_change), onChangeIcon, full)
+            rowActions()
         }
     }
 }

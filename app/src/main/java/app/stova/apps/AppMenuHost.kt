@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 
 /** Shared by Home and Apps. Profile switches discard the pending menu and picker. */
 @Composable
-fun AppMenuHost(app: InstalledApp, apps: AppRepository, profile: Profile, art: AppArtCache, catalog: AppCatalog, onDismiss: () -> Unit) {
+fun AppMenuHost(app: InstalledApp, apps: AppRepository, profile: Profile, art: AppArtCache, catalog: AppCatalog, rowActions: @Composable () -> Unit = {}, onDismiss: () -> Unit) {
     if (profile.kid) return
     key(profile.id, app.key) {
         val scope = rememberCoroutineScope()
@@ -46,7 +46,7 @@ fun AppMenuHost(app: InstalledApp, apps: AppRepository, profile: Profile, art: A
                 onMove = { delta -> scope.launch { apps.moveFavorite(profile.id, app.key, delta) } },
                 onToggleHidden = { scope.launch { apps.setHidden(profile.id, app.key, app.key !in profile.apps.hidden) } },
                 onAppInfo = { catalog.openAppInfo(app.packageName) }, onDismiss = onDismiss,
-                onChangeIcon = { changing = true })
+                onChangeIcon = { changing = true }, rowActions = rowActions)
         }
     }
 }

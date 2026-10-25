@@ -459,4 +459,17 @@
     <string name="ha_action_hint_menu">" · Meny: tilpass"</string>
     <string name="ha_action_all_lights">"Slå av alle %1$d lys?"</string>
     <string name="ha_action_yes_off">"Ja, slå av"</string>
+    <!-- Tilpassing v3 -->
+    <string name="custom_row_section">Rada</string>
+    <string name="custom_move_row">Flytt rada</string>
+    <string name="custom_hide_row">Skjul rada</string>
+    <string name="custom_row_format">Kortformat for rada</string>
+    <string name="custom_row_size">Storleik for rada</string>
+    <string name="custom_row_title">Vis radtittel</string>
+    <string name="custom_large_wide">Stor brei</string>
+    <string name="custom_small_wide">Liten brei</string>
+    <string name="custom_row_inherit">Bruk standard for rada</string>
+    <string name="custom_move_hint">Opp/ned flyttar rada · OK eller Tilbake avsluttar</string>
+    <string name="custom_row_hidden">Rada er skjult</string>
+    <string name="custom_undo">Angre</string>
 </resources>

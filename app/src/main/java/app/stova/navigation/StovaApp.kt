@@ -10,6 +10,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -54,6 +56,7 @@ fun StovaApp(container: AppContainer) {
 
 @Composable
 private fun MainShell(container: AppContainer, profile: Profile) {
+    val scope = rememberCoroutineScope()
     var current by rememberSaveable { mutableStateOf(Destination.HOME) }
     var smartHomeCardId by remember(profile.id) {mutableStateOf<String?>(null)}
     val file by container.profiles.file.collectAsStateWithLifecycle(initialValue = null)
@@ -84,6 +87,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                 home, container.appArt, container.appCatalog,
                 onOpenApps = { current = Destination.APPS },
                 profile = profile, apps = container.apps,
+                onHomeChange = { prefs -> scope.launch { container.profiles.update(profile.id) { it.copy(home = prefs) } } },
                 onRefresh = { container.media.refresh(profile.id) },
                 haRepository = container.haRepository,
                 haConnection = container.haSocket,
