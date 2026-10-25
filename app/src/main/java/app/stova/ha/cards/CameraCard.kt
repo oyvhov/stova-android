@@ -20,8 +20,9 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader)
 
-@Composable fun CameraCard(entity:HaEntity,images:HaImageSource?,visible:Boolean) {
-    HaImage("/api/camera_proxy/${entity.id}",images,Modifier.fillMaxWidth().height(80.dp),if(visible) 10_000L else null)
+@Composable fun CameraCard(entity:HaEntity,images:HaImageSource?,visible:Boolean,size:CardSize=CardSize.S) {
+    HaImage("/api/camera_proxy/${entity.id}",images,Modifier.fillMaxWidth().height(if(size==CardSize.L) 236.dp else 80.dp),if(visible) 10_000L else null)
+    CardDetail(stringResource(R.string.ha_v2_camera_live))
 }
 
 /** No bearer token crosses origins, no camera frames are cached, and paused/offscreen cards stop. */

@@ -6,6 +6,15 @@ import app.stova.R
 import app.stova.core.ui.StovaIcons
 import app.stova.ha.HaEntity
 import kotlinx.serialization.json.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import app.stova.ha.ForecastDay
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 fun weatherIcon(state:String) = when(state) {
     "sunny" -> StovaIcons.Sun; "clear-night" -> StovaIcons.Moon
     "cloudy","partlycloudy" -> StovaIcons.Cloud; "fog" -> StovaIcons.Fog
@@ -15,6 +24,18 @@ fun weatherIcon(state:String) = when(state) {
     "windy","windy-variant" -> StovaIcons.Wind
     else -> StovaIcons.Cloud
 }
-@Composable fun WeatherCard(entity:HaEntity) {
+@Composable fun WeatherCard(entity:HaEntity,forecast:List<ForecastDay> = emptyList(),size:CardSize=CardSize.S) {
     CardValue(entity.attributes.number("temperature")?.let { formatNumber(it,LocalConfiguration.current.locales[0]) } ?: stringResource(R.string.ha_dash), entity.attributes["temperature_unit"]?.jsonPrimitive?.contentOrNull)
+    CardDetail(entityStateLabel(entity))
+    if(forecast.isEmpty()) CardDetail(stringResource(R.string.ha_v2_forecast_missing)) else {
+        val locale=LocalConfiguration.current.locales[0]
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+            forecast.take(5).forEach {day -> Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                Text(Instant.ofEpochMilli(day.time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("EEE",locale)),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(weatherIcon(day.condition),null,Modifier.size(18.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(formatNumber(day.high,locale)+"°",style=MaterialTheme.typography.labelMedium)
+                if(size!=CardSize.S) day.low?.let {Text(formatNumber(it,locale)+"°",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+            }}
+        }
+    }
 }

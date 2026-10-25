@@ -11,10 +11,19 @@ import app.stova.R
 import app.stova.core.ui.StovaIcons
 import app.stova.ha.HaEntity
 import kotlinx.serialization.json.*
-@Composable fun MediaPlayerCard(entity:HaEntity,images:HaImageSource?) {
-    entity.attributes["entity_picture"]?.jsonPrimitive?.contentOrNull?.let { HaImage(it,images,Modifier.size(48.dp)) }
-    CardValue(entity.attributes["media_title"]?.jsonPrimitive?.contentOrNull ?: entity.state)
-    entity.attributes["media_artist"]?.jsonPrimitive?.contentOrNull?.let { Text(it,color=MaterialTheme.colorScheme.onSurfaceVariant) }
-    val playing=entity.state=="playing"
-    Icon(if(playing) StovaIcons.Pause else StovaIcons.Play,stringResource(if(playing) R.string.ha_pause else R.string.ha_play),Modifier.size(32.dp).background(MaterialTheme.colorScheme.primary,CircleShape).padding(6.dp),tint=MaterialTheme.colorScheme.onPrimary)
+import app.stova.core.ui.StovaButton
+import androidx.compose.ui.text.style.TextOverflow
+@Composable fun MediaPlayerCard(entity:HaEntity,images:HaImageSource?,locked:Boolean=false,perform:(ServiceCall)->Unit={}) {
+    Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
+        entity.attributes["entity_picture"]?.jsonPrimitive?.contentOrNull?.let { HaImage(it,images,Modifier.size(56.dp)) }
+        Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+            Text(entity.attributes["media_title"]?.jsonPrimitive?.contentOrNull ?: entityStateLabel(entity),style=MaterialTheme.typography.titleLarge,maxLines=2,overflow=TextOverflow.Ellipsis)
+            entity.attributes["media_artist"]?.jsonPrimitive?.contentOrNull?.let {CardDetail(it)}
+        }
+    }
+    Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
+        StovaButton(stringResource(if(entity.state=="playing") R.string.ha_pause else R.string.ha_play),{perform(ServiceCall("media_player","media_play_pause"))},icon=if(entity.state=="playing") StovaIcons.Pause else StovaIcons.Play,enabled=!locked)
+        StovaButton(stringResource(R.string.ha_v2_next),{perform(ServiceCall("media_player","media_next_track"))},enabled=!locked)
+    }
+    entity.attributes.number("volume_level")?.let {CardDetail(stringResource(R.string.ha_v2_volume,(it*100).toInt()))}
 }

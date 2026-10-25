@@ -32,5 +32,11 @@ class CardV2ModelTest {
         assertTrue(sections[0].favorites); assertEquals("2",sections[0].cards.single().id)
         assertEquals("Stove",sections[1].room); assertNull(sections[2].room)
     }
+    @Test fun priceTimestampsPreserveBothRepeatedHoursOnDstDay() {
+        val points=pricePoints(e("sensor.price","1","""{"raw_today":[{"start":"2026-10-25T02:00:00+02:00","end":"2026-10-25T02:00:00+01:00","value":-0.5},{"start":"2026-10-25T02:00:00+01:00","end":"2026-10-25T03:00:00+01:00","value":2}]}"""))
+        assertEquals(2,points.size);assertEquals(points[0].end,points[1].start)
+        assertEquals(3_600_000L,points[0].end-points[0].start)
+        assertEquals(-0.5,points[0].value,0.001)
+    }
     private fun e(id:String,state:String="on",attrs:String="{}")=HaEntity(id,state,StovaJson.parseToJsonElement(attrs).jsonObject,0,0)
 }

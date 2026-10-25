@@ -23,6 +23,8 @@ sealed interface CardDialog {
     data class Climate(override val entityId:String):CardDialog
     data class Graph(override val entityId:String,val today:Boolean=false):CardDialog
     data class Camera(override val entityId:String):CardDialog
+    data class Cover(override val entityId:String):CardDialog
+    data class Lock(override val entityId:String):CardDialog
 }
 
 @Composable
@@ -64,9 +66,37 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
                     var history by remember(dialog.entityId) { mutableStateOf(emptyList<Double>()) }
                     LaunchedEffect(dialog.entityId) { history=if(entity!=null && dialog.today) priceCurve(entity) else socket.history(dialog.entityId).map { it.second } }
                     Text(entity?.let(::friendlyName) ?: dialog.entityId)
-                    if(history.size<2) Text(stringResource(R.string.ha_no_history)) else Sparkline(history,Modifier.width(496.dp))
+                    if(dialog.today && entity!=null) {
+                        var tomorrow by remember {mutableStateOf(false)}
+                        Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                            StovaButton(stringResource(R.string.ha_v2_today),{tomorrow=false},primary=!tomorrow)
+                            StovaButton(stringResource(R.string.ha_v2_tomorrow),{tomorrow=true},primary=tomorrow)
+                        }
+                        PriceChart(entity,tomorrow,Modifier.width(496.dp).height(180.dp))
+                    } else {
+                        Text(stringResource(R.string.ha_v2_history),style=MaterialTheme.typography.labelLarge)
+                        if(history.size<2) Text(stringResource(R.string.ha_no_history)) else Sparkline(history,Modifier.width(496.dp).height(180.dp))
+                    }
                 }
-                is CardDialog.Camera -> HaImage("/api/camera_proxy/${dialog.entityId}",images,Modifier.weight(1f).fillMaxWidth(),2_000)
+                is CardDialog.Camera -> {
+                    CardDetail(stringResource(R.string.ha_v2_fullscreen))
+                    HaImage("/api/camera_proxy/${dialog.entityId}",images,Modifier.weight(1f).fillMaxWidth(),2_000)
+                }
+                is CardDialog.Cover -> {
+                    Text(entity?.let(::friendlyName) ?: dialog.entityId,style=MaterialTheme.typography.titleLarge)
+                    CardValue(entityStateLabel(entity))
+                    val features=(entity?.attributes?.number("supported_features") ?: 0.0).toInt()
+                    listOf(Triple(R.string.ha_v2_open_cover,"open_cover",1),Triple(R.string.ha_v2_stop_cover,"stop_cover",8),Triple(R.string.ha_v2_close_cover,"close_cover",2)).forEach {(label,service,bit) ->
+                        StovaButton(stringResource(label),{if(!locked) perform(ServiceCall("cover",service),dialog.entityId)},enabled=!locked && (features and bit)!=0)
+                    }
+                }
+                is CardDialog.Lock -> {
+                    Text(stringResource(R.string.ha_v2_lock_confirm,entity?.let(::friendlyName) ?: dialog.entityId),style=MaterialTheme.typography.titleLarge)
+                    StovaButton(stringResource(if(entity?.state=="locked") R.string.ha_v2_unlock_action else R.string.ha_v2_lock_action),{
+                        if(!locked) perform(ServiceCall("lock",if(entity?.state=="locked") "unlock" else "lock"),dialog.entityId)
+                        onDismiss()
+                    },enabled=!locked)
+                }
             }
             StovaButton(stringResource(R.string.ha_close),onDismiss)
         }

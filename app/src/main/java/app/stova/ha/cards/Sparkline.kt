@@ -18,7 +18,7 @@ fun sparklinePoints(values: List<Double>, width: Float, height: Float): List<Off
 @Composable
 fun Sparkline(values: List<Double>, modifier: Modifier = Modifier, current: Int? = null) {
     val text = MaterialTheme.colorScheme.onSurface
-    Canvas(modifier.fillMaxWidth().height(48.dp)) {
+    Canvas(modifier.fillMaxWidth().heightIn(min=28.dp)) {
         val points = sparklinePoints(values, size.width, size.height)
         if (points.isNotEmpty()) {
             val path = Path().apply { moveTo(points.first().x, points.first().y); points.drop(1).forEach { lineTo(it.x,it.y) } }

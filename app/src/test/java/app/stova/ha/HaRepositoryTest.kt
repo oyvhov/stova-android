@@ -68,4 +68,14 @@ class HaRepositoryTest {
         assertEquals(CardSize.L,card.size);assertEquals("Leselys",card.name);assertEquals("sun",card.icon);assertTrue(card.favorite)
         assertEquals(card,p.current().profiles.single().dashboard.single())
     }
+    @Test fun successfulToggleWaitsForServerAndClearsPending() = runTest {
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
+        val light=HaEntity("light.a","off",JsonObject(emptyMap()),0,0)
+        repo.add(light,CardType.LIGHT);runCurrent();socket.entities.value=mapOf(light.id to light);runCurrent()
+        val job=backgroundScope.async {repo.perform(ServiceCall("light","toggle"),light.id,adult)}
+        runCurrent();assertFalse(job.isCompleted);assertTrue(light.id in repo.pending.value)
+        socket.entities.value=mapOf(light.id to light.copy(state="on"));runCurrent()
+        assertTrue(job.await());assertTrue(repo.pending.value.isEmpty());assertEquals("on",repo.entities.value[light.id]?.state)
+    }
 }
