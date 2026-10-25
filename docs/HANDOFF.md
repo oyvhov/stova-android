@@ -1,3 +1,10 @@
+# Større medielogo i heroen – fullført
+2026-10-25: Bestillinga i `2026-10-25-hero-logo.md` er fullført. Fast tekstreserve pressa logoen til 24/26 dp; faktisk metadata-/omtalehøgd bestemmer no logoplass, innanfor maks 360 × 96 dp. Transparent trimming og heile sideforholdet er bevarte.
+Herohøgda, første rad og parallax er bevarte. Tre nye layoutregresjonar dekkjer kompakt hero, omtale og stor skrift. Sluttkontroll: 93/93 relevante testar, 0 hoppa over, lint 0 feil (38 åtvaringar, 1 hint), debug-bygg OK.
+Endeleg APK er installert med `-r` på emulator-5580 og Shield med ekte data. Shield-logoramma gjekk frå 24 til 70,5 dp i det målte tilfellet; D-pad ned rullar framleis heroen bort. Profil- og kontofiler er byteidentiske før/etter.
+APK: `app/build/outputs/apk/debug/app-debug.apk`, SHA-256 `beff6d758088ca51253ddb30afaa47fadfe5eb0d12561baf2993075ccddfddf9`. Rapport og ekte skjermbilete: `docs/verification/hero-logo.md`.
+Ingen påbyrja steg eller spørsmål står att i denne bestillinga. `main` i det private `oyvhov/stova-android`; eldre restpunkt om produksjonsrelease er uendra.
+
 # Rein hero-metadata – fullført
 2026-10-25: Bestillinga i `2026-10-25-hero-metadata.md` er fullført. Rating, år, alder og «Ny sesong» har ingen eigne bakgrunnar, kantar eller rundingar. Numerisk alder (også NO-15) viser lokaliserte år; andre sertifiseringar er bevarte.
 Raud tomat ved minst 60 %, grøn Rotten-markering under 60 %. Statusfargar er samla i `core/theme/RatingColors`, uavhengige av profilaksent; alder brukar språkressursar med eintal/fleirtal.

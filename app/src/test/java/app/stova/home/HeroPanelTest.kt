@@ -1,10 +1,13 @@
 package app.stova.home
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
 import app.stova.core.theme.StovaTheme
@@ -23,6 +26,52 @@ import org.robolectric.annotation.GraphicsMode
 class HeroPanelTest {
     @get:Rule val compose = createComposeRule()
     private val account = MediaAccount("a", "p", ServerKind.JELLYFIN, "s", "Midttunet", "http://jf", "u", "U")
+
+    @Test fun compactHeroUsesRemainingSpaceForTheLogo() {
+        assertLogoFits(137, overview = false)
+    }
+
+    @Test fun overviewDoesNotReduceTheLogoToATinyStamp() {
+        assertLogoFits(208, overview = true)
+    }
+
+    @Test fun largeTextKeepsLogoAndMetadataInsideTheHero() {
+        assertLogoFits(220, overview = false, fontScale = 2f)
+    }
+
+    private fun assertLogoFits(heightDp: Int, overview: Boolean, fontScale: Float = 1f) {
+        val title = "Medielogo"
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val file = java.io.File(context.cacheDir, "hero-padded-logo.png")
+        val bitmap = android.graphics.Bitmap.createBitmap(600, 600, android.graphics.Bitmap.Config.ARGB_8888)
+        android.graphics.Canvas(bitmap).drawRect(140f, 80f, 460f, 520f,
+            android.graphics.Paint().apply { color = android.graphics.Color.WHITE })
+        file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+        val item = MediaItem("logo", "a", ItemType.MOVIE, title,
+            art = ItemArt(logo = file.absolutePath), year = 2024, ratings = Ratings(7.8, 91, "12"),
+            genres = listOf("Drama"), overview = "Ei ferd gjennom stille fjordar og opne landskap. ".repeat(2))
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
+                StovaTheme(reduceMotion = true, appearance = app.stova.profiles.AppearancePrefs(showOverview = overview)) {
+                    HeroPanel(SpotlightEntry(item, account, true), Modifier.fillMaxWidth().height(heightDp.dp))
+                }
+            }
+        }
+        compose.waitUntil(5_000) { compose.onAllNodesWithContentDescription(title).fetchSemanticsNodes().isNotEmpty() }
+        // Loading/error and decoded artwork share the same frame, so arrival cannot move the facts.
+        val logo = compose.onNodeWithContentDescription(title).assertIsDisplayed()
+        logo.assertHeightIsAtLeast(48.dp)
+        val logoBounds = logo.getUnclippedBoundsInRoot()
+        val facts = compose.onNodeWithText("2024").assertIsDisplayed().getUnclippedBoundsInRoot()
+        val genres = compose.onNodeWithText("Film · Drama").assertIsDisplayed().getUnclippedBoundsInRoot()
+        assertTrue("Facts follow the logo", facts.top >= logoBounds.bottom)
+        assertTrue("Genres stay inside the hero", genres.bottom <= (heightDp - 16).dp)
+        if (overview && fontScale < 1.5f) {
+            val story = compose.onNodeWithText(item.overview!!).assertIsDisplayed().getUnclippedBoundsInRoot()
+            assertTrue("The whole overview stays inside the hero", story.bottom <= (heightDp - 16).dp)
+        }
+    }
 
     @Test fun aLogoThatCannotBeLoadedStillShowsTheTitle() {
         val film = MediaItem("missing", "a", ItemType.MOVIE, "Fjordlys", art = ItemArt(logo = "missing-logo"))

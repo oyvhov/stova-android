@@ -151,7 +151,7 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
     heile biblioteket, berre filmar, berre seriar eller favorittar (`UserData.IsFavorite`). Eigne
     bibliotekspørjingar gir eit nytt utval, med sesongprioritering og «Ny sesong» innanfor valet.
   - Innhald (Utsjånad v2): teksten står øvst til venstre rett under toppfeltet. Clearlogo er
-    høgst 320 × 72 dp og får transparent kant trimma; utan logo blir tittelen vist i
+    høgst 360 × 96 dp og får transparent kant trimma; utan logo blir tittelen vist i
     `headlineMedium`. «Ny sesong», stjernescore, år, aldersgrense og kritikarprosent står som
     rein tekst utan eigne bakgrunnar, kantar eller rundingar (brukarønske 25.10.2026).
     Numeriske aldersgrenser, også «NO-15», får lokaliserte einingar: «15 år» / «15 years».
@@ -162,6 +162,9 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
     Berre community-score i 0–10 blir vist; til dømes 39,0 gir inga stjerne.
     Profilen kan velje «Alltid tittel» i staden for clearlogo. Tittelen er òg reserve medan logoen
     lastar og når lasting feilar, slik at heroen aldri mister namnet på filmen eller serien.
+    Logoen får plassen som faktisk er att etter metadata, sjangrar og eventuell omtale. Ingen
+    fast tekstreserve skal presse han til 24 dp når det finst meir plass. Heile logoen blir vist
+    med bevart sideforhold. Herohøgda og radplasseringa blir ikkje endra av logoproporsjonane.
   - Heroen er ei **rullande parallax-overskrift i same liste som radene** (brukarønske 25.10.2026).
     Når fokus går ned til neste rad, rullar heroen heilt ut av syne og mediaradene får heile høgda
     under topplinja. Opp til første rad viser heroen att. Teksten blir forskyvd 35 % av rullestillinga
