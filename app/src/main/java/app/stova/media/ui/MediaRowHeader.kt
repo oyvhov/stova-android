@@ -12,7 +12,6 @@ import app.stova.media.MediaRowKind
 @Composable fun MediaRowHeader(row:HomeRowUi.Media) {
  Row(Modifier.padding(start=StovaLayout.TvSafeEdge,end=StovaLayout.TvSafeEdge,top=StovaLayout.SectionTop,bottom=StovaLayout.SectionBottom),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
   Text(stringResource(when(row.kind){MediaRowKind.CONTINUE->R.string.row_continue;MediaRowKind.LATEST_MOVIES->R.string.row_latest_movies;MediaRowKind.LATEST_SERIES->R.string.row_latest_series}),style=MaterialTheme.typography.titleLarge,color=MaterialTheme.colorScheme.onSurface)
-  ServiceLogo(row.account.kind)
   Text(row.account.serverName,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
   if(row.offline) Text(stringResource(R.string.offline),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
  }

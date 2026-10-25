@@ -1,6 +1,9 @@
 package app.stova.home
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.BringIntoViewSpec
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +37,7 @@ import app.stova.media.ui.*
 import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -107,6 +111,7 @@ fun HomeScreen(
 }
 
 /** The rendered home with controlled data, shared by the launcher and visual tests. */
+@OptIn(ExperimentalFoundationApi::class) // LocalBringIntoViewSpec, the TV pivot hook
 @Composable
 fun HomeContent(
     rows: List<HomeRowUi>?,
@@ -134,7 +139,12 @@ fun HomeContent(
     val firstItem = remember { FocusRequester() }
     var placedFocus by remember { mutableStateOf(false) }
     LaunchedEffect(restoreRow, rows) {
-        if (restoreRow != null && !placedFocus) placedFocus = runCatching { firstItem.requestFocus() }.isSuccess
+        // Lazy rows compose during layout, after this effect starts; give the requester a few frames to attach.
+        repeat(10) {
+            if (restoreRow == null || placedFocus) return@LaunchedEffect
+            placedFocus = runCatching { firstItem.requestFocus(FocusDirection.Enter) }.getOrDefault(false)
+            if (!placedFocus) withFrameNanos { }
+        }
     }
     Column(Modifier.fillMaxSize().semantics {
         // Automation marker, not user-facing copy. Null rows mean sources are still loading.
@@ -151,14 +161,29 @@ fun HomeContent(
                     else -> {
                         val firstRow = rows.indexOfFirst { it.key == restoreRow }.coerceAtLeast(0)
                         val listState = rememberLazyListState(initialFirstVisibleItemIndex = firstRow)
-                        LazyColumn(Modifier.fillMaxSize().focusRestorer(), state = listState,
-                            contentPadding = PaddingValues(bottom = StovaLayout.TvSafeEdge)) {
-                            items(rows, key = { it.key.value }) { row ->
-                                val requester = if (row.key == restoreRow) firstItem else null
-                                when (row) {
-                                    is HomeRowUi.WatchNext -> WatchNextRow(row, requester, onFocus)
-                                    is HomeRowUi.Media -> MediaRow(row, requester, restoreTarget, onFocus, onMediaClick, onMediaLongClick)
-                                    is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, restoreTarget) { onFocus(FocusedTarget.App(it)) }
+                        val scope = rememberCoroutineScope()
+                        val reduceMotion = LocalReduceMotion.current
+                        val rowSpec = LocalBringIntoViewSpec.current
+                        // The column does not scroll to a focused card; the focused row snaps its header
+                        // to the top instead, so the row above never peeks out as a bare bar under the hero.
+                        CompositionLocalProvider(LocalBringIntoViewSpec provides StayPut) {
+                            LazyColumn(Modifier.fillMaxSize().focusRestorer(), state = listState,
+                                contentPadding = PaddingValues(bottom = StovaLayout.TvSafeEdge)) {
+                                itemsIndexed(rows, key = { _, row -> row.key.value }) { index, row ->
+                                    val requester = if (row.key == restoreRow) firstItem else null
+                                    CompositionLocalProvider(LocalBringIntoViewSpec provides rowSpec) {
+                                        Box(Modifier.onFocusChanged { state ->
+                                            if (state.hasFocus) scope.launch {
+                                                if (reduceMotion) listState.scrollToItem(index) else listState.animateScrollToItem(index)
+                                            }
+                                        }) {
+                                            when (row) {
+                                                is HomeRowUi.WatchNext -> WatchNextRow(row, requester, onFocus)
+                                                is HomeRowUi.Media -> MediaRow(row, requester, restoreTarget, onFocus, onMediaClick, onMediaLongClick)
+                                                is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, restoreTarget) { onFocus(FocusedTarget.App(it)) }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -167,6 +192,10 @@ fun HomeContent(
             }
         }
     }
+}
+
+private val StayPut = object : BringIntoViewSpec {
+    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float) = 0f
 }
 
 @Composable

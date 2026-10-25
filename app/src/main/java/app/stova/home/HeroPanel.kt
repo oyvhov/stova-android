@@ -30,7 +30,7 @@ import coil3.request.ImageRequest
     Text(parts.joinToString(" · "),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
     RatingRow(item.ratings)
     if(!large) item.overview?.let { Text(it,style=MaterialTheme.typography.bodyLarge,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis) }
-    Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) { ServiceLogo(target.account.kind);Text(target.account.serverName,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant) }
+    Text(target.account.serverName,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
    }
    is FocusedTarget.App -> Text(target.label,style=MaterialTheme.typography.displaySmall,color=MaterialTheme.colorScheme.onSurface)
    null -> Text(stringResource(when(java.time.LocalTime.now().hour) { in 5..9 -> R.string.greeting_morning;in 10..16 -> R.string.greeting_day;in 17..21 -> R.string.greeting_evening;else -> R.string.greeting_night }),style=MaterialTheme.typography.displaySmall,color=MaterialTheme.colorScheme.onSurface)
