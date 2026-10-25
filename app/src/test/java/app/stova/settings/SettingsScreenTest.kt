@@ -6,6 +6,7 @@ import android.content.IntentFilter
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.AppContainer
@@ -40,8 +41,20 @@ class SettingsScreenTest {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
         rule.onNodeWithText("Utsjånad").performClick()
-        rule.onNodeWithText("Reduser rørsle").performClick()
+        rule.onNodeWithText("Reduser rørsle").performScrollTo().performClick()
         rule.waitUntil(5_000) { profile("A").appearance.reduceMotion }
+    }
+
+    @Test fun appearanceChoicesPersistOnlyForTheActiveProfile() {
+        runBlocking {
+            container.profiles.create("B", AvatarColor.OCEAN, false)
+            container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id)
+        }
+        openSettings()
+        rule.onNodeWithText("Utsjånad").performClick()
+        rule.onNodeWithText("Kortstorleik").performScrollTo().performClick()
+        rule.waitUntil(5_000) { profile("A").appearance.cardSize == app.stova.profiles.CardSize.LARGE }
+        assertEquals(app.stova.profiles.CardSize.MEDIUM, profile("B").appearance.cardSize)
     }
 
     @Test fun kidSeesOnlySwitchProfile() {
