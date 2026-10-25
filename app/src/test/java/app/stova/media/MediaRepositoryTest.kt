@@ -93,6 +93,20 @@ class MediaRepositoryTest {
   r.refresh("p");val entry=r.spotlight("p").first().single()
   assertTrue(entry.newSeason);assertEquals("Livet langs kysten.",entry.item.overview)
  }
+ // Real Jellyfin: whole-library spotlight and Halloween queries took the account past its 10 s,
+ // and every row came back "Offline" on each refresh.
+ @Test fun slowSpotlightNeverMarksTheRowsOffline()=runTest {
+  val a=accounts();add(a,ServerKind.JELLYFIN)
+  val slow=object:MediaServerClient {
+   override suspend fun resume():List<MediaItem> { delay(2_000);return listOf(item(a.forProfile("p").first().single())) }
+   override suspend fun nextUp():List<MediaItem> { delay(2_000);return emptyList() }
+   override suspend fun latest(endpoint:Endpoint):List<MediaItem> { delay(if(endpoint==Endpoint.SPOTLIGHT||endpoint==Endpoint.NEW_SEASONS) 9_000 else 2_000);return emptyList() }
+  }
+  val r=MediaRepository(a,{ slow },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))
+  r.refresh("p")
+  val row=r.rows("p").first().single()
+  assertFalse(row.offline);assertEquals("m",row.items.single().id)
+ }
  @Test fun removedAccountDropsCachedRows()=runTest {
   val a=accounts();val j=add(a,ServerKind.JELLYFIN);cached(j)
   val r=MediaRepository(a,{client(it)},tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))

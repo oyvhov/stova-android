@@ -15,6 +15,8 @@ import kotlinx.coroutines.sync.withLock
 
 /** The spotlight pool changes this rarely, so the rotation never jumps on a routine row refresh. */
 const val SPOTLIGHT_REFRESH_MILLIS = 2 * 60 * 60 * 1000L
+/** Spotlight and season rows query the whole library; they get longer than the rows, and their own clock. */
+const val EXTRA_TIMEOUT_MILLIS = 20_000L
 
 class MediaRepository(private val accounts: MediaAccountRepository,private val clientFor: suspend (MediaAccount) -> MediaServerClient?,private val snapshotDir: File,private val scope: CoroutineScope,private val io: CoroutineDispatcher=Dispatchers.IO,private val clock: () -> Long=System::currentTimeMillis) {
  private class Slot(val store: JsonFileStore<MediaSnapshot>) {
@@ -70,26 +72,36 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
     val cached=slot.rows.value.orEmpty().filter { it.account.id==account.id }.map { it.copy(offline=true) }
     val cachedSpotlight=slot.spotlight.value.filter { it.account.id==account.id }
     try {
-     withTimeoutOrNull(10_000) {
-      val client=clientFor(account) ?: throw MediaError.Unauthorized()
-      val resume=client.resume();val next=client.nextUp()
-      val seasonal=if(season==Season.NONE) emptyList() else orElse(cached.filter { it.kind.season==season }) {
-       val items=client.seasonal(season)
-       listOf(HomeRowUi.Media(HomeRowKey.seasonal(account.id,season),account,if(season==Season.HALLOWEEN) MediaRowKind.HALLOWEEN else MediaRowKind.CHRISTMAS,items,false))
+     val client=clientFor(account) ?: throw MediaError.Unauthorized()
+     coroutineScope {
+      // Extras run beside the rows under their own limits: a slow whole-library query must never
+      // turn the account's rows "Offline".
+      val seasonalRows=async {
+       if(season==Season.NONE) emptyList() else withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(null) {
+        listOf(HomeRowUi.Media(HomeRowKey.seasonal(account.id,season),account,if(season==Season.HALLOWEEN) MediaRowKind.HALLOWEEN else MediaRowKind.CHRISTMAS,client.seasonal(season),false))
+       } } ?: cached.filter { it.kind.season==season }
       }
-      val rows=(listOf(
-       HomeRowUi.Media(HomeRowKey.continueWatching(account.id),account,MediaRowKind.CONTINUE,mergeContinue(resume,next),false),
-       HomeRowUi.Media(HomeRowKey.latestMovies(account.id),account,MediaRowKind.LATEST_MOVIES,client.latest(Endpoint.LATEST_MOVIES),false),
-       HomeRowUi.Media(HomeRowKey.latestSeries(account.id),account,MediaRowKind.LATEST_SERIES,client.latest(Endpoint.LATEST_SERIES),false)
-      )+seasonal).filter { it.items.isNotEmpty() }
       // A spotlight failure never costs the rows; the cached titles stay until the next try.
-      val spotlight=if(!spotlightDue) null else orElse(null) {
-       val seasons=orElse(emptyList()) { client.latest(Endpoint.NEW_SEASONS) }
-       val series=orElse(emptyList()) { client.items(newSeasonSeriesIds(seasons,today)) }
-       spotlightEntries(account,client.latest(Endpoint.SPOTLIGHT),seasons,today,series)
+      val spotlightJob=async {
+       if(!spotlightDue) null else withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(null) {
+        val seasons=async { orElse(emptyList()) { client.latest(Endpoint.NEW_SEASONS) } }
+        val pool=async { client.latest(Endpoint.SPOTLIGHT) }
+        val series=orElse(emptyList()) { client.items(newSeasonSeriesIds(seasons.await(),today)) }
+        spotlightEntries(account,pool.await(),seasons.await(),today,series)
+       } }
       }
-      Fetched(rows,spotlight ?: cachedSpotlight,spotlight!=null)
-     } ?: Fetched(cached,cachedSpotlight,false)
+      val core=withTimeoutOrNull(10_000) {
+       val resume=async { client.resume() };val next=async { client.nextUp() }
+       val movies=async { client.latest(Endpoint.LATEST_MOVIES) };val series=async { client.latest(Endpoint.LATEST_SERIES) }
+       listOf(
+        HomeRowUi.Media(HomeRowKey.continueWatching(account.id),account,MediaRowKind.CONTINUE,mergeContinue(resume.await(),next.await()),false),
+        HomeRowUi.Media(HomeRowKey.latestMovies(account.id),account,MediaRowKind.LATEST_MOVIES,movies.await(),false),
+        HomeRowUi.Media(HomeRowKey.latestSeries(account.id),account,MediaRowKind.LATEST_SERIES,series.await(),false))
+      }
+      val spotlight=spotlightJob.await()
+      Fetched(((core ?: cached.filter { it.kind.season==Season.NONE })+seasonalRows.await()).filter { it.items.isNotEmpty() },
+       spotlight ?: cachedSpotlight,spotlight!=null)
+     }
     } catch(_: MediaError.Unauthorized) { accounts.markNeedsSignIn(account.id);Fetched(emptyList(),emptyList(),true) }
       catch(e: CancellationException) { throw e }
       catch(_: Exception) { Fetched(cached,cachedSpotlight,false) }
