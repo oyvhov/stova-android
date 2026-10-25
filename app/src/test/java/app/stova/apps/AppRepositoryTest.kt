@@ -96,4 +96,25 @@ class AppRepositoryTest {
         assertEquals(listOf(a), page.value?.all)
         assertEquals(1, catalog.scans)
     }
+
+    // Lean core 6: every appearance step re-sorted the apps with a fresh Collator on Main.
+    @Test fun appearanceEditsDoNotRearrangeTheApps() = runTest(UnconfinedTestDispatcher()) {
+        val a = app("a")
+        val profiles = ProfileRepository(
+            JsonFileStore(tmp.root.resolve("p.json"), ProfilesFile.serializer(), ProfilesFile(), UnconfinedTestDispatcher(testScheduler)),
+        )
+        val id = profiles.create("A", AvatarColor.LIME, false).id
+        val repo = AppRepository(FakeAppCatalog(listOf(a)), profiles, backgroundScope, UnconfinedTestDispatcher(testScheduler))
+        var emissions = 0
+        backgroundScope.launch { repo.arranged(profiles.file.map { file -> file.profiles.first() }).collect { emissions++ } }
+        assertEquals(1, emissions)
+        profiles.update(id) { it.copy(appearance = it.appearance.copy(showDate = true)) }
+        profiles.update(id) { it.copy(appearance = it.appearance.copy(showTitles = true)) }
+        profiles.update(id) { it.copy(appearance = it.appearance.copy(showDate = false)) }
+        profiles.update(id) { it.copy(appearance = it.appearance.copy(showTitles = false)) }
+        profiles.update(id) { it.copy(appearance = it.appearance.copy(clock = app.stova.profiles.ClockMode.H12)) }
+        assertEquals("five appearance edits", 1, emissions)
+        profiles.update(id) { it.copy(apps = it.apps.copy(favorites = listOf(a.key))) }
+        assertEquals("one app edit", 2, emissions)
+    }
 }

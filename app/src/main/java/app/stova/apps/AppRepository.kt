@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -32,12 +33,15 @@ class AppRepository(
     private val installed: Flow<List<InstalledApp>> = catalog.changes().onStart { emit(Unit) }.map { catalog.installed() }
         .shareIn(scope, SharingStarted.WhileSubscribed(5_000), replay = 1)
 
+    /** All an arrangement depends on; an appearance edit or any other profile change never re-sorts. */
+    private data class Arrangement(val id: String, val prefs: AppPrefs, val kid: Boolean)
+
     fun arranged(profile: Flow<Profile?>): Flow<ArrangedApps> =
-        combine(profile, installed) { p, apps -> p to apps }
+        combine(profile.map { p -> p?.let { Arrangement(it.id, it.apps, it.kid) } }.distinctUntilChanged(), installed) { p, apps -> p to apps }
             .onEach { (p, apps) -> if (p != null) reconcileIfNeeded(p, apps) }
             .map { (p, apps) ->
                 if (p == null) ArrangedApps()
-                else arrangeApps(apps, p.apps, p.kid, Collator.getInstance(Locale.getDefault()))
+                else arrangeApps(apps, p.prefs, p.kid, Collator.getInstance(Locale.getDefault()))
             }
 
     suspend fun toggleFavorite(profileId: String, key: String) = updatePrefs(profileId) { prefs ->
@@ -75,10 +79,10 @@ class AppRepository(
      * uninstalled. Otherwise each stored key a scan did not return is followed (renamed activity),
      * kept (package installed but unavailable) or dropped (package uninstalled); see [reconcileKeys].
      */
-    private fun reconcileIfNeeded(profile: Profile, apps: List<InstalledApp>) {
+    private fun reconcileIfNeeded(profile: Arrangement, apps: List<InstalledApp>) {
         if (apps.isEmpty()) return
         val keys = apps.mapTo(mutableSetOf()) { it.key }
-        val referenced = profile.apps.favorites + profile.apps.hidden + profile.apps.kidAllowed + profile.apps.iconOverrides.keys
+        val referenced = profile.prefs.favorites + profile.prefs.hidden + profile.prefs.kidAllowed + profile.prefs.iconOverrides.keys
         if (referenced.all { it in keys }) return
         scope.launch {
             val mapping = withContext(io) { reconcileKeys(referenced.toSet(), apps, catalog::isInstalled) }
