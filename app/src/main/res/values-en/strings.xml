@@ -296,4 +296,7 @@
         <item quantity="one">%1$d card</item>
         <item quantity="other">%1$d cards</item>
     </plurals>
+    <string name="ha_v2_warm_white">Warm white</string>
+    <string name="ha_v2_neutral_white">Neutral</string>
+    <string name="ha_v2_cool_white">Cool white</string>
 </resources>

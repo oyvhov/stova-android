@@ -296,4 +296,7 @@
         <item quantity="one">%1$d kort</item>
         <item quantity="other">%1$d kort</item>
     </plurals>
+    <string name="ha_v2_warm_white">Varm kvit</string>
+    <string name="ha_v2_neutral_white">Nøytral</string>
+    <string name="ha_v2_cool_white">Kald kvit</string>
 </resources>
