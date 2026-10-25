@@ -72,6 +72,13 @@ fun HomeScreen(
         vm.backdrop.rotation(rotationUrls, !reduceMotion && rotationEnabled)
     }
     val context = LocalContext.current
+    val preloadUrls = remember(rows) { app.stova.background.backdropPreloadUrls(rows.orEmpty()) }
+    LaunchedEffect(preloadUrls) {
+        val loader = SingletonImageLoader.get(context)
+        preloadUrls.forEach { url ->
+            loader.enqueue(ImageRequest.Builder(context).data(url).size(1920, 1080).build())
+        }
+    }
     LaunchedEffect(backdrop, rotationUrls, reduceMotion, rotationEnabled) {
         if (!reduceMotion && rotationEnabled && rotationUrls.isNotEmpty()) {
             val next = rotationUrls[(rotationUrls.indexOf(backdrop) + 1) % rotationUrls.size]
