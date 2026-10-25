@@ -81,6 +81,7 @@ fun HomeScreen(
     fun open(target: FocusedTarget.Media, action: SpoleAction) {
         when (handoff.open(target.account, target.item, action)) {
             HandoffResult.Opened -> Unit
+            HandoffResult.OpenedWithoutLink -> Toast.makeText(context, R.string.spole_update_for_links, Toast.LENGTH_LONG).show()
             HandoffResult.SpoleMissing -> missing = true
             HandoffResult.InvalidIds -> Toast.makeText(context, R.string.invalid_media_ids, Toast.LENGTH_SHORT).show()
         }

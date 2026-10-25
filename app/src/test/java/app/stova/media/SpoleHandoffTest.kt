@@ -24,5 +24,29 @@ class SpoleHandoffTest {
         val started = shadowOf(context as Application).nextStartedActivity
         assertEquals("app.reelstack", started.`package`); assertEquals("details", started.data!!.getQueryParameter("action"))
     }
+    /** Records starts; packages in [noLink] refuse spole:// as an older Spole does. */
+    private class Recorder(private val noLink: Set<String>) : android.content.ContextWrapper(androidx.test.core.app.ApplicationProvider.getApplicationContext()) {
+        val started = mutableListOf<android.content.Intent>()
+        override fun startActivity(intent: android.content.Intent) {
+            if (intent.action == android.content.Intent.ACTION_VIEW && intent.`package` in noLink) throw android.content.ActivityNotFoundException()
+            started += intent
+        }
+    }
+    @Test fun usesTheDebugSpoleWhenTheReleaseHasNoLinkYet() {
+        shadowOf(context.packageManager).installPackage(PackageInfo().apply { packageName = "app.reelstack" })
+        shadowOf(context.packageManager).installPackage(PackageInfo().apply { packageName = "app.reelstack.debug" })
+        val recorder = Recorder(setOf("app.reelstack"))
+        assertEquals(HandoffResult.Opened, SpoleHandoff(recorder).open(acc, item, SpoleAction.PLAY))
+        assertEquals("app.reelstack.debug", recorder.started.single().`package`)
+    }
+    // The Shield's Spole 1.0.0-beta18 has no spole:// yet: Stova said "Spole is needed" although it was there.
+    @Test fun opensSpoleItselfWhenItCannotOpenTitlesYet() {
+        shadowOf(context.packageManager).installPackage(PackageInfo().apply { packageName = "app.reelstack" })
+        val recorder = Recorder(setOf("app.reelstack"))
+        assertEquals(HandoffResult.OpenedWithoutLink, SpoleHandoff(recorder).open(acc, item, SpoleAction.DETAILS))
+        val started = recorder.started.single()
+        assertEquals("app.reelstack", started.`package` ?: started.component?.packageName)
+        assertNotEquals(android.content.Intent.ACTION_VIEW, started.action)
+    }
     @Test fun rejectsBadIds() = assertEquals(HandoffResult.InvalidIds, SpoleHandoff(context).open(acc, item.copy(id = "../x"), SpoleAction.PLAY))
 }

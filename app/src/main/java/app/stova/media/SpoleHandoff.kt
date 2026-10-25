@@ -22,22 +22,33 @@ object SpoleContract {
 }
 sealed interface HandoffResult {
     data object Opened : HandoffResult
+    /** Spole is installed but too old for spole:// links: it opened at its own home instead. */
+    data object OpenedWithoutLink : HandoffResult
     data object SpoleMissing : HandoffResult
     data object InvalidIds : HandoffResult
 }
 class SpoleHandoff(private val context: Context) {
     @Suppress("DEPRECATION")
-    fun installedPackage(): String? = listOf(SpoleContract.PACKAGE, SpoleContract.DEBUG_PACKAGE).firstOrNull { pkg ->
+    fun installedPackages(): List<String> = listOf(SpoleContract.PACKAGE, SpoleContract.DEBUG_PACKAGE).filter { pkg ->
         try { context.packageManager.getPackageInfo(pkg, 0); true }
         catch (_: PackageManager.NameNotFoundException) { false }
     }
     fun open(account: MediaAccount, item: MediaItem, action: SpoleAction): HandoffResult {
         if (!SpoleContract.ID_PATTERN.matches(account.userId) || !SpoleContract.ID_PATTERN.matches(item.id) || item.accountId != account.id) return HandoffResult.InvalidIds
-        val pkg = installedPackage() ?: return HandoffResult.SpoleMissing
-        return try {
-            context.startActivity(Intent(Intent.ACTION_VIEW, SpoleContract.uri(account.kind, account.userId, item.id, action))
-                .setPackage(pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            HandoffResult.Opened
-        } catch (_: ActivityNotFoundException) { HandoffResult.SpoleMissing }
+        val packages = installedPackages().ifEmpty { return HandoffResult.SpoleMissing }
+        // Every installed Spole gets the link in turn: a release may be older than a debug build.
+        for (pkg in packages) {
+            try {
+                context.startActivity(Intent(Intent.ACTION_VIEW, SpoleContract.uri(account.kind, account.userId, item.id, action))
+                    .setPackage(pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                return HandoffResult.Opened
+            } catch (_: ActivityNotFoundException) { }
+        }
+        // Spole is here but cannot open a title yet: open it anyway rather than claim it is missing.
+        val pkg = packages.first()
+        val launch = context.packageManager.getLeanbackLaunchIntentForPackage(pkg) ?: context.packageManager.getLaunchIntentForPackage(pkg)
+            ?: Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER).setPackage(pkg)
+        return try { context.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); HandoffResult.OpenedWithoutLink }
+        catch (_: ActivityNotFoundException) { HandoffResult.SpoleMissing }
     }
 }

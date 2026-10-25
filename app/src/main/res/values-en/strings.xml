@@ -461,4 +461,5 @@
     <string name="ha_action_yes_off">"Yes, turn off"</string>
     <!-- System -->
     <string name="nav_system_settings">Android settings</string>
+    <string name="spole_update_for_links">Opened Spole. Update Spole to go straight to the title.</string>
 </resources>
