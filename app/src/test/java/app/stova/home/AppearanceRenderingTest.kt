@@ -137,7 +137,7 @@ class AppearanceRenderingTest {
     }
 
     @Test fun accentAndCornersReachTheTheme() {
-        var prefs by mutableStateOf(AppearancePrefs())
+        var prefs by mutableStateOf(AppearancePrefs(seasonChoice = SeasonChoice.NONE))
         var primary = Color.Unspecified
         var round = false
         compose.setContent { StovaTheme(appearance = prefs) {

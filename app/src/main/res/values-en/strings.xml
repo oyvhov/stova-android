@@ -283,10 +283,14 @@
     <string name="theme_preview">Preview</string>
     <string name="theme_greeting_halloween">Happy Halloween</string>
     <string name="theme_greeting_christmas">Merry Christmas</string>
-    <string name="theme_countdown_halloween">%1$d days to Halloween</string>
-    <string name="theme_countdown_christmas">%1$d days to Christmas Eve</string>
+    <plurals name="theme_countdown_halloween">
+        <item quantity="one">%1$d day to Halloween</item>
+        <item quantity="other">%1$d days to Halloween</item>
+    </plurals>
+    <plurals name="theme_countdown_christmas">
+        <item quantity="one">%1$d day to Christmas Eve</item>
+        <item quantity="other">%1$d days to Christmas Eve</item>
+    </plurals>
     <string name="theme_peak_halloween">Halloween today</string>
     <string name="theme_peak_christmas">Christmas Eve today</string>
-    <string name="theme_one_halloween">1 day to Halloween</string>
-    <string name="theme_one_christmas">1 day to Christmas Eve</string>
 </resources>

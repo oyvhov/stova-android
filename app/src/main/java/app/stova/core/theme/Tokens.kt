@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  * Spole's matte FOREST surfaces with everything on top of them muted further: a sage-lime accent
  * instead of Spole's bright lime, softer text and desaturated status colours. Surfaces are
  * separated by fill, never by glass or a line. The accent is for selection, progress and direct
- * actions only â€” never for counts, labels or status. Text keeps at least 6:1 against Surface.
+ * actions only — never for counts, labels or status. Text keeps at least 6:1 against Surface.
  */
 object StovaColors {
     val Ink = Color(0xFF101211)

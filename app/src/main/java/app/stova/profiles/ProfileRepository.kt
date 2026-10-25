@@ -29,7 +29,7 @@ class ProfileRepository(
 
     suspend fun create(name: String, avatar: AvatarColor, kid: Boolean): Profile {
         val clean = name.trim()
-        require(clean.length in 1..MAX_NAME) { "name must be 1â€“$MAX_NAME characters" }
+        require(clean.length in 1..MAX_NAME) { "name must be 1–$MAX_NAME characters" }
         lateinit var created: Profile
         store.update { file ->
             require(!(kid && file.profiles.isEmpty())) { "the first profile must be an adult" }
@@ -63,7 +63,7 @@ class ProfileRepository(
     }
 
     suspend fun setPin(id: String, pin: String?) {
-        require(pin == null || PinHasher.isValid(pin)) { "PIN must be 4â€“8 digits" }
+        require(pin == null || PinHasher.isValid(pin)) { "PIN must be 4–8 digits" }
         val hash = pin?.let { withContext(cpu) { PinHasher.hash(it) } }
         store.update { file ->
             check(file.profiles.any { it.id == id }) { "no profile $id" }

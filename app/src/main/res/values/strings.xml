@@ -283,10 +283,14 @@
     <string name="theme_preview">Førehandsvising</string>
     <string name="theme_greeting_halloween">God Halloween</string>
     <string name="theme_greeting_christmas">God jul</string>
-    <string name="theme_countdown_halloween">%1$d dagar til Halloween</string>
-    <string name="theme_countdown_christmas">%1$d dagar til julaftan</string>
+    <plurals name="theme_countdown_halloween">
+        <item quantity="one">%1$d dag til Halloween</item>
+        <item quantity="other">%1$d dagar til Halloween</item>
+    </plurals>
+    <plurals name="theme_countdown_christmas">
+        <item quantity="one">%1$d dag til julaftan</item>
+        <item quantity="other">%1$d dagar til julaftan</item>
+    </plurals>
     <string name="theme_peak_halloween">Halloween i dag</string>
     <string name="theme_peak_christmas">Julaftan i dag</string>
-    <string name="theme_one_halloween">1 dag til Halloween</string>
-    <string name="theme_one_christmas">1 dag til julaftan</string>
 </resources>

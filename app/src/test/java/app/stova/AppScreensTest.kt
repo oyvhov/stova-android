@@ -162,7 +162,7 @@ class AppScreensTest {
         return file.absolutePath
     }
 
-    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList(), brightTop: Boolean = false, appearance: AppearancePrefs = AppearancePrefs(), showApps: Boolean = false) {
+    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList(), brightTop: Boolean = false, appearance: AppearancePrefs = AppearancePrefs(), showApps: Boolean = false, seasonalShowcase: Boolean = false) {
         val backdrop = demoArt("demo-landscape", android.graphics.Color.rgb(79, 95, 88), brightTop)
         val logoFile = File(rule.activity.cacheDir, "demo-logo.png")
         val logo = Bitmap.createBitmap(900, 300, Bitmap.Config.ARGB_8888)
@@ -178,7 +178,12 @@ class AppScreensTest {
         val items = listOf(item, item.copy(id = "demo-film-2", title = "Vegen vidare", art = ItemArt(backdrop = second, poster = second, wide = second)), item.copy(id = "demo-film-3", title = "Nordavind"))
         val kind = if (poster) MediaRowKind.LATEST_MOVIES else MediaRowKind.CONTINUE
         val key = if (poster) HomeRowKey.latestMovies(account.id) else HomeRowKey.continueWatching(account.id)
-        val rows = (if (showApps) listOf(HomeRowUi.Apps(HomeRowKey.APPS, appearanceApps())) else emptyList()) + listOf(HomeRowUi.Media(key, account, kind, items, false),
+        val date = java.time.LocalDate.of(2026,10,25)
+        val activeSeason = appearance.activeSeason(date)
+        val seasonalRow = if (seasonalShowcase && activeSeason != Season.NONE) listOf(HomeRowUi.Media(
+            HomeRowKey.seasonal(account.id,activeSeason),account,
+            if(activeSeason==Season.HALLOWEEN) MediaRowKind.HALLOWEEN else MediaRowKind.CHRISTMAS,items,false)) else emptyList()
+        val rows = seasonalRow + (if (showApps) listOf(HomeRowUi.Apps(HomeRowKey.APPS, appearanceApps())) else emptyList()) + listOf(HomeRowUi.Media(key, account, kind, items, false),
             HomeRowUi.Media(HomeRowKey.latestSeries(account.id), account, MediaRowKind.LATEST_SERIES,
                 listOf(item.copy(id = "demo-episode", type = ItemType.EPISODE, seriesName = "Fjordlys", season = 1, episode = 2)), false))
         runBlocking {
@@ -187,14 +192,14 @@ class AppScreensTest {
         }
         rule.runOnUiThread {
             rule.activity.setContent {
-                StovaTheme(reduceMotion = true, appearance = appearance) {
+                StovaTheme(reduceMotion = !seasonalShowcase, appearance = appearance, date = date) {
                     val inputMode = androidx.compose.ui.platform.LocalInputModeManager.current
                     SideEffect { inputMode.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
                     val density = LocalDensity.current
                     CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
                         Box(Modifier.fillMaxSize()) {
                             BackdropLayer(backdrop)
-                            HomeContent(rows, if (showApps) FocusedTarget.App("Stova") else FocusedTarget.Media(item, account), if (showApps) HomeRowKey.APPS else key, container.appArt, container.appCatalog,
+                            HomeContent(rows, if (showApps) FocusedTarget.App("Stova") else FocusedTarget.Media(item, account), if (showApps) HomeRowKey.APPS else seasonalRow.firstOrNull()?.key ?: key, container.appArt, container.appCatalog,
                                 {}, {}, {}, {}, topBar = {
                                     TopBar(Profile("demo-profile", "Demo", AvatarColor.LIME), {}, {}, {},
                                         onSmartHome = if (chips.isNotEmpty()) ({}) else null,
@@ -206,6 +211,7 @@ class AppScreensTest {
             }
         }
         rule.waitForIdle()
+        if(seasonalShowcase) { rule.mainClock.advanceTimeBy(1_200); rule.waitForIdle() }
         rule.onNodeWithText("★ 7,8").assertIsDisplayed()
         rule.onNodeWithText(app.stova.media.ui.criticText(91, java.util.Locale.forLanguageTag("nn"))).assertExists()
         // Decode the same sized requests into Coil's memory cache before taking the window image.
@@ -219,7 +225,7 @@ class AppScreensTest {
         val label = if(showApps) "Stova" else "Fjordlys"
         rule.onAllNodes(hasContentDescription(label) and hasClickAction())[0].performSemanticsAction(SemanticsActions.RequestFocus) { it() }
         rule.onAllNodes(hasContentDescription(label) and hasClickAction())[0].assertIsFocused()
-        rule.mainClock.advanceTimeBy(250)
+        rule.mainClock.advanceTimeBy(if(seasonalShowcase) 1_200 else 250)
         rule.waitForIdle()
     }
 
@@ -268,7 +274,7 @@ class AppScreensTest {
     }
 
     @Test fun appearanceOceanAccent() {
-        renderMediaHome(appearance = AppearancePrefs(accent = Accent.OCEAN))
+        renderMediaHome(appearance = AppearancePrefs(accent = Accent.OCEAN, seasonChoice = SeasonChoice.NONE))
         val bitmap = BitmapFactory.decodeFile(rule.saveScreen("appearance-ocean").absolutePath)
         val card = rule.onAllNodes(hasContentDescription("Fjordlys") and hasClickAction())[0].fetchSemanticsNode().boundsInRoot
         org.junit.Assert.assertEquals("Ocean focus ring follows the artwork", AvatarColor.OCEAN.argb.toInt(), bitmap.getPixel(card.left.toInt()+2, card.top.toInt()+40))
@@ -361,5 +367,44 @@ class AppScreensTest {
         renderMediaHome(fontScale = 2f)
         rule.onAllNodesWithText("Demoarkiv")[0].assertIsDisplayed()
         rule.saveScreen("11-home-media-font-2")
+    }
+
+    @Test fun temaHalloweenFullFollowsOctoberCalendar() {
+        rule.mainClock.autoAdvance=false
+        renderMediaHome(appearance=AppearancePrefs(),seasonalShowcase=true)
+        rule.onNodeWithText("Halloween").assertIsDisplayed()
+        rule.saveScreen("tema-halloween")
+    }
+    @Test fun temaChristmasFull() {
+        rule.mainClock.autoAdvance=false
+        renderMediaHome(appearance=SeasonChoice.CHRISTMAS.applyTo(AppearancePrefs()),seasonalShowcase=true)
+        rule.onNodeWithText("Jul").assertIsDisplayed()
+        rule.saveScreen("tema-jul")
+    }
+    @Test fun temaMidnightOcean() {
+        renderMediaHome(appearance=AppearancePrefs(visualTheme=app.stova.core.theme.VisualTheme.MIDNIGHT,accent=Accent.OCEAN,seasonChoice=SeasonChoice.NONE))
+        rule.saveScreen("tema-midnatt-hav")
+    }
+    @Test fun temaCinemaPearl() {
+        renderMediaHome(appearance=AppearancePrefs(visualTheme=app.stova.core.theme.VisualTheme.CINEMA,accent=Accent.PEARL,seasonChoice=SeasonChoice.NONE))
+        rule.saveScreen("tema-kino-perle")
+    }
+    @Test fun temaForestWithoutSeason() {
+        renderMediaHome(appearance=AppearancePrefs(seasonChoice=SeasonChoice.NONE))
+        rule.onNodeWithText("Halloween").assertDoesNotExist()
+        rule.saveScreen("tema-skog")
+    }
+
+    @Test fun temaSettingsPreview() {
+        runBlocking {
+            val p = container.profiles.create("Demo", AvatarColor.LIME, false)
+            container.profiles.update(p.id) { it.copy(appearance=SeasonChoice.HALLOWEEN.applyTo(it.appearance)) }
+            container.session.enter(p.id)
+        }
+        rule.waitForIdle()
+        rule.onAllNodesWithText("Innstillingar")[0].performClick()
+        rule.onNodeWithText("Utsjånad").performClick()
+        rule.onNodeWithText("Sesongpynt").assertIsDisplayed()
+        rule.saveScreen("tema-innstillingar")
     }
 }

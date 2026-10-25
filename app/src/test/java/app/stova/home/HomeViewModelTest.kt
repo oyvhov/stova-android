@@ -148,4 +148,17 @@ class HomeViewModelTest {
         assertEquals(Season.CHRISTMAS,rowSeasons.last())
         assertEquals(rowSeasons,spotSeasons)
     }
+
+    @Test fun enteringASeasonStartsWithItsLeadingTitleEvenIfTheOldPoolWasMidRotation() = runTest(UnconfinedTestDispatcher()) {
+        val vm = HomeViewModel(session(backgroundScope, StartFocus.FIRST_MEDIA_ROW), emptyList()) { profile ->
+            flowOf(if(profile.appearance.season()==Season.HALLOWEEN) listOf(entry("halloween"),entry("ordinary"))
+                else listOf(entry("first"),entry("second")))
+        }
+        vm.setCalendarDate(java.time.LocalDate.of(2026,11,2))
+        backgroundScope.launch { vm.spotlight.collect {} }
+        advanceTimeBy(SPOTLIGHT_MILLIS+1)
+        assertEquals("second",vm.spotlight.value?.item?.id)
+        vm.setCalendarDate(java.time.LocalDate.of(2026,10,25))
+        assertEquals("halloween",vm.spotlight.value?.item?.id)
+    }
 }

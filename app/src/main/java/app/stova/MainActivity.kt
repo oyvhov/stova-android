@@ -14,14 +14,9 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private val container get() = (application as StovaApplication).container
 
-    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
-        if (event.action == android.view.KeyEvent.ACTION_DOWN) app.stova.home.SeasonalInput.report()
-        return super.dispatchKeyEvent(event)
-    }
-
-    override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
-        if (event.action == android.view.MotionEvent.ACTION_DOWN) app.stova.home.SeasonalInput.report()
-        return super.dispatchTouchEvent(event)
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        app.stova.home.SeasonalInput.report()
     }
 
     override fun onStart() {

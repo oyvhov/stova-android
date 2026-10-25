@@ -19,7 +19,7 @@ class StovaThemeTest {
 
     @Test fun schemeUsesMutedForestTokens() {
         lateinit var scheme: ColorScheme
-        compose.setContent { StovaTheme { scheme = MaterialTheme.colorScheme } }
+        compose.setContent { StovaTheme(date = java.time.LocalDate.of(2026,6,1)) { scheme = MaterialTheme.colorScheme } }
         // Spole's matte FOREST surfaces, with a muted sage-lime accent and softer text (user wish 25.10.2026).
         assertEquals(Color(0xFFBAC79C), scheme.primary)
         assertEquals(Color(0xFF30372A), scheme.primaryContainer)

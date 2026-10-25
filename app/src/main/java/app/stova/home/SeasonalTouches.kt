@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.theme.*
@@ -24,8 +25,7 @@ fun SeasonalCountdown(season: Season) {
     val christmas = season == Season.CHRISTMAS
     val label = when (days) {
         0 -> stringResource(if (christmas) R.string.theme_peak_christmas else R.string.theme_peak_halloween)
-        1 -> stringResource(if (christmas) R.string.theme_one_christmas else R.string.theme_one_halloween)
-        else -> stringResource(if (christmas) R.string.theme_countdown_christmas else R.string.theme_countdown_halloween, days)
+        else -> pluralStringResource(if (christmas) R.plurals.theme_countdown_christmas else R.plurals.theme_countdown_halloween, days, days)
     }
     Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

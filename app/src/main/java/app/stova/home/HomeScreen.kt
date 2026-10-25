@@ -126,6 +126,7 @@ fun HomeContent(
     var placedRow by remember { mutableStateOf<HomeRowKey?>(null) }
     var viewerMoved by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
+    SeasonalScene(Modifier.matchParentSize())
     Column(Modifier.fillMaxSize().onPreviewKeyEvent { if (it.type == KeyEventType.KeyDown) viewerMoved = true; false }.semantics {
         // Automation marker, not user-facing copy. Null rows mean sources are still loading.
         if (rows != null) contentDescription = "home-ready"
@@ -193,7 +194,6 @@ fun HomeContent(
             }
         }
     }
-    SeasonalScene(Modifier.matchParentSize())
     }
 }
 

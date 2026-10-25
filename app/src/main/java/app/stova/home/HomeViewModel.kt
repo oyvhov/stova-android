@@ -44,6 +44,7 @@ class HomeViewModel(
     val focused: StateFlow<FocusedTarget?> = focusedState
     private val rotation = MutableStateFlow(true)
     private var spotlightIndex = 0
+    private var spotlightProfileSeason: Pair<String, app.stova.profiles.Season>? = null
     init {
         viewModelScope.launch { session.active.distinctUntilChangedBy { it?.id }.collect { focusedState.value = null; spotlightIndex = 0 } }
     }
@@ -53,7 +54,11 @@ class HomeViewModel(
     fun focus(target: FocusedTarget) { focusedState.value = target }
 
     private val spotlightPool: Flow<List<SpotlightEntry>> = seasonalProfile
-        .flatMapLatest { profile -> if (profile == null) flowOf(emptyList()) else spotlightSource(profile) }
+        .flatMapLatest { profile ->
+            val key = profile?.let { it.id to it.appearance.season() }
+            if (key != spotlightProfileSeason) { spotlightIndex = 0; spotlightProfileSeason = key }
+            if (profile == null) flowOf(emptyList()) else spotlightSource(profile)
+        }
         .distinctUntilChanged()
 
     /**
