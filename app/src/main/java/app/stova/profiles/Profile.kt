@@ -25,6 +25,7 @@ data class AppPrefs(
     val favorites: List<String> = emptyList(),
     val hidden: Set<String> = emptySet(),
     val kidAllowed: Set<String> = emptySet(),
+    val iconOverrides: Map<String, app.stova.apps.IconOverride> = emptyMap(),
 )
 
 @Serializable
@@ -40,6 +41,9 @@ enum class StartFocus { FIRST_MEDIA_ROW, FAVORITE_APPS }
 
 @Serializable
 data class AppearancePrefs(
+    val iconPack: String? = null,
+    val iconColor: IconColor = IconColor.ORIGINAL,
+    val iconFill: IconFill = IconFill.CENTER,
     val reduceMotion: Boolean = false,
     val strongFocus: Boolean = false,
     val cardSize: CardSize = CardSize.MEDIUM,
@@ -64,6 +68,8 @@ data class AppearancePrefs(
 
 @Serializable enum class CardSize(val width: Int) { SMALL(200), MEDIUM(248), LARGE(296) }
 @Serializable enum class AppStyle { BANNER, ICON }
+@Serializable enum class IconColor { ORIGINAL, ACCENT }
+@Serializable enum class IconFill { CENTER, CROP }
 @Serializable enum class MovieStyle { POSTER, WIDE }
 @Serializable enum class HeroSize(val fraction: Float) { COMPACT(0.40f), LARGE(0.52f) }
 @Serializable enum class SpotlightTime(val millis: Long) { FAST(8_000), NORMAL(12_000), SLOW(20_000) }

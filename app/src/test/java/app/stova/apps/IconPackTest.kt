@@ -91,12 +91,14 @@ class FakeIconPackSource : IconPackSource {
     var filter = """<item component="ComponentInfo{org.jellyfin.mobile/.MainActivity}" drawable="jellyfin"/>"""
     var catalog: String? = null
     var reads = 0
+    var missingDrawables: Set<String> = emptySet()
     val requested = mutableListOf<Pair<String, Int>>()
     override fun installed() = packs
     override fun appFilter(pack: IconPack): String { reads++; return filter }
     override fun drawableCatalog(pack: IconPack) = catalog
     override fun drawable(pack: IconPack, name: String, density: Int): Drawable? {
         requested += name to density
+        if (name in missingDrawables) return null
         return ApplicationProvider.getApplicationContext<Context>().getDrawable(app.stova.R.drawable.ic_stova_foreground)
     }
 }

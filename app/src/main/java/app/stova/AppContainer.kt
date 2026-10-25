@@ -1,6 +1,7 @@
 package app.stova
 
 import android.content.Context
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import app.stova.apps.AppArtCache
@@ -80,6 +81,15 @@ class AppContainer(
     }
 
     val appArt = AppArtCache(appContext)
+    val iconPacks get() = appArt.iconPacks
+
+    init {
+        appScope.launch {
+            appsIconPackChanges().collect { iconPacks.refresh() }
+        }
+    }
+
+    private fun appsIconPackChanges() = appCatalog.changes().onStart { emit(Unit) }
 
     val media = app.stova.media.MediaRepository(mediaAccounts, { account ->
         mediaAccounts.token(account.id)?.let { app.stova.media.net.JellyfinEmbyClient(account, it, mediaHttp, identity) }

@@ -22,6 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.stova.profiles.IconColor
+import app.stova.profiles.IconFill
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -53,6 +57,7 @@ fun AppTile(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
+    iconOverride: IconOverride? = null,
 ) {
     val prefs = LocalAppearance.current
     val source = remember { MutableInteractionSource() }
@@ -61,8 +66,9 @@ fun AppTile(
     val wide = prefs.cardSize.width.dp
     val height = wide * 9 / 16
     val width = if (iconStyle) height else wide
-    val banner by produceState<ImageBitmap?>(null, app.key, app.lastUpdateTime, iconStyle) {
-        value = if (iconStyle) art.icon(app) else art.banner(app)
+    val packs by art.iconPacks.packs.collectAsStateWithLifecycle()
+    val artwork by produceState<AppArtwork?>(null, app, art, prefs.iconPack, iconStyle, iconOverride, packs) {
+        value = art.artwork(app, prefs, iconOverride)
     }
     Column(modifier.width(width).semantics { contentDescription = app.label }
         .onKeyEvent { event ->
@@ -70,10 +76,12 @@ fun AppTile(
         }.combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick, onClick = onClick)) {
         Box(Modifier.size(width, height).focusOutline(source, shape, zoom = true).clip(shape)
             .background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
-            val image = banner
+            val image = artwork
             if (image != null) {
-                Image(image, contentDescription = null, contentScale = if (iconStyle) ContentScale.Fit else ContentScale.Crop,
-                    modifier = if (iconStyle) Modifier.size(height * 0.65f) else Modifier.fillMaxSize())
+                val centered = if (image.packIcon) prefs.iconFill == IconFill.CENTER else iconStyle
+                Image(image.bitmap, contentDescription = null, contentScale = if (centered) ContentScale.Fit else ContentScale.Crop,
+                    colorFilter = if (image.monochrome && prefs.iconColor == IconColor.ACCENT) ColorFilter.tint(MaterialTheme.colorScheme.primary) else null,
+                    modifier = if (centered) Modifier.size(height * if (image.packIcon) 0.82f else 0.65f) else Modifier.fillMaxSize())
             } else {
                 IconAndName(app, art, iconStyle)
             }
