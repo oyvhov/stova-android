@@ -10,9 +10,14 @@ private fun command(id: Int, type: String, extra: JsonObjectBuilder.() -> Unit =
 fun supportedFeatures(id: Int) = command(id, "supported_features") { putJsonObject("features") { put("coalesce_messages", 1) } }
 fun subscribeEntities(id: Int, ids: Set<String>) = command(id, "subscribe_entities") { putJsonArray("entity_ids") { ids.sorted().forEach { add(it) } } }
 fun unsubscribe(id: Int, subscription: Int) = command(id, "unsubscribe_events") { put("subscription", subscription) }
-fun callService(id: Int, domain: String, service: String, entityId: String, data: JsonObject) = command(id, "call_service") {
+fun callService(id: Int, domain: String, service: String, entityId: String, data: JsonObject, returnResponse: Boolean = false) = command(id, "call_service") {
     put("domain", domain); put("service", service); put("service_data", data); putJsonObject("target") { put("entity_id", entityId) }
+    if (returnResponse) put("return_response", true)
 }
+enum class HaRegistryKind(val endpoint: String) { AREA("area"), DEVICE("device"), ENTITY("entity") }
+fun registryRequest(id: Int, kind: HaRegistryKind) = command(id, "config/${kind.endpoint}_registry/list")
+fun forecastRequest(id: Int, entityId: String) = callService(id, "weather", "get_forecasts", entityId,
+    buildJsonObject { put("type", "daily") }, returnResponse = true)
 fun historyRequest(id: Int, entityId: String, start: Instant) = command(id, "history/history_during_period") {
     put("start_time", start.toString()); putJsonArray("entity_ids") { add(entityId) }
     put("minimal_response", true); put("no_attributes", true); put("significant_changes_only", false)

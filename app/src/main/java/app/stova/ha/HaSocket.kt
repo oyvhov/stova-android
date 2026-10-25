@@ -21,6 +21,8 @@ interface HaConnection {
     suspend fun callService(domain: String, service: String, entityId: String, data: JsonObject = JsonObject(emptyMap())): Boolean
     suspend fun history(entityId: String, hours: Int = 24): List<Pair<Long, Double>>
     suspend fun states(): List<HaEntity>
+    suspend fun registry(): HaRegistry = HaRegistry()
+    suspend fun forecast(entityId: String): List<ForecastDay> = emptyList()
 }
 
 class HaSocket(
@@ -163,4 +165,13 @@ class HaSocket(
         return (response?.get("result") as? JsonObject)?.let { parseHistory(it, entityId) }.orEmpty()
     }
     override suspend fun states(): List<HaEntity> = (request(::getStates)?.get("result") as? JsonArray)?.let(::parseStates).orEmpty()
+    override suspend fun registry(): HaRegistry = coroutineScope {
+        val results = HaRegistryKind.entries.map { kind -> async {
+            val response = request { registryRequest(it, kind) }
+            response?.get("result") as? JsonArray ?: JsonArray(emptyList())
+        } }.awaitAll()
+        parseRegistry(results[0], results[1], results[2])
+    }
+    override suspend fun forecast(entityId: String): List<ForecastDay> =
+        (request { forecastRequest(it, entityId) }?.get("result") as? JsonObject)?.let { parseForecast(it, entityId) }.orEmpty()
 }
