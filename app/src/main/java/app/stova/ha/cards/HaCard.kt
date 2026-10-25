@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.R
 import app.stova.ha.*
 import kotlinx.coroutines.*
@@ -22,12 +23,16 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
     var adjustment by remember(config.entityId) {mutableStateOf<ServiceCall?>(null)}
     var history by remember(config.entityId) {mutableStateOf(emptyList<Double>())}
     var forecast by remember(config.entityId) {mutableStateOf(emptyList<ForecastDay>())}
+    var energy by remember(config.entityId) {mutableStateOf<HaEntity?>(null)}
     val scope=rememberCoroutineScope()
-    LifecycleResumeEffect(config.entityId,visible,connection) {
+    val connectionStatus=connection?.status?.collectAsStateWithLifecycle()?.value
+    val latestEntity by rememberUpdatedState(entity)
+    LifecycleResumeEffect(config.entityId to (entity!=null),visible,connection to connectionStatus) {
         val job=scope.launch {
-            if(visible && connection!=null) when(config.type) {
+            if(visible && connection!=null && connectionStatus==HaStatus.CONNECTED) when(config.type) {
                 CardType.SENSOR -> if(entity?.state?.toDoubleOrNull()!=null) {do {history=connection.history(config.entityId).map {it.second};delay(300_000)} while(isActive)}
                 CardType.WEATHER -> do {forecast=connection.forecast(config.entityId);delay(900_000)} while(isActive)
+                CardType.ENERGY_PRICE -> do {latestEntity?.let {energy=connection.energy(it)};delay(900_000)} while(isActive)
                 else -> Unit
             }
         }
@@ -73,8 +78,8 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
             CardType.TOGGLE -> ToggleCard(shown)
             CardType.CLIMATE -> ClimateCard(shown)
             CardType.SENSOR -> {SensorCard(shown);if(history.size>1) Sparkline(history,Modifier.height(28.dp))}
-            CardType.WEATHER -> WeatherCard(shown,forecast,config.size)
-            CardType.ENERGY_PRICE -> EnergyPriceCard(shown)
+            CardType.WEATHER -> WeatherCard(shown,forecast,config.size,connection?.timeZone ?: java.time.ZoneId.systemDefault())
+            CardType.ENERGY_PRICE -> EnergyPriceCard(energy?.copy(state=shown.state) ?: shown)
             CardType.MEDIA_PLAYER -> MediaPlayerCard(shown,images,locked || pending,perform)
             CardType.SCENE -> SceneCard()
             CardType.CAMERA -> CameraCard(shown,images,visible,config.size)

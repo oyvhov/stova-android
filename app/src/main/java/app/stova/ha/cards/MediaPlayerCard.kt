@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
             entity.attributes["media_artist"]?.jsonPrimitive?.contentOrNull?.let {CardDetail(it)}
         }
     }
-    Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
+    FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
         StovaButton(stringResource(if(entity.state=="playing") R.string.ha_pause else R.string.ha_play),{perform(ServiceCall("media_player","media_play_pause"))},icon=if(entity.state=="playing") StovaIcons.Pause else StovaIcons.Play,enabled=!locked)
         StovaButton(stringResource(R.string.ha_v2_next),{perform(ServiceCall("media_player","media_next_track"))},enabled=!locked)
     }

@@ -23,6 +23,10 @@ import org.robolectric.annotation.Config
 class SmartHomeV2UiTest {
     @get:Rule val compose=createComposeRule()
     private val adult=Profile("a","A",AvatarColor.LIME)
+    @Test fun firstCardReceivesInitialRemoteFocus() {
+        compose.setContent {StovaTheme {SmartHomeContent(adult,listOf(CardConfig("a",CardType.LIGHT,"light.a",name="Leselys")),emptyMap(),HaStatus.CONNECTED)}}
+        compose.onNodeWithText("Leselys").assertIsFocused()
+    }
     @Test fun menuChangesSizeThenRestoresFocus() {
         var card by mutableStateOf(CardConfig("a",CardType.LIGHT,"light.a",name="Leselys"))
         compose.setContent {StovaTheme {SmartHomeContent(adult,listOf(card),emptyMap(),HaStatus.CONNECTED,onConfigure={card=it})}}

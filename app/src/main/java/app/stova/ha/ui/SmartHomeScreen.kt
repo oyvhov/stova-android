@@ -16,6 +16,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -71,6 +72,7 @@ import kotlin.math.ceil
     var editing by remember(profile.id) {mutableStateOf(false)}
     var menuId by remember(profile.id) {mutableStateOf<String?>(null)}
     var restoreId by remember(profile.id) {mutableStateOf<String?>(null)}
+    var initialFocusGiven by remember(profile.id) {mutableStateOf(false)}
     val focus=remember(profile.id) {mutableMapOf<String,FocusRequester>()}
     val list=rememberLazyListState()
     val visible by remember {derivedStateOf {list.layoutInfo.visibleItemsInfo.map {it.key}.toSet()}}
@@ -94,7 +96,7 @@ import kotlin.math.ceil
         if(status==HaStatus.NOT_CONFIGURED) {Text(stringResource(R.string.ha_setup_instruction));return@Column}
         if(feedback!=null) Text(stringResource(if(feedback==HaFeedback.FAILED) R.string.ha_v2_failed else R.string.ha_v2_done),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
         if(cards.isEmpty()) {
-            Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface,RoundedCornerShape(16.dp)).padding(32.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(32.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 Icon(StovaIcons.Home,null,Modifier.size(40.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(stringResource(R.string.ha_empty),style=MaterialTheme.typography.titleLarge)
                 Text(stringResource(R.string.ha_v2_empty_hint),style=MaterialTheme.typography.bodyLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -105,12 +107,17 @@ import kotlin.math.ceil
                 item(key="section-$index") {
                     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
                         Text(if(section.favorites) stringResource(R.string.ha_v2_favorites) else section.room ?: stringResource(R.string.ha_v2_unassigned),style=MaterialTheme.typography.titleMedium)
-                        Text(stringResource(R.string.ha_v2_room_count,section.cards.size),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(pluralStringResource(R.plurals.ha_v2_room_count,section.cards.size,section.cards.size),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 items(packCards(section.cards),key={band->"band-${band.first().card.id}"}) {band ->
                     CardBand(band) {card ->
-                        val requester=focus.getOrPut(card.id) {FocusRequester()}
+                        val requester=remember(card.id) {focus.getOrPut(card.id) {FocusRequester()}}
+                        LaunchedEffect(card.id) {
+                            if(!initialFocusGiven && card.id==cards.firstOrNull()?.id) {
+                                requester.requestFocus();initialFocusGiven=true
+                            }
+                        }
                         Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
                             HaCard(card,entities[card.entityId],!canControl(profile),{onPerform(it,card.entityId)},onDialog,images,
                                 visible="band-${band.first().card.id}" in visible,
@@ -135,7 +142,7 @@ import kotlin.math.ceil
     val selected=cards.mapNotNull {entities[it.entityId]}.distinctBy {it.id}
     val parts=mutableListOf<String>()
     val lights=selected.count {it.id.startsWith("light.") && it.state=="on"}
-    if(selected.any {it.id.startsWith("light.")}) parts+=stringResource(R.string.ha_v2_lights_on,lights)
+    if(selected.any {it.id.startsWith("light.")}) parts+=pluralStringResource(R.plurals.ha_v2_lights_on,lights,lights)
     selected.firstNotNullOfOrNull {if(it.id.startsWith("climate.")) it.attributes.number("current_temperature") else null}?.let {parts+=stringResource(R.string.ha_v2_inside,formatNumber(it,locale))}
     cards.firstOrNull {it.type==CardType.ENERGY_PRICE}?.let {entities[it.entityId]}?.let {e ->
         (stateText(e) as? StateText.Number)?.let {parts+=stringResource(R.string.ha_v2_price_now,formatNumber(it.value,locale),it.unit.orEmpty())}
@@ -172,7 +179,7 @@ import kotlin.math.ceil
     val scope=rememberCoroutineScope()
     fun save(updated:CardConfig) {onConfigure(updated);onDismiss()}
     Dialog(onDismiss) {
-        Column(Modifier.widthIn(max=560.dp).background(MaterialTheme.colorScheme.surface,RoundedCornerShape(16.dp)).padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.widthIn(max=560.dp).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Text(label,style=MaterialTheme.typography.titleLarge)
             LazyColumn(Modifier.heightIn(max=320.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 when(page) {

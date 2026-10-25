@@ -85,7 +85,13 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
     suspend fun remove(cardId: String) = edit { it.filterNot { c -> c.id == cardId } }
     suspend fun move(cardId: String, delta: Int) = edit { list ->
         val from = list.indexOfFirst { it.id == cardId }
-        if (from < 0) list else list.toMutableList().apply { add((from + delta).coerceIn(0,lastIndex), removeAt(from)) }
+        if (from < 0) list else {
+            val card=list[from]
+            val room=registry.value.entities[card.entityId]?.room
+            val section=list.indices.filter {i->list[i].favorite==card.favorite && (card.favorite || registry.value.entities[list[i].entityId]?.room==room)}
+            val target=section[(section.indexOf(from)+delta).coerceIn(0,section.lastIndex)]
+            list.toMutableList().apply {add(target,removeAt(from))}
+        }
     }
     suspend fun setOnHome(cardId: String, on: Boolean): Boolean {
         var accepted = false

@@ -78,4 +78,14 @@ class HaRepositoryTest {
         socket.entities.value=mapOf(light.id to light.copy(state="on"));runCurrent()
         assertTrue(job.await());assertTrue(repo.pending.value.isEmpty());assertEquals("on",repo.entities.value[light.id]?.state)
     }
+    @Test fun movingCardsStaysWithinTheirVisibleRoomSection() = runTest {
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection().apply {
+            registryValue=HaRegistry(mapOf("light.a" to HaEntityInfo(room="Stove"),"light.b" to HaEntityInfo(room="Gang"),"light.c" to HaEntityInfo(room="Stove")))
+        }
+        val repo=HaRepository(socket,s,p,backgroundScope);s.enter(p.create("A",AvatarColor.LIME,false).id);runCurrent()
+        listOf("light.a","light.b","light.c").forEach {repo.add(HaEntity(it,"on",JsonObject(emptyMap()),0,0),CardType.LIGHT);runCurrent()}
+        val last=repo.cards.value.last()
+        repo.move(last.id,-1);runCurrent()
+        assertEquals(listOf("light.c","light.a"),dashboardSections(repo.cards.value,socket.registryValue).first {it.room=="Stove"}.cards.map {it.entityId})
+    }
 }

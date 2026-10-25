@@ -4,6 +4,10 @@ import app.stova.ha.HaEntity
 import app.stova.ha.HaRegistry
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
+import app.stova.ha.text
 
 @Serializable enum class CardType { LIGHT, TOGGLE, CLIMATE, SENSOR, WEATHER, ENERGY_PRICE, MEDIA_PLAYER, SCENE, CAMERA, COVER, LOCK }
 @Serializable enum class CardSize(val columns: Int, val rows: Int) { S(1,1), M(2,1), L(2,2) }
@@ -25,7 +29,7 @@ fun cardTypesFor(entity: HaEntity): List<CardType> = when (entity.id.substringBe
     "light" -> listOf(CardType.LIGHT)
     "switch", "input_boolean", "fan" -> listOf(CardType.TOGGLE)
     "climate" -> listOf(CardType.CLIMATE)
-    "sensor" -> if (entity.attributes["raw_today"] is JsonArray || entity.attributes["today"] is JsonArray) listOf(CardType.ENERGY_PRICE, CardType.SENSOR) else listOf(CardType.SENSOR)
+    "sensor" -> if (isEnergyPrice(entity)) listOf(CardType.ENERGY_PRICE, CardType.SENSOR) else listOf(CardType.SENSOR)
     "binary_sensor" -> listOf(CardType.SENSOR)
     "weather" -> listOf(CardType.WEATHER)
     "media_player" -> listOf(CardType.MEDIA_PLAYER)
@@ -34,4 +38,12 @@ fun cardTypesFor(entity: HaEntity): List<CardType> = when (entity.id.substringBe
     "cover" -> listOf(CardType.COVER)
     "lock" -> listOf(CardType.LOCK)
     else -> emptyList()
+}
+
+fun isEnergyPrice(entity:HaEntity):Boolean {
+    val values=(entity.attributes["raw_today"] ?: entity.attributes["today"]) as? JsonArray
+    val curve=values?.any { (it as? JsonPrimitive)?.doubleOrNull!=null || (it as? JsonObject)?.number("value")!=null }==true
+    val unit=entity.attributes.text("unit_of_measurement").orEmpty().lowercase()
+    return curve || (unit.contains("/kwh") && unit!="kwh/kwh") ||
+        (unit in setOf("øre","ore","öre","nok","kr","eur") && (entity.id.contains("price") || entity.id.contains("pris")))
 }

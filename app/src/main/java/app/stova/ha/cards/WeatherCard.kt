@@ -24,14 +24,14 @@ fun weatherIcon(state:String) = when(state) {
     "windy","windy-variant" -> StovaIcons.Wind
     else -> StovaIcons.Cloud
 }
-@Composable fun WeatherCard(entity:HaEntity,forecast:List<ForecastDay> = emptyList(),size:CardSize=CardSize.S) {
+@Composable fun WeatherCard(entity:HaEntity,forecast:List<ForecastDay> = emptyList(),size:CardSize=CardSize.S,zone:ZoneId=ZoneId.systemDefault()) {
     CardValue(entity.attributes.number("temperature")?.let { formatNumber(it,LocalConfiguration.current.locales[0]) } ?: stringResource(R.string.ha_dash), entity.attributes["temperature_unit"]?.jsonPrimitive?.contentOrNull)
     CardDetail(entityStateLabel(entity))
     if(forecast.isEmpty()) CardDetail(stringResource(R.string.ha_v2_forecast_missing)) else {
         val locale=LocalConfiguration.current.locales[0]
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
             forecast.take(5).forEach {day -> Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(4.dp)) {
-                Text(Instant.ofEpochMilli(day.time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("EEE",locale)),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(Instant.ofEpochMilli(day.time).atZone(zone).format(DateTimeFormatter.ofPattern("EEE",locale)),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 Icon(weatherIcon(day.condition),null,Modifier.size(18.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(formatNumber(day.high,locale)+"°",style=MaterialTheme.typography.labelMedium)
                 if(size!=CardSize.S) day.low?.let {Text(formatNumber(it,locale)+"°",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}

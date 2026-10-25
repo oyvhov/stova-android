@@ -41,4 +41,9 @@ class HaCatalogTest {
     @Test fun normalServiceDoesNotRequestAResponse() {
         assertNull(splitIncoming(callService(1,"light","toggle","light.a",JsonObject(emptyMap()))).single()["return_response"])
     }
+    @Test fun disabledRegistryEntitiesRemainAvailableUnderShowAll() {
+        val registry=parseRegistry(array("[]"),array("[]"),array("""[{"entity_id":"sensor.battery","disabled_by":"integration","original_name":"Batteri"}]"""))
+        val item=entityCatalog(emptyList(),registry).single()
+        assertTrue(item.hidden);assertEquals("Batteri",item.name);assertEquals("unavailable",item.entity.state)
+    }
 }

@@ -7,11 +7,16 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.json.*
 import okhttp3.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.time.LocalDate
+import java.time.ZoneId
 
 enum class HaStatus { NOT_CONFIGURED, DISCONNECTED, CONNECTING, CONNECTED, SIGNED_OUT }
 
 /** UI and repositories depend on the connection contract; transport details stay here. */
 interface HaConnection {
+    val timeZone:ZoneId get()=ZoneId.systemDefault()
     val status: StateFlow<HaStatus>
     val entities: StateFlow<Map<String, HaEntity>>
     /** Received snapshots, excluding the uninitialised empty StateFlow value. */
@@ -23,6 +28,7 @@ interface HaConnection {
     suspend fun states(): List<HaEntity>
     suspend fun registry(): HaRegistry = HaRegistry()
     suspend fun forecast(entityId: String): List<ForecastDay> = emptyList()
+    suspend fun energy(entity:HaEntity):HaEntity = entity
 }
 
 class HaSocket(
@@ -54,6 +60,11 @@ class HaSocket(
     private var reconnect: Job? = null
     private var stopping: Job? = null
     private val pending = mutableMapOf<Int, CompletableDeferred<JsonObject?>>()
+    private val priceMutex=Mutex()
+    private var priceResponse:JsonObject?=null
+    private var pricesAt=0L
+    @Volatile private var homeZone=ZoneId.systemDefault()
+    override val timeZone:ZoneId get()=homeZone
     init {
         require(backoff.isNotEmpty())
         scope.launch {
@@ -167,12 +178,25 @@ class HaSocket(
     override suspend fun states(): List<HaEntity> = (request(::getStates)?.get("result") as? JsonArray)?.let(::parseStates)
         ?: throw java.io.IOException("HA states unavailable")
     override suspend fun registry(): HaRegistry = coroutineScope {
+        val config=async {request(::getConfig)?.get("result") as? JsonObject}
         val results = HaRegistryKind.entries.map { kind -> async {
             val response = request { registryRequest(it, kind) }
             response?.get("result") as? JsonArray ?: JsonArray(emptyList())
         } }.awaitAll()
+        config.await()?.text("time_zone")?.let {zone->runCatching {ZoneId.of(zone)}.getOrNull()?.let {homeZone=it}}
         parseRegistry(results[0], results[1], results[2])
     }
     override suspend fun forecast(entityId: String): List<ForecastDay> =
         (request { forecastRequest(it, entityId) }?.get("result") as? JsonObject)?.let { parseForecast(it, entityId) }.orEmpty()
+    override suspend fun energy(entity:HaEntity):HaEntity {
+        if(app.stova.ha.cards.pricePoints(entity).isNotEmpty()) return entity
+        val result=priceMutex.withLock {
+            if(System.currentTimeMillis()-pricesAt>900_000 || priceResponse==null) {
+                priceResponse=request {tibberPricesRequest(it,LocalDate.now(timeZone))}?.get("result") as? JsonObject
+                pricesAt=System.currentTimeMillis()
+            }
+            priceResponse
+        } ?: return entity
+        return entity.copy(attributes=JsonObject(entity.attributes+parseTibberPrices(result,entity,LocalDate.now(timeZone),timeZone)))
+    }
 }

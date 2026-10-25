@@ -52,7 +52,7 @@ fun chipText(config:CardConfig,entity:HaEntity?,locale:Locale):ChipContent {
                 CardType.MEDIA_PLAYER -> StovaIcons.Play;CardType.SCENE -> StovaIcons.Home
                 CardType.CAMERA -> StovaIcons.Camera;else -> StovaIcons.Sensor
             }
-            Row(Modifier.weight(1f,fill=false).background(MaterialTheme.colorScheme.surface,RoundedCornerShape(StovaShapes.Medium)).padding(horizontal=10.dp,vertical=6.dp),
+            Row(Modifier.weight(1f,fill=false).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.medium).padding(horizontal=10.dp,vertical=6.dp),
                 verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                 Icon(icon,null,Modifier.size(16.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(chip.textResource?.let {stringResource(it)} ?: chip.text,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurface,maxLines=1,overflow=TextOverflow.Ellipsis)

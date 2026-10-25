@@ -215,14 +215,20 @@
     <string name="ha_v2_hide_extra">Hide extra</string>
     <string name="ha_v2_search">Search by name or room</string>
     <string name="ha_v2_added">Added</string>
-    <string name="ha_v2_entities">%1$d entities</string>
+    <plurals name="ha_v2_entities">
+        <item quantity="one">%1$d entity</item>
+        <item quantity="other">%1$d entities</item>
+    </plurals>
     <string name="ha_v2_choose_hint">Choose what matters to you</string>
     <string name="ha_v2_unassigned">Other entities</string>
     <string name="ha_v2_favorites">Favourites</string>
     <string name="ha_v2_failed_load">Could not load entities</string>
     <string name="ha_v2_retry">Try again</string>
     <string name="ha_v2_no_matches">No matches. Try another name or room.</string>
-    <string name="ha_v2_lights_on">%1$d lights on</string>
+    <plurals name="ha_v2_lights_on">
+        <item quantity="one">%1$d light on</item>
+        <item quantity="other">%1$d lights on</item>
+    </plurals>
     <string name="ha_v2_inside">%1$s° indoors</string>
     <string name="ha_v2_price_now">%1$s %2$s now</string>
     <string name="ha_v2_overview">Your home, at a glance</string>
@@ -266,8 +272,6 @@
     <string name="ha_v2_lock_action">Lock</string>
     <string name="ha_v2_unlock_action">Unlock</string>
     <string name="ha_v2_lock_confirm">Change the lock “%1$s”?</string>
-    <string name="ha_v2_confirm">Confirm</string>
-    <string name="ha_v2_cancel">Cancel</string>
     <string name="ha_v2_history">Last 24 hours</string>
     <string name="ha_v2_today">Today</string>
     <string name="ha_v2_tomorrow">Tomorrow</string>
@@ -287,10 +291,9 @@
     <string name="ha_v2_color_temp">%1$d K</string>
     <string name="ha_v2_camera_live">Snapshot · 10 s</string>
     <string name="ha_v2_fullscreen">Full screen · 2 s</string>
-    <string name="ha_v2_position">%1$d %% open</string>
-    <string name="ha_v2_sensor_icon">Sensor</string>
     <string name="ha_v2_sun_icon">Sun</string>
-    <string name="ha_v2_room_count">%1$d cards</string>
-    <string name="ha_v2_nav_hint">Up / down: move focus</string>
-    <string name="ha_v2_no_registry">Room information is unavailable</string>
+    <plurals name="ha_v2_room_count">
+        <item quantity="one">%1$d card</item>
+        <item quantity="other">%1$d cards</item>
+    </plurals>
 </resources>

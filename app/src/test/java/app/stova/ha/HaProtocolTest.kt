@@ -7,6 +7,9 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class HaProtocolTest {
+    @Test fun configRequestReadsHomeTimeZone() {
+        assertEquals("get_config",splitIncoming(getConfig(10)).single()["type"]!!.jsonPrimitive.content)
+    }
     @Test fun coalescedArraySplit() = assertEquals(2, splitIncoming("""[{"id":2,"type":"event"},{"id":2,"type":"event"}]""").size)
     @Test fun subscribeSortsIds() = assertTrue(subscribeEntities(3, setOf("sensor.b", "light.a")).contains(""""entity_ids":["light.a","sensor.b"]"""))
     @Test fun historySkipsNonNumeric() = assertEquals(listOf(1_700_000_000_000L to 21.5), parseHistory(StovaJson.parseToJsonElement("""{"sensor.t":[{"s":"21.5","lu":1700000000.0},{"s":"unavailable","lu":1700000060.0}]}""").jsonObject, "sensor.t"))

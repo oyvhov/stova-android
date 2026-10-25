@@ -13,7 +13,7 @@ import app.stova.ha.text
     entity.attributes.number("brightness")?.takeIf {entity.state=="on"}?.let {brightness ->
         val percent=(brightness/255*100).toInt().coerceIn(0,100)
         CardDetail(stringResource(R.string.ha_v2_brightness,percent))
-        LinearProgressIndicator(progress={percent/100f},modifier=Modifier.fillMaxWidth().height(3.dp),color=app.stova.core.theme.StovaColors.Caution,trackColor=MaterialTheme.colorScheme.surfaceVariant)
+        LinearProgressIndicator(progress={percent/100f},modifier=Modifier.fillMaxWidth().height(3.dp),color=MaterialTheme.colorScheme.primary,trackColor=MaterialTheme.colorScheme.surfaceVariant)
     }
     entity.attributes.number("color_temp_kelvin")?.takeIf {entity.state=="on"}?.let {CardDetail(stringResource(R.string.ha_v2_color_temp,it.toInt()))}
 }

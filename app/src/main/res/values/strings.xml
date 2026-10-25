@@ -215,14 +215,20 @@
     <string name="ha_v2_hide_extra">Skjul ekstra</string>
     <string name="ha_v2_search">Søk etter namn eller rom</string>
     <string name="ha_v2_added">Lagt til</string>
-    <string name="ha_v2_entities">%1$d einingar</string>
+    <plurals name="ha_v2_entities">
+        <item quantity="one">%1$d eining</item>
+        <item quantity="other">%1$d einingar</item>
+    </plurals>
     <string name="ha_v2_choose_hint">Vel det du vil ha nær deg</string>
     <string name="ha_v2_unassigned">Andre einingar</string>
     <string name="ha_v2_favorites">Favorittar</string>
     <string name="ha_v2_failed_load">Kunne ikkje hente einingar</string>
     <string name="ha_v2_retry">Prøv igjen</string>
     <string name="ha_v2_no_matches">Ingen treff. Prøv eit anna namn eller rom.</string>
-    <string name="ha_v2_lights_on">%1$d lys på</string>
+    <plurals name="ha_v2_lights_on">
+        <item quantity="one">%1$d lys på</item>
+        <item quantity="other">%1$d lys på</item>
+    </plurals>
     <string name="ha_v2_inside">%1$s° inne</string>
     <string name="ha_v2_price_now">%1$s %2$s no</string>
     <string name="ha_v2_overview">Heimen din, i eit blikk</string>
@@ -266,8 +272,6 @@
     <string name="ha_v2_lock_action">Lås</string>
     <string name="ha_v2_unlock_action">Lås opp</string>
     <string name="ha_v2_lock_confirm">Endre låsen «%1$s»?</string>
-    <string name="ha_v2_confirm">Stadfest</string>
-    <string name="ha_v2_cancel">Avbryt</string>
     <string name="ha_v2_history">Siste 24 timar</string>
     <string name="ha_v2_today">I dag</string>
     <string name="ha_v2_tomorrow">I morgon</string>
@@ -287,10 +291,9 @@
     <string name="ha_v2_color_temp">%1$d K</string>
     <string name="ha_v2_camera_live">Stillbilete · 10 s</string>
     <string name="ha_v2_fullscreen">Fullskjerm · 2 s</string>
-    <string name="ha_v2_position">%1$d %% open</string>
-    <string name="ha_v2_sensor_icon">Sensor</string>
     <string name="ha_v2_sun_icon">Sol</string>
-    <string name="ha_v2_room_count">%1$d kort</string>
-    <string name="ha_v2_nav_hint">Opp / ned: flytt fokus</string>
-    <string name="ha_v2_no_registry">Romdata er ikkje tilgjengelege</string>
+    <plurals name="ha_v2_room_count">
+        <item quantity="one">%1$d kort</item>
+        <item quantity="other">%1$d kort</item>
+    </plurals>
 </resources>

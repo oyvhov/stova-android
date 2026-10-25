@@ -5,7 +5,8 @@ import app.stova.ha.cards.friendlyName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
-@Serializable data class HaEntityInfo(val name: String? = null, val room: String? = null, val hidden: Boolean = false)
+@Serializable data class HaEntityInfo(val name: String? = null, val room: String? = null, val hidden: Boolean = false,
+    val originalName:String?=null,val disabled:Boolean=false)
 @Serializable data class HaRegistry(val entities: Map<String, HaEntityInfo> = emptyMap())
 data class HaCatalogItem(val entity: HaEntity, val name: String, val room: String?, val hidden: Boolean)
 internal fun JsonObject.text(key: String) = (get(key) as? JsonPrimitive)?.contentOrNull
@@ -17,14 +18,17 @@ fun parseRegistry(areas: JsonArray, devices: JsonArray, entities: JsonArray): Ha
         val id = j.text("entity_id") ?: return@mapNotNull null
         val areaId = j.text("area_id") ?: deviceRooms[j.text("device_id")]
         id to HaEntityInfo(j.text("name"), rooms[areaId],
-            j.text("hidden_by") != null || j.text("disabled_by") != null || j.text("entity_category") in setOf("config", "diagnostic"))
+            j.text("hidden_by") != null || j.text("disabled_by") != null || j.text("entity_category") in setOf("config", "diagnostic"),
+            originalName=j.text("original_name"),disabled=j.text("disabled_by")!=null)
     }.toMap())
 }
 
-fun entityCatalog(states: List<HaEntity>, registry: HaRegistry): List<HaCatalogItem> = states
+fun entityCatalog(states: List<HaEntity>, registry: HaRegistry): List<HaCatalogItem> = (states + registry.entities
+    .filter {(id,info)->info.disabled && states.none {it.id==id}}
+    .map {(id,_)->HaEntity(id,"unavailable",JsonObject(emptyMap()),0,0)})
     .filter { cardTypesFor(it).isNotEmpty() }.map { entity ->
         val info = registry.entities[entity.id]
-        HaCatalogItem(entity, info?.name?.takeIf(String::isNotBlank) ?: friendlyName(entity), info?.room, info?.hidden == true)
+        HaCatalogItem(entity, info?.name?.takeIf(String::isNotBlank) ?: entity.attributes.text("friendly_name") ?: info?.originalName ?: entity.id, info?.room, info?.hidden == true)
     }.sortedWith(compareBy<HaCatalogItem> { it.room == null }.thenBy { it.room?.lowercase().orEmpty() }.thenBy { it.name.lowercase() })
 
 @Serializable data class ForecastDay(val time: Long, val condition: String, val high: Double, val low: Double? = null)

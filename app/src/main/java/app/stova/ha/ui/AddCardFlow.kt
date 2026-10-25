@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -92,7 +93,7 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
         if(failed) Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
             Text(stringResource(R.string.ha_v2_failed_load));StovaButton(stringResource(R.string.ha_v2_retry),{retry++})
         }
-        if(!loading && !failed && status==HaStatus.CONNECTED) Text(stringResource(R.string.ha_v2_entities,filtered.size),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        if(!loading && !failed && status==HaStatus.CONNECTED) Text(pluralStringResource(R.plurals.ha_v2_entities,filtered.size,filtered.size),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
         LazyVerticalGrid(GridCells.Fixed(3),Modifier.weight(1f),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             if(loading) items(6) { EntitySkeleton() }
             else if(status==HaStatus.CONNECTED && !failed) {
@@ -110,7 +111,7 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
 }
 
 @Composable private fun EntityTile(item:HaCatalogItem,added:Boolean,enabled:Boolean,onClick:()->Unit) {
-    val source=remember {MutableInteractionSource()};val shape=RoundedCornerShape(16.dp)
+    val source=remember {MutableInteractionSource()};val shape=MaterialTheme.shapes.large
     val type=cardTypesFor(item.entity).first()
     Column(Modifier.fillMaxWidth().heightIn(min=128.dp).focusOutline(source,shape).clip(shape).background(MaterialTheme.colorScheme.surface)
         .clickable(source,null,enabled=enabled && !added,role=Role.Button,onClick=onClick).padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -127,7 +128,7 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
 }
 
 @Composable private fun EntitySkeleton() {
-    Column(Modifier.fillMaxWidth().height(128.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
+    Column(Modifier.fillMaxWidth().height(128.dp).clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surface).padding(16.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
         repeat(3) {Box(Modifier.fillMaxWidth(if(it==1) .55f else .8f).height(14.dp).background(MaterialTheme.colorScheme.surfaceVariant,RoundedCornerShape(4.dp)))}
     }
 }
