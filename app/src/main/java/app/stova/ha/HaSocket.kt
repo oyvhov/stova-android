@@ -28,6 +28,7 @@ interface HaConnection {
     suspend fun states(): List<HaEntity>
     suspend fun registry(): HaRegistry = HaRegistry()
     suspend fun forecast(entityId: String): List<ForecastDay> = emptyList()
+    suspend fun hourlyForecast(entityId:String):List<ForecastDay> = emptyList()
     suspend fun energy(entity:HaEntity):HaEntity = entity
 }
 
@@ -188,6 +189,8 @@ class HaSocket(
     }
     override suspend fun forecast(entityId: String): List<ForecastDay> =
         (request { forecastRequest(it, entityId) }?.get("result") as? JsonObject)?.let { parseForecast(it, entityId) }.orEmpty()
+    override suspend fun hourlyForecast(entityId:String):List<ForecastDay> =
+        (request {forecastRequest(it,entityId,"hourly")}?.get("result") as? JsonObject)?.let {parseForecast(it,entityId,24)}.orEmpty()
     override suspend fun energy(entity:HaEntity):HaEntity {
         if(app.stova.ha.cards.pricePoints(entity).isNotEmpty()) return entity
         val result=priceMutex.withLock {

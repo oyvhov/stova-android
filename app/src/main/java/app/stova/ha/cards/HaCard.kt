@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -18,10 +20,9 @@ import kotlinx.coroutines.*
 @Composable
 fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCall)->Unit,openDialog:(CardDialog)->Unit,
     images:HaImageSource?=null,visible:Boolean=true,onEdit:(()->Unit)?=null,onMenu:(()->Unit)?=null,
-    pending:Boolean=false,connection:HaConnection?=null,modifier:Modifier=Modifier,room:String?=null) {
+    pending:Boolean=false,connection:HaConnection?=null,modifier:Modifier=Modifier,room:String?=null,
+    onMove:((Int)->Unit)?=null,editing:Boolean=false,completed:Boolean=false,inputSuspended:Boolean=false) {
     val unavailable=stateText(entity)==StateText.Unavailable
-    var adjusting by remember(config.entityId,entity) {mutableStateOf(entity)}
-    var adjustment by remember(config.entityId) {mutableStateOf<ServiceCall?>(null)}
     var history by remember(config.entityId) {mutableStateOf(emptyList<Double>())}
     var forecast by remember(config.entityId) {mutableStateOf(emptyList<ForecastDay>())}
     var energy by remember(config.entityId) {mutableStateOf<HaEntity?>(null)}
@@ -39,8 +40,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
         }
         onPauseOrDispose {job.cancel()}
     }
-    LaunchedEffect(adjustment) {adjustment?.let {delay(250);perform(it);adjustment=null}}
-    val shown=if(adjustment!=null) adjusting else entity
+    val shown=entity
     val artwork=shown?.attributes?.text("entity_picture")?.takeIf {config.type==CardType.MEDIA_PLAYER && config.size!=CardSize.S}
     val leading:(@Composable (Modifier)->Unit)?=if(artwork!=null && images!=null) {
         {imageModifier -> HaImage(artwork,images,imageModifier,contentScale=ContentScale.Crop)}
@@ -49,31 +49,33 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
         CardType.MEDIA_PLAYER -> if(shown.state=="playing") entityStateLabel(shown) else null
         else -> null
     }
-    val menu=onMenu ?: onEdit
+    fun panel() {if(entity!=null) openDialog(controlPanel(config.type,entity.id))}
     fun click() {
         if(onEdit!=null) {onEdit();return}
         if(unavailable || entity==null) return
+        if(locked) {panel();return}
         when(config.type) {
-            CardType.SENSOR -> if(entity.state.toDoubleOrNull()!=null) openDialog(CardDialog.Graph(entity.id))
+            CardType.SENSOR -> openDialog(CardDialog.Graph(entity.id))
             CardType.ENERGY_PRICE -> openDialog(CardDialog.Graph(entity.id,true))
             CardType.CAMERA -> openDialog(CardDialog.Camera(entity.id))
             CardType.CLIMATE -> if(!locked) openDialog(CardDialog.Climate(entity.id))
             CardType.COVER -> if(!locked) openDialog(CardDialog.Cover(entity.id))
             CardType.LOCK -> if(!locked) openDialog(CardDialog.Lock(entity.id))
-            else -> if(!locked && !pending) primaryAction(config.type,entity)?.let(perform)
+            else -> if(!pending) primaryAction(config.type,entity)?.let(perform) ?: panel()
         }
     }
     CardFrame(config,cardIcon(config.type,shown,config.icon),config.name ?: entity?.let(::friendlyName) ?: config.entityId,
-        badge,locked,::click,onLongClick={
-            if(menu!=null) menu() else if(!unavailable && entity!=null) when(config.type) {
-                CardType.LIGHT -> if(!locked) openDialog(CardDialog.Brightness(entity.id))
-                CardType.SENSOR,CardType.ENERGY_PRICE -> openDialog(CardDialog.Graph(entity.id,config.type==CardType.ENERGY_PRICE))
-                else -> Unit
+        badge,locked,::click,onLongClick=::panel,onMenu=onMenu,
+        modifier=modifier.alpha(if(unavailable) 0.55f else 1f),glow=if(config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,leading=leading,
+        onMove=onMove,editing=editing,inputSuspended=inputSuspended,onMediaKey={key ->
+            val service=when(key) {
+                Key.MediaPlayPause->"media_play_pause";Key.MediaPlay->"media_play";Key.MediaPause->"media_pause"
+                Key.MediaFastForward,Key.MediaNext->"media_next_track"
+                Key.MediaRewind,Key.MediaPrevious->"media_previous_track"
+                else->null
             }
-        },modifier=modifier,glow=if(config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,leading=leading,onDirection={direction ->
-            val call=shown?.takeUnless {unavailable}?.let {directionAction(config.type,it,direction)}
-            if(call!=null && onEdit==null) {
-                if(!locked && !pending) {adjusting=optimisticEntity(shown!!,call);adjustment=call}
+            if(config.type==CardType.MEDIA_PLAYER && service!=null) {
+                if(!locked && !pending && !unavailable && !editing) perform(ServiceCall("media_player",service))
                 true
             } else false
         }) {
@@ -85,8 +87,8 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
             CardType.SENSOR -> {SensorCard(shown);if(history.size>1) Sparkline(history,Modifier.height(28.dp))}
             CardType.WEATHER -> WeatherCard(shown,forecast,config.size,connection?.timeZone ?: java.time.ZoneId.systemDefault())
             CardType.ENERGY_PRICE -> EnergyPriceCard(energy?.copy(state=shown.state) ?: shown,connection?.timeZone ?: java.time.ZoneId.systemDefault())
-            CardType.MEDIA_PLAYER -> MediaPlayerCard(shown,locked || pending,perform,config.size)
-            CardType.SCENE -> SceneCard()
+            CardType.MEDIA_PLAYER -> MediaPlayerCard(shown,true,{},config.size)
+            CardType.SCENE -> if(completed) CardValue(stringResource(app.stova.R.string.ha_action_ran)) else SceneCard()
             CardType.CAMERA -> CameraCard(shown,images,visible,config.size)
             CardType.COVER -> {CardValue(entityStateLabel(shown));shown.attributes.number("current_position")?.let {CardDetail(stringResource(R.string.ha_percent,it.toInt()))}}
             CardType.LOCK -> CardValue(entityStateLabel(shown))

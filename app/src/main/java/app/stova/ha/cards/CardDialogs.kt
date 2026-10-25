@@ -29,87 +29,77 @@ sealed interface CardDialog {
     data class Camera(override val entityId:String):CardDialog
     data class Cover(override val entityId:String):CardDialog
     data class Lock(override val entityId:String):CardDialog
+    data class Controls(override val entityId:String,val type:CardType):CardDialog
+}
+
+fun controlPanel(type:CardType,id:String):CardDialog=when(type) {
+    CardType.LIGHT->CardDialog.Brightness(id)
+    CardType.CLIMATE->CardDialog.Climate(id)
+    CardType.SENSOR->CardDialog.Graph(id)
+    CardType.ENERGY_PRICE->CardDialog.Graph(id,true)
+    CardType.CAMERA->CardDialog.Camera(id)
+    CardType.COVER->CardDialog.Cover(id)
+    CardType.LOCK->CardDialog.Lock(id)
+    else->CardDialog.Controls(id,type)
 }
 
 @Composable
-fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaConnection,images:HaImageSource?,locked:Boolean,perform:(ServiceCall,String)->Unit,onDismiss:()->Unit) {
+fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaConnection,images:HaImageSource?,locked:Boolean,
+    perform:(ServiceCall,String)->Unit,onDismiss:()->Unit,room:String?=null,name:String?=null,
+    send:suspend (ServiceCall,String)->Boolean={call,id->perform(call,id);true}) {
     if(dialog==null) return
     val entity=entities[dialog.entityId]
-    val locale=LocalConfiguration.current.locales[0]
     val energyGraph=dialog is CardDialog.Graph && dialog.today
     Dialog(onDismiss,properties=DialogProperties(usePlatformDefaultWidth=dialog !is CardDialog.Camera && !energyGraph)) {
         val windowHeight=with(LocalDensity.current) {LocalWindowInfo.current.containerSize.height.toDp()}
         val frame=if(dialog is CardDialog.Camera) Modifier.fillMaxSize() else Modifier
-            .heightIn(max=(windowHeight-96.dp).coerceAtLeast(160.dp)).verticalScroll(rememberScrollState())
-        Column((if(energyGraph) frame.width(640.dp) else frame).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(if(energyGraph) 12.dp else 16.dp)) {
+            .width(if(energyGraph) 640.dp else 480.dp).heightIn(max=(windowHeight-96.dp).coerceAtLeast(160.dp))
+            .background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).verticalScroll(rememberScrollState())
+        Column(frame.padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            Text(name ?: entity?.let(::friendlyName) ?: dialog.entityId,style=MaterialTheme.typography.titleLarge)
+            room?.takeIf {it.isNotBlank()}?.let {CardDetail(it)}
+            if(locked || dialog.entityId.startsWith("alarm_control_panel.")) CardDetail(stringResource(R.string.ha_action_read_only))
             when(dialog) {
-                is CardDialog.Brightness -> {
-                    var percent by remember(dialog.entityId) { mutableIntStateOf(((entity?.attributes?.number("brightness") ?: 255.0)/255*100).toInt().coerceIn(1,100)) }
-                    var changed by remember(dialog.entityId) { mutableStateOf(false) }
-                    LaunchedEffect(percent,changed) { if(changed && !locked) { delay(300); perform(brightnessCall(percent),dialog.entityId) } }
-                    fun adjust(delta:Int) { if(!locked) {percent=(percent+delta).coerceIn(1,100);changed=true} }
-                    Column(Modifier.onPreviewKeyEvent { if(it.type==KeyEventType.KeyDown) when(it.key) { Key.DirectionLeft->{adjust(-10);true}; Key.DirectionRight->{adjust(10);true};else->false } else false }) {
-                        Text(stringResource(R.string.ha_brightness)); CardValue(stringResource(R.string.ha_percent,percent))
-                        Row(horizontalArrangement=Arrangement.spacedBy(16.dp)) {
-                            StovaButton(stringResource(R.string.ha_decrease),{adjust(-10)},enabled=!locked)
-                            StovaButton(stringResource(R.string.ha_increase),{adjust(10)},enabled=!locked)
-                        }
-                    }
-                }
-                is CardDialog.Climate -> {
-                    var current by remember(dialog.entityId) { mutableStateOf(entity) }
-                    fun adjust(delta:Double) { current?.let { e -> if(!locked) {
-                        val call=climateCall(e,delta); current=e.copy(attributes=JsonObject(e.attributes+call.data));perform(call,dialog.entityId)
-                    } } }
-                    Column(Modifier.onPreviewKeyEvent { if(it.type==KeyEventType.KeyDown) when(it.key) { Key.DirectionLeft->{adjust(-0.5);true}; Key.DirectionRight->{adjust(0.5);true};else->false } else false }) {
-                        Text(stringResource(R.string.ha_target)); CardValue(current?.attributes?.number("temperature")?.let {formatNumber(it,locale)} ?: stringResource(R.string.ha_unavailable))
-                        Row(horizontalArrangement=Arrangement.spacedBy(16.dp)) {
-                            StovaButton(stringResource(R.string.ha_decrease),{adjust(-0.5)},enabled=!locked)
-                            StovaButton(stringResource(R.string.ha_increase),{adjust(0.5)},enabled=!locked)
-                        }
-                    }
-                }
-                is CardDialog.Graph -> {
-                    var history by remember(dialog.entityId) { mutableStateOf(emptyList<Double>()) }
-                    var energy by remember(dialog.entityId) {mutableStateOf(entity)}
-                    LaunchedEffect(dialog.entityId) { if(entity!=null && dialog.today) {energy=socket.energy(entity);history=priceCurve(energy!!)} else history=socket.history(dialog.entityId).map { it.second } }
-                    Text(entity?.let(::friendlyName) ?: dialog.entityId)
-                    if(dialog.today && entity!=null) {
-                        var tomorrow by remember {mutableStateOf(false)}
-                        var quarters by remember {mutableStateOf(false)}
-                        FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                            StovaButton(stringResource(R.string.ha_v2_today),{tomorrow=false},primary=!tomorrow)
-                            StovaButton(stringResource(R.string.ha_v2_tomorrow),{tomorrow=true},primary=tomorrow)
-                            StovaButton(stringResource(R.string.ha_v2_hourly),{quarters=false},primary=!quarters)
-                            StovaButton(stringResource(R.string.ha_v2_quarter_hours),{quarters=true},primary=quarters)
-                        }
-                        PriceChart(energy ?: entity,tomorrow,Modifier.fillMaxWidth().height(132.dp),quarters=quarters,zone=socket.timeZone)
-                    } else {
-                        Text(stringResource(R.string.ha_v2_history),style=MaterialTheme.typography.labelLarge)
-                        if(history.size<2) Text(stringResource(R.string.ha_no_history)) else Sparkline(history,Modifier.width(496.dp).height(180.dp))
-                    }
-                }
+                is CardDialog.Graph -> HistoryPanel(dialog,entity,socket)
                 is CardDialog.Camera -> {
                     CardDetail(stringResource(R.string.ha_v2_fullscreen))
                     HaImage("/api/camera_proxy/${dialog.entityId}",images,Modifier.weight(1f).fillMaxWidth(),2_000)
                 }
-                is CardDialog.Cover -> {
-                    Text(entity?.let(::friendlyName) ?: dialog.entityId,style=MaterialTheme.typography.titleLarge)
-                    CardValue(entityStateLabel(entity))
-                    val features=(entity?.attributes?.number("supported_features") ?: 0.0).toInt()
-                    listOf(Triple(R.string.ha_v2_open_cover,"open_cover",1),Triple(R.string.ha_v2_stop_cover,"stop_cover",8),Triple(R.string.ha_v2_close_cover,"close_cover",2)).forEach {(label,service,bit) ->
-                        StovaButton(stringResource(label),{if(!locked) perform(ServiceCall("cover",service),dialog.entityId)},enabled=!locked && (features and bit)!=0)
-                    }
-                }
-                is CardDialog.Lock -> {
-                    Text(stringResource(R.string.ha_v2_lock_confirm,entity?.let(::friendlyName) ?: dialog.entityId),style=MaterialTheme.typography.titleLarge)
-                    StovaButton(stringResource(if(entity?.state=="locked") R.string.ha_v2_unlock_action else R.string.ha_v2_lock_action),{
-                        if(!locked) perform(ServiceCall("lock",if(entity?.state=="locked") "unlock" else "lock"),dialog.entityId)
-                        onDismiss()
-                    },enabled=!locked)
-                }
+                else -> DeviceControls(dialog,entity,socket,locked,send)
             }
             StovaButton(stringResource(R.string.ha_close),onDismiss)
         }
     }
 }
+
+@Composable private fun HistoryPanel(dialog:CardDialog.Graph,entity:HaEntity?,socket:HaConnection) {
+    val locale=LocalConfiguration.current.locales[0]
+    var history by remember(dialog.entityId) {mutableStateOf(emptyList<Double>())}
+    var energy by remember(dialog.entityId) {mutableStateOf(entity)}
+    LaunchedEffect(dialog.entityId,entity!=null) {
+        if(entity!=null && dialog.today) energy=socket.energy(entity)
+        else history=socket.history(dialog.entityId).map {it.second}
+    }
+    entity?.let {StateValue(it)}
+    if(dialog.today && entity!=null) {
+        var tomorrow by remember {mutableStateOf(false)}
+        var quarters by remember {mutableStateOf(false)}
+        FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            StovaButton(stringResource(R.string.ha_v2_today),{tomorrow=false},primary=!tomorrow)
+            StovaButton(stringResource(R.string.ha_v2_tomorrow),{tomorrow=true},primary=tomorrow)
+            StovaButton(stringResource(R.string.ha_v2_hourly),{quarters=false},primary=!quarters)
+            StovaButton(stringResource(R.string.ha_v2_quarter_hours),{quarters=true},primary=quarters)
+        }
+        PriceChart(energy ?: entity,tomorrow,Modifier.fillMaxWidth().height(132.dp),quarters=quarters,zone=socket.timeZone)
+    } else {
+        Text(stringResource(R.string.ha_v2_history),style=MaterialTheme.typography.labelLarge)
+        if(history.size<2) Text(stringResource(R.string.ha_no_history)) else {
+            Sparkline(history,Modifier.fillMaxWidth().height(120.dp))
+            CardDetail(stringResource(R.string.ha_action_extrema,formatNumber(history.min(),locale),formatNumber(history.max(),locale)))
+        }
+        entity?.let {CardDetail(stringResource(R.string.ha_action_changed,panelTime(it.lastChanged,socket.timeZone,locale)))}
+    }
+}
+
+internal fun panelTime(time:Long,zone:java.time.ZoneId,locale:java.util.Locale):String=
+    java.time.Instant.ofEpochMilli(time).atZone(zone).format(java.time.format.DateTimeFormatter.ofPattern("dd.MM HH:mm",locale))

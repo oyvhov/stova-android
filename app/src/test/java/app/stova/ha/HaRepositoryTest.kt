@@ -17,6 +17,29 @@ import org.junit.rules.TemporaryFolder
 class HaRepositoryTest {
     @get:Rule val dir = TemporaryFolder()
     private fun profiles() = ProfileRepository(JsonFileStore(File(dir.root, "profiles.json"), ProfilesFile.serializer(), ProfilesFile(), UnconfinedTestDispatcher()))
+    @Test fun alarmUnavailableAndRevokedPermissionNeverSend() = runTest {
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
+        val alarm=HaEntity("alarm_control_panel.home","disarmed",JsonObject(emptyMap()),0,0)
+        val missing=HaEntity("light.a","unavailable",JsonObject(emptyMap()),0,0)
+        repo.add(alarm,CardType.SENSOR);repo.add(missing,CardType.LIGHT);runCurrent()
+        socket.entities.value=mapOf(alarm.id to alarm,missing.id to missing);runCurrent()
+        assertFalse(repo.perform(ServiceCall("alarm_control_panel","alarm_arm_away"),alarm.id,adult))
+        assertFalse(repo.perform(ServiceCall("light","toggle"),missing.id,adult))
+        p.update(adult.id) {it.copy(kid=true,kidSmartHomeControl=false)};runCurrent()
+        assertFalse(repo.perform(ServiceCall("light","toggle"),missing.id,adult))
+        assertEquals(0,socket.calls)
+    }
+    @Test fun sceneReceiptBelongsToItsCardAndExpiresAfterTwoSeconds() = runTest {
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
+        val scene=HaEntity("scene.night","off",JsonObject(emptyMap()),0,0)
+        repo.add(scene,CardType.SCENE);runCurrent();socket.entities.value=mapOf(scene.id to scene);runCurrent()
+        assertTrue(repo.perform(ServiceCall("scene","turn_on"),scene.id,adult));runCurrent()
+        assertTrue(scene.id in repo.completed.value)
+        advanceTimeBy(1999);runCurrent();assertTrue(scene.id in repo.completed.value)
+        advanceTimeBy(1);runCurrent();assertFalse(scene.id in repo.completed.value)
+    }
     @Test fun watchFollowsActiveProfileCards() = runTest {
         val p = profiles(); val s = ProfileSession(p, backgroundScope); val socket = FakeHaConnection()
         val repo = HaRepository(socket, s, p, backgroundScope)

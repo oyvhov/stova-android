@@ -19,11 +19,10 @@ class CardV2ModelTest {
         assertEquals(listOf(CardType.COVER),cardTypesFor(e("cover.curtain")))
         assertEquals(listOf(CardType.LOCK),cardTypesFor(e("lock.front")))
     }
-    @Test fun remoteAdjustmentsClampAndRespectSupportedFeatures() {
-        assertEquals(brightnessCall(60),directionAction(CardType.LIGHT,e("light.a", "on", """{"brightness":128,"supported_color_modes":["brightness"]}"""),1))
-        assertNull(directionAction(CardType.LIGHT,e("light.a","on","""{"supported_color_modes":["onoff"]}"""),1))
-        assertEquals(1.0,directionAction(CardType.MEDIA_PLAYER,e("media_player.a","playing","""{"volume_level":0.98}"""),1)!!.data.number("volume_level")!!,0.01)
-        assertEquals(100.0,directionAction(CardType.COVER,e("cover.a","open","""{"current_position":95,"supported_features":4}"""),1)!!.data.number("position")!!,0.01)
+    @Test fun riskyCardsHaveNoPrimaryService() {
+        listOf(CardType.COVER,CardType.LOCK,CardType.CLIMATE,CardType.SENSOR).forEach {
+            assertNull(primaryAction(it,e("cover.a")))
+        }
     }
     @Test fun roomSectionsPutFavouritesFirstAndPreserveOrder() {
         val cards = listOf(CardConfig("1",CardType.LIGHT,"light.a"),CardConfig("2",CardType.LIGHT,"light.b",favorite=true),CardConfig("3",CardType.SENSOR,"sensor.c"))

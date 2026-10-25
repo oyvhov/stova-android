@@ -16,7 +16,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 enum class HaFeedback { FAILED, DONE }
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-class HaRepository(private val socket: HaConnection, private val session: ProfileSession, private val profiles: ProfileRepository, scope: CoroutineScope,
+class HaRepository(private val socket: HaConnection, private val session: ProfileSession, private val profiles: ProfileRepository, private val scope: CoroutineScope,
     private val cache: JsonFileStore<HaSnapshot>? = null,
 ) {
     private val mutableEntities = MutableStateFlow<Map<String, HaEntity>>(emptyMap())
@@ -27,10 +27,16 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
     val pending = mutablePending.asStateFlow()
     private val mutableFeedback = MutableStateFlow<HaFeedback?>(null)
     val feedback = mutableFeedback.asStateFlow()
+    private val mutableCompleted=MutableStateFlow<Set<String>>(emptySet())
+    val completed=mutableCompleted.asStateFlow()
+    private val receipts=mutableMapOf<String,kotlinx.coroutines.Job>()
     private val mutableRegistry = MutableStateFlow(HaRegistry())
     val registry = mutableRegistry.asStateFlow()
     val cards: StateFlow<List<CardConfig>> = session.active.map { it?.dashboard.orEmpty() }.stateIn(scope, SharingStarted.Eagerly, emptyList())
     val homeCards: StateFlow<List<CardConfig>> = cards.map { it.filter(CardConfig::onHome).take(3) }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+    private val focusedCards=mutableMapOf<String,String>()
+    fun lastFocused(profileId:String):String?=focusedCards[profileId]
+    fun rememberFocus(profileId:String,cardId:String) {focusedCards[profileId]=cardId}
     init {
         val writes = Channel<HaSnapshot>(Channel.CONFLATED)
         scope.launch {
@@ -54,7 +60,7 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
             session.active.map { it?.id to it?.dashboard.orEmpty() }.distinctUntilChanged().collectLatest { (profileId, cards) ->
                 val ids = cards.map(CardConfig::entityId).toSet()
                 socket.watch(ids)
-                if(profileId!=previousProfileId) {optimistic.value=emptyMap();mutablePending.value=emptySet();mutableFeedback.value=null}
+                if(profileId!=previousProfileId) {optimistic.value=emptyMap();mutablePending.value=emptySet();mutableFeedback.value=null;receipts.values.forEach {it.cancel()};receipts.clear();mutableCompleted.value=emptySet()}
                 val retained = if (profileId == previousProfileId) mutableEntities.value.filterKeys { it in ids } else emptyMap()
                 mutableEntities.value = retained
                 previousProfileId = profileId
@@ -108,8 +114,10 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
     }
     fun dismissFeedback() {mutableFeedback.value=null}
     suspend fun perform(call: ServiceCall, entityId: String, profile: Profile): Boolean {
-        if(!canControl(profile) || session.active.value?.id!=profile.id || entityId in pending.value) return false
+        val active=session.active.value
+        if(active?.id!=profile.id || !canControl(active) || entityId in pending.value || entityId.startsWith("alarm_control_panel.") || call.domain=="alarm_control_panel") return false
         val before=mutableEntities.value[entityId]
+        if(stateText(before)==StateText.Unavailable) return false
         val predicted=before?.let {optimisticEntity(it,call)}
         mutablePending.value+=entityId
         if(predicted!=null) optimistic.value+=entityId to predicted
@@ -126,6 +134,11 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
                 }}
             }
             mutableFeedback.value=if(success) HaFeedback.DONE else HaFeedback.FAILED
+            if(success && entityId.substringBefore('.') in setOf("scene","script")) {
+                receipts.remove(entityId)?.cancel()
+                mutableCompleted.value+=entityId
+                receipts[entityId]=scope.launch {delay(2_000);mutableCompleted.value-=entityId;receipts.remove(entityId)}
+            }
             return success
         } finally {
             if(session.active.value?.id==profile.id) {

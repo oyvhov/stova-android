@@ -32,7 +32,7 @@ fun entityCatalog(states: List<HaEntity>, registry: HaRegistry): List<HaCatalogI
     }.sortedWith(compareBy<HaCatalogItem> { it.room == null }.thenBy { it.room?.lowercase().orEmpty() }.thenBy { it.name.lowercase() })
 
 @Serializable data class ForecastDay(val time: Long, val condition: String, val high: Double, val low: Double? = null)
-fun parseForecast(result: JsonObject, entityId: String): List<ForecastDay> {
+fun parseForecast(result: JsonObject, entityId: String, limit:Int=5): List<ForecastDay> {
     val response = result["response"] as? JsonObject ?: return emptyList()
     val forecast = (response[entityId] as? JsonObject)?.get("forecast") as? JsonArray ?: return emptyList()
     return forecast.mapNotNull { raw ->
@@ -40,5 +40,5 @@ fun parseForecast(result: JsonObject, entityId: String): List<ForecastDay> {
         val time = j.text("datetime")?.let { runCatching { haMillis(it) }.getOrNull() } ?: return@mapNotNull null
         val high = (j["temperature"] as? JsonPrimitive)?.doubleOrNull?.takeIf(Double::isFinite) ?: return@mapNotNull null
         ForecastDay(time, j.text("condition").orEmpty(), high, (j["templow"] as? JsonPrimitive)?.doubleOrNull?.takeIf(Double::isFinite))
-    }.sortedBy { it.time }.take(5)
+    }.sortedBy { it.time }.take(limit)
 }

@@ -9,6 +9,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.focus.FocusRequester
@@ -36,12 +42,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
-@Composable fun SmartHomeScreen(container:AppContainer,profile:Profile) {
+@Composable fun SmartHomeScreen(container:AppContainer,profile:Profile,initialCardId:String?=null) {
     val cards by container.haRepository.cards.collectAsStateWithLifecycle()
     val entities by container.haRepository.entities.collectAsStateWithLifecycle()
     val registry by container.haRepository.registry.collectAsStateWithLifecycle()
     val pending by container.haRepository.pending.collectAsStateWithLifecycle()
     val feedback by container.haRepository.feedback.collectAsStateWithLifecycle()
+    val completed by container.haRepository.completed.collectAsStateWithLifecycle()
     val status by container.haSocket.status.collectAsStateWithLifecycle()
     val household by container.household.data.collectAsStateWithLifecycle(initialValue=null)
     val scope=rememberCoroutineScope()
@@ -49,6 +56,7 @@ import kotlin.math.ceil
     var dialog by remember(profile.id) {mutableStateOf<CardDialog?>(null)}
     val images=household?.haBaseUrl?.let {HaImageSource(it,container.haAuth,container.haImages)}
     LaunchedEffect(feedback) {if(feedback!=null) {delay(if(feedback==HaFeedback.FAILED) 5_000 else 2_000);container.haRepository.dismissFeedback()}}
+    val firstFocus=remember(profile.id,initialCardId) {initialCardId ?: container.haRepository.lastFocused(profile.id)}
     SmartHomeContent(profile,cards,entities,if(household?.haBaseUrl==null) HaStatus.NOT_CONFIGURED else status,
         images=images,onAdd={adding=true},
         onPerform={call,id->scope.launch {container.haRepository.perform(call,id,profile)}},onDialog={dialog=it},
@@ -56,11 +64,13 @@ import kotlin.math.ceil
         onHome={card->container.haRepository.setOnHome(card.id,!card.onHome)},
         onRemove={card->scope.launch {container.haRepository.remove(card.id)}},
         onConfigure={card->scope.launch {container.haRepository.configure(card.id,card.size,card.name,card.icon,card.favorite)}},
-        registry=registry,pending=pending,feedback=feedback,connection=container.haSocket)
+        registry=registry,pending=pending,feedback=feedback,connection=container.haSocket,completed=completed,overlayOpen=dialog!=null || adding,
+        initialFocusId=firstFocus,onCardFocused={container.haRepository.rememberFocus(profile.id,it)})
     if(adding && !profile.kid) Dialog({adding=false},properties=DialogProperties(usePlatformDefaultWidth=false)) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(StovaLayout.TvSafeEdge)) {AddCardFlow(container) {adding=false}}
     }
-    CardDialogHost(dialog,entities,container.haSocket,images,!canControl(profile),{call,id->scope.launch {container.haRepository.perform(call,id,profile)}},{dialog=null})
+    CardDialogHost(dialog,entities,container.haSocket,images,!canControl(profile),{call,id->scope.launch {container.haRepository.perform(call,id,profile)}},{dialog=null},room=dialog?.let {registry.entities[it.entityId]?.room},
+        name=cards.find {it.entityId==dialog?.entityId}?.name,send={call,id->container.haRepository.perform(call,id,profile)})
 }
 
 /** Rendering works from HaSnapshot before the network is ready. */
@@ -70,20 +80,86 @@ import kotlin.math.ceil
     onDialog:(CardDialog)->Unit={},onMove:(CardConfig,Int)->Unit={_,_->},onWide:(CardConfig)->Unit={},
     onHome:suspend (CardConfig)->Boolean={true},onRemove:(CardConfig)->Unit={},
     onConfigure:(CardConfig)->Unit={},registry:HaRegistry=HaRegistry(),pending:Set<String> = emptySet(),
-    feedback:HaFeedback?=null,connection:HaConnection?=null,
+    feedback:HaFeedback?=null,connection:HaConnection?=null,completed:Set<String> = emptySet(),
+    initialFocusId:String?=null,onCardFocused:(String)->Unit={},overlayOpen:Boolean=false,
 ) {
     var editing by remember(profile.id) {mutableStateOf(false)}
     var menuId by remember(profile.id) {mutableStateOf<String?>(null)}
     var restoreId by remember(profile.id) {mutableStateOf<String?>(null)}
     var initialFocusGiven by remember(profile.id) {mutableStateOf(false)}
+    var focusedId by remember(profile.id) {mutableStateOf(initialFocusId)}
+    var hintVisible by remember {mutableStateOf(false)}
+    var lightsToTurnOff by remember {mutableStateOf<List<String>?>(null)}
+    val summaryFocus=remember {FocusRequester()}
+    var editHeld by remember {mutableStateOf(false)}
+    var editBackDown by remember {mutableStateOf(false)}
+    var editConsumed by remember {mutableStateOf(false)}
+    var movingId by remember {mutableStateOf<String?>(null)}
+    var holdJob by remember {mutableStateOf<kotlinx.coroutines.Job?>(null)}
+    val timeout=androidx.compose.ui.platform.LocalViewConfiguration.current.longPressTimeoutMillis
     val focus=remember(profile.id) {mutableMapOf<String,FocusRequester>()}
     val list=rememberLazyListState()
     val scope=rememberCoroutineScope()
     var gridFocused by remember {mutableStateOf(false)}
     val visible by remember {derivedStateOf {list.layoutInfo.visibleItemsInfo.map {it.key}.toSet()}}
     val sections=remember(cards,registry) {dashboardSections(cards,registry)}
-    LaunchedEffect(menuId) {if(menuId==null) restoreId?.let {runCatching {focus[it]?.requestFocus()};restoreId=null}}
-    BackHandler(enabled=editing) {editing=false;menuId=null}
+    val firstId=cards.find {it.id==initialFocusId}?.id ?: cards.firstOrNull()?.id
+    fun listIndex(id:String):Int {
+        var index=0
+        sections.forEach {section ->
+            index++
+            packCards(section.cards).forEach {band ->
+                if(band.any {it.card.id==id}) return index
+                index++
+            }
+        }
+        return 0
+    }
+    LaunchedEffect(cards,firstId) {if(!initialFocusGiven && firstId!=null) list.scrollToItem(listIndex(firstId))}
+    LaunchedEffect(menuId,overlayOpen,cards,restoreId) {
+        if(menuId==null && !overlayOpen) restoreId?.let {id ->
+            val target=id.takeIf {cardId->cards.any {it.id==cardId}} ?: cards.firstOrNull()?.id
+            if(target!=null) {
+                list.scrollToItem(listIndex(target))
+                withFrameNanos {}
+                runCatching {focus[target]?.requestFocus()}
+            }
+            restoreId=null
+        }
+    }
+    LaunchedEffect(focusedId,gridFocused,editing,overlayOpen,menuId) {
+        hintVisible=gridFocused && !overlayOpen && menuId==null
+        if(hintVisible) {delay(4_000);hintVisible=false}
+    }
+    DisposableEffect(Unit) {onDispose {holdJob?.cancel()}}
+    LaunchedEffect(overlayOpen,menuId) {if(overlayOpen || menuId!=null) {holdJob?.cancel();editHeld=false;editConsumed=true}}
+    BackHandler(enabled=editing) {editing=false;menuId=null;restoreId=focusedId}
+    Box(Modifier.fillMaxSize().onPreviewKeyEvent {event ->
+        if(event.key==Key.Back && (editBackDown || (editing && menuId==null && !overlayOpen))) {
+            if(event.type==KeyEventType.KeyDown) {editBackDown=true;editing=false;holdJob?.cancel();editHeld=false;restoreId=focusedId}
+            else editBackDown=false
+            true
+        } else if(!editing || (!gridFocused && !editHeld) || menuId!=null || overlayOpen) false
+        else if(event.key in listOf(Key.DirectionCenter,Key.Enter,Key.NumPadEnter)) {
+            if(event.type==KeyEventType.KeyDown && !editHeld) {
+                editHeld=true;editConsumed=false;movingId=focusedId
+                holdJob=scope.launch {delay(timeout);editConsumed=true
+                    cards.find {it.id==movingId}?.let {card->restoreId=card.id;onDialog(controlPanel(card.type,card.entityId))}
+                }
+            } else if(event.type==KeyEventType.KeyUp) {
+                holdJob?.cancel();editHeld=false
+                if(!editConsumed) {menuId=movingId;restoreId=movingId}
+            }
+            true
+        } else if(editHeld && event.key in listOf(Key.DirectionLeft,Key.DirectionRight,Key.DirectionUp,Key.DirectionDown)) {
+            holdJob?.cancel();editConsumed=true
+            if(event.type==KeyEventType.KeyDown) cards.find {it.id==movingId}?.let {card ->
+                restoreId=card.id
+                onMove(card,when(event.key) {Key.DirectionLeft->-1;Key.DirectionRight->1;Key.DirectionUp->-3;else->3})
+            }
+            true
+        } else false
+    }) {
     Column(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
             Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(6.dp)) {
@@ -92,15 +168,11 @@ import kotlin.math.ceil
                     HaStatusLabel(status)
                 }
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
-                    Box(Modifier.weight(1f)) {DashboardSummary(cards,entities)}
-                    if(cards.isNotEmpty() && gridFocused && LocalConfiguration.current.fontScale<1.5f) {
-                        Text(stringResource(if(canControl(profile)) R.string.ha_v2_remote_hint else R.string.ha_locked),
-                            style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                    DashboardSummary(cards,entities,canControl(profile),summaryFocus) {lightsToTurnOff=it}
                 }
             }
             if(!profile.kid && status!=HaStatus.NOT_CONFIGURED) {
-                if(cards.isNotEmpty()) StovaButton(stringResource(if(editing) R.string.ha_done else R.string.ha_edit),{editing=!editing})
+                if(cards.isNotEmpty()) StovaButton(stringResource(if(editing) R.string.ha_done else R.string.ha_edit),{editing=!editing;restoreId=focusedId ?: firstId})
                 StovaButton(stringResource(R.string.ha_add_card),onAdd,icon=StovaIcons.Plus)
             }
         }
@@ -127,21 +199,20 @@ import kotlin.math.ceil
                         val requester=remember(card.id) {focus.getOrPut(card.id) {FocusRequester()}}
                         val intoView=remember(card.id) {BringIntoViewRequester()}
                         LaunchedEffect(card.id) {
-                            if(!initialFocusGiven && card.id==cards.firstOrNull()?.id) {
+                            if(!initialFocusGiven && card.id==firstId) {
                                 requester.requestFocus();initialFocusGiven=true
                             }
                         }
                         Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                            HaCard(card,entities[card.entityId],!canControl(profile),{onPerform(it,card.entityId)},onDialog,images,
+                            HaCard(card,entities[card.entityId],!canControl(profile),{onPerform(it,card.entityId)},{restoreId=card.id;onDialog(it)},images,
                                 visible="band-${band.first().card.id}" in visible,
                                 onEdit=if(editing) {{menuId=card.id;restoreId=card.id}} else null,
                                 onMenu=if(!profile.kid) {{menuId=card.id;restoreId=card.id}} else null,
-                                pending=card.entityId in pending,connection=connection,
+                                pending=card.entityId in pending,connection=connection,completed=card.entityId in completed,editing=editing && !profile.kid,inputSuspended=overlayOpen || menuId!=null,
                                 room=if(section.favorites) registry.entities[card.entityId]?.room else null,
                                 modifier=Modifier.weight(1f).bringIntoViewRequester(intoView).onFocusChanged {
-                                    if(it.isFocused) scope.launch {intoView.bringIntoView()}
+                                    if(it.isFocused) {focusedId=card.id;onCardFocused(card.id);scope.launch {intoView.bringIntoView()}}
                                 }.focusRequester(requester))
-                            if(editing && !profile.kid) StovaButton(stringResource(R.string.ha_card_menu,card.name ?: entities[card.entityId]?.let(::friendlyName) ?: card.entityId),{menuId=card.id;restoreId=card.id})
                         }
                     }
                 }
@@ -149,22 +220,49 @@ import kotlin.math.ceil
         }
         }
     }
+    val hintCard=cards.find {it.id==focusedId}
+    val hintAlpha by animateFloatAsState(if(hintVisible) 1f else 0f,tween(if(app.stova.core.theme.LocalReduceMotion.current) 0 else 180))
+    if(hintCard!=null && hintAlpha>0f) Text(remoteHint(hintCard,entities[hintCard.entityId],!canControl(profile),profile.kid,editing),
+        Modifier.align(Alignment.BottomCenter).padding(horizontal=StovaLayout.TvSafeEdge,vertical=12.dp).alpha(hintAlpha).testTag("remote-hint"),
+        style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1,overflow=TextOverflow.Ellipsis)
+    }
+    lightsToTurnOff?.let {ids ->
+        fun dismiss() {lightsToTurnOff=null;runCatching {summaryFocus.requestFocus()}}
+        Dialog(::dismiss) {
+            val cancelFocus=remember {FocusRequester()}
+            Column(Modifier.widthIn(max=480.dp).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+                Text(stringResource(R.string.ha_action_all_lights,ids.size),style=MaterialTheme.typography.titleLarge)
+                StovaButton(stringResource(R.string.ha_cancel),::dismiss,Modifier.focusRequester(cancelFocus))
+                StovaButton(stringResource(R.string.ha_action_yes_off),{
+                    if(canControl(profile)) ids.filter {entities[it]?.state=="on" && it !in pending}.forEach {onPerform(ServiceCall("light","turn_off"),it)}
+                    dismiss()
+                },enabled=canControl(profile))
+            }
+            LaunchedEffect(Unit) {cancelFocus.requestFocus()}
+        }
+    }
     cards.find {it.id==menuId}?.takeUnless {profile.kid}?.let {card ->
         CardMenu(card,card.name ?: entities[card.entityId]?.let(::friendlyName) ?: card.entityId,onMove,onConfigure,onHome,onRemove) {menuId=null}
     }
 }
 
-@Composable private fun DashboardSummary(cards:List<CardConfig>,entities:Map<String,HaEntity>) {
+@Composable private fun DashboardSummary(cards:List<CardConfig>,entities:Map<String,HaEntity>,canControl:Boolean,focus:FocusRequester,onLights:(List<String>)->Unit) {
     val locale=LocalConfiguration.current.locales[0]
     val selected=cards.mapNotNull {entities[it.entityId]}.distinctBy {it.id}
     val parts=mutableListOf<String>()
-    val lights=selected.count {it.id.startsWith("light.") && it.state=="on"}
-    if(selected.any {it.id.startsWith("light.")}) parts+=pluralStringResource(R.plurals.ha_v2_lights_on,lights,lights)
-    selected.firstNotNullOfOrNull {if(it.id.startsWith("climate.")) it.attributes.number("current_temperature") else null}?.let {parts+=stringResource(R.string.ha_v2_inside,formatNumber(it,locale))}
-    cards.firstOrNull {it.type==CardType.ENERGY_PRICE}?.let {entities[it.entityId]}?.let {e ->
-        (stateText(e) as? StateText.Number)?.let {parts+=stringResource(R.string.ha_v2_price_now,formatNumber(it.value,locale),it.unit.orEmpty())}
+    val lights=selected.filter {it.id.startsWith("light.") && it.state=="on"}.map {it.id}
+    Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
+        if(selected.any {it.id.startsWith("light.")}) {
+            val label=pluralStringResource(R.plurals.ha_v2_lights_on,lights.size,lights.size)
+            if(canControl && lights.isNotEmpty()) StovaButton(label,{onLights(lights)},Modifier.focusRequester(focus))
+            else Text(label,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        selected.firstNotNullOfOrNull {if(it.id.startsWith("climate.")) it.attributes.number("current_temperature") else null}?.let {parts+=stringResource(R.string.ha_v2_inside,formatNumber(it,locale))}
+        cards.firstOrNull {it.type==CardType.ENERGY_PRICE}?.let {entities[it.entityId]}?.let {e ->
+            (stateText(e) as? StateText.Number)?.let {parts+=stringResource(R.string.ha_v2_price_now,formatNumber(it.value,locale),it.unit.orEmpty())}
+        }
+        if(parts.isNotEmpty() || selected.isEmpty()) Text(if(parts.isEmpty()) stringResource(R.string.ha_v2_overview) else parts.joinToString(" · "),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
     }
-    Text(if(parts.isEmpty()) stringResource(R.string.ha_v2_overview) else parts.joinToString(" · "),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /** A real two-dimensional layout: L spans two rows, while neighbours remain reachable. */

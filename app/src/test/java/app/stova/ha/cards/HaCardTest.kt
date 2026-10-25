@@ -29,11 +29,11 @@ class HaCardTest {
         compose.onNodeWithText("light.stove").performClick()
         assertEquals(ServiceCall("light","toggle"),call)
     }
-    @Test fun lockedCardDoesNothingAndShowsLock() {
-        var calls=0
-        compose.setContent { StovaTheme { HaCard(CardConfig("1",CardType.LIGHT,"light.stove"),entity(),true,{calls++},{calls++}) } }
+    @Test fun lockedCardOpensReadOnlyPanelAndShowsLock() {
+        var calls=0; var dialog:CardDialog?=null
+        compose.setContent { StovaTheme { HaCard(CardConfig("1",CardType.LIGHT,"light.stove"),entity(),true,{calls++},{dialog=it}) } }
         compose.onNodeWithText("light.stove").performClick()
-        compose.onNodeWithContentDescription("Låst").assertExists(); assertEquals(0,calls)
+        compose.onNodeWithContentDescription("Låst").assertExists(); assertEquals(0,calls); assertEquals(CardDialog.Brightness("light.stove"),dialog)
     }
     @Test fun missingEntityShowsUnavailableAndCanFocus() {
         compose.setContent { StovaTheme { HaCard(CardConfig("1",CardType.SENSOR,"sensor.x"),null,false,{},{}) } }
@@ -60,10 +60,10 @@ class HaCardTest {
         val calls=mutableListOf<ServiceCall>()
         compose.mainClock.autoAdvance=false
         compose.setContent { StovaTheme { CardDialogHost(CardDialog.Brightness("light.stove"),mapOf("light.stove" to entity(attrs="""{"brightness":128}""")),app.stova.ha.FakeHaConnection(),null,false,{call,_->calls+=call},{}) } }
-        compose.onNodeWithText("Meir").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
-        compose.onNodeWithText("Meir").performKeyInput { pressKey(Key.DirectionRight);pressKey(Key.DirectionRight) }
+        compose.onNodeWithTag("slider-brightness").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        compose.onNodeWithTag("slider-brightness").performKeyInput { pressKey(Key.DirectionRight);pressKey(Key.DirectionRight) }
         compose.mainClock.advanceTimeBy(100); assertTrue(calls.isEmpty())
         compose.mainClock.advanceTimeBy(400); compose.waitForIdle()
-        assertEquals(listOf(brightnessCall(70)),calls)
+        assertEquals(listOf(brightnessCall(52)),calls)
     }
 }

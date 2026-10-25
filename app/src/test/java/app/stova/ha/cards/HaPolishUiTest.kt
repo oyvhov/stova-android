@@ -53,7 +53,7 @@ class HaPolishUiTest {
         val climate=HaEntity("climate.home","heat",StovaJson.parseToJsonElement("""{"friendly_name":"Varmepumpe","temperature":23.5,"current_temperature":25}""").jsonObject,0,0)
         compose.setContent {StovaTheme {HaCard(CardConfig("c",CardType.CLIMATE,climate.id),climate,false,{},{},modifier=Modifier.width(264.dp))}}
         compose.onNodeWithText("Varmepumpe").performSemanticsAction(SemanticsActions.RequestFocus)
-        compose.onNodeWithText("Mål 23,5° · ← − / + →").assertIsDisplayed()
+        compose.onNodeWithText("Mål 23,5°").assertIsDisplayed()
         compose.onNodeWithText("Varme").assertExists()
         val name=compose.onNodeWithText("Varmepumpe",useUnmergedTree=true).fetchSemanticsNode().boundsInRoot
         val value=compose.onNodeWithText("25",useUnmergedTree=true).fetchSemanticsNode().boundsInRoot

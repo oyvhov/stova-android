@@ -55,6 +55,7 @@ fun StovaApp(container: AppContainer) {
 @Composable
 private fun MainShell(container: AppContainer, profile: Profile) {
     var current by rememberSaveable { mutableStateOf(Destination.HOME) }
+    var smartHomeCardId by remember(profile.id) {mutableStateOf<String?>(null)}
     val file by container.profiles.file.collectAsStateWithLifecycle(initialValue = null)
     val household by container.household.data.collectAsStateWithLifecycle(initialValue = null)
     var verifiedAdultId by remember { mutableStateOf<String?>(null) }
@@ -92,13 +93,13 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         onApps = { current = Destination.APPS },
                         onSettings = { current = Destination.SETTINGS },
                         onProfile = switchProfile,
-                        onSmartHome = if(household?.haBaseUrl!=null) {{current=Destination.SMART_HOME}} else null,
-                        leading = { app.stova.ha.ui.HomeStatusChips(chips) },
+                        onSmartHome = if(household?.haBaseUrl!=null) {{smartHomeCardId=null;current=Destination.SMART_HOME}} else null,
+                        leading = { app.stova.ha.ui.HomeStatusChips(chips,onOpenCard={id->smartHomeCardId=id;current=Destination.SMART_HOME}) },
                     )
                 },
             )
             Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog)
-            Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile)
+            Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId)
             Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile)
         }
     }

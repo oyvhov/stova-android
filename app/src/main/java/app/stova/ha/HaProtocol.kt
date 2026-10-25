@@ -17,8 +17,8 @@ fun callService(id: Int, domain: String, service: String, entityId: String?, dat
 }
 enum class HaRegistryKind(val endpoint: String) { AREA("area"), DEVICE("device"), ENTITY("entity") }
 fun registryRequest(id: Int, kind: HaRegistryKind) = command(id, "config/${kind.endpoint}_registry/list")
-fun forecastRequest(id: Int, entityId: String) = callService(id, "weather", "get_forecasts", entityId,
-    buildJsonObject { put("type", "daily") }, returnResponse = true)
+fun forecastRequest(id: Int, entityId: String, type:String="daily") = callService(id, "weather", "get_forecasts", entityId,
+    buildJsonObject { put("type", type) }, returnResponse = true)
 fun historyRequest(id: Int, entityId: String, start: Instant) = command(id, "history/history_during_period") {
     put("start_time", start.toString()); putJsonArray("entity_ids") { add(entityId) }
     put("minimal_response", true); put("no_attributes", true); put("significant_changes_only", false)

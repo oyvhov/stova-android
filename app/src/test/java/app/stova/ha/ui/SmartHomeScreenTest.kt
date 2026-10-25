@@ -60,7 +60,7 @@ class SmartHomeScreenTest {
         val cards=List(4) {CardConfig("$it",CardType.SENSOR,"sensor.$it",onHome=it<3)}
         compose.setContent { StovaTheme { SmartHomeContent(adult,cards,emptyMap(),HaStatus.CONNECTED,onHome={false}) } }
         compose.onNodeWithText("Rediger").performClick()
-        compose.onNodeWithText("Kortmeny: sensor.3").performScrollTo().performClick()
+        compose.onNodeWithText("sensor.3").performScrollTo().performClick()
         compose.onNodeWithText("Vis på heim").performClick()
         compose.onNodeWithText("Maks tre kort på heim").assertExists()
     }
