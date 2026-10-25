@@ -43,4 +43,29 @@ class HaRepositoryTest {
         val kid = Profile("k","K",AvatarColor.ROSE,kid=true)
         assertFalse(repo.perform(ServiceCall("light","toggle"),"light.stove",kid)); assertEquals(0,socket.calls)
     }
+    @Test fun optimisticToggleIsImmediatePendingAndRollsBackOnFailure() = runTest {
+        val p=profiles(); val s=ProfileSession(p,backgroundScope); val socket=FakeHaConnection()
+        val repo=HaRepository(socket,s,p,backgroundScope)
+        val adult=p.create("A",AvatarColor.LIME,false); s.enter(adult.id); runCurrent()
+        val light=HaEntity("light.a","off",JsonObject(emptyMap()),0,0)
+        repo.add(light,CardType.LIGHT); runCurrent()
+        socket.entities.value=mapOf(light.id to light);runCurrent()
+        val answer=CompletableDeferred<Boolean>();socket.service={_,_,_,_->answer.await()}
+        val call=backgroundScope.async {repo.perform(ServiceCall("light","toggle"),light.id,adult)}
+        runCurrent();assertEquals("on",repo.entities.value[light.id]?.state);assertTrue(light.id in repo.pending.value)
+        assertFalse(repo.perform(ServiceCall("light","toggle"),light.id,adult));assertEquals(1,socket.calls)
+        answer.complete(false);runCurrent()
+        assertFalse(call.await());assertEquals("off",repo.entities.value[light.id]?.state);assertTrue(repo.pending.value.isEmpty())
+        assertEquals(HaFeedback.FAILED,repo.feedback.value)
+    }
+    @Test fun customSizeNameIconFavoritePersist() = runTest {
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val repo=HaRepository(FakeHaConnection(),s,p,backgroundScope)
+        s.enter(p.create("A",AvatarColor.LIME,false).id);runCurrent()
+        repo.add(HaEntity("light.a","off",JsonObject(emptyMap()),0,0),CardType.LIGHT);runCurrent()
+        val id=repo.cards.value.single().id
+        repo.configure(id,CardSize.L,"  Leselys  ","sun",true);runCurrent()
+        val card=repo.cards.value.single()
+        assertEquals(CardSize.L,card.size);assertEquals("Leselys",card.name);assertEquals("sun",card.icon);assertTrue(card.favorite)
+        assertEquals(card,p.current().profiles.single().dashboard.single())
+    }
 }

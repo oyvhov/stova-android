@@ -1,11 +1,25 @@
 package app.stova.ha.cards
 
 import app.stova.ha.HaEntity
+import app.stova.ha.HaRegistry
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 
-@Serializable enum class CardType { LIGHT, TOGGLE, CLIMATE, SENSOR, WEATHER, ENERGY_PRICE, MEDIA_PLAYER, SCENE, CAMERA }
-@Serializable data class CardConfig(val id: String, val type: CardType, val entityId: String, val wide: Boolean = false, val onHome: Boolean = false)
+@Serializable enum class CardType { LIGHT, TOGGLE, CLIMATE, SENSOR, WEATHER, ENERGY_PRICE, MEDIA_PLAYER, SCENE, CAMERA, COVER, LOCK }
+@Serializable enum class CardSize(val columns: Int, val rows: Int) { S(1,1), M(2,1), L(2,2) }
+@Serializable data class CardConfig(
+    val id: String, val type: CardType, val entityId: String,
+    // Read legacy JSON and keep constructor compatibility. All new layout and edits use size.
+    val wide: Boolean = false, val onHome: Boolean = false,
+    val size: CardSize = if (wide) CardSize.M else CardSize.S,
+    val name: String? = null, val icon: String? = null, val favorite: Boolean = false,
+)
+data class DashboardSection(val room: String?, val favorites: Boolean, val cards: List<CardConfig>)
+fun dashboardSections(cards: List<CardConfig>, registry: HaRegistry): List<DashboardSection> = buildList {
+    cards.filter { it.favorite }.takeIf { it.isNotEmpty() }?.let { add(DashboardSection(null,true,it)) }
+    cards.filterNot { it.favorite }.groupBy { registry.entities[it.entityId]?.room }
+        .forEach { (room, list) -> add(DashboardSection(room,false,list)) }
+}
 
 fun cardTypesFor(entity: HaEntity): List<CardType> = when (entity.id.substringBefore('.')) {
     "light" -> listOf(CardType.LIGHT)
@@ -17,5 +31,7 @@ fun cardTypesFor(entity: HaEntity): List<CardType> = when (entity.id.substringBe
     "media_player" -> listOf(CardType.MEDIA_PLAYER)
     "scene", "script" -> listOf(CardType.SCENE)
     "camera" -> listOf(CardType.CAMERA)
+    "cover" -> listOf(CardType.COVER)
+    "lock" -> listOf(CardType.LOCK)
     else -> emptyList()
 }

@@ -77,4 +77,5 @@ internal fun cardTypeLabel(type:CardType):Int = when(type) {
     CardType.WEATHER -> R.string.ha_group_weather; CardType.ENERGY_PRICE -> R.string.ha_energy_price
     CardType.MEDIA_PLAYER -> R.string.ha_group_media; CardType.SCENE -> R.string.ha_group_scenes
     CardType.CAMERA -> R.string.ha_group_cameras
+    CardType.COVER -> R.string.ha_group_covers; CardType.LOCK -> R.string.ha_group_locks
 }

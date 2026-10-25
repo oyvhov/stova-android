@@ -207,4 +207,7 @@
     <string name="ha_home_limit">At most three cards on home</string>
     <string name="ha_remove">Remove</string>
     <string name="spotlight_new_season">New season</string>
+    <!-- Smarthus v2 -->
+    <string name="ha_group_covers">Covers</string>
+    <string name="ha_group_locks">Locks</string>
 </resources>

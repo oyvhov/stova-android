@@ -6,19 +6,20 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
 @Serializable
-data class HaSnapshot(val profileId: String? = null, val entities: Map<String, HaEntity> = emptyMap())
+data class HaSnapshot(val profileId: String? = null, val entities: Map<String, HaEntity> = emptyMap(), val registry:HaRegistry=HaRegistry())
 
 /** Persist display data only. In particular entity_picture can contain a camera bearer token. */
 internal fun snapshotEntities(cards: List<CardConfig>, entities: Map<String, HaEntity>): Map<String, HaEntity> =
     cards.groupBy(CardConfig::entityId).mapNotNull { (id, configs) ->
         val entity = entities[id] ?: return@mapNotNull null
-        val keys = setOf("friendly_name") + configs.flatMap { config ->
+        val keys = setOf("friendly_name","device_class") + configs.flatMap { config ->
             when (config.type) {
                 CardType.SENSOR, CardType.ENERGY_PRICE -> listOf("unit_of_measurement")
                 CardType.WEATHER -> listOf("temperature", "temperature_unit")
                 CardType.CLIMATE -> listOf("current_temperature", "temperature", "min_temp", "max_temp")
                 CardType.LIGHT -> listOf("brightness")
                 CardType.MEDIA_PLAYER -> listOf("media_title", "media_artist")
+                CardType.COVER -> listOf("current_position","supported_features")
                 else -> emptyList()
             }
         }

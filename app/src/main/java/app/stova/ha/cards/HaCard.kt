@@ -18,6 +18,7 @@ fun HaCard(config: CardConfig, entity: HaEntity?, locked: Boolean, perform: (Ser
         CardType.SENSOR,CardType.ENERGY_PRICE -> StovaIcons.Sensor
         CardType.WEATHER -> weatherIcon(entity?.state.orEmpty()); CardType.MEDIA_PLAYER -> StovaIcons.Play
         CardType.SCENE -> StovaIcons.Home; CardType.CAMERA -> StovaIcons.Camera
+        CardType.COVER -> StovaIcons.Home; CardType.LOCK -> StovaIcons.Lock
     }
     val badge=if(unavailable) null else when(config.type) {
         CardType.LIGHT,CardType.TOGGLE -> stringResource(if(entity?.state=="on") R.string.ha_on else R.string.ha_off)
@@ -50,6 +51,7 @@ fun HaCard(config: CardConfig, entity: HaEntity?, locked: Boolean, perform: (Ser
             CardType.MEDIA_PLAYER -> MediaPlayerCard(entity,images)
             CardType.SCENE -> SceneCard()
             CardType.CAMERA -> CameraCard(entity,images,visible)
+            CardType.COVER,CardType.LOCK -> StateValue(entity)
         }
     }
 }
