@@ -1,3 +1,10 @@
+# Ikonpakkar ferdige
+2026-10-25: Heile ikonpakkebestillinga er fullført på `appearance-v2` i appearance-worktreet; plan `2026-10-25-ikonpakke.md` er ferdig. Ingen påbyrja steg står att.
+Pakkefinning, tolerant versjonsbufra appfilter, profilval, Heim/Appar-kunst, delt appmeny og søkbar ikonveljar med profilvise overstyringar/tilbakestilling er implementerte. Ingen automatiske favorittar.
+Spole har SVG/VectorDrawable i Arcticons-stil og flat fargeutgåve; malen inkluderer strekbreidda. Arcticons og Spole er berre lesne; ingenting er sendt inn.
+Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'`: 365/365, 0 hoppa over, AppScreensTest 31/31, DesignRulesTest 4/4; lint 0 feil (23 åtvaringar, 1 hint), debug-APK OK. Sju kontrollerte bilete: `docs/images/ikonpakke-*.png`; evidens: `docs/verification/ikonpakke.md`.
+Ingen APK-nedlasting, emulatorinstallasjon eller push. Ekte installerte pakkar, fysisk fjernkontroll og Shield-ytelse er ikkje verifiserte. Brukarens to ucommitta bestillingsfiler er urørte. Ingen spørsmål.
+
 # Tema v1 ferdig
 2026-10-25: Heile `docs/briefs/2026-10-25-tema-v1.md` er fullført på `appearance-v2` i appearance-worktreet; plan `2026-10-25-tema-v1.md` er ferdig. Ingen påbyrja steg står att.
 Seks tema, ti aksentar, kalenderoverlegg utan persistens, pyntnivå, lifecycle-/rørslesperra Canvas og 45 s edderkopp, sesongrad i snapshot, sesongprioritert spotlight og temagruppe med fargeprøver/førehandsvising er implementerte.

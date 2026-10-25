@@ -23,6 +23,45 @@ class IconArtworkTest {
     private val jellyfin = InstalledApp("org.jellyfin.mobile/.MainActivity", "org.jellyfin.mobile", ".MainActivity", "Jellyfin", true)
     private val spole = InstalledApp("app.reelstack/.MainActivity", "app.reelstack", ".MainActivity", "Spole", true)
 
+    @Test @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun submissionSvgAndAndroidVectorMatchAndFitTheArcticonsRectangleIncludingStroke() {
+        val svg = java.io.File("../docs/icons/spole-arcticons.svg").readText()
+        val vector = java.io.File("src/main/res/drawable/ic_spole_arcticons.xml").readText()
+        assertTrue(svg.contains("viewBox=\"0 0 48 48\""))
+        assertTrue(svg.contains("stroke-width=\"1\""))
+        assertTrue(svg.contains("fill=\"none\""))
+        assertTrue(svg.contains("stroke-linecap=\"round\""))
+        assertTrue(svg.contains("stroke-linejoin=\"round\""))
+        val path = Regex(""" d="([^"]+)"""").find(svg)!!.groupValues[1]
+        assertEquals(path, Regex("""android:pathData="([^"]+)"""").find(vector)!!.groupValues[1])
+        val bounds = android.graphics.RectF()
+        androidx.core.graphics.PathParser.createPathFromPathData(path).computeBounds(bounds, true)
+        assertTrue("31 px wide including stroke: $bounds", bounds.width() + 1 <= 31f)
+        assertTrue("39 px tall including stroke: $bounds", bounds.height() + 1 <= 39.001f)
+    }
+
+    @Test @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun otherMonochromePacksUseAccentAndTheLineSupplementWhileColourPacksKeepTheirColours() = runTest {
+        val fake = FakeIconPackSource().apply { packs = listOf(IconPack("other.pack", "Other", 1)) }
+        var colourful = false
+        val source = object : IconPackSource by fake {
+            override fun drawable(pack: IconPack, name: String, density: Int): android.graphics.drawable.Drawable {
+                val bitmap = android.graphics.Bitmap.createBitmap(32, 32, android.graphics.Bitmap.Config.ARGB_8888)
+                for (y in 4..27) for (x in 8..23) bitmap.setPixel(x, y, if (!colourful) android.graphics.Color.WHITE else if (x < 16) android.graphics.Color.RED else android.graphics.Color.BLUE)
+                return android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
+            }
+        }
+        val art = AppArtCache(context, iconPacks = IconPackRepository(source, tmp.root))
+        val prefs = AppearancePrefs(iconPack = "other.pack", iconColor = IconColor.ACCENT)
+        assertTrue(art.artwork(jellyfin, prefs)!!.monochrome)
+        assertTrue(art.artwork(spole, prefs)!!.monochrome)
+        colourful = true
+        fake.packs = fake.packs.map { it.copy(versionCode = 2) }
+        art.iconPacks.refresh()
+        assertFalse(art.artwork(jellyfin, prefs)!!.monochrome)
+        assertFalse(art.artwork(spole, prefs)!!.monochrome)
+    }
+
     @Test fun packMatchWinsAndDecodesOnceAtTvDensity() = runTest {
         val source = FakeIconPackSource()
         val art = AppArtCache(context, iconPacks = IconPackRepository(source, tmp.root))

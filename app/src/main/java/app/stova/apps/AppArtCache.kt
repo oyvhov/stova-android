@@ -30,19 +30,24 @@ class AppArtCache(
 ) {
     private val pm = context.packageManager
     private val cache = LruCache<String, ImageBitmap>(maxEntries)
+    private val monochrome = LruCache<String, Boolean>(maxEntries)
+    private val packStyles = LruCache<String, Boolean>(16)
 
     suspend fun artwork(app: InstalledApp, prefs: AppearancePrefs, override: IconOverride? = null): AppArtwork? {
         if (override != null || prefs.iconPack != null) {
             val packs = iconPacks.installed()
             // An unavailable override falls back to the global pack, then the app's own art.
             val manual = override?.let { custom -> packs.firstOrNull { it.packageName == custom.packageName }?.let { it to custom.drawable } }
-            if (manual != null) packIcon(manual.first, manual.second)?.let { return AppArtwork(it, true, manual.first.monochrome) }
+            if (manual != null) packIcon(manual.first, manual.second)?.let { return AppArtwork(it, true, isMonochrome(manual.first, manual.second)) }
             val pack = packs.firstOrNull { it.packageName == prefs.iconPack }
             if (pack != null) {
                 val key = AppFilter.normalize(app.key)
                 val name = iconPacks.index(pack).components[key]
-                if (name != null) packIcon(pack, name)?.let { return AppArtwork(it, true, pack.monochrome) }
-                if (isSpole(app)) return AppArtwork(spole(pack.monochrome, false)!!, true, pack.monochrome)
+                if (name != null) packIcon(pack, name)?.let { return AppArtwork(it, true, isMonochrome(pack, name)) }
+                if (isSpole(app)) {
+                    val line = packStyle(pack)
+                    return AppArtwork(spole(line, false)!!, true, line)
+                }
             }
         }
         val own = if (prefs.appStyle == AppStyle.ICON) icon(app) else banner(app)
@@ -50,7 +55,37 @@ class AppArtCache(
     }
 
     suspend fun packIcon(pack: IconPack, name: String): ImageBitmap? = cached("p:${pack.cacheKey}:$name") {
-        iconPacks.drawable(pack, name)?.toBitmap(PACK_PX, PACK_PX)
+        iconPacks.drawable(pack, name)?.toBitmap(PACK_PX, PACK_PX)?.also {
+            monochrome.put("${pack.cacheKey}:$name", pack.monochrome || bitmapIsMonochrome(it))
+        }
+    }
+
+    fun isMonochrome(pack: IconPack, name: String): Boolean = pack.monochrome || monochrome.get("${pack.cacheKey}:$name") == true
+
+    private suspend fun packStyle(pack: IconPack): Boolean {
+        if (pack.monochrome) return true
+        packStyles.get(pack.cacheKey)?.let { return it }
+        val sample = iconPacks.index(pack).drawables.take(3)
+        val line = sample.isNotEmpty() && sample.all { name -> packIcon(pack, name) != null && isMonochrome(pack, name) }
+        packStyles.put(pack.cacheKey, line)
+        return line
+    }
+
+    /** Classify once during IO decoding. Transparency and antialiasing do not change ink colour. */
+    private fun bitmapIsMonochrome(bitmap: android.graphics.Bitmap): Boolean {
+        val pixels = IntArray(bitmap.width * bitmap.height)
+        bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+        var ink: Int? = null
+        for (pixel in pixels) {
+            if (android.graphics.Color.alpha(pixel) < 64) continue
+            val reference = ink
+            if (reference == null) ink = pixel else {
+                if (kotlin.math.abs(android.graphics.Color.red(pixel) - android.graphics.Color.red(reference)) > 12 ||
+                    kotlin.math.abs(android.graphics.Color.green(pixel) - android.graphics.Color.green(reference)) > 12 ||
+                    kotlin.math.abs(android.graphics.Color.blue(pixel) - android.graphics.Color.blue(reference)) > 12) return false
+            }
+        }
+        return ink != null
     }
 
     private suspend fun spole(outline: Boolean, banner: Boolean) = cached("spole:$outline:$banner") {

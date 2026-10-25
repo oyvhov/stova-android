@@ -1,5 +1,8 @@
 package app.stova
 
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.dp
+
 import coil3.request.transformations
 import android.content.ComponentName
 import androidx.activity.compose.setContent
@@ -162,7 +165,7 @@ class AppScreensTest {
         return file.absolutePath
     }
 
-    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList(), brightTop: Boolean = false, appearance: AppearancePrefs = AppearancePrefs(), showApps: Boolean = false, seasonalShowcase: Boolean = false) {
+    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList(), brightTop: Boolean = false, appearance: AppearancePrefs = AppearancePrefs(), showApps: Boolean = false, seasonalShowcase: Boolean = false, packArt: app.stova.apps.AppArtCache? = null, packApps: List<InstalledApp>? = null) {
         val backdrop = demoArt("demo-landscape", android.graphics.Color.rgb(79, 95, 88), brightTop)
         val logoFile = File(rule.activity.cacheDir, "demo-logo.png")
         val logo = Bitmap.createBitmap(900, 300, Bitmap.Config.ARGB_8888)
@@ -183,7 +186,8 @@ class AppScreensTest {
         val seasonalRow = if (seasonalShowcase && activeSeason != Season.NONE) listOf(HomeRowUi.Media(
             HomeRowKey.seasonal(account.id,activeSeason),account,
             if(activeSeason==Season.HALLOWEEN) MediaRowKind.HALLOWEEN else MediaRowKind.CHRISTMAS,items,false)) else emptyList()
-        val rows = seasonalRow + (if (showApps) listOf(HomeRowUi.Apps(HomeRowKey.APPS, appearanceApps())) else emptyList()) + listOf(HomeRowUi.Media(key, account, kind, items, false),
+        val apps = if (showApps) packApps ?: appearanceApps() else emptyList()
+        val rows = seasonalRow + (if (showApps) listOf(HomeRowUi.Apps(HomeRowKey.APPS, apps)) else emptyList()) + listOf(HomeRowUi.Media(key, account, kind, items, false),
             HomeRowUi.Media(HomeRowKey.latestSeries(account.id), account, MediaRowKind.LATEST_SERIES,
                 listOf(item.copy(id = "demo-episode", type = ItemType.EPISODE, seriesName = "Fjordlys", season = 1, episode = 2)), false))
         runBlocking {
@@ -199,7 +203,7 @@ class AppScreensTest {
                     CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
                         Box(Modifier.fillMaxSize()) {
                             BackdropLayer(backdrop)
-                            HomeContent(rows, if (showApps) FocusedTarget.App("Stova") else FocusedTarget.Media(item, account), if (showApps) HomeRowKey.APPS else seasonalRow.firstOrNull()?.key ?: key, container.appArt, container.appCatalog,
+                            HomeContent(rows, if (showApps) FocusedTarget.App(apps.first().label) else FocusedTarget.Media(item, account), if (showApps) HomeRowKey.APPS else seasonalRow.firstOrNull()?.key ?: key, packArt ?: container.appArt, container.appCatalog,
                                 {}, {}, {}, {}, topBar = {
                                     TopBar(Profile("demo-profile", "Demo", AvatarColor.LIME), {}, {}, {},
                                         onSmartHome = if (chips.isNotEmpty()) ({}) else null,
@@ -222,7 +226,7 @@ class AppScreensTest {
             }
         }
         rule.waitForIdle()
-        val label = if(showApps) "Stova" else "Fjordlys"
+        val label = if(showApps) apps.first().label else "Fjordlys"
         rule.onAllNodes(hasContentDescription(label) and hasClickAction())[0].performSemanticsAction(SemanticsActions.RequestFocus) { it() }
         rule.onAllNodes(hasContentDescription(label) and hasClickAction())[0].assertIsFocused()
         rule.mainClock.advanceTimeBy(if(seasonalShowcase) 1_200 else 250)
@@ -245,6 +249,69 @@ class AppScreensTest {
                 }
             }
         }
+    }
+
+    private fun iconPackHome(prefs: AppearancePrefs, name: String): Bitmap {
+        val source = DemoLineIconPack()
+        val art = app.stova.apps.AppArtCache(rule.activity, iconPacks = app.stova.apps.IconPackRepository(source, File(rule.activity.cacheDir, "demo-pack")))
+        val apps = source.apps
+        runBlocking {
+            art.iconPacks.refresh()
+            apps.forEach { org.junit.Assert.assertNotNull(art.artwork(it, prefs)) }
+        }
+        renderMediaHome(appearance = prefs, showApps = true, packArt = art, packApps = apps)
+        val file = rule.saveScreen(name)
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+        if (prefs.iconPack != null && prefs.iconColor == IconColor.ACCENT) {
+            val theme = prefs.seasonal(java.time.LocalDate.of(2026,10,25))
+            val accent = app.stova.core.theme.stovaColorScheme(theme.visualTheme, theme.accent).primary
+            val expected = accent.toArgb()
+            val bounds = rule.onNode(hasContentDescription("Spole") and hasClickAction()).fetchSemanticsNode().boundsInRoot
+            var tinted = 0
+            // Ignore the focus ring: count accent pixels only within the artwork interior.
+            for (y in bounds.top.toInt()+16 until bounds.bottom.toInt()-16) for (x in bounds.left.toInt()+16 until bounds.right.toInt()-16) {
+                if (bitmap.getPixel(x,y) == expected) tinted++
+            }
+            assertTrue("The Spole supplement must actually be decoded and tinted ($tinted pixels)", tinted > 120)
+        }
+        return bitmap
+    }
+
+    @Test fun iconPackAccentForest() {
+        iconPackHome(AppearancePrefs(iconPack = DemoLineIconPack.PACK, iconColor = IconColor.ACCENT, seasonChoice = SeasonChoice.NONE), "ikonpakke-vanleg")
+    }
+    @Test fun iconPackAccentHalloween() {
+        iconPackHome(SeasonChoice.HALLOWEEN.applyTo(AppearancePrefs(iconPack = DemoLineIconPack.PACK, iconColor = IconColor.ACCENT, seasonalDecor = SeasonalDecor.CALM)), "ikonpakke-halloween")
+    }
+    @Test fun iconPackSquareTiles() {
+        iconPackHome(AppearancePrefs(iconPack = DemoLineIconPack.PACK, iconColor = IconColor.ACCENT, appStyle = AppStyle.ICON, seasonChoice = SeasonChoice.NONE), "ikonpakke-ikonstil")
+    }
+    @Test fun iconPackCropToFill() {
+        iconPackHome(AppearancePrefs(iconPack = DemoLineIconPack.PACK, iconFill = IconFill.CROP, seasonChoice = SeasonChoice.NONE), "ikonpakke-fyll")
+    }
+    @Test fun spoleWithoutIconPack() {
+        val source = DemoLineIconPack()
+        val art = app.stova.apps.AppArtCache(rule.activity)
+        runBlocking { org.junit.Assert.assertNotNull(art.artwork(source.apps.first(), AppearancePrefs())) }
+        renderMediaHome(appearance = AppearancePrefs(seasonChoice = SeasonChoice.NONE), showApps = true, packArt = art, packApps = listOf(source.apps.first()))
+        rule.saveScreen("ikonpakke-spole-banner")
+    }
+    @Test fun iconPackPickerAndSettings() {
+        val source = DemoLineIconPack()
+        val prefs = AppearancePrefs(iconPack = DemoLineIconPack.PACK, iconColor = IconColor.ACCENT, seasonChoice = SeasonChoice.NONE)
+        val art = app.stova.apps.AppArtCache(rule.activity, iconPacks = app.stova.apps.IconPackRepository(source, File(rule.activity.cacheDir, "demo-pack")))
+        runBlocking { art.iconPacks.refresh(); art.iconPacks.index(source.installed().single()).drawables.forEach { art.packIcon(source.installed().single(),it) } }
+        rule.runOnUiThread { rule.activity.setContent { StovaTheme(appearance = prefs) {
+            androidx.compose.foundation.layout.Column(Modifier.fillMaxSize().padding(48.dp)) {
+                app.stova.settings.IconPackSettingsContent(prefs, source.installed()) {}
+            }
+        } } }
+        rule.saveScreen("ikonpakke-innstillingar")
+        rule.runOnUiThread { rule.activity.setContent { StovaTheme(appearance = prefs) { app.stova.apps.IconPicker(art, DemoLineIconPack.PACK, {}, {}) } } }
+        rule.onNodeWithText("Søk etter ikon").assertExists()
+        val windows = android.view.inspector.WindowInspector.getGlobalWindowViews()
+        assertTrue("The picker must have its own dialog window", windows.size > 1)
+        rule.saveScreen("ikonpakke-veljar", windows.last())
     }
 
     @Test fun appearanceDefault() {

@@ -3,6 +3,7 @@ package app.stova.core.theme
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import androidx.core.graphics.createBitmap
 import app.stova.R
 import androidx.compose.ui.graphics.toArgb
 
@@ -10,7 +11,7 @@ import androidx.compose.ui.graphics.toArgb
 private const val SpoleLime = 0xFFD5F675.toInt()
 
 fun spoleArtwork(context: Context, outline: Boolean, width: Int, height: Int): Bitmap {
-    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val bitmap = createBitmap(width, height)
     val canvas = Canvas(bitmap)
     val drawable = context.getDrawable(if (outline) R.drawable.ic_spole_arcticons else R.drawable.ic_spole_brand)!!.mutate()
     if (!outline) {

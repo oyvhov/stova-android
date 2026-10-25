@@ -219,8 +219,31 @@ Barneprofilar ser korta, men styring er låst med mindre profilen har «Smarthus
 
 Alle installerte TV-appar (`LEANBACK_LAUNCHER`) og vanlege appar med `LAUNCHER`, sorterte
 alfabetisk, med Favorittar øvst. Meny på ein app: «Legg til i favorittar / Fjern», «Flytt»
-(venstre/høgre i favorittrada), «Skjul», «Appinfo». Skjulte appar ligg i ei eiga, samanfalda
+(venstre/høgre i favorittrada), «Skjul», «Appinfo» og «Endre ikon». Skjulte appar ligg i ei eiga, samanfalda
 gruppe nedst. Stova sjølv og den innebygde launcheren blir aldri viste.
+
+**Ikonpakkar:** Heim og Appar bruker den profilen sin valde Candybar-/Blueprint-pakke, med
+Arcticons som tilrådd linjepakke. Appfilter blir lese frå `res/xml/appfilter.xml`, elles
+`assets/appfilter.xml`; ugyldige item-oppføringar blir hoppa over utan å miste resten. Dei fem
+vanlege temahandlingane blir spurde med `queryIntentActivities` og står i manifestet sine
+`queries`. Indeksen blir lagra på disk per pakkenamn, `versionCode` og oppdateringstid; nye,
+oppdaterte og avinstallerte pakkar utløyser ny oppdaging. TV-ressursar blir dekoda på IO ved
+XXHIGH-tettleik og haldne i ein avgrensa `AppArtCache`. Ingen ikonliste blir dekoda på førehand.
+
+Banner-appstil viser pakkeikon sentrert på Raised-flata eller med «Fyll flata» (kvadratisk kunst
+skalert og klipt til 16:9). Ikon-appstil viser same ikon på ei kvadratisk flate. Manglande treff,
+manglande drawable eller ein utilgjengeleg pakke fell tilbake til eige banner/ikon. «Ingen» er
+standard og bevarer appane si eiga kunst. Stova legg til eit Spole-merke for `app.reelstack` og
+`app.reelstack.debug` når pakken ikkje har treff: kvit Arcticons-linjeteikning i monokrome pakkar,
+flat Spole-lime på mørk flate i fargepakkar. Utan pakke blir Spole sitt eige banner brukt; det
+flate merket er reserve dersom banneret manglar.
+
+Lang OK eller Meny på ein app, både på Heim og i Appar, gir «Endre ikon» → «Frå ikonpakke».
+Veljaren har pakkeval, søk og eit D-pad-styrt, late rutenett. Valet lagrar pakkenamn og
+drawable-namn per app og profil, og gjeld på begge skjermane. «Tilbakestill» fjernar overstyringa
+og bruker automatisk treff igjen. Aktivitetsskifte følgjer dei eksisterande appnøkkelreglane;
+avinstallerte appar blir rydda bort. Barneprofilar får ingen appmeny. Ingen automatiske favorittar.
+
 
 ### 5.4 Innstillingar
 
@@ -237,6 +260,11 @@ Grupper (som i Spole sine innstillingar):
   sesongmerke. Eit direkte temaval slår av kalenderen; eit sesongtema vel òg sesongaksenten.
   Ei rad er eitt D-pad-stopp med namnet til venstre og gjeldande verdi med piler til høgre.
   Venstre går til førre verdi; høgre og OK går til neste, med omløp. Opp/ned flyttar fokus.
+  Gruppa Appikon gir Ikonpakke (Ingen eller installerte pakkar), Farge (Original/Aksent) og
+  Fyll (Sentrert/Fyll flata). Aksent fargar monokrome ikon med effektiv temaaksent, også under
+  kalenderstyrt Halloween/jul; fargeikon beheld originalfargane. Arcticons blir gjenkjend som
+  linjepakke; andre pakkeikon blir klassifiserte ved dekoding, og Spole-reserven følgjer inntil
+  tre prøveikon frå pakken. Innstillingane hugsar ein utilgjengeleg pakke til brukaren endrar valet.
   Endringar blir lagra straks for den aktive profilen. Barneprofilar har same sperre som resten
   av innstillingane: berre «Byt profil» er tilgjengeleg.
   Reduser rørsle og kraftig fokus (4 dp strek) er bevarte.

@@ -91,7 +91,7 @@ private fun PickerIcon(art: AppArtCache, pack: IconPack, name: String, onClick: 
         .background(MaterialTheme.colorScheme.surfaceVariant).clickable(source, indication = null, role = Role.Button, onClick = onClick)
         .padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {
-            image?.let { Image(it, null, colorFilter = if (pack.monochrome && prefs.iconColor == IconColor.ACCENT) ColorFilter.tint(MaterialTheme.colorScheme.primary) else null) }
+            image?.let { Image(it, null, colorFilter = if (art.isMonochrome(pack, name) && prefs.iconColor == IconColor.ACCENT) ColorFilter.tint(MaterialTheme.colorScheme.primary) else null) }
         }
         Text(name, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
