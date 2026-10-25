@@ -57,5 +57,6 @@ oppdatering på fysisk Shield og Shield sine ytelsesbudsjett er framleis eigne, 
 
 ## GitHub
 
-Nytt repo: [oyvhov/stova-android](https://github.com/oyvhov/stova-android). Privat status er
-stadfesta gjennom GitHub API. Push og fjern-commit blir stadfesta ved ferdigstilling.
+Nytt repo: [oyvhov/stova-android](https://github.com/oyvhov/stova-android). Privat status og
+standardgreina `main` er stadfesta gjennom GitHub API. Kodecommit `2c4bb32` er pusha; `git ls-remote`
+stadfesta identisk lokalt og eksternt hode. Hovudutsjekken i `C:/Launcher` er synkronisert til `main`.

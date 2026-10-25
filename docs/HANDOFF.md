@@ -1,3 +1,10 @@
+# Design, parallax og privat GitHub – fullført
+2026-10-25: Claude sine uferdige kjerne-, HA- og rørsleendringar er fullførte; ny design-/vedlikehaldsplan er ferdig. Kodecommit `2c4bb32`; ingen påbyrja steg står att i denne bestillinga.
+Heim har rullande parallax, frigjord plass nedover, retur via første rad/topplinja og tittelreserve ved logofeil. Skjermar er delte i datakopling, vising og mindre komponentar; sjå `docs/ARCHITECTURE.md` og `CONTRIBUTING.md`.
+Full kontroll: 556/556, ingen hoppa over, lint 0 feil, debug-bygg OK. Etter siste fokusretting: Heim/navigasjon 81/81, lint 0 feil og bygg OK. Rapport og fire ekte bilete: `docs/verification/design-og-vedlikehald.md`.
+Endeleg debug-APK er installert med `-r` på emulator-5580 med ekte Jellyfin/HA; profil- og kontofiler har identiske hashar. Ingen styringshandlingar på HA eller installasjon på fysisk Shield. APK ligg i `.worktrees/plan-2/app/build/outputs/apk/debug/app-debug.apk`.
+Nytt privat repo `https://github.com/oyvhov/stova-android`, standardgrein `main`; push og samsvarande fjern-commit er stadfesta. `C:/Launcher` er no hovudutsjekk på `main`. Gamle signerings-/Shield-/release-steg er framleis uverifiserte og ikkje del av denne bestillinga.
+
 # Smarthus – fjernkontrollhandlingar fullført
 2026-10-25: Heile bestillinga `2026-10-25-smarthus-handlingar.md` er fullført i `ha-v2`; ingen påbyrja steg står att. §5.2 og eigen plan er oppdaterte.
 Sluttkontroll via `scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug -Pstova.screens=true`: 381/381, ingen hoppa over; HA 165, DesignRulesTest 4/4; lint 0 feil (32 åtvaringar, 1 hint), APK OK.

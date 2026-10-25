@@ -9,6 +9,6 @@ Tillegg: heroen skal vere parallax og gi frå seg høgda når ein navigerer nedo
 - [x] Del Heim og utsjånad i datakopling, rein vising og mindre rad-/navigasjonskomponentar.
 - [x] Del Smarthus-vising og kortmeny frå datakoplinga; dokumenter ansvar, designreglar og testflyt.
 - [x] Full einingstest-/skjermtestpakke, lint og debug-bygg; reell emulatorprøve med bevarte data.
-- [ ] Opprett nytt privat `oyvhov/stova-android`, push testa historie til `main`, og stadfest privat status og commit.
+- [x] Opprett nytt privat `oyvhov/stova-android`, push testa historie til `main`, og stadfest privat status og commit.
 
 Validering og konkrete avvik skal førast i `docs/verification/design-og-vedlikehald.md`.
