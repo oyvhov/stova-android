@@ -1,3 +1,29 @@
+# Spotlight og innlogging på emulatoren
+2026-10-25: Spotlight og innlogging er gjort i `polish` på `polish-cache` og snøggspola inn i `plan-2-media`. Siste commit er `cc217b8`.
+- **Brukarønske:** ingen episodekunst eller episodenummer, ingen tenestelogo, og ein vakker hero som roterer frå biblioteket.
+- **Hero:**
+  - Heroen er ein spotlight (spec §5.1, endra): filmar og seriar med backdrop, dei med logo først, maks 30, nytt utval kvar 2. time.
+  - Seriar der sesong 2 eller seinare kom dei siste 45 dagane, står først med «Ny sesong». Serieomtale, score og logo blir henta med éin `Ids=`-førespurnad.
+  - Kvar tittel står i 12 s. Rotasjonen tikkar berre når Heim er synleg (`WhileSubscribed`).
+  - Bakgrunnen tonar inn først når biletet er dekoda (900 ms). Logoar får transparent kant klipt bort.
+  - Heroen har fast høgd, så radene flyttar seg ikkje.
+- **Kort og rader:**
+  - Episodekort bruker seriekunst. Fokusringen rammar berre kunstverket.
+  - Fokusert rad smett til toppen, så forrige rad aldri stikk fram.
+  - Startfokus følgjer medierader som kjem seint, til sjåaren har trykt ein tast.
+- **Verifisering:**
+  - `testDebugUnitTest lintDebug assembleDebug` → 291/291 bestått, 16 hoppa over (berre skjermbilettestar), lint 0 feil.
+  - På emulatoren (`Stova_TV`, `emulator-5580`): Jellyfin «Midttunet» er innlogga via Quick Connect, og spotlight og rader er kontrollerte med skjermbilete i `.superpowers/spot-0*.png`.
+- **Spole:**
+  - `feat/spole-launcher-link` i `C:/JellyBin/spole-launcher-link` er fletta med Spole beta18: `d24a8dc`, pluss `b850ea0` for CHANGELOG-rekkjefølgja.
+  - Ein subagent porterte lenkja til `DetailsCoordinator`/`KidsLibraryCoordinator`. Resultat: 1 281 testar, 1 280 bestått, 1 hoppa over (nettverkstest), lint 0 feil.
+  - Debug-APK-en (beta18) er installert på emulatoren og ventar på Quick Connect-godkjenning.
+- **Står att:**
+  - Brukaren godkjenner Spole-koden.
+  - Overleveringa Stova → Spole skal testast på emulatoren.
+  - Emby og HA krev at brukaren skriv inn eigne opplysningar.
+  - Ingen push.
+
 # Cache og finpuss
 2026-10-25: Hero-lesbarheit er fullført med raud/grøn TDD: heile tekstkolonna er maks 560 dp ved 960 dp skjerm; flat Ink-scrim har 100 % ved venstre kant, 85 % ved 35 %, 80 % ved 60 %, 70 % ved 62,5 % og 0 % ved 65 %. Ekstra fargestopp held slutten av omtalen lesbar; tre stopp åleine gav for låg kontrast.
 Verifisering: `testDebugUnitTest --tests app.stova.AppScreensTest '-Pstova.screens=true'` → 12/12; deretter `testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → 265/265, ingen hoppa over, DesignRulesTest 3/3, lint 0 feil (20 åtvaringar, 1 hint), debug-APK OK. Alle kall via `pwsh -NoProfile -File scripts/gradle.ps1`.
