@@ -34,8 +34,6 @@ import app.stova.ha.ui.chipText
 import app.stova.media.*
 import app.stova.media.model.*
 import app.stova.media.ui.*
-import coil3.SingletonImageLoader
-import coil3.request.ImageRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -66,29 +64,11 @@ fun HomeScreen(
     val rows by vm.rows.collectAsStateWithLifecycle()
     val focused by vm.focused.collectAsStateWithLifecycle()
     val initial by vm.initialFocus.collectAsStateWithLifecycle()
-    val backdrop by vm.backdrop.current.collectAsStateWithLifecycle()
+    val spotlight by vm.spotlight.collectAsStateWithLifecycle()
     val reduceMotion = LocalReduceMotion.current
     val rotationEnabled = vm.rotationEnabled()
-    val rotationUrls = rows.orEmpty().filterIsInstance<HomeRowUi.Media>()
-        .filter { it.kind != MediaRowKind.CONTINUE }.flatMap { it.items }
-        .mapNotNull { it.art.backdrop }.distinct()
-    LaunchedEffect(rotationUrls, reduceMotion, rotationEnabled) {
-        vm.backdrop.rotation(rotationUrls, !reduceMotion && rotationEnabled)
-    }
+    LaunchedEffect(reduceMotion, rotationEnabled) { vm.setSpotlightRotation(!reduceMotion && rotationEnabled) }
     val context = LocalContext.current
-    val preloadUrls = remember(rows) { app.stova.background.backdropPreloadUrls(rows.orEmpty()) }
-    LaunchedEffect(preloadUrls) {
-        val loader = SingletonImageLoader.get(context)
-        preloadUrls.forEach { url ->
-            loader.enqueue(ImageRequest.Builder(context).data(url).size(1920, 1080).build())
-        }
-    }
-    LaunchedEffect(backdrop, rotationUrls, reduceMotion, rotationEnabled) {
-        if (!reduceMotion && rotationEnabled && rotationUrls.isNotEmpty()) {
-            val next = rotationUrls[(rotationUrls.indexOf(backdrop) + 1) % rotationUrls.size]
-            SingletonImageLoader.get(context).enqueue(ImageRequest.Builder(context).data(next).size(1920, 1080).build())
-        }
-    }
     val handoff = remember(context) { SpoleHandoff(context) }
     var actions by remember { mutableStateOf<FocusedTarget.Media?>(null) }
     var missing by remember { mutableStateOf(false) }
@@ -100,7 +80,8 @@ fun HomeScreen(
         }
     }
     HomeContent(rows, focused, initial, art, catalog, onOpenApps, vm::focus,
-        onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { topBar(chips) })
+        onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { topBar(chips) },
+        spotlight = spotlight)
     actions?.let { target ->
         ItemActionsMenu(target.item,
             onPlay = { actions = null; open(target, SpoleAction.PLAY) },
@@ -124,6 +105,7 @@ fun HomeContent(
     onMediaClick: (FocusedTarget.Media) -> Unit,
     onMediaLongClick: (FocusedTarget.Media) -> Unit,
     topBar: @Composable () -> Unit = {},
+    spotlight: SpotlightEntry? = null,
 ) {
     // The last focused title survives leaving Home for Spole or another launcher page.
     val restoreTarget = remember { focused }
@@ -154,7 +136,7 @@ fun HomeContent(
         BoxWithConstraints(Modifier.weight(1f)) {
             val heroHeight = maxHeight * 0.45f
             Column {
-                HeroPanel(focused, Modifier.fillMaxWidth().heightIn(min = heroHeight))
+                HeroPanel(spotlight, Modifier.fillMaxWidth().heightIn(min = heroHeight))
                 when {
                     rows == null -> Unit
                     rows.isEmpty() -> EmptyHome(onOpenApps)

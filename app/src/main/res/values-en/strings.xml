@@ -122,7 +122,6 @@
     <string name="row_latest_movies">Recently added · Movies</string>
     <string name="row_latest_series">Recently added · Series</string>
     <string name="offline">Offline</string>
-    <string name="episode_code">S%1$d · E%2$d</string>
     <string name="service_jellyfin">Jellyfin</string>
     <string name="service_emby">Emby</string>
     <string name="rating_tmdb">TMDB</string>
@@ -207,4 +206,5 @@
     <string name="ha_hide_home">Hide from home</string>
     <string name="ha_home_limit">At most three cards on home</string>
     <string name="ha_remove">Remove</string>
+    <string name="spotlight_new_season">New season</string>
 </resources>

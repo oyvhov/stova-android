@@ -13,14 +13,28 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import app.stova.core.theme.LocalReduceMotion
+import androidx.compose.ui.platform.testTag
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
-@Composable fun BackdropLayer(url:String?,modifier:Modifier=Modifier) {
+import coil3.request.SuccessResult
+import android.content.Context
+import androidx.compose.runtime.*
+private fun backdropRequest(context:Context,url:String)=ImageRequest.Builder(context).data(url).size(1920,1080).build()
+@Composable fun BackdropLayer(url:String?,modifier:Modifier=Modifier,imageLoader:ImageLoader=SingletonImageLoader.get(LocalContext.current)) {
  val ink=MaterialTheme.colorScheme.background
  val context=LocalContext.current
+ // The next title fades in only once its image is decoded, so a change never dips to the bare
+ // background; a failed load keeps the current picture.
+ var shown by remember { mutableStateOf<String?>(null) }
+ LaunchedEffect(url,imageLoader) {
+  if(url==null) shown=null
+  else if(imageLoader.execute(backdropRequest(context,url)) is SuccessResult) shown=url
+ }
  Box(modifier.fillMaxSize().background(ink)) {
-  Crossfade(url,animationSpec=tween(if(LocalReduceMotion.current) 0 else 300),label="backdrop") { image ->
-   if(image!=null) AsyncImage(ImageRequest.Builder(context).data(image).size(1920,1080).build(),null,Modifier.fillMaxSize(),contentScale=ContentScale.Crop)
+  Crossfade(shown,animationSpec=tween(if(LocalReduceMotion.current) 0 else 900),label="backdrop") { image ->
+   if(image!=null) AsyncImage(backdropRequest(context,image),null,imageLoader,Modifier.fillMaxSize().testTag("backdrop:$image"),contentScale=ContentScale.Crop)
   }
   Canvas(Modifier.fillMaxSize()) {
    // Hold the scrim under the entire bounded hero column before fading into the artwork.

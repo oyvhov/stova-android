@@ -2,10 +2,16 @@ package app.stova.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.stova.media.SpotlightEntry
+import app.stova.profiles.Profile
 import app.stova.profiles.ProfileSession
 import app.stova.profiles.StartFocus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,19 +23,49 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
+/** How long each spotlight title holds the hero before the next one fades in. */
+const val SPOTLIGHT_MILLIS = 12_000L
+
 @OptIn(ExperimentalCoroutinesApi::class)
-class HomeViewModel(private val session: ProfileSession, sources: List<HomeRowSource>) : ViewModel() {
+class HomeViewModel(
+    private val session: ProfileSession,
+    sources: List<HomeRowSource>,
+    spotlightSource: (Profile) -> Flow<List<SpotlightEntry>> = { flowOf(emptyList()) },
+) : ViewModel() {
     private val focusedState = MutableStateFlow<FocusedTarget?>(null)
     val focused: StateFlow<FocusedTarget?> = focusedState
-    val backdrop = app.stova.background.BackdropController(viewModelScope)
+    private val rotation = MutableStateFlow(true)
+    private var spotlightIndex = 0
     init {
-        viewModelScope.launch { session.active.distinctUntilChangedBy { it?.id }.collect { focusedState.value = null; backdrop.clear() } }
+        viewModelScope.launch { session.active.distinctUntilChangedBy { it?.id }.collect { focusedState.value = null; spotlightIndex = 0 } }
     }
     fun rotationEnabled() = session.active.value?.home?.backdropRotation ?: false
-    fun focus(target: FocusedTarget) {
-        focusedState.value = target
-        backdrop.focus((target as? FocusedTarget.Media)?.item?.art?.backdrop)
-    }
+    fun setSpotlightRotation(enabled: Boolean) { rotation.value = enabled }
+    /** Remembers the card for focus restore; the hero and backdrop follow the spotlight, not focus. */
+    fun focus(target: FocusedTarget) { focusedState.value = target }
+
+    private val spotlightPool: Flow<List<SpotlightEntry>> = session.active
+        .distinctUntilChangedBy { it?.id }
+        .flatMapLatest { profile -> if (profile == null) flowOf(emptyList()) else spotlightSource(profile) }
+        .distinctUntilChanged()
+
+    /**
+     * The title the hero shows, stepping through the library pool. It only ticks while Home is on
+     * screen, and picks up where it left off when Home comes back.
+     */
+    val spotlight: StateFlow<SpotlightEntry?> = combine(spotlightPool, rotation) { pool, rotate -> pool to rotate }
+        .flatMapLatest { (pool, rotate) ->
+            flow {
+                if (pool.isEmpty()) { emit(null); return@flow }
+                while (true) {
+                    emit(pool[spotlightIndex % pool.size])
+                    if (!rotate || pool.size < 2) return@flow
+                    delay(SPOTLIGHT_MILLIS)
+                    spotlightIndex = (spotlightIndex + 1) % pool.size
+                }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /**
      * Null until every source has answered for the current profile: "not loaded yet" must never

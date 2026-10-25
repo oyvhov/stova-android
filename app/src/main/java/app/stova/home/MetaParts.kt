@@ -7,13 +7,9 @@ sealed interface FocusedTarget {
 sealed interface MetaPart {
  data class Year(val y:Int):MetaPart
  data class Runtime(val minutes:Int):MetaPart
- data class EpisodeCode(val season:Int,val episode:Int):MetaPart
 }
+/** Year, and a film's length; a series' episode runtime would read as the length of the whole show. */
 fun metaParts(item:MediaItem):List<MetaPart> = buildList {
- if(item.type==ItemType.EPISODE) {
-  if(item.season!=null && item.episode!=null) add(MetaPart.EpisodeCode(item.season,item.episode))
-  item.runtimeMinutes?.let { add(MetaPart.Runtime(it)) }
- } else {
-  item.year?.let { add(MetaPart.Year(it)) };item.runtimeMinutes?.let { add(MetaPart.Runtime(it)) }
- }
+ item.year?.let { add(MetaPart.Year(it)) }
+ if(item.type==ItemType.MOVIE) item.runtimeMinutes?.let { add(MetaPart.Runtime(it)) }
 }

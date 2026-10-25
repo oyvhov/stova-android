@@ -34,6 +34,5 @@ import coil3.request.ImageRequest
    if(!poster) item.progress?.let { progress -> Box(Modifier.align(Alignment.BottomStart).fillMaxWidth(progress.coerceIn(0f,1f)).height(4.dp).background(MaterialTheme.colorScheme.primary)) }
   }
   Text(if(item.type==ItemType.EPISODE) item.seriesName ?: item.title else item.title,Modifier.padding(top=8.dp),style=MaterialTheme.typography.titleSmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurface)
-  if(item.type==ItemType.EPISODE && item.season!=null && item.episode!=null) Text(stringResource(R.string.episode_code,item.season,item.episode),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
  }
 }

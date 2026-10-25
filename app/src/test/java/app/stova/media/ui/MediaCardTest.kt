@@ -46,4 +46,15 @@ class MediaCardTest {
         compose.onRoot().performKeyInput { pressKey(Key.Menu) }
         assertEquals("Second", menu)
     }
+
+    @Test fun episodeCardNamesTheSeriesWithoutAnEpisodeCode() {
+        compose.setContent {
+            StovaTheme {
+                MediaCard(MediaItem("e1", "a", ItemType.EPISODE, "Pilot", seriesName = "Kystvakta", season = 1, episode = 2),
+                    false, {}, {}, {})
+            }
+        }
+        compose.onNodeWithText("Kystvakta").assertIsDisplayed()
+        compose.onAllNodesWithText("E2", substring = true).assertCountEquals(0)
+    }
 }

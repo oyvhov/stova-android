@@ -99,10 +99,10 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│  [clearlogo / tittel]          ☁ 4°  135 øre  21:14  ⌂  ▦  ⚙  ◉ │
+│  [Ny sesong]                   ☁ 4°  135 øre  21:14  ⌂  ▦  ⚙  ◉ │
+│  [clearlogo / tittel]                                           │
 │  2024 · 1 t 52 min · 12 · ★ 7,8 · 🍅 91 %                        │
-│  To linjer omtale …                                             │
-│  Jellyfin                                                       │
+│  Tre linjer omtale …                                            │
 │                                                                 │
 │  Favorittappar   [banner][banner][banner][banner]               │
 │  Hald fram  Jellyfin   [16:9][16:9][16:9] ▬▬▬ framdrift          │
@@ -111,13 +111,20 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
 │  Nyleg lagt til · Seriar  Emby      [16:9]…                     │
 │  Hald fram i andre appar (Watch Next) [16:9]…                   │
 └────────────────────────────────────────────────────────────────┘
-          ▲ heile bakgrunnen = backdrop for fokusert tittel + flat scrim
+          ▲ heile bakgrunnen = backdrop for spotlight-tittelen + flat scrim
 ```
 
-- **Hero** (øvre 45 %) viser den fokuserte tittelen: clearlogo (fallback: tittel i
-  `displaySmall`), metadatalinje (år · speletid · aldersgrense), score, to linjer omtale og
-  kjelde (tenestemerke + namn). Når fokus er på apprada, viser heroen appnamnet og held førre
-  backdrop.
+- **Hero = spotlight frå biblioteket** (endra 25.10.2026 etter ønske frå brukaren). Heroen
+  følgjer ikkje fokus. Han roterer roleg gjennom vakre filmar og seriar frå heile biblioteket:
+  tilfeldige titlar med backdrop (dei med clearlogo først), opptil 30, og eitt nytt utval kvar
+  2. time. Seriar der sesong 2 eller seinare har hatt premiere dei siste 45 dagane kjem først,
+  merka «Ny sesong». Aldri episodekunst, episodenummer eller tenestemerke i heroen.
+  - Innhald: «Ny sesong»-merke, clearlogo (fallback: tittel i `displaySmall`), metadatalinje
+    (år, og speletid berre for film), score og tre linjer omtale.
+  - Kvar tittel står i 12 s. Neste bakgrunn blir lasta ferdig før han tonar inn over 900 ms,
+    så det blir aldri eit svart blink. Ingen kontinuerleg rørsle (zoom), så Shield kan kvile.
+  - Rotasjonen tikkar berre medan Heim er synleg, og held fram der han slapp.
+    «Bakgrunnsrotasjon» av eller redusert rørsle stoppar han på første tittel.
 - **Statuslinje** øvst til høgre: klokke og opptil tre HA-statusbrikker (kort merka «Vis på heim»).
 - **Rader**, i denne standardrekkjefølgja, kvar for seg per konto og teneste (Jellyfin og Emby
   blir aldri blanda):
@@ -128,10 +135,11 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   5. Hald fram i andre appar (Watch Next)
 
   Profilen kan slå av og sortere rader i Innstillingar → Heim. Ei tom rad blir ikkje vist.
-  Radoverskrifta er namnet på rada («Hald fram», «Nyleg lagt til · Filmar»), følgt av tenestemerke
-  og servernamn i `Muted`, slik at to kontoar av same type kan skiljast.
+  Radoverskrifta er namnet på rada («Hald fram», «Nyleg lagt til · Filmar»), følgt av
+  servernamnet i `Muted` (utan tenestelogo), slik at to kontoar kan skiljast.
 - **Kunstformat:** filmar i «Nyleg lagt til» bruker plakat (2:3, 132 × 198 dp). Hald fram,
-  episodar og seriar bruker brei thumbnail (16:9, 248 × 139,5 dp). Apprada bruker banner
+  episodar og seriar bruker brei thumbnail (16:9, 248 × 139,5 dp). Eit episodekort viser
+  seriekunst (serie-thumb, elles seriebackdrop) og serienamnet, utan episodenummer. Apprada bruker banner
   (16:9, 248 × 139,5 dp). Ingen kunstige botnkantar på plakatar.
 - **Framdrift:** 4 dp lime-strek i botnen av 16:9-kort for påbyrja titlar.
 - **OK** på ein tittel opnar detaljsida i Spole. **Lang OK / Meny** opnar ein liten handlingsmeny:

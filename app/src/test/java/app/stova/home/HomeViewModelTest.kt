@@ -3,6 +3,8 @@ package app.stova.home
 import app.stova.apps.InstalledApp
 import app.stova.core.storage.JsonFileStore
 import app.stova.core.theme.AvatarColor
+import app.stova.media.SpotlightEntry
+import app.stova.media.model.*
 import app.stova.profiles.ProfileRepository
 import app.stova.profiles.ProfileSession
 import app.stova.profiles.ProfilesFile
@@ -11,8 +13,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -71,5 +75,33 @@ class HomeViewModelTest {
         )
         assertEquals(listOf(x, HomeRowKey.APPS), vm.rows.value!!.map { it.key })
         assertEquals(HomeRowKey.APPS, vm.initialFocus.value)
+    }
+
+    private val account = MediaAccount("a", "p", ServerKind.JELLYFIN, "s", "Heim", "http://jf", "u", "U")
+    private fun entry(id: String) = SpotlightEntry(MediaItem(id, "a", ItemType.MOVIE, id, art = ItemArt(backdrop = "b-$id")), account, false)
+    private suspend fun TestScope.spotlightVm(vararg ids: String): HomeViewModel {
+        val vm = HomeViewModel(session(backgroundScope, StartFocus.FIRST_MEDIA_ROW), emptyList()) { flowOf(ids.map(::entry)) }
+        backgroundScope.launch { vm.spotlight.collect {} }
+        return vm
+    }
+
+    @Test fun spotlightRotatesThroughTheLibraryPool() = runTest(UnconfinedTestDispatcher()) {
+        val vm = spotlightVm("a", "b")
+        vm.setSpotlightRotation(true)
+        assertEquals("a", vm.spotlight.value?.item?.id)
+        advanceTimeBy(SPOTLIGHT_MILLIS + 1); assertEquals("b", vm.spotlight.value?.item?.id)
+        advanceTimeBy(SPOTLIGHT_MILLIS); assertEquals("a", vm.spotlight.value?.item?.id)
+    }
+
+    @Test fun spotlightHoldsWhenRotationIsOff() = runTest(UnconfinedTestDispatcher()) {
+        val vm = spotlightVm("a", "b")
+        vm.setSpotlightRotation(false)
+        advanceTimeBy(SPOTLIGHT_MILLIS * 5); assertEquals("a", vm.spotlight.value?.item?.id)
+    }
+
+    @Test fun focusingACardLeavesTheSpotlightAlone() = runTest(UnconfinedTestDispatcher()) {
+        val vm = spotlightVm("a", "b")
+        vm.focus(FocusedTarget.Media(MediaItem("ep", "a", ItemType.EPISODE, "Episode", art = ItemArt(backdrop = "b-ep")), account))
+        assertEquals("a", vm.spotlight.value?.item?.id)
     }
 }

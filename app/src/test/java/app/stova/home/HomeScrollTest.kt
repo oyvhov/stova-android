@@ -56,8 +56,8 @@ class HomeScrollTest {
     @Test fun homeShowsNoServiceLogo() {
         render(FocusedTarget.Media(rows.first().items.first(), account))
         compose.waitForIdle()
-        // The server name stays in the hero and in each row header; only the logo goes.
-        compose.onAllNodesWithText("Demo").assertCountEquals(3)
+        // The server name stays in each row header; only the logo goes.
+        compose.onAllNodesWithText("Demo").assertCountEquals(2)
         compose.onAllNodesWithContentDescription("Jellyfin").assertCountEquals(0)
     }
 }

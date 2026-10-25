@@ -180,7 +180,7 @@ class AppScreensTest {
                                     TopBar(Profile("demo-profile", "Demo", AvatarColor.LIME), {}, {}, {},
                                         onSmartHome = if (chips.isNotEmpty()) ({}) else null,
                                         leading = { HomeStatusChips(chips) })
-                                })
+                                }, spotlight = app.stova.media.SpotlightEntry(item, account, newSeason = true))
                         }
                     }
                 }

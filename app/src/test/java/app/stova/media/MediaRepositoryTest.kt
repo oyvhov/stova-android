@@ -49,6 +49,36 @@ class MediaRepositoryTest {
   val r=MediaRepository(a,{ client(it) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler));r.refresh("p")
   assertTrue(r.rows("p").first().all { it.kind==MediaRowKind.CONTINUE })
  }
+ private fun spot(a:MediaAccount)=MediaItem("f1",a.id,ItemType.MOVIE,"Fjordlys",art=ItemArt(backdrop="b",logo="l"))
+ private fun spotClient(a:MediaAccount,calls:MutableList<Endpoint>,failSpotlight:Boolean=false)=object:MediaServerClient {
+  override suspend fun resume()=listOf(item(a))
+  override suspend fun nextUp()=emptyList<MediaItem>()
+  override suspend fun latest(endpoint:Endpoint):List<MediaItem> {
+   calls+=endpoint
+   if(endpoint==Endpoint.SPOTLIGHT && failSpotlight) throw MediaError.Server(500)
+   return if(endpoint==Endpoint.SPOTLIGHT) listOf(spot(a)) else emptyList()
+  }
+ }
+ @Test fun spotlightIsFetchedCachedAndServedFromDiskOnColdStart()=runTest {
+  val a=accounts();add(a,ServerKind.JELLYFIN);val calls=mutableListOf<Endpoint>();val io=UnconfinedTestDispatcher(testScheduler)
+  val r=MediaRepository(a,{ spotClient(it,calls) },tmp.root.resolve("snapshots"),backgroundScope,io)
+  r.refresh("p");assertEquals(listOf("f1"),r.spotlight("p").first().map { it.item.id })
+  val cold=MediaRepository(a,{ awaitCancellation() },tmp.root.resolve("snapshots"),backgroundScope,io)
+  assertEquals(listOf("f1"),cold.spotlight("p").first().map { it.item.id })
+ }
+ @Test fun spotlightRefreshesAtMostEveryTwoHours()=runTest {
+  val a=accounts();add(a,ServerKind.JELLYFIN);val calls=mutableListOf<Endpoint>();var now=1_000L
+  val r=MediaRepository(a,{ spotClient(it,calls) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ now })
+  r.refresh("p");r.refresh("p");assertEquals(1,calls.count { it==Endpoint.SPOTLIGHT })
+  now+=2*60*60*1000L+1;r.refresh("p");assertEquals(2,calls.count { it==Endpoint.SPOTLIGHT })
+ }
+ @Test fun aFailingSpotlightKeepsTheRowsAndTheCachedSpotlight()=runTest {
+  val a=accounts();add(a,ServerKind.JELLYFIN);val calls=mutableListOf<Endpoint>();var now=1_000L;var fail=false
+  val r=MediaRepository(a,{ spotClient(it,calls,fail) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ now })
+  r.refresh("p");fail=true;now+=3*60*60*1000L;r.refresh("p")
+  assertEquals(listOf(item(a.forProfile("p").first().single())),r.rows("p").first().single().items)
+  assertEquals(listOf("f1"),r.spotlight("p").first().map { it.item.id })
+ }
  @Test fun removedAccountDropsCachedRows()=runTest {
   val a=accounts();val j=add(a,ServerKind.JELLYFIN);cached(j)
   val r=MediaRepository(a,{client(it)},tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))
