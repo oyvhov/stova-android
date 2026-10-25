@@ -12,6 +12,7 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import app.stova.core.theme.StovaLayout
+import app.stova.core.ui.softEntrance
 
 internal val LocalSettingsSectionFocus = staticCompositionLocalOf<FocusRequester?> { null }
 
@@ -58,7 +59,7 @@ internal fun SettingsLayout(
         // compete for Up/Down while the user is already selecting the next section.
         key(selected) {
             Column(
-                Modifier.weight(1f).fillMaxHeight()
+                Modifier.weight(1f).fillMaxHeight().softEntrance(selected)
                     .focusRequester(pane)
                     .focusProperties {
                         onExit = {

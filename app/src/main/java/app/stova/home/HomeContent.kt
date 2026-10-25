@@ -27,9 +27,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.apps.*
-import app.stova.core.theme.LocalReduceMotion
 import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.StovaButton
+import app.stova.core.ui.smoothScrollToItem
+import app.stova.core.theme.stovaMotion
 import app.stova.media.*
 import app.stova.media.model.*
 import app.stova.media.ui.*
@@ -107,19 +108,30 @@ fun HomeContent(
     val topBarFocus = remember { FocusRequester() }
     val focusScope = rememberCoroutineScope()
     var rowNavigation by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var pendingRow by remember { mutableStateOf<HomeRowKey?>(null) }
+    var navigationVersion by remember { mutableIntStateOf(0) }
+    val motion = stovaMotion
     fun scrollIndex(index: Int) = if (index == 0 || appearance.heroSize == HeroSize.OFF) index else index + 1
     val initialRow = rows.orEmpty().indexOfFirst { it.key == restoreRow }.coerceAtLeast(0)
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = scrollIndex(initialRow))
     fun focusRow(index: Int) {
         rowNavigation?.cancel()
+        navigationVersion++
+        val version = navigationVersion
+        pendingRow = null
         if (index < 0) { runCatching { topBarFocus.requestFocus(FocusDirection.Enter) }; return }
         val key = currentRows?.getOrNull(index)?.key ?: return
+        pendingRow = key
         rowNavigation = focusScope.launch {
-            withFrameNanos { }
-            listState.scrollToItem(scrollIndex(index))
-            repeat(12) {
-                if (runCatching { requesters[key]?.requestFocus(FocusDirection.Enter) == true }.getOrDefault(false)) return@launch
+            try {
                 withFrameNanos { }
+                listState.smoothScrollToItem(scrollIndex(index), motion)
+                repeat(12) {
+                    if (runCatching { requesters[key]?.requestFocus(FocusDirection.Enter) == true }.getOrDefault(false)) return@launch
+                    withFrameNanos { }
+                }
+            } finally {
+                if (version == navigationVersion) pendingRow = null
             }
         }
     }
@@ -134,8 +146,10 @@ fun HomeContent(
             viewerMoved = true
             // A newer arrow owns focus, even when it only moves within the header or a row.
             // Never let a lazy-row request from an earlier Down steal it on the next frame.
-            if (event.key in listOf(Key.DirectionUp, Key.DirectionDown, Key.DirectionLeft, Key.DirectionRight))
+            if (event.key in listOf(Key.DirectionLeft, Key.DirectionRight)) {
                 rowNavigation?.cancel()
+                pendingRow = null
+            }
         }
         val key = movingRow
         if (key == null) false else when (event.key) {
@@ -201,10 +215,9 @@ fun HomeContent(
                             }
                         }
                         val scope = rememberCoroutineScope()
-                        val reduceMotion = LocalReduceMotion.current
                         LaunchedEffect(topReturn) {
                             if (topReturn > 0) {
-                                if (reduceMotion) listState.scrollToItem(0) else listState.animateScrollToItem(0)
+                                if (pendingRow == null) listState.smoothScrollToItem(0, motion)
                             }
                         }
                         val rowSpec = LocalBringIntoViewSpec.current
@@ -214,8 +227,8 @@ fun HomeContent(
                             (if (appearance.showTitles) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp
                         // Even the last row can reach the top after the hero has scrolled away.
                         val bottomSpace = (viewportHeight - lastRowHeight).coerceAtLeast(StovaLayout.TvSafeEdge)
-                        // The column does not scroll to a focused card; the focused row snaps its header
-                        // to the top instead, so the row above never peeks out as a bare bar under the hero.
+                        // One animation owns the column, including the hero. Individual cards must
+                        // not start a second vertical bring-into-view scroll during a row transition.
                         CompositionLocalProvider(LocalBringIntoViewSpec provides StayPut) {
                             LazyColumn(Modifier.fillMaxSize().focusRestorer(), state = listState,
                                 contentPadding = PaddingValues(bottom = bottomSpace)) {
@@ -235,7 +248,8 @@ fun HomeContent(
                                             if (event.key !in listOf(Key.DirectionUp, Key.DirectionDown)) false else {
                                                 if (event.type == KeyEventType.KeyDown) {
                                                     val step = if (event.key == Key.DirectionUp) -1 else 1
-                                                    val next = nextRow(index, step)
+                                                    val from = pendingRow?.let { key -> currentRows.orEmpty().indexOfFirst { it.key == key } } ?: index
+                                                    val next = nextRow(from, step)
                                                     if (next != null) focusRow(next) else if (step < 0) focusRow(-1)
                                                 }
                                                 true
@@ -245,8 +259,8 @@ fun HomeContent(
                                         }.focusRestorer().onFocusChanged { state ->
                                             val gainedFocus = state.hasFocus && !hasFocus
                                             hasFocus = state.hasFocus
-                                            if (gainedFocus) scope.launch {
-                                                if (reduceMotion) listState.scrollToItem(scrollIndex(index)) else listState.animateScrollToItem(scrollIndex(index))
+                                            if (gainedFocus && pendingRow == null) scope.launch {
+                                                listState.smoothScrollToItem(scrollIndex(index), motion)
                                             }
                                         }.focusGroup().then(if (movingRow == row.key) Modifier.padding(horizontal = 32.dp)
                                             .border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large) else Modifier)) {

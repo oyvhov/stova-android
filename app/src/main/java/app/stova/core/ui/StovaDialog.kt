@@ -31,7 +31,7 @@ import app.stova.core.theme.stovaMotion
 
 /**
  * Every dialog, menu and panel in Stova. The scrim and the content fade in while the panel settles
- * from 0.96, the exit is quicker, and under reduced motion it simply appears and disappears.
+ * from 0.985, the exit is quicker, and under reduced motion it simply appears and disappears.
  * Back and a touch outside still close it: the request plays the exit first and reaches
  * [onDismissRequest] when the panel has gone. Focus goes into the content as before, because
  * the content is composed from the first frame.
@@ -98,6 +98,6 @@ fun StovaDialog(
 
 /** The platform's own dialog dim, kept so the picture behind a dialog looks as it always did. */
 private const val SCRIM_ALPHA = 0.6f
-private const val PANEL_FROM = 0.96f
+private const val PANEL_FROM = 0.985f
 private const val PANEL_TO = 0.98f
 private val confirmKeys = setOf(Key.DirectionCenter, Key.Enter, Key.NumPadEnter)

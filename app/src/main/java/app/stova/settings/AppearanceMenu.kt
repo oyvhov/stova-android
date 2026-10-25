@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.ui.StovaButton
 import app.stova.core.ui.focusOutline
+import app.stova.core.ui.softEntrance
 
 enum class AppearanceCategory(@StringRes val title: Int, @StringRes val hint: Int) {
     THEME(R.string.theme_group, R.string.settings_summary_theme),
@@ -88,7 +89,7 @@ internal fun AppearanceMenu(scrollable: Boolean = true, content: @Composable (Ap
         }
         key(selected) {
             val scroll = rememberScrollState()
-            Column(Modifier.fillMaxWidth().focusProperties {
+            Column(Modifier.fillMaxWidth().softEntrance(selected).focusProperties {
                 onExit = { if (requestedFocusDirection == FocusDirection.Left) sidebar?.requestFocus() }
             }.focusGroup().then(if (scrollable) Modifier.verticalScroll(scroll) else Modifier), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 val category = selected

@@ -16,6 +16,8 @@ class StovaMotionTest {
         assertEquals(0, still.ambient)
         assertEquals(0, still.focusRing)
         assertEquals(0, still.focusZoom)
+        assertEquals(0, still.rowTravel)
+        assertEquals(0, still.travel<Float>().durationMillis)
         // A delayed entry would still be a wait: delays collapse with the durations.
         assertEquals(0, still.enter<Float>(delayMillis = 250).delay)
         assertEquals(0, still.enter<Float>(delayMillis = 250).durationMillis)
@@ -26,13 +28,14 @@ class StovaMotionTest {
     @Test fun fullMotionIsQuickStandardEmphasized() {
         val full = StovaMotion.tokens(reduceMotion = false)
         assertFalse(full.still)
-        assertEquals(150, full.quick)
-        assertEquals(240, full.standard)
-        assertEquals(360, full.emphasized)
+        assertEquals(220, full.quick)
+        assertEquals(340, full.standard)
+        assertEquals(420, full.emphasized)
         assertTrue(full.quick < full.standard && full.standard < full.emphasized && full.emphasized < full.ambient)
-        assertEquals(240, full.enter<Float>().durationMillis)
+        assertEquals(340, full.enter<Float>().durationMillis)
         assertEquals(250, full.enter<Float>(delayMillis = 250).delay)
-        assertEquals(150, full.exit<Float>().durationMillis)
+        assertEquals(220, full.exit<Float>().durationMillis)
+        assertEquals(560, full.travel<Float>().durationMillis)
     }
 
     @Test fun entriesDecelerateAndExitsAccelerate() {
@@ -45,6 +48,9 @@ class StovaMotionTest {
             val t = i / 20f
             assertTrue(StovaMotion.Enter.transform(t) in 0f..1.0001f)
             assertTrue(StovaMotion.Exit.transform(t) in 0f..1.0001f)
+            assertTrue(StovaMotion.Travel.transform(t) in 0f..1.0001f)
         }
+        assertTrue(StovaMotion.Travel.transform(0.1f) < 0.05f)
+        assertTrue(StovaMotion.Travel.transform(0.9f) > 0.98f)
     }
 }

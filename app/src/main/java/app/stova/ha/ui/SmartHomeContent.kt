@@ -68,21 +68,32 @@ import kotlin.math.ceil
     val focus=remember(profile.id) {mutableMapOf<String,FocusRequester>()}
     val list=rememberLazyListState()
     val scope=rememberCoroutineScope()
+    val scrollMotion=app.stova.core.theme.stovaMotion
     var gridFocused by remember {mutableStateOf(false)}
     val visible by remember {derivedStateOf {list.layoutInfo.visibleItemsInfo.map {it.key}.toSet()}}
     val sections=remember(cards,registry) {dashboardSections(cards,registry)}
     val cells=remember(sections) {cardFocusCells(sections)}
     var navigation by remember {mutableStateOf<Job?>(null)}
+    var pendingCard by remember {mutableStateOf<String?>(null)}
+    var navigationVersion by remember {mutableIntStateOf(0)}
     val firstId=cards.find {it.id==initialFocusId}?.id ?: cells.firstOrNull()?.id
     fun requestCard(id:String) {
         val target=cells.firstOrNull {it.id==id} ?: return
         navigation?.cancel()
+        navigationVersion++
+        val version=navigationVersion
+        pendingCard=id
         navigation=scope.launch {
-            list.scrollToItem(target.listIndex)
-            // A later band may not be composed until the scroll has reached layout.
-            repeat(8) {
-                if(runCatching {focus[id]?.requestFocus()}.getOrNull()==true) return@launch
-                withFrameNanos {}
+            try {
+                withFrameNanos { }
+                list.smoothScrollToItem(target.listIndex,scrollMotion)
+                // A later band may not be composed until the scroll has reached layout.
+                repeat(8) {
+                    if(runCatching {focus[id]?.requestFocus()}.getOrNull()==true) return@launch
+                    withFrameNanos {}
+                }
+            } finally {
+                if(version==navigationVersion) pendingCard=null
             }
         }
     }
@@ -94,12 +105,12 @@ import kotlin.math.ceil
             Key.DirectionRight->CardFocusDirection.RIGHT
             else->return false
         }
-        navigation?.cancel()
-        val id=focusedId ?: return true
+        val id=pendingCard ?: focusedId ?: return true
         val next=cardFocusNeighbor(cells,id,direction)
         if(next!=null) requestCard(next)
         else if(direction==CardFocusDirection.UP) {
             navigation?.cancel()
+            pendingCard=null
             runCatching {headerFocus.requestFocus(FocusDirection.Enter)}
         }
         return true

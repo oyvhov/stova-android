@@ -25,6 +25,7 @@ data class MotionTokens(
     val ambient: Int,
     val focusRing: Int,
     val focusZoom: Int,
+    val rowTravel: Int = 560,
 ) {
     val still: Boolean get() = standard == 0
 
@@ -37,23 +38,28 @@ data class MotionTokens(
 
     /** A symmetric fade, for crossfades and values that go both ways. */
     fun <T> fade(millis: Int = quick): TweenSpec<T> = tween(millis, 0, FastOutSlowInEasing)
+
+    /** A row eases away from rest and settles without a spring or a jump. */
+    fun <T> travel(): TweenSpec<T> = tween(rowTravel, 0, StovaMotion.Travel)
 }
 
 object StovaMotion {
-    const val QuickMillis = 150
-    const val StandardMillis = 240
-    const val EmphasizedMillis = 360
+    const val QuickMillis = 220
+    const val StandardMillis = 340
+    const val EmphasizedMillis = 420
     const val AmbientMillis = 900
-    const val FocusRingMillis = 110
-    const val FocusZoomMillis = 180
+    const val FocusRingMillis = 160
+    const val FocusZoomMillis = 240
+    const val RowTravelMillis = 560
 
-    /** Material's emphasized decelerate: fast out of the gate, a long soft landing. */
-    val Enter: Easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
+    /** A gentle start, followed by a long soft landing. */
+    val Enter: Easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
     /** Material's emphasized accelerate: a quiet start, then gone. */
     val Exit: Easing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)
+    val Travel: Easing = CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
 
-    val Full = MotionTokens(QuickMillis, StandardMillis, EmphasizedMillis, AmbientMillis, FocusRingMillis, FocusZoomMillis)
-    val Still = MotionTokens(0, 0, 0, 0, 0, 0)
+    val Full = MotionTokens(QuickMillis, StandardMillis, EmphasizedMillis, AmbientMillis, FocusRingMillis, FocusZoomMillis, RowTravelMillis)
+    val Still = MotionTokens(0, 0, 0, 0, 0, 0, 0)
 
     fun tokens(reduceMotion: Boolean): MotionTokens = if (reduceMotion) Still else Full
 }

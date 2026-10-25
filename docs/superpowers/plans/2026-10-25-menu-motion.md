@@ -15,9 +15,9 @@ Arbeid på emulator-5580 med ekte data; bevar eksisterande Smarthus-endringar.
 - [x] Verifiser tastestyring, profilval og visuell layout; commit og ledger.
 
 ## Task 3: Mjuk og avbrytbar rørsle
-- [ ] Skriv og køyr raude testar for radflytting over fleire rammer, reversering og redusert rørsle.
-- [ ] Samle roleg rulling og mjukare overgangar i temaet; bruk dei på Heim og Smarthus.
-- [ ] Køyr relevante testar grøne; commit og ledger.
+- [x] Skriv og køyr raude testar for radflytting over fleire rammer, reversering og redusert rørsle.
+- [x] Samle roleg rulling og mjukare overgangar i temaet; bruk dei på Heim og Smarthus.
+- [x] Køyr relevante testar grøne; commit og ledger.
 
 ## Task 4: Samla kontroll og overlevering
 - [ ] Køyr testDebugUnitTest lintDebug assembleDebug med skjermprøver og kontroller resultata.
