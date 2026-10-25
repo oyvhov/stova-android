@@ -456,7 +456,7 @@ class AppScreensTest {
         rule.onNodeWithText("Hald fram").assertIsDisplayed()
         rule.onNodeWithText("Nyleg lagt til · Seriar").assertIsDisplayed()
         rule.onNodeWithText("2024").assertIsDisplayed()
-        rule.onNodeWithText("12").assertIsDisplayed()
+        rule.onNodeWithText("12 år").assertIsDisplayed()
         rule.saveScreen("12-home-media-ha")
     }
 

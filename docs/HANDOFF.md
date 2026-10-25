@@ -1,3 +1,10 @@
+# Appmeny etter langt OK – retta
+2026-10-25: Kode, emulatorprøver og testplan `2026-10-25-app-longpress.md` er fullførte. Repetert OK frå opningstrykket kunne velje første dialoghandling og lukke menyen; `StovaDialog` krev no ei eiga ny KeyDown og ryddar trykket ved fokustap, utan tidsbasert sperre.
+Sluttkontroll: 571/571 inkludert skjermtestane, 0 hoppa over; lint 0 feil (38 åtvaringar, 1 hint), debug-bygg OK. Native regresjonar dekkjer OK/Enter/numpad, rest-slepp og første nye trykk; appmeny/favoritt og resten av dialogane er med i fulltesten.
+Heim/Appar, langt OK, touch-hald, neste menyval, Meny, Back og kort appstart er prøvde på emulator-5580 med ekte data. Profil- og kontofiler er byteidentiske før/etter på begge einingane. Rapport: `docs/verification/app-longpress.md`.
+APK er installert med `-r` på emulator og Shield: `app/build/outputs/apk/debug/app-debug.apk`, SHA-256 `8cf162faac67fba4397d1277345e48024b8af077ff852c1caaf43d15f60c4d7a`. Shield viste YouTube, så fysisk menyprøve står att. Valfritt spørsmål om brukaren sin inndatatype er sendt; inga avklaring var naudsynt for den påviste nøkkelfeilen.
+Hovudgrein/repo er `main` i private `oyvhov/stova-android`. Tre testfiksturar er stabiliserte/oppdaterte etter fulltesten; ingen Watch Next-produksjonskode er endra. Eldre restpunkt om produksjonsrelease er uendra.
+
 # Større medielogo i heroen – fullført
 2026-10-25: Bestillinga i `2026-10-25-hero-logo.md` er fullført. Fast tekstreserve pressa logoen til 24/26 dp; faktisk metadata-/omtalehøgd bestemmer no logoplass, innanfor maks 360 × 96 dp. Transparent trimming og heile sideforholdet er bevarte.
 Herohøgda, første rad og parallax er bevarte. Tre nye layoutregresjonar dekkjer kompakt hero, omtale og stor skrift. Sluttkontroll: 93/93 relevante testar, 0 hoppa over, lint 0 feil (38 åtvaringar, 1 hint), debug-bygg OK.

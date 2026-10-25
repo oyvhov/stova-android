@@ -21,12 +21,15 @@ class WatchNextReaderTest {
         val uri = android.media.tv.TvContract.WatchNextPrograms.CONTENT_URI
         org.robolectric.shadows.ShadowContentResolver.registerProviderInternal(android.media.tv.TvContract.AUTHORITY, provider())
         val reader = WatchNextReader(resolver, { allowed }, "app.stova")
-        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) { reader.observe().collect {} }
-        testScheduler.runCurrent()
+        val emitted = kotlinx.coroutines.channels.Channel<WatchNextResult>(kotlinx.coroutines.channels.Channel.UNLIMITED)
+        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) { reader.observe().collect { emitted.send(it) } }
+        // Wait for the initial IO read before changing permission. A status value alone can
+        // otherwise come from that old read, before the new observer has been registered.
+        assertEquals(WatchNextResult.Unavailable(WatchNextResult.Reason.NO_PERMISSION), emitted.receive())
         assertTrue(shadow.getContentObservers(uri).isEmpty())
         allowed = true
         reader.refresh()
-        reader.status.first { it is WatchNextResult.Available }
+        assertTrue(emitted.receive() is WatchNextResult.Available)
         assertEquals(1, shadow.getContentObservers(uri).size)
         job.cancel()
     }

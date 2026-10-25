@@ -18,6 +18,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -43,6 +49,7 @@ fun StovaDialog(
     val still = motion.still
     val visible = remember { MutableTransitionState(still).apply { targetState = true } }
     val dismiss by rememberUpdatedState(onDismissRequest)
+    val confirmPresses = remember { mutableSetOf<Key>() }
     val exited = visible.isIdle && !visible.currentState
     LaunchedEffect(exited) { if (exited) dismiss() }
     Dialog(
@@ -56,8 +63,21 @@ fun StovaDialog(
             decorFitsSystemWindows = properties.decorFitsSystemWindows,
         ),
     ) {
+        val windowFocused = LocalWindowInfo.current.isWindowFocused
+        LaunchedEffect(windowFocused) { if (!windowFocused) confirmPresses.clear() }
         AnimatedVisibility(visible, enter = fadeIn(motion.enter()), exit = fadeOut(motion.exit()), label = "dialog") {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize().onPreviewKeyEvent { event ->
+                if (event.key !in confirmKeys) false else when (event.type) {
+                    KeyEventType.KeyDown -> {
+                        // The opening hold may keep repeating after focus enters this window.
+                        // Only a fresh down here owns the subsequent release and its action.
+                        if (event.nativeKeyEvent.repeatCount == 0 && !event.nativeKeyEvent.isLongPress) confirmPresses.add(event.key)
+                        event.key !in confirmPresses
+                    }
+                    KeyEventType.KeyUp -> !confirmPresses.remove(event.key) || event.nativeKeyEvent.isCanceled
+                    else -> false
+                }
+            }, contentAlignment = Alignment.Center) {
                 Box(Modifier.matchParentSize().background(MaterialTheme.colorScheme.background.copy(alpha = SCRIM_ALPHA))
                     .pointerInput(still, properties.dismissOnClickOutside) {
                         detectTapGestures { if (properties.dismissOnClickOutside) {
@@ -80,3 +100,4 @@ fun StovaDialog(
 private const val SCRIM_ALPHA = 0.6f
 private const val PANEL_FROM = 0.96f
 private const val PANEL_TO = 0.98f
+private val confirmKeys = setOf(Key.DirectionCenter, Key.Enter, Key.NumPadEnter)

@@ -62,6 +62,9 @@ oppstart direkte på ei medierad.
 
 `StovaMotion` eig varigheit og easing. Bruk berre laganimasjonar for alfa, skala og forskyving.
 `LocalReduceMotion` gir null varigheit og slår av parallax. Dialogar går gjennom `StovaDialog`.
+Dialogvindauget godtek OK/Enter berre når trykket byrja med ein ny KeyDown i det vindauget.
+Repetisjonar og slepp frå eit langt trykk på kortet bak blir etne opp, utan å sperre neste
+vanlege trykk. Eigarskap til trykket blir rydda når vindauget mister fokus.
 
 ## Verifisering
 

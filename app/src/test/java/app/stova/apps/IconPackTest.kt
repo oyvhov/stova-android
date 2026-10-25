@@ -105,7 +105,8 @@ class FakeIconPackSource : IconPackSource {
     var reads = 0
     var scans = 0
     var missingDrawables: Set<String> = emptySet()
-    val requested = mutableListOf<Pair<String, Int>>()
+    // Visible icons decode concurrently on IO, including in the picker integration tests.
+    val requested = java.util.concurrent.CopyOnWriteArrayList<Pair<String, Int>>()
     override fun installed(): List<IconPack> { scans++; return packs }
     override fun appFilter(pack: IconPack): String { reads++; return filter }
     override fun drawableCatalog(pack: IconPack) = catalog

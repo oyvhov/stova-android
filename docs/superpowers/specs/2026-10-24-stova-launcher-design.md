@@ -339,6 +339,11 @@ alfabetisk, med Favorittar øvst. Meny på ein app: «Legg til i favorittar / Fj
 (venstre/høgre i favorittrada), «Skjul», «Appinfo» og «Endre ikon». Skjulte appar ligg i ei eiga, samanfalda
 gruppe nedst. Stova sjølv og den innebygde launcheren blir aldri viste.
 
+Lang OK skal opne appmenyen og halde han open når knappen blir sleppt. Repetisjonar frå
+opningstrykket skal aldri velje første handling, endre favorittar eller lukke menyen.
+Neste nye OK/Enter skal verke straks. Dette blir handtert i det felles dialogvindauget, på
+både Heim og Appar, utan ei tidsbasert sperre.
+
 **Ikonpakkar:** Heim og Appar bruker den profilen sin valde Candybar-/Blueprint-pakke, med
 Arcticons som tilrådd linjepakke. Appfilter blir lese frå `res/xml/appfilter.xml`, elles
 `assets/appfilter.xml`; ugyldige item-oppføringar blir hoppa over utan å miste resten. Dei fem

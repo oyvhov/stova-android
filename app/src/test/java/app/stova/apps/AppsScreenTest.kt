@@ -92,6 +92,32 @@ class AppsScreenTest {
         assertEquals(listOf(banan.key), runBlocking { profiles.file.first().profiles.first().apps.favorites })
     }
 
+    @Test fun openingHoldCannotChooseFavoriteButTheNextOkCan() {
+        val profiles = profiles()
+        val adult = runBlocking { profiles.create("A", AvatarColor.LIME, false) }
+        val catalog = FakeAppCatalog(listOf(banan))
+        show(profiles, adult, catalog)
+        compose.onNodeWithText("Banan").performTouchInput { longClick() }
+        fun ok(action: Int, repeat: Int = 0) {
+            compose.runOnIdle {
+                val now = android.os.SystemClock.uptimeMillis()
+                org.robolectric.shadows.ShadowDialog.getLatestDialog().dispatchKeyEvent(android.view.KeyEvent(
+                    now, now, action, android.view.KeyEvent.KEYCODE_DPAD_CENTER, repeat,
+                ))
+            }
+            compose.waitForIdle()
+        }
+        ok(android.view.KeyEvent.ACTION_DOWN, repeat = 4)
+        ok(android.view.KeyEvent.ACTION_UP)
+        compose.onNodeWithText("Legg til i favorittar").assertIsDisplayed()
+        assertTrue(runBlocking { profiles.current().profiles.first().apps.favorites.isEmpty() })
+        assertTrue(catalog.launched.isEmpty())
+        ok(android.view.KeyEvent.ACTION_DOWN)
+        ok(android.view.KeyEvent.ACTION_UP)
+        compose.waitUntil(5_000) { runBlocking { profiles.current().profiles.first().apps.favorites == listOf(banan.key) } }
+        compose.onNodeWithText("Legg til i favorittar").assertDoesNotExist()
+    }
+
     @Test fun menuKeyCanResetOnlyThisProfilesIcon() {
         val profiles = profiles()
         val icon = IconOverride("com.donnnno.arcticons", "vlc")

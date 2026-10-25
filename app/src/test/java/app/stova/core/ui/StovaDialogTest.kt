@@ -48,6 +48,57 @@ class StovaDialogTest {
 
     private fun pressBack() = compose.runOnIdle { ShadowDialog.getLatestDialog().onBackPressed() }
 
+    private fun ok(action: Int, repeat: Int = 0, key: Int = android.view.KeyEvent.KEYCODE_DPAD_CENTER) {
+        compose.runOnIdle {
+            val now = android.os.SystemClock.uptimeMillis()
+            ShadowDialog.getLatestDialog().dispatchKeyEvent(android.view.KeyEvent(
+                now, now, action, key, repeat,
+            ))
+        }
+        compose.waitForIdle()
+    }
+
+    @Test fun heldOkFromTheOpeningWindowCannotChooseTheFirstAction() {
+        openingHoldDoesNotChoose(android.view.KeyEvent.KEYCODE_DPAD_CENTER)
+    }
+
+    @Test fun heldEnterFromTheOpeningWindowCannotChooseTheFirstAction() {
+        openingHoldDoesNotChoose(android.view.KeyEvent.KEYCODE_ENTER)
+    }
+
+    @Test fun heldNumpadEnterFromTheOpeningWindowCannotChooseTheFirstAction() {
+        openingHoldDoesNotChoose(android.view.KeyEvent.KEYCODE_NUMPAD_ENTER)
+    }
+
+    private fun openingHoldDoesNotChoose(key: Int) {
+        show()
+        ok(android.view.KeyEvent.ACTION_DOWN, repeat = 3, key = key)
+        ok(android.view.KeyEvent.ACTION_UP, key = key)
+        compose.onNodeWithText("Lukk").assertIsDisplayed()
+        // No timeout: the very next deliberate OK is still accepted.
+        ok(android.view.KeyEvent.ACTION_DOWN, key = key)
+        ok(android.view.KeyEvent.ACTION_UP, key = key)
+        compose.onNodeWithText("Lukk").assertDoesNotExist()
+    }
+
+    @Test fun releasingAnOkThatStartedElsewhereDoesNotChooseAnAction() {
+        show()
+        ok(android.view.KeyEvent.ACTION_UP)
+        compose.onNodeWithText("Lukk").assertIsDisplayed()
+        ok(android.view.KeyEvent.ACTION_DOWN)
+        ok(android.view.KeyEvent.ACTION_UP)
+        compose.onNodeWithText("Lukk").assertDoesNotExist()
+    }
+
+    @Test fun anOkPressThatStartsInsideTheDialogStillWorksWhenHeld() {
+        show()
+        ok(android.view.KeyEvent.ACTION_DOWN)
+        ok(android.view.KeyEvent.ACTION_DOWN, repeat = 1)
+        ok(android.view.KeyEvent.ACTION_DOWN, repeat = 2)
+        ok(android.view.KeyEvent.ACTION_UP)
+        compose.onNodeWithText("Lukk").assertDoesNotExist()
+    }
+
     @Test fun contentIsThereFromTheFirstFrameAndTakesFocus() {
         show()
         compose.onNodeWithText("Lukk").assertIsFocused()
