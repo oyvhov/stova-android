@@ -13,6 +13,7 @@ import app.stova.R
 import app.stova.core.ui.StovaButton
 import app.stova.ha.*
 import kotlinx.serialization.json.*
+import kotlin.math.roundToInt
 
 @Composable internal fun DeviceControls(dialog:CardDialog,entity:HaEntity?,socket:HaConnection,locked:Boolean,
     send:suspend (ServiceCall,String)->Boolean) {
@@ -25,7 +26,8 @@ import kotlinx.serialization.json.*
         else latestSend(call,dialog.entityId)
     }}
     SideEffect {state.live=entity}
-    val shown=state.shown ?: return
+    val shown=state.shown
+    if(shown==null) {CardValue(stringResource(R.string.ha_unavailable));return}
     val enabled=!locked && stateText(entity)!=StateText.Unavailable && !entity!!.id.startsWith("alarm_control_panel.")
     val locale=LocalConfiguration.current.locales[0]
     val attrs=shown.attributes
@@ -50,7 +52,7 @@ import kotlinx.serialization.json.*
         return
     }
     when(dialog) {
-        is CardDialog.Brightness -> CardValue(stringResource(R.string.ha_percent,((attrs.number("brightness") ?: 0.0)/255*100).toInt()))
+        is CardDialog.Brightness -> CardValue(stringResource(R.string.ha_percent,((attrs.number("brightness") ?: 0.0)/255*100).roundToInt()))
         is CardDialog.Climate -> CardValue(attrs.number("current_temperature")?.let {formatNumber(it,locale)} ?: entityStateLabel(shown),stringResource(R.string.ha_celsius))
         else -> CardValue(entityStateLabel(shown))
     }
@@ -60,7 +62,7 @@ import kotlinx.serialization.json.*
         is CardDialog.Brightness -> {
             val modes=attrs.strings("supported_color_modes")
             if(attrs.number("brightness")!=null || modes.any {it!="onoff"}) {
-                val value=((attrs.number("brightness") ?: 255.0)/255*100).toInt().coerceIn(1,100).toDouble()
+                val value=((attrs.number("brightness") ?: 255.0)/255*100).roundToInt().coerceIn(1,100).toDouble()
                 PanelSlider("brightness",stringResource(R.string.ha_brightness),value,stringResource(R.string.ha_percent,value.toInt()),1.0..100.0,enabled) {act(brightnessCall(it.toInt()),true)}
             }
             FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {

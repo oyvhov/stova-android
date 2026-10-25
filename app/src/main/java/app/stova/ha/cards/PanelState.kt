@@ -39,7 +39,8 @@ class PanelState(private val scope:CoroutineScope,initial:HaEntity?,private val 
             try {
                 mutex.withLock {
                     val success=try {send(call)} catch(e:CancellationException) {throw e} catch(_:Exception) {false}
-                    if(revision==version) {draft=null;failed=!success}
+                    if(revision==version) draft=null
+                    if(!success) failed=true
                 }
             } finally {queued--;pending=queued>0 || scheduled!=null}
         }
