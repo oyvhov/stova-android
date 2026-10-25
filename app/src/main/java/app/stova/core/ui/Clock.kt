@@ -8,7 +8,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.testTag
@@ -31,14 +33,15 @@ fun Clock(modifier: Modifier = Modifier, clock: () -> Long = System::currentTime
     val mode = prefs.clock
     if (mode == app.stova.profiles.ClockMode.HIDDEN && !prefs.showDate) return
     var now by remember { mutableLongStateOf(clock()) }
-    LifecycleResumeEffect(Unit) {
-        now = clock()
-        onPauseOrDispose { }
-    }
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(MINUTE - now % MINUTE)
-            now = clock()
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val currentClock by androidx.compose.runtime.rememberUpdatedState(clock)
+    LaunchedEffect(lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            now = currentClock()
+            while (true) {
+                delay(MINUTE - Math.floorMod(now, MINUTE))
+                now = currentClock()
+            }
         }
     }
     Column(modifier, horizontalAlignment = Alignment.End) {
