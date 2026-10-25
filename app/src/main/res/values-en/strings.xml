@@ -351,7 +351,7 @@
     <string name="appearance_gold">Gold</string>
     <string name="appearance_mint">Mint</string>
     <string name="appearance_ring">Ring</string>
-    <string name="appearance_zoom">Ring + zoom</string>
+    <string name="appearance_zoom">Zoom</string>
     <string name="appearance_24h">24 h</string>
     <string name="appearance_12h">12 h</string>
     <string name="appearance_hidden">Hidden</string>
@@ -533,4 +533,17 @@
     <string name="custom_show_smart_home">Show Smart home button</string>
     <string name="custom_show_profile">Show profile picture</string>
     <string name="custom_back">Back</string>
+    <string name="custom_focus_lift">Gentle lift</string>
+    <string name="custom_edit_heading">Edit heading</string>
+    <string name="custom_heading_name">Custom heading</string>
+    <string name="custom_heading_default">Default: %1$s. Leave blank to use the default heading.</string>
+    <string name="custom_heading_reset">Use default heading</string>
+    <string name="custom_heading_size">Heading size</string>
+    <string name="custom_row_source">Show server name</string>
+    <string name="custom_home_appearance">Home appearance</string>
+    <string name="custom_home_appearance_hint">Hero, cards, background, focus and top bar</string>
+    <string name="custom_hero_year">Show year in hero</string>
+    <string name="custom_hero_age">Show age rating in hero</string>
+    <string name="custom_hero_ratings">Show ratings in hero</string>
+    <string name="custom_hero_new_season">Show new season in hero</string>
 </resources>

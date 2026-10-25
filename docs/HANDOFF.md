@@ -1,3 +1,10 @@
+# Roleg fokus og redigerbar framside – fullført; Projectivy er neste
+2026-10-25: Plan `2026-10-25-soft-focus-home-editing.md` er fullført. Svakt løft er standard i kort og menyar; gamle RING-profilar får same vising. Radnamn/storleik/kjeldevising kan endrast frå Heim og Innstillingar; hero-fakta er valfrie.
+583/583 testar inkludert skjermprøver, 0 hoppa over; lint 0 feil (38 åtvaringar, 1 hint), debug-bygg OK. Rapport: `docs/verification/soft-focus-home-editing.md`. Oppdatert på emulator-5580 med ekte data, ikkje Shield; ingen push.
+Mine appar vart prøvd som radnamn, overlevde ny installasjon/kald start og er sett tilbake til standard. Tidlegare profilfelt er uendra, kontofila er byteidentisk. Redusert rørsle er kontrollert i native skjermprøver; fysisk fjernkontroll står att.
+Ny bestilling under arbeidet: ta inn `SicMundus86/ProjectivyIconPack` og lag eit Spole-ikon i same stil. Offisiell APK 1.1.9 er lasta til `.superpowers/Projectivy_Icon_Pack_1.1.9.apk`; pakke `dev.projectivy.blueprint.app`. Installasjon på emulator er påbyrja; ingen Stova-kode for denne pakken er endra enno.
+Berre éin agent i mappa. Originalpakka skal haldast separat; eige Spole-supplement kan følgje Stova. Ingen spørsmål til brukaren.
+
 # Kortare retry etter fråkopla medierader – fullført
 2026-10-25: Ny bestilling om å halde fram etter Claude; planen `2026-10-25-offline-retry.md` er fullført. Feila henting kan prøvast att etter 30 sekund, også utan snapshot; vellukka henting held femminuttsbufferen og Spole-invalideringa.
 Tre regresjonar vart køyrde raude før retting; fire nye testar er grøne. Full sluttkontroll inkludert skjermtestar: 575/575, 0 hoppa over, lint 0 feil (38 åtvaringar, 1 hint), debug-bygg OK.

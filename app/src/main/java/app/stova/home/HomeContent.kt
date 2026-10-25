@@ -8,6 +8,8 @@ import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -260,7 +262,7 @@ fun HomeContent(
                 { val target = menuMedia!!; closeMenu(); onMediaClick(target) }, ::closeMenu, controls)
             else -> app.stova.core.ui.StovaDialog(::closeMenu) {
                 androidx.compose.material3.Surface(shape = MaterialTheme.shapes.large) {
-                    Column(Modifier.width(440.dp).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { controls() }
+                    Column(Modifier.width(440.dp).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { controls() }
                 }
             }
         }

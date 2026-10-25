@@ -28,6 +28,25 @@ import org.robolectric.annotation.Config
 class FocusAppearanceTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun defaultFocusGentlyRaisesArtworkAndMenuControls() {
+        val source = MutableInteractionSource()
+        compose.setContent { StovaTheme {
+            androidx.compose.foundation.layout.Column(Modifier.size(200.dp)) {
+                Box(Modifier.size(100.dp).focusOutline(source, MaterialTheme.shapes.medium, zoom = true).testTag("art"))
+                Box(Modifier.size(100.dp).focusOutline(source, MaterialTheme.shapes.medium).testTag("menu"))
+            }
+        } }
+        val before = compose.onNodeWithTag("art").fetchSemanticsNode().boundsInRoot
+        TestScope(kotlinx.coroutines.test.UnconfinedTestDispatcher()).launch { source.emit(FocusInteraction.Focus()) }
+        compose.waitForIdle()
+        compose.mainClock.advanceTimeBy(300)
+        val art = compose.onNodeWithTag("art").fetchSemanticsNode().boundsInRoot
+        val menu = compose.onNodeWithTag("menu").fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue("artwork grows gently", art.width > before.width && art.width < before.width * 1.04f)
+        org.junit.Assert.assertTrue("menus use the same calm treatment", menu.width > before.width && menu.width < art.width)
+        org.junit.Assert.assertTrue("focus lifts the artwork", art.top < before.top)
+    }
+
     @Test fun zoomAffectsArtworkOnlyAndReduceMotionDisablesIt() {
         val source = MutableInteractionSource()
         var prefs by mutableStateOf(AppearancePrefs(focusEffect = FocusEffect.ZOOM))
@@ -43,7 +62,7 @@ class FocusAppearanceTest {
         org.junit.Assert.assertEquals(210f, compose.onNodeWithTag("art").fetchSemanticsNode().boundsInRoot.width, 1f)
         compose.runOnIdle { prefs = prefs.copy(reduceMotion = true) }
         org.junit.Assert.assertEquals(200f, compose.onNodeWithTag("art").fetchSemanticsNode().boundsInRoot.width, 1f)
-        compose.runOnIdle { prefs = prefs.copy(reduceMotion = false, focusEffect = FocusEffect.RING) }
+        compose.runOnIdle { prefs = prefs.copy(reduceMotion = false, focusEffect = FocusEffect.OUTLINE) }
         org.junit.Assert.assertEquals(200f, compose.onNodeWithTag("art").fetchSemanticsNode().boundsInRoot.width, 1f)
     }
 }

@@ -12,9 +12,11 @@ import app.stova.core.theme.StovaLayout
 @Composable
 fun RowHeader(title: String, modifier: Modifier = Modifier) {
     Text(
-        title,
-        style = MaterialTheme.typography.titleLarge,
+        LocalRowStyle.current.heading(title),
+        style = LocalRowStyle.current.headingTextStyle(),
         color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 2,
+        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
         modifier = modifier.padding(
             start = StovaLayout.TvSafeEdge,
             end = StovaLayout.TvSafeEdge,
@@ -22,4 +24,11 @@ fun RowHeader(title: String, modifier: Modifier = Modifier) {
             bottom = StovaLayout.SectionBottom,
         ),
     )
+}
+
+@Composable
+fun app.stova.profiles.RowStyle.headingTextStyle() = when (headingSize) {
+    app.stova.profiles.HeadingSize.SMALL -> MaterialTheme.typography.titleMedium
+    app.stova.profiles.HeadingSize.NORMAL -> MaterialTheme.typography.titleLarge
+    app.stova.profiles.HeadingSize.LARGE -> MaterialTheme.typography.headlineSmall
 }

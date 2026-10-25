@@ -78,11 +78,11 @@ fun SettingsSwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Un
 }
 
 @Composable
-fun SettingsNavRow(title: String, value: String? = null, onClick: () -> Unit) {
+fun SettingsNavRow(title: String, value: String? = null, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.medium
     Row(
-        Modifier.fillMaxWidth()
+        modifier.fillMaxWidth()
             .heightIn(min = 56.dp)
             .focusOutline(source, shape)
             .clip(shape)
@@ -91,10 +91,7 @@ fun SettingsNavRow(title: String, value: String? = null, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        RowText(title, null, Modifier.weight(1f))
-        if (value != null) {
-            Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+        RowText(title, value, Modifier.weight(1f))
         Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

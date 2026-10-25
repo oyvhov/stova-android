@@ -57,11 +57,13 @@ Kjelder: `C:\JellyBin\reelstack-android\docs\DESIGN_SYSTEM.md`, `docs\LAYOUT.md`
   går gjennom alle `MaterialTheme.shapes`, kunstkort, appflisar, dialogar, knappar og HA-kort.
   Gamle SHARP/ROUND blir 4/20 dp; gamle felt blir berre haldne for lesekompatibilitet.
 - **Typografi:** Spole sin `reelstackTypography()`-skala (sans-serif, 12 nivå), kopiert uendra.
-- **Fokus:** Ring (standard), Forstørring, Ring + forstørring eller Lys opp. Ringen er
-  2/3/4 dp (Normal 3 er standard), tonar inn på 110 ms og følgjer kunstforma. Forstørring
-  til 1,05 skjer berre i `graphicsLayer` over 180 ms. Lys opp teiknar flat 28 % temademping
-  på nabokorta i den aktive rada; kunsten held seg ugjennomsiktig. Redusert rørsle gir straks
-  fokus utan skalering; rein Forstørring får ring som reserve. Gamal `strongFocus` blir 4 dp.
+- **Fokus (25.10, eigaren sitt val):** Svakt løft er standard på både kort og menyval:
+  2 dp opp, 2,5 % forstørring på kunst / 1,5 % på kontrollar, svak skugge og 10 % lysare flate.
+  Gamalt standardval `RING` blir lese som `LIFT` utan omskriving av profilen. Forstørring,
+  Lys opp, Ring og Ring + forstørring kan veljast uttrykkeleg. Ringen er 2/3/4 dp og følgjer
+  kunstforma; menyar tvingar ikkje fram ring. Forstørring skjer berre i `graphicsLayer`.
+  Lys opp dempar nabokorta 28 % i aktiv rad. Redusert rørsle bevarer lysare flate, utan
+  løft eller skalering og utan å leggje til ring. Gamal `strongFocus` bevarer 4 dp som eige tilgjengeval.
 - **Rørsle:** `StovaMotion` eig raske overgangar på 150 ms, inngangar på 240 ms,
   spotlight-utgang på 360 ms og roleg bakgrunn/spotlight-inngang på 900 ms. Fokus er
   110/180 ms. Berre laganimasjonar for alfa, skala og forskyving; inga ny kontinuerleg rørsle,
@@ -214,6 +216,12 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   Angre hugsar rada og kortet sjølv om fokus har flytta seg. Ei tom rad blir ikkje vist.
   `HomePrefs.rowFormats: Map<HomeRowKey, RowStyle>` lagrar valfritt format/storleik og radtittel
   (På som standard). Manglande overstyring følgjer dei globale vala og dagens standard per rad.
+  Alle radoverskrifter kan få eigne namn per profil og stabil radnøkkel (høgst 80 teikn),
+  frå same editor i langt OK-menyen og Innstillingar → Heim. Tomt felt eller Standardoverskrift
+  tek tilbake det omsette standardnamnet. Overskriftstorleik Liten/Normal/Stor og vising av
+  servernamn blir lagra i same `RowStyle`; namneendring påverkar ikkje format, storleik eller rekkjefølgje.
+  Heroen har eigne visingsval for årstal, aldersgrense, vurderingar og Ny sesong, i tillegg til sjangrar og omtale.
+  Heim-innstillingane lenkjer til utsjånad, og Kort og rader lenkjer tilbake til radredigeringa.
   Innstillingar → Heim viser dei same vala og ei formatprøve; flytteknappane kan styrast med D-pad.
   Radoverskrifta er namnet på rada («Hald fram», «Nyleg lagt til · Filmar»), følgt av
   servernamnet i `Muted` (utan tenestelogo), slik at to kontoar kan skiljast.
@@ -224,7 +232,7 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   proporsjonalt ut frå breidd 200 og 296 dp. Ikonstil gir kvadratiske appflisar med side lik
   bannerhøgda. Filmrada kan òg velje breie kort. Ingen kunstige botnkantar på plakatar.
   Titlar under kunst er av som standard, men tittelen er alltid tilgjengeleg for skjermlesar.
-  Manglande kunst viser tittelen inne i plasshaldaren. Fokusringen rammar berre kunsten.
+  Manglande kunst viser tittelen inne i plasshaldaren. Fokuseffekten følgjer berre kunsten.
   Radformat kan overstyrast til Plakat (2:3), Brei (16:9), Stor brei (1,2×), Liten brei (0,8×)
   eller Ikon (kvadrat). Storleik S/M/L gjeld oppå formatet. Vassrett avstand er 8/16/24 dp.
 - **Framdrift:** Tynn 2 dp / Tjukk 4 dp (standard) / Skjult i vald aksent for påbyrja titlar.

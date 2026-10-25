@@ -30,8 +30,9 @@ class AppearanceSettingsTest {
             Column(Modifier.verticalScroll(rememberScrollState())) { AppearanceSettingsContent(prefs) { prefs = it } }
         } }
         val choices = listOf("Herostorleik", "Logo eller tittel", "Omtale i heroen", "Sjangrar i heroen", "Spotlight-tid", "Radavstand",
+            "Vis årstal i heroen", "Vis aldersgrense i heroen", "Vis vurderingar i heroen", "Vis ny sesong i heroen",
             "Kortstorleik", "Titlar under kort", "Appstil", "Nyleg lagt til · Filmar", "Hjørne", "Bakgrunnsdemping",
-            "Aksentfarge", "Fokuseffekt", "Klokkeformat", "Kortavstand", "Ringbreidd", "Framdriftsstrek", "Bakgrunnskjelde",
+            "Aksentfarge", "Fokuseffekt", "Klokkeformat", "Kortavstand", "Framdriftsstrek", "Bakgrunnskjelde",
             "Spotlight-kjelde", "Roleg bakgrunnsrørsle", "Vis dato", "Vis HA-brikker", "Vis sesongnedteljing", "Vis Appar-knapp",
             "Vis Smarthus-knapp", "Vis profilbilete", "Klokkestorleik")
         choices.forEach { label ->

@@ -83,7 +83,7 @@ class RowEditingTest {
         compose.onNodeWithText("Kortformat for rada").performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("Storleik for rada").performSemanticsAction(SemanticsActions.RequestFocus)
         compose.onNodeWithText("Storleik for rada").performKeyInput { pressKey(Key.DirectionRight) }
-        compose.onNodeWithText("Vis radtittel").performClick()
+        compose.onNodeWithText("Vis radtittel").performScrollTo().performClick()
         assertEquals(RowStyle(RowFormat.LARGE_WIDE, ArtworkSize.LARGE, false), saved.rowFormats[first])
         assertNull(saved.rowFormats[second])
     }

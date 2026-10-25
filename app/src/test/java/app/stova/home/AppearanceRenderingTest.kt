@@ -41,6 +41,34 @@ class AppearanceRenderingTest {
     private val film = MediaItem("f", "a", ItemType.MOVIE, "Fjordlys", overview = "Ei ferd langs kysten.",
         genres = listOf("Drama"), art = ItemArt(wide = artUrl, poster = artUrl))
 
+    @Test fun headingsUseTheirOwnTextAndSourceCanBeHiddenWithoutHidingOfflineStatus() {
+        val row=HomeRowUi.Media(HomeRowKey.latestMovies(account.id),account,MediaRowKind.LATEST_MOVIES,listOf(film),true)
+        compose.setContent { StovaTheme { Column {
+            CompositionLocalProvider(LocalRowStyle provides RowStyle(title="Mine appar",headingSize=HeadingSize.LARGE)) { RowHeader("Favorittappar") }
+            CompositionLocalProvider(LocalRowStyle provides RowStyle(title="Filmhylla",showSource=false)) { app.stova.media.ui.MediaRowHeader(row) }
+        } } }
+        compose.onNodeWithText("Mine appar").assertIsDisplayed()
+        compose.onNodeWithText("Filmhylla").assertIsDisplayed()
+        compose.onNodeWithText("Demo").assertDoesNotExist()
+        compose.onNodeWithText("Fråkopla").assertIsDisplayed()
+    }
+
+    @Test fun heroFactsCanBeHiddenIndependentlyOfTheTitleAndGenres() {
+        var prefs by mutableStateOf(AppearancePrefs(heroTitle=HeroTitle.TITLE))
+        val entry=SpotlightEntry(film.copy(year=2024,ratings=Ratings(8.4,96,"NO15")),account,true)
+        compose.setContent { StovaTheme(appearance=prefs) { HeroPanel(entry,Modifier.height(240.dp)) } }
+        compose.onNodeWithText("2024").assertExists()
+        compose.onNodeWithText("15 år").assertExists()
+        compose.onNodeWithText("Ny sesong").assertExists()
+        compose.runOnIdle { prefs=prefs.copy(showHeroYear=false,showHeroAge=false,showHeroRatings=false,showNewSeason=false) }
+        compose.onNodeWithText("2024").assertDoesNotExist()
+        compose.onNodeWithText("15 år").assertDoesNotExist()
+        compose.onNodeWithText("Ny sesong").assertDoesNotExist()
+        compose.onNodeWithText("96",substring=true).assertDoesNotExist()
+        compose.onNodeWithText("Fjordlys").assertExists()
+        compose.onNodeWithText("Drama",substring=true).assertExists()
+    }
+
     @Test fun cardSizesTitlesAndMissingArt() {
         var prefs by mutableStateOf(AppearancePrefs())
         compose.setContent { StovaTheme(appearance = prefs) { Row {

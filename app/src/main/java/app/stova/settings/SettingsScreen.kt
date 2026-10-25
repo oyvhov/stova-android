@@ -55,7 +55,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
                 when (shown) {
                     SettingsSection.PROFILE -> ProfileSettings(container, profile)
                     SettingsSection.ACCOUNTS -> AccountsSettings(profile, container)
-                    SettingsSection.HOME -> HomeRowSettings(container, profile, home)
+                    SettingsSection.HOME -> HomeRowSettings(container, profile, home, onEditAppearance = { section = SettingsSection.APPEARANCE })
                     SettingsSection.SMART_HOME -> app.stova.ha.ui.HaSettings(container)
                     SettingsSection.HOME_BUTTON -> HomeButtonSettings(container)
                     SettingsSection.APPEARANCE -> AppearanceSettings(container, profile, pinnedPreview = true, onEditRows = { section = SettingsSection.HOME })

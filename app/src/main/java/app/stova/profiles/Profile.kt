@@ -57,7 +57,7 @@ data class AppearancePrefs(
     val spotlightTime: SpotlightTime = SpotlightTime.NORMAL,
     val backdropDimming: BackdropDimming = BackdropDimming.MEDIUM,
     val corners: Corners = Corners.ROUND,
-    val focusEffect: FocusEffect = FocusEffect.RING,
+    val focusEffect: FocusEffect = FocusEffect.LIFT,
     val accent: Accent = Accent.LIME,
     val clock: ClockMode = ClockMode.H24,
     val rowSpacing: RowSpacing = RowSpacing.NORMAL,
@@ -80,6 +80,10 @@ data class AppearancePrefs(
     val showAppsButton: Boolean = true,
     val showSmartHomeButton: Boolean = true,
     val showProfile: Boolean = true,
+    val showHeroYear: Boolean = true,
+    val showHeroAge: Boolean = true,
+    val showHeroRatings: Boolean = true,
+    val showNewSeason: Boolean = true,
     val clockSize: ClockSize = ClockSize.NORMAL,
     /** The mood and accent in use before a chosen Jul or Halloween; they come back when it ends. */
     val moodBeforeSeason: app.stova.core.theme.VisualTheme? = null,
@@ -96,7 +100,9 @@ data class AppearancePrefs(
 @Serializable enum class SpotlightTime(val millis: Long) { FAST(8_000), NORMAL(12_000), SLOW(20_000) }
 @Serializable enum class BackdropDimming { LIGHT, MEDIUM, DARK }
 @Serializable enum class Corners { ROUND, SHARP }
-@Serializable enum class FocusEffect { RING, ZOOM, RING_ZOOM, LIGHT_UP }
+/** RING was the old default. Read it as LIFT; OUTLINE is the new explicit opt-in to a ring. */
+@Serializable enum class FocusEffect { RING, ZOOM, RING_ZOOM, LIGHT_UP, LIFT, OUTLINE }
+fun FocusEffect.resolved(): FocusEffect = if (this == FocusEffect.RING) FocusEffect.LIFT else this
 @Serializable enum class Accent { LIME, OCEAN, IRIS, CORAL, GOLD, MINT, ROSE, PEARL, HOLLY, PUMPKIN }
 @Serializable enum class ClockMode { H24, H12, HIDDEN }
 @Serializable enum class RowSpacing(val top: Int) { TIGHT(12), NORMAL(22), AIRY(34) }
@@ -112,7 +118,18 @@ data class AppearancePrefs(
 @Serializable enum class RowFormat { POSTER, WIDE, LARGE_WIDE, SMALL_WIDE, ICON }
 
 /** Null format/size inherit the row's original format and the global artwork size. */
-@Serializable data class RowStyle(val format: RowFormat? = null, val size: ArtworkSize? = null, val showTitle: Boolean = true)
+@Serializable data class RowStyle(
+    val format: RowFormat? = null,
+    val size: ArtworkSize? = null,
+    val showTitle: Boolean = true,
+    val title: String? = null,
+    val headingSize: HeadingSize = HeadingSize.NORMAL,
+    val showSource: Boolean = true,
+) {
+    fun heading(default: String): String = title?.trim()?.takeIf { it.isNotEmpty() } ?: default
+    fun withHeading(value: String): RowStyle = copy(title = value.replace(Regex("\\s+"), " ").trim().take(80).takeIf { it.isNotEmpty() })
+}
+@Serializable enum class HeadingSize { SMALL, NORMAL, LARGE }
 
 /** IDs, rather than authenticated URLs: a removed account cannot leave its artwork behind. */
 @Serializable data class BackgroundTitle(val accountId: String, val itemId: String, val title: String)

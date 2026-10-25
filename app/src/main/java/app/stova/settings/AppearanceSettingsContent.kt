@@ -51,6 +51,10 @@ fun AppearanceSettingsContent(
         Choice(R.string.custom_hero_title, p.heroTitle, HeroTitle.entries, listOf(R.string.custom_logo, R.string.custom_always_title)) { onChange(p.copy(heroTitle = it)) }
         Toggle(R.string.appearance_overview, p.showOverview) { onChange(p.copy(showOverview = it)) }
         Toggle(R.string.appearance_genres, p.showGenres) { onChange(p.copy(showGenres = it)) }
+        Toggle(R.string.custom_hero_year, p.showHeroYear) { onChange(p.copy(showHeroYear = it)) }
+        Toggle(R.string.custom_hero_age, p.showHeroAge) { onChange(p.copy(showHeroAge = it)) }
+        Toggle(R.string.custom_hero_ratings, p.showHeroRatings) { onChange(p.copy(showHeroRatings = it)) }
+        Toggle(R.string.custom_hero_new_season, p.showNewSeason) { onChange(p.copy(showNewSeason = it)) }
         Choice(R.string.appearance_spotlight_time, p.spotlightTime, SpotlightTime.entries, listOf(R.string.appearance_8s, R.string.appearance_12s, R.string.appearance_20s)) { onChange(p.copy(spotlightTime = it)) }
     }
     SettingsGroup(stringResource(R.string.custom_cards_rows)) {
@@ -70,7 +74,7 @@ fun AppearanceSettingsContent(
         Choice(R.string.custom_background_source, p.backgroundSource, BackgroundSource.entries,
             listOf(R.string.custom_spotlight, R.string.custom_fixed_image, R.string.custom_theme_surface)) { onChange(p.copy(backgroundSource = it)) }
         if (p.backgroundSource == BackgroundSource.FIXED) app.stova.core.ui.SettingsNavRow(
-            stringResource(R.string.custom_pick_background), p.fixedBackground?.title, onPickBackground)
+            stringResource(R.string.custom_pick_background), p.fixedBackground?.title, onClick = onPickBackground)
         Choice(R.string.custom_spotlight_source, p.spotlightSource, SpotlightSource.entries,
             listOf(R.string.custom_whole_library, R.string.custom_only_movies, R.string.custom_only_series, R.string.custom_favorites)) { onChange(p.copy(spotlightSource = it)) }
         Choice(R.string.appearance_dimming, p.backdropDimming, BackdropDimming.entries, listOf(R.string.appearance_light, R.string.appearance_medium, R.string.appearance_dark)) { onChange(p.copy(backdropDimming = it)) }
@@ -78,8 +82,11 @@ fun AppearanceSettingsContent(
     }
     SettingsGroup(stringResource(R.string.custom_focus)) {
         GroupHint(R.string.custom_focus_hint)
-        Choice(R.string.appearance_focus_effect, p.focusEffect, FocusEffect.entries, listOf(R.string.appearance_ring, R.string.appearance_zoom, R.string.custom_ring_zoom, R.string.custom_light_up)) { onChange(p.copy(focusEffect = it)) }
-        Choice(R.string.custom_ring_width, p.ringWidth, RingWidth.entries, listOf(R.string.custom_thin, R.string.appearance_normal, R.string.custom_thick)) { onChange(p.copy(ringWidth = it)) }
+        Choice(R.string.appearance_focus_effect, p.focusEffect.resolved(),
+            listOf(FocusEffect.LIFT, FocusEffect.ZOOM, FocusEffect.LIGHT_UP, FocusEffect.OUTLINE, FocusEffect.RING_ZOOM),
+            listOf(R.string.custom_focus_lift, R.string.appearance_zoom, R.string.custom_light_up, R.string.appearance_ring, R.string.custom_ring_zoom)) { onChange(p.copy(focusEffect = it)) }
+        if (p.focusEffect.resolved() == FocusEffect.OUTLINE || p.focusEffect == FocusEffect.RING_ZOOM)
+            Choice(R.string.custom_ring_width, p.ringWidth, RingWidth.entries, listOf(R.string.custom_thin, R.string.appearance_normal, R.string.custom_thick)) { onChange(p.copy(ringWidth = it)) }
         Toggle(R.string.appearance_reduce_motion, p.reduceMotion) { onChange(p.copy(reduceMotion = it)) }
     }
     SettingsGroup(stringResource(R.string.custom_top_bar)) {

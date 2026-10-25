@@ -414,9 +414,9 @@ class AppScreensTest {
         rule.saveScreen("appearance-overview")
     }
 
-    @Test fun appearanceOceanAccent() {
-        renderMediaHome(appearance = AppearancePrefs(accent = Accent.OCEAN, seasonChoice = SeasonChoice.NONE))
-        val bitmap = BitmapFactory.decodeFile(rule.saveScreen("appearance-ocean").absolutePath)
+    @Test fun appearanceOceanOutline() {
+        renderMediaHome(appearance = AppearancePrefs(accent = Accent.OCEAN, seasonChoice = SeasonChoice.NONE, focusEffect = FocusEffect.OUTLINE))
+        val bitmap = BitmapFactory.decodeFile(rule.saveScreen("appearance-ocean-outline").absolutePath)
         val card = rule.onAllNodes(hasContentDescription("Fjordlys") and hasClickAction())[0].fetchSemanticsNode().boundsInRoot
         org.junit.Assert.assertEquals("Ocean focus ring follows the artwork", AvatarColor.OCEAN.argb.toInt(), bitmap.getPixel(card.left.toInt()+2, card.top.toInt()+40))
     }

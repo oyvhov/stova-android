@@ -351,7 +351,7 @@
     <string name="appearance_gold">Gull</string>
     <string name="appearance_mint">Mint</string>
     <string name="appearance_ring">Ring</string>
-    <string name="appearance_zoom">Ring + forstørring</string>
+    <string name="appearance_zoom">Forstørring</string>
     <string name="appearance_24h">24 t</string>
     <string name="appearance_12h">12 t</string>
     <string name="appearance_hidden">Skjult</string>
@@ -533,4 +533,17 @@
     <string name="custom_show_smart_home">Vis Smarthus-knapp</string>
     <string name="custom_show_profile">Vis profilbilete</string>
     <string name="custom_back">Tilbake</string>
+    <string name="custom_focus_lift">Svakt løft</string>
+    <string name="custom_edit_heading">Endre overskrift</string>
+    <string name="custom_heading_name">Eigen overskrift</string>
+    <string name="custom_heading_default">Standard: %1$s. Tomt felt bruker standardoverskrifta.</string>
+    <string name="custom_heading_reset">Bruk standardoverskrift</string>
+    <string name="custom_heading_size">Storleik på overskrifta</string>
+    <string name="custom_row_source">Vis servernamn</string>
+    <string name="custom_home_appearance">Utsjånad på framsida</string>
+    <string name="custom_home_appearance_hint">Hero, kort, bakgrunn, fokus og toppfelt</string>
+    <string name="custom_hero_year">Vis årstal i heroen</string>
+    <string name="custom_hero_age">Vis aldersgrense i heroen</string>
+    <string name="custom_hero_ratings">Vis vurderingar i heroen</string>
+    <string name="custom_hero_new_season">Vis ny sesong i heroen</string>
 </resources>

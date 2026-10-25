@@ -35,6 +35,15 @@ object RatingColors {
     val Rotten = Color(0xFF8DB448)
 }
 
+/** Shared calm focus, sized to stay within the TV gutters and menu spacing. */
+object StovaFocus {
+    const val ArtworkScale = 1.025f
+    const val ControlScale = 1.015f
+    const val SurfaceAlpha = 0.10f
+    val Lift = 2.dp
+    val Elevation = 6.dp
+}
+
 /** Five steps, and every corner in the app is one of them. */
 object StovaShapes {
     val ExtraSmall = 4.dp

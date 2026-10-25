@@ -18,7 +18,7 @@ class AppearancePrefsTest {
         assertEquals(SpotlightTime.NORMAL, old.spotlightTime)
         assertEquals(BackdropDimming.MEDIUM, old.backdropDimming)
         assertEquals(Corners.ROUND, old.corners)
-        assertEquals(FocusEffect.RING, old.focusEffect)
+        assertEquals(FocusEffect.LIFT, old.focusEffect)
         assertEquals(Accent.LIME, old.accent)
         assertEquals(ClockMode.H24, old.clock)
         assertEquals(RowSpacing.NORMAL, old.rowSpacing)

@@ -49,7 +49,7 @@ class TopBarTest {
         compose.onNodeWithText("Android-innstillingar").assertDoesNotExist()
     }
 
-    @Test fun focusingLabelsKeepsAllButtonBoundsStable() {
+    @Test fun focusingLabelsKeepsNeighbourButtonsInPlace() {
         compose.setContent { StovaTheme {
             TopBar(Profile("a", "A", AvatarColor.LIME), {}, {}, {})
         } }
@@ -62,6 +62,10 @@ class TopBarTest {
         }
         compose.onNodeWithText("Innstillingar").assertIsFocused()
         val after = labels.map { compose.onNodeWithText(it).fetchSemanticsNode().boundsInRoot }
-        assertEquals(before, after)
+        assertEquals(before[0], after[0])
+        assertEquals(before[2], after[2])
+        assertEquals(before[1].center.x, after[1].center.x, 0.1f)
+        org.junit.Assert.assertTrue(after[1].width in before[1].width..before[1].width*1.02f)
+        org.junit.Assert.assertTrue(kotlin.math.abs(after[1].center.y-before[1].center.y) <= 6f)
     }
 }

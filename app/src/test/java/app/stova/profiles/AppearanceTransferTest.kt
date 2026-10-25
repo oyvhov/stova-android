@@ -32,7 +32,7 @@ class AppearanceTransferTest {
         val kid = repo.create("Barn",AvatarColor.ROSE,true)
         val src = HomeRowKey.latestMovies("source")
         val dst = HomeRowKey.latestMovies("target")
-        val style = RowStyle(RowFormat.POSTER,ArtworkSize.LARGE,false)
+        val style = RowStyle(RowFormat.POSTER,ArtworkSize.LARGE,false,title="Filmhylla",headingSize=HeadingSize.LARGE,showSource=false)
         repo.update(a.id) { it.copy(appearance=AppearancePrefs(heroSize=HeroSize.OFF,focusEffect=FocusEffect.LIGHT_UP),
             home=HomePrefs(rowOrder=listOf(src,HomeRowKey.APPS),hiddenRows=setOf(src),rowFormats=mapOf(src to style))) }
         repo.copyAppearance(kid.id,a.id,mapOf(src to dst))
@@ -41,5 +41,6 @@ class AppearanceTransferTest {
             home=HomePrefs(rowOrder=listOf(dst,HomeRowKey.APPS),hiddenRows=setOf(dst),rowFormats=mapOf(dst to style))),result)
         assertTrue(result.kid)
         assertFalse(result.kidSmartHomeControl)
+        assertEquals(result,repo().current().profiles.first { it.id==kid.id })
     }
 }

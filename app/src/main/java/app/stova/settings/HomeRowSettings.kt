@@ -37,18 +37,18 @@ import app.stova.home.*
 import kotlinx.coroutines.launch
 
 @Composable
-fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewModel? = null) {
+fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewModel? = null, onEditAppearance: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
     val accountFlow = remember(profile.id) { container.mediaAccounts.forProfile(profile.id) }
     val accounts by accountFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     val stored = profile.home.rowOrder + profile.home.hiddenRows + profile.home.rowFormats.keys
-    val known = (listOf(HomeRowKey.APPS) + accounts.flatMap { account ->
+    val known = (listOf(HomeRowKey.APPS) + (if (profile.kid) emptyList() else listOf(HomeRowKey.WATCH_NEXT)) + accounts.flatMap { account ->
         listOf(HomeRowKey.continueWatching(account.id), HomeRowKey.latestMovies(account.id), HomeRowKey.latestSeries(account.id)) +
             profile.appearance.season().takeUnless { it == Season.NONE }?.let { listOf(HomeRowKey.seasonal(account.id, it)) }.orEmpty()
     } + stored).distinct()
     val available = if (home != null) {
         val loaded by home.availableRows.collectAsStateWithLifecycle()
-        (loaded + stored).distinct()
+        (known + loaded).distinct()
     } else known
     val watchNext by container.watchNext.status.collectAsStateWithLifecycle()
     LaunchedEffect(container.watchNext, profile.kid) { if (!profile.kid) container.watchNext.read() }
@@ -62,6 +62,7 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
     }
 
     SettingsGroup(stringResource(R.string.settings_home)) {
+        app.stova.core.ui.SettingsNavRow(stringResource(R.string.custom_home_appearance), stringResource(R.string.custom_home_appearance_hint), onClick = onEditAppearance)
         SettingsSwitchRow(stringResource(R.string.home_backdrop_rotation), prefs.backdropRotation, { enabled -> save { it.copy(backdropRotation = enabled) } })
         SettingsSwitchRow(
             stringResource(R.string.home_start_on_apps),
@@ -92,7 +93,6 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
         onStyle = { key, style -> save { it.copy(rowFormats = if (style == RowStyle()) it.rowFormats - key else it.rowFormats + (key to style)) } },
     )
 }
-
 @Composable
 internal fun HomeRowOrderSettings(
     ordered: List<HomeRowKey>,
@@ -109,29 +109,15 @@ internal fun HomeRowOrderSettings(
                 key(key) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(Modifier.weight(1f)) {
-                        SettingsSwitchRow(rowLabel(key), key !in hiddenRows, { visible -> onVisible(key, visible) })
+                        SettingsSwitchRow((rowFormats[key] ?: RowStyle()).heading(rowLabel(key)), key !in hiddenRows, { visible -> onVisible(key, visible) })
                     }
                     StovaButton(stringResource(R.string.row_move_up), { onMove(key, -1) })
                     StovaButton(stringResource(R.string.row_move_down), { onMove(key, +1) })
                 }
-                RowStyleChoices(rowFormats[key] ?: RowStyle(), defaultRowFormat(key, appearance), appearance.cardSize) { onStyle(key, it) }
+                RowStyleChoices(rowFormats[key] ?: RowStyle(), defaultRowFormat(key, appearance), appearance.cardSize, rowLabel(key),
+                    hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT) { onStyle(key, it) }
                 }
             }
         }
-    }
-}
-
-/** Human name for a row key. Plan 2 adds the media rows. */
-@Composable
-fun rowLabel(key: HomeRowKey): String = when (key) {
-    HomeRowKey.APPS -> stringResource(R.string.row_favorite_apps)
-    HomeRowKey.WATCH_NEXT -> stringResource(R.string.row_watch_next)
-    else -> when {
-        key.value.startsWith("halloween:") -> stringResource(R.string.theme_halloween)
-        key.value.startsWith("christmas:") -> stringResource(R.string.theme_christmas)
-        key.value.startsWith("continue:") -> stringResource(R.string.row_continue)
-        key.value.startsWith("latest_movies:") -> stringResource(R.string.row_latest_movies)
-        key.value.startsWith("latest_series:") -> stringResource(R.string.row_latest_series)
-        else -> key.value
     }
 }

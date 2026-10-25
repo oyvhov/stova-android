@@ -46,8 +46,11 @@ import coil3.request.transformations
          Modifier.weight(1f, fill=false).heightIn(max=96.dp).fillMaxHeight())
      else Text(item.title,style=MaterialTheme.typography.headlineMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=if(large || prefs.showOverview) 1 else 2,overflow=TextOverflow.Ellipsis)
      FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp),itemVerticalAlignment=Alignment.CenterVertically) {
-      if(current.newSeason) Text(stringResource(R.string.spotlight_new_season),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurface)
-      RatingRow(item.ratings, year = item.year)
+      if(current.newSeason && prefs.showNewSeason) Text(stringResource(R.string.spotlight_new_season),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurface)
+      RatingRow(item.ratings.copy(
+       community = item.ratings.community.takeIf { prefs.showHeroRatings },
+       criticPercent = item.ratings.criticPercent.takeIf { prefs.showHeroRatings },
+       official = item.ratings.official.takeIf { prefs.showHeroAge }), year = item.year.takeIf { prefs.showHeroYear })
      }
      if(prefs.showGenres) Text((listOf(stringResource(if(item.type==app.stova.media.model.ItemType.MOVIE) R.string.appearance_movie else R.string.appearance_series))+item.genres).joinToString(" · "),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1,overflow=TextOverflow.Ellipsis)
      if(prefs.showOverview && !large) item.overview?.let { Text(it,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis) }
