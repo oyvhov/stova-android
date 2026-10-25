@@ -23,7 +23,8 @@ import coil3.request.ImageRequest
    if(image!=null) AsyncImage(ImageRequest.Builder(context).data(image).size(1920,1080).build(),null,Modifier.fillMaxSize(),contentScale=ContentScale.Crop)
   }
   Canvas(Modifier.fillMaxSize()) {
-   drawRect(Brush.horizontalGradient(listOf(ink,ink.copy(alpha=0f)),endX=size.width*0.6f))
+   // Hold the scrim under the entire bounded hero column before fading into the artwork.
+   drawRect(Brush.horizontalGradient(0f to ink,0.35f to ink.copy(alpha=0.85f),0.6f to ink.copy(alpha=0.8f),0.625f to ink.copy(alpha=0.7f),0.65f to ink.copy(alpha=0f)))
    drawRect(Brush.verticalGradient(listOf(ink.copy(alpha=0f),ink),startY=size.height*0.45f,endY=size.height),topLeft=Offset(0f,size.height*0.45f),size=Size(size.width,size.height*0.55f))
    drawRect(Brush.verticalGradient(listOf(ink,ink.copy(alpha=0f)),endY=size.height*0.3f),size=Size(size.width,size.height*0.3f))
   }

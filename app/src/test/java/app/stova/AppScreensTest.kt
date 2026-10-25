@@ -236,6 +236,13 @@ class AppScreensTest {
         val foreground = android.graphics.Color.rgb(233, 233, 226)
         val contrast = ColorUtils.calculateContrast(foreground, skyBehindTopBar)
         assertTrue("Top bar contrast over bright art: $contrast (expected >= 6)", contrast >= 6.0)
+        // Bright sky at 35% width, below the top scrim and clear of text/mountains.
+        val skyBehindHero = bitmap.getPixel(672, 340)
+        val muted = android.graphics.Color.rgb(154, 162, 153)
+        assertTrue("Hero text contrast over bright art", ColorUtils.calculateContrast(foreground, skyBehindHero) >= 6.0)
+        assertTrue("Hero metadata/score contrast over bright art", ColorUtils.calculateContrast(muted, skyBehindHero) >= 4.5)
+        // Just above the final words of the first overview line, near the column's right edge.
+        assertTrue("Entire overview must remain readable", ColorUtils.calculateContrast(foreground, bitmap.getPixel(1180, 400)) >= 6.0)
         // The additional scrim ends at 30%; the right-side sky below it stays bright.
         assertTrue("Bright fixture must actually be loaded", ColorUtils.calculateLuminance(bitmap.getPixel(1900, 380)) > 0.6)
     }

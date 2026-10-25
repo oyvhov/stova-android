@@ -1,4 +1,8 @@
 # Cache og finpuss
+2026-10-25: Hero-lesbarheit er fullført med raud/grøn TDD: heile tekstkolonna er maks 560 dp ved 960 dp skjerm; flat Ink-scrim har 100 % ved venstre kant, 85 % ved 35 %, 80 % ved 60 %, 70 % ved 62,5 % og 0 % ved 65 %. Ekstra fargestopp held slutten av omtalen lesbar; tre stopp åleine gav for låg kontrast.
+Verifisering: `testDebugUnitTest --tests app.stova.AppScreensTest '-Pstova.screens=true'` → 12/12; deretter `testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → 265/265, ingen hoppa over, DesignRulesTest 3/3, lint 0 feil (20 åtvaringar, 1 hint), debug-APK OK. Alle kall via `pwsh -NoProfile -File scripts/gradle.ps1`.
+Oppdaterte/lagra og visuelt kontrollerte bilete: `docs/images/cache-home-bright-backdrop.png` og `docs/images/cache-home-dark-backdrop.png` (1920 × 1080); kjelder `app/build/screens/13-home-bright-backdrop.png` og `09-home-media-hero.png`. Ingen påbyrja steg står att; ekte Shield er ikkje verifisert. Berre `polish`/`polish-cache` er endra; ingen push.
+
 2026-10-25: Alle fire bestilte punkt er fullførte med raud/grøn TDD i `polish` på `polish-cache`; ingen påbyrja steg står att.
 HA-cache: `a6856d9` (berre aktivt kortutval og nødvendige attributt/tidsstempel, aldri token, maks éi skriving per 5 s, tomme ferske svar ryddar cachen). Førehandslasting: `cd53232` (3 første titlar per rad, unike URL-ar, maks 12, Coil 1920 × 1080).
 Toppscrim: `1928c0c` (flat Ink-gradient øvst i 30 %). Smarthus-status er sentrert i denne committen, verifisert ved skriftstorleik 1 og 2.
