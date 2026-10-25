@@ -1,4 +1,13 @@
 # Status
+2026-10-25: Plan 5 oppgåve 2 og 3, og dokumentasjonsdelen av oppgåve 5 steg 1, er fullførte i `C:/Launcher/.worktrees/plan-5` på `plan-5-perf`.
+Baseline Profile/benchmark: `8409d65`; måleskript: `7da6b7c`; oppsettdokument, README, tre emulatorbilete og målerapport er med i denne dokumentasjonscommitten.
+Sluttkontroll `testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'`: 233/233 bestått, 0 hoppa over, DesignRulesTest 3/3, lint 0 feil (22 åtvaringar, 1 hint), debug-APK OK. Sjølvtest 24/24; profil og benchmark kvar 1/1 relevant test bestått.
+Emulator (debug-signert benchmarkRelease): kald 313,50 ms, varm 98 ms, hakking 3,66 %, PSS 67,30 MiB; startupbenchmark TTID-median 232,454 ms. `emulator-5582` er slått av med `emu kill`.
+Ingen påbyrja arbeid står att innanfor bestillinga. Brukaren må gjere signering/passord, Shield-målingar og oppsettkontroll, oppdateringstest og produksjonsrelease/hash; oppgåve 1 og 4 og resten av 5 er urørte. Versjonen er framleis 0.1.0.
+Avvik står under Plan 5 nedanfor og i `docs/verification/plan-5-emulator.md`. Ingen spørsmål, ingen tag, ingen push eller publisering.
+
+## Før Plan 5
+
 2026-10-25: Samanslåingsoppgåve 1–3 er fullførte på `plan-2-media` i `C:/Launcher/.worktrees/plan-2`; Plan 2 og Plan 4 er bevarte.
 Merge: `a568e8b`. Aldersgrense med raud/grøn TDD: `3865293`; HeroPanelTest er òg oppdatert til éi alderspille.
 Sluttkontroll: `testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → 232/232 bestått, ingen hoppa over, DesignRulesTest 3/3, lint 0 feil (22 åtvaringar, 1 hint), debug-APK OK.
@@ -87,3 +96,7 @@ Konfliktane låg i `AppContainer`, `MainActivity`, `HomeScreen` og `StovaApp`. `
 - Oppgåve 2: `HomeReadyTest` gjekk frå AssertionError utan markør til 1/1 bestått. Profilgenerering og startupbenchmark er begge grøne (éin relevant test per køyring; den andre regelen blir medvite hoppa over). Profilen har 21 708 linjer, 334 med `Lapp/stova/home/`, og ingen reglar for demoinnsteget. Startupbenchmark: 10 iterasjonar, median `timeToInitialDisplayMs` 232,454 ms (min 206,374; maks 329,551). Verktøyvariantane er debug-signerte av profilpluginen; `assembleRelease` er ikkje køyrd.
 - Oppgåve 3: `Measure-Stova.ps1 -SelfTest` er utvikla raud/grøn og bestod 24/24 kontrollar. Skriptet krev eksplisitt serie, avviser alle andre emulatorportar, ventar på `home-ready`, gir feil ved manglande data og kode 1 ved brote budsjett. Første integrasjonskøyring avdekte 32-bits overflyt i Android-shellen sin nanosekundaritmetikk; PowerShell si monotone `Stopwatch` styrer no dei 30 sekunda. D-pad-sekvensen har eigne grensetestar.
 - Oppgåve 3: Målt på R8-minifisert, ikkje-debuggbar `benchmarkRelease` med Android Debug-sertifikat (ingen produksjonsrelease eller Stova-nøkkel): kaldstartmedian 313,50 ms (10 prøver), varm Home 98 ms, hakking 3,66 %, PSS 67,30 MiB. 147 tastetrykk over 30,14 s. Alle fire radene OK, avslutningskode 0. Dette er funksjonskontroll på emulator; Shield-budsjetta er ikkje godkjende. PSS bruker KiB/1024. Varmmålet er `am start -W` si TotalTime.
+
+- Oppgåve 5 steg 1: `docs/SHIELD_SETUP.md` og `README.md` er skrivne på nynorsk. Tre bilete frå emulator-5582 med demodata ligg i `docs/images/home.png`, `apps.png` og `smarthome.png` og er visuelt kontrollerte; ingen personlege namn, adresser eller token er synlege. Målerapport og repeterbare kommandoar ligg i `docs/verification/plan-5-emulator.md`. Dei seks lokale dokumentasjonslenkjene verkar.
+- Oppgåve 5: Berre dokumentasjon og bilete er fullførte etter bestillinga. Versjonsauke, signering, oppdatering over eldre signert installasjon, fysisk Shield-oppsett, produksjonsrelease/storleik/hash og tag er ikkje gjorde. Ingen `assembleRelease`, push eller publisering. Emulatoren vart slått av med `adb -s emulator-5582 emu kill` (OK).
+- Sluttkontroll: `pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → BUILD SUCCESSFUL, 233/233 bestått, 0 hoppa over, DesignRulesTest 3/3; lint 0 feil, 22 åtvaringar og 1 hint. Debug-APK bygd. Ingen nye kodeendringar etter denne kontrollen.
