@@ -47,6 +47,8 @@ fun controlPanel(type:CardType,id:String):CardDialog=when(type) {
 fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaConnection,images:HaImageSource?,locked:Boolean,
     perform:(ServiceCall,String)->Unit,onDismiss:()->Unit,room:String?=null,name:String?=null,
     send:suspend (ServiceCall,String)->Boolean={call,id->perform(call,id);true}) {
+    // Outlives each dialog: a last slider edit is still sent after Back.
+    val sendScope=rememberCoroutineScope()
     if(dialog==null) return
     val entity=entities[dialog.entityId]
     val energyGraph=dialog is CardDialog.Graph && dialog.today
@@ -65,7 +67,7 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
                     CardDetail(stringResource(R.string.ha_v2_fullscreen))
                     HaImage("/api/camera_proxy/${dialog.entityId}",images,Modifier.weight(1f).fillMaxWidth(),2_000)
                 }
-                else -> DeviceControls(dialog,entity,socket,locked,send)
+                else -> DeviceControls(dialog,entity,socket,locked,send,sendScope)
             }
             StovaButton(stringResource(R.string.ha_close),onDismiss)
         }

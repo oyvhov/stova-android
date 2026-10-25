@@ -16,16 +16,17 @@ import kotlinx.serialization.json.*
 import kotlin.math.roundToInt
 
 @Composable internal fun DeviceControls(dialog:CardDialog,entity:HaEntity?,socket:HaConnection,locked:Boolean,
-    send:suspend (ServiceCall,String)->Boolean) {
+    send:suspend (ServiceCall,String)->Boolean,sendScope:kotlinx.coroutines.CoroutineScope?=null) {
     val scope=rememberCoroutineScope()
     val latestSend by rememberUpdatedState(send)
     val latestEntity by rememberUpdatedState(entity)
     val latestLocked by rememberUpdatedState(locked)
-    val state=remember(dialog.entityId) {PanelState(scope,entity) {call ->
+    val state=remember(dialog.entityId) {PanelState(scope,entity,sendScope ?: scope) {call ->
         if(latestLocked || stateText(latestEntity)==StateText.Unavailable || dialog.entityId.startsWith("alarm_control_panel.")) false
         else latestSend(call,dialog.entityId)
     }}
     SideEffect {state.live=entity}
+    DisposableEffect(state) {onDispose {state.close()}}
     val shown=state.shown
     if(shown==null) {CardValue(stringResource(R.string.ha_unavailable));return}
     val enabled=!locked && stateText(entity)!=StateText.Unavailable && !entity!!.id.startsWith("alarm_control_panel.")

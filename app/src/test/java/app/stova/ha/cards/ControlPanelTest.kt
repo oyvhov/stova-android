@@ -1,5 +1,6 @@
 package app.stova.ha.cards
 
+import androidx.compose.runtime.*
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
@@ -63,6 +64,27 @@ class ControlPanelTest {
         compose.mainClock.advanceTimeBy(200);assertTrue(calls.isEmpty())
         compose.mainClock.advanceTimeBy(160);compose.waitForIdle()
         assertEquals(listOf(brightnessCall(52)),calls)
+    }
+    // Review finding 11: Back within the 300 ms debounce dropped the last step with the dialog's scope.
+    @Test fun closingThePanelRightAfterASliderStepStillSendsIt() {
+        val light=entity("light.a",attrs="""{"brightness":128,"supported_color_modes":["brightness"]}""")
+        var show by mutableStateOf(true)
+        compose.setContent {StovaTheme {
+            val outer=rememberCoroutineScope()
+            if(show) androidx.compose.foundation.layout.Column {
+                DeviceControls(CardDialog.Brightness("light.a"),light,FakeHaConnection(),false,{c,_->calls+=c;true},outer)
+            }
+        }}
+        compose.mainClock.autoAdvance=false
+        compose.onNodeWithTag("slider-brightness").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithTag("slider-brightness").performKeyInput {pressKey(Key.DirectionRight)}
+        compose.mainClock.advanceTimeBy(100);assertTrue(calls.isEmpty())
+        // Let the write reach the recomposer before the frame that removes the panel.
+        compose.runOnIdle {show=false};compose.waitForIdle()
+        compose.mainClock.advanceTimeByFrame();compose.waitForIdle()
+        compose.onNodeWithTag("slider-brightness").assertDoesNotExist()
+        compose.mainClock.advanceTimeBy(500);compose.waitForIdle()
+        assertEquals(listOf(brightnessCall(51)),calls)
     }
     @Test fun arrowsOnButtonNavigateWithoutAdjusting() {
         panel(CardDialog.Brightness("light.a"),entity("light.a",attrs="""{"brightness":128}"""))

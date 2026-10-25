@@ -6,9 +6,13 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-/** Debounce only unsent input. A newer key must never cancel an in-flight HA request. */
+/**
+ * Debounce only unsent input. A newer key must never cancel an in-flight HA request.
+ * [sendScope] outlives the dialog, so an edit made just before Back still reaches HA.
+ */
 @Stable
-class PanelState(private val scope:CoroutineScope,initial:HaEntity?,private val send:suspend (ServiceCall)->Boolean) {
+class PanelState(private val scope:CoroutineScope,initial:HaEntity?,private val sendScope:CoroutineScope=scope,
+    private val send:suspend (ServiceCall)->Boolean) {
     var live by mutableStateOf(initial)
     private var draft by mutableStateOf<HaEntity?>(null)
     val shown:HaEntity? get()=draft ?: live
@@ -31,11 +35,13 @@ class PanelState(private val scope:CoroutineScope,initial:HaEntity?,private val 
         pending=true
         if(delayed) debounce=scope.launch {delay(300);flush()} else flush()
     }
+    /** Sends a debounced edit at once; call it when the dialog closes. */
+    fun close() {debounce?.cancel();flush()}
     private fun flush() {
         val (call,revision)=scheduled ?: return
         scheduled=null
         queued++
-        scope.launch {
+        sendScope.launch {
             try {
                 mutex.withLock {
                     val success=try {send(call)} catch(e:CancellationException) {throw e} catch(_:Exception) {false}

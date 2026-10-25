@@ -2,6 +2,7 @@ package app.stova.ha.cards
 
 import app.stova.ha.HaEntity
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.*
 import kotlinx.serialization.json.*
 import org.junit.Assert.*
@@ -31,6 +32,18 @@ class PanelStateTest {
         answer.complete(true);runCurrent()
         assertEquals(listOf(brightnessCall(51),brightnessCall(60)),calls)
         assertFalse(state.pending)
+    }
+    // Review finding 11: a slider edit followed by Back within 300 ms was dropped with the dialog's scope.
+    @Test fun closingRightAfterASliderEditStillSendsIt()=runTest {
+        val calls=mutableListOf<ServiceCall>()
+        val dialog=kotlinx.coroutines.CoroutineScope(backgroundScope.coroutineContext+kotlinx.coroutines.Job())
+        val state=PanelState(dialog,light,sendScope=backgroundScope) {calls+=it;true}
+        state.submit(brightnessCall(51),true)
+        advanceTimeBy(100);runCurrent();assertTrue(calls.isEmpty())
+        dialog.cancel();state.close();runCurrent()
+        assertEquals(listOf(brightnessCall(51)),calls)
+        state.close();runCurrent()
+        assertEquals("nothing is sent twice",1,calls.size)
     }
     @Test fun repeatAcceleratesOnlyPercentageSliders() {
         assertEquals(1,percentageStep(0));assertEquals(5,percentageStep(5));assertEquals(10,percentageStep(14))
