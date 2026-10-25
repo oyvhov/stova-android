@@ -81,6 +81,9 @@ data class AppearancePrefs(
     val showSmartHomeButton: Boolean = true,
     val showProfile: Boolean = true,
     val clockSize: ClockSize = ClockSize.NORMAL,
+    /** The mood and accent in use before a chosen Jul or Halloween; they come back when it ends. */
+    val moodBeforeSeason: app.stova.core.theme.VisualTheme? = null,
+    val accentBeforeSeason: Accent? = null,
     @kotlinx.serialization.Transient val seasonOverlay: SeasonOverlay? = null,
 )
 

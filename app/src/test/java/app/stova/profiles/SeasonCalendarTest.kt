@@ -35,7 +35,20 @@ class SeasonCalendarTest {
         assertEquals(Season.CHRISTMAS, fixed.seasonal(LocalDate.of(2026,6,1)).season())
         assertEquals(Accent.HOLLY, fixed.accent)
         assertEquals(base.copy(seasonChoice = SeasonChoice.NONE), SeasonChoice.NONE.applyTo(base))
-        assertEquals(VisualTheme.FOREST, SeasonChoice.CALENDAR.applyTo(fixed).visualTheme)
+        // Review finding 14: leaving a chosen season brings back the mood you had, not Skog/Lime.
+        assertEquals(VisualTheme.MIDNIGHT, SeasonChoice.CALENDAR.applyTo(fixed).visualTheme)
+    }
+    @Test fun leavingAChosenSeasonRestoresTheMoodYouHad() {
+        val mine = AppearancePrefs(visualTheme = VisualTheme.MIDNIGHT, accent = Accent.OCEAN, seasonChoice = SeasonChoice.NONE)
+        val back = SeasonChoice.NONE.applyTo(SeasonChoice.CHRISTMAS.applyTo(mine))
+        assertEquals(VisualTheme.MIDNIGHT to Accent.OCEAN, back.visualTheme to back.accent)
+        val viaHalloween = SeasonChoice.NONE.applyTo(SeasonChoice.HALLOWEEN.applyTo(SeasonChoice.CHRISTMAS.applyTo(mine)))
+        assertEquals("switching seasons keeps the first mood", mine, viaHalloween)
+        val picked = SeasonChoice.CHRISTMAS.applyTo(mine).withMood(VisualTheme.CINEMA)
+        assertEquals(VisualTheme.CINEMA to Accent.OCEAN, picked.visualTheme to picked.accent)
+        assertEquals(mine.copy(visualTheme = VisualTheme.CINEMA), picked)
+        val saved = Json.encodeToString(AppearancePrefs.serializer(), SeasonChoice.HALLOWEEN.applyTo(mine))
+        assertEquals(mine, SeasonChoice.NONE.applyTo(Json.decodeFromString<AppearancePrefs>(saved)))
     }
     @Test fun countdownStopsAfterPeakAndAtThirtyOneDays() {
         assertEquals(6, Season.HALLOWEEN.daysUntilPeak(LocalDate.of(2026,10,25)))

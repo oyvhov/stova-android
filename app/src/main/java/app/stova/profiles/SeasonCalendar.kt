@@ -8,12 +8,11 @@ import kotlinx.serialization.Serializable
 @Serializable enum class SeasonalDecor { OFF, CALM, FULL }
 @Serializable enum class SeasonChoice { NONE, CALENDAR, CHRISTMAS, HALLOWEEN;
     fun applyTo(value: AppearancePrefs): AppearancePrefs {
-        val stored = value.withoutCalendarSeason()
-        val plain = if (stored.season() == Season.NONE) stored else stored.copy(visualTheme = VisualTheme.FOREST, accent = Accent.LIME)
+        val plain = value.withoutCalendarSeason().withoutChosenSeason()
         return when (this) {
             NONE, CALENDAR -> plain.copy(seasonChoice = this)
-            CHRISTMAS -> Season.CHRISTMAS.applyTo(stored).copy(seasonChoice = this)
-            HALLOWEEN -> Season.HALLOWEEN.applyTo(stored).copy(seasonChoice = this)
+            CHRISTMAS, HALLOWEEN -> (if (this == CHRISTMAS) Season.CHRISTMAS else Season.HALLOWEEN).applyTo(plain)
+                .copy(seasonChoice = this, moodBeforeSeason = plain.visualTheme, accentBeforeSeason = plain.accent)
         }
     }
 }
@@ -46,6 +45,11 @@ fun AppearancePrefs.seasonal(date: LocalDate): AppearancePrefs {
     val season = Season.onCalendar(date)
     return if (season == Season.NONE) this else season.applyTo(this).copy(seasonOverlay = SeasonOverlay(season, visualTheme, accent))
 }
+/** Ends a chosen Jul or Halloween: back to the mood before it (Skog/Lime for older profiles). */
+fun AppearancePrefs.withoutChosenSeason(): AppearancePrefs =
+    (if (season() == Season.NONE) this
+    else copy(visualTheme = moodBeforeSeason ?: VisualTheme.FOREST, accent = accentBeforeSeason ?: Accent.LIME))
+        .copy(moodBeforeSeason = null, accentBeforeSeason = null)
 fun AppearancePrefs.withoutCalendarSeason(): AppearancePrefs {
     val overlay = seasonOverlay ?: return this
     val laid = overlay.season.applyTo(this)
@@ -70,6 +74,6 @@ val PLAIN_MOODS = VisualTheme.entries.filter { it != VisualTheme.NOEL && it != V
  */
 fun AppearancePrefs.withMood(theme: VisualTheme): AppearancePrefs {
     val stored = withoutCalendarSeason()
-    return stored.copy(visualTheme = theme, seasonOverlay = null,
+    return stored.withoutChosenSeason().copy(visualTheme = theme, seasonOverlay = null,
         seasonChoice = if (stored.seasonChoice == SeasonChoice.CALENDAR) SeasonChoice.CALENDAR else SeasonChoice.NONE)
 }
