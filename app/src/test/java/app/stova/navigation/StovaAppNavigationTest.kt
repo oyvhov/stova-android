@@ -1,16 +1,19 @@
 package app.stova.navigation
 
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.MainActivity
@@ -84,6 +87,39 @@ class StovaAppNavigationTest {
         rule.waitForIdle()
         rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag("screen-HOME").assertExists()
+    }
+
+    // Pages fade over each other. Once the fade has settled the old page is gone and focus is on the new one.
+    @Test fun pageFadeSettlesWithTheOldPageGoneAndFocusOnTheNewOne() {
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
+        rule.onAllNodesWithText("Appar")[0].performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("screen-APPS").assertExists()
+        rule.onAllNodesWithText("Opne Appar").assertCountEquals(0)
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        rule.waitForIdle()
+        rule.onNodeWithTag("screen-HOME").assertExists()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Opne Appar").assertIsFocused()
+        // Only the top bar's button is left called "Appar": the Apps page title has gone with its page.
+        rule.onAllNodesWithText("Appar").assertCountEquals(1)
+    }
+
+    // While the old page is still fading, a stray D-pad press must not land on it.
+    @Test fun theLeavingPageCannotTakeFocusWhileItFades() {
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
+        rule.mainClock.autoAdvance = false
+        rule.onAllNodesWithText("Appar")[0].performClick()
+        rule.mainClock.advanceTimeByFrame()
+        rule.mainClock.advanceTimeByFrame()
+        rule.onNodeWithTag("screen-APPS").assertExists()
+        rule.onNodeWithText("Opne Appar").assertExists() // still fading out
+        rule.onNodeWithText("Opne Appar").performSemanticsAction(SemanticsActions.RequestFocus)
+        rule.mainClock.advanceTimeByFrame()
+        rule.onNodeWithText("Opne Appar").assertIsNotFocused()
+        rule.mainClock.autoAdvance = true
+        rule.waitForIdle()
+        rule.onNodeWithText("Opne Appar").assertDoesNotExist()
     }
 
     @Test fun homeIntentClosesSmartHomeAndKeepsItAvailable() {

@@ -1,7 +1,6 @@
 package app.stova.navigation
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -38,7 +37,6 @@ import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import app.stova.R
-import app.stova.core.theme.LocalReduceMotion
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.StovaShapes
 import app.stova.core.ui.Clock
@@ -92,8 +90,8 @@ private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit) 
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusedAsState()
     val shape = MaterialTheme.shapes.extraLarge
-    val millis = if (LocalReduceMotion.current) 0 else 140
-    val labelAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(millis))
+    val motion = app.stova.core.theme.stovaMotion
+    val labelAlpha by animateFloatAsState(if (focused) 1f else 0f, motion.fade(motion.quick))
     Box(
         Modifier
             .size(48.dp)

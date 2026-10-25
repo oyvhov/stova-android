@@ -308,7 +308,7 @@ fun HomeContent(
             menuMedia != null -> ItemActionsMenu(menuMedia!!.item,
                 { val target = menuMedia!!; closeMenu(); onMediaPlay(target) },
                 { val target = menuMedia!!; closeMenu(); onMediaClick(target) }, ::closeMenu, controls)
-            else -> androidx.compose.ui.window.Dialog(onDismissRequest = ::closeMenu) {
+            else -> app.stova.core.ui.StovaDialog(::closeMenu) {
                 androidx.compose.material3.Surface(shape = MaterialTheme.shapes.large) {
                     Column(Modifier.width(440.dp).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { controls() }
                 }

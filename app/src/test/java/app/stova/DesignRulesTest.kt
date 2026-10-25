@@ -20,6 +20,13 @@ class DesignRulesTest {
         assertEquals(emptyList<File>(), offenders)
     }
 
+    // One entry and one exit for every dialog, menu and panel: they all go through StovaDialog.
+    @Test fun everyDialogGoesThroughStovaDialog() {
+        val raw = Regex("""androidx\.compose\.ui\.window\.Dialog\b|\bAlertDialog\(""")
+        val offenders = files().filterNot { it.name == "StovaDialog.kt" }.filter { raw.containsMatchIn(it.readText()) }.toList()
+        assertEquals(emptyList<File>(), offenders)
+    }
+
     // Android 11 (the Shield) parses only "Z" in Instant.parse; Home Assistant sends "+00:00",
     // so every entity was silently dropped and "Add card" found nothing.
     @Test fun noInstantParseBecauseAndroid11RejectsOffsets() {

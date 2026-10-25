@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.testTag
@@ -28,8 +27,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.AppContainer
 import app.stova.R
@@ -66,7 +63,7 @@ import kotlin.math.ceil
         onConfigure={card->scope.launch {container.haRepository.configure(card.id,card.size,card.name,card.icon,card.favorite)}},
         registry=registry,pending=pending,feedback=feedback,connection=container.haSocket,completed=completed,overlayOpen=dialog!=null || adding,
         initialFocusId=firstFocus,onCardFocused={container.haRepository.rememberFocus(profile.id,it)})
-    if(adding && !profile.kid) Dialog({adding=false},properties=DialogProperties(usePlatformDefaultWidth=false)) {
+    if(adding && !profile.kid) StovaDialog({adding=false}) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(StovaLayout.TvSafeEdge)) {AddCardFlow(container) {adding=false}}
     }
     CardDialogHost(dialog,entities,container.haSocket,images,!canControl(profile),{call,id->scope.launch {container.haRepository.perform(call,id,profile)}},{dialog=null},room=dialog?.let {registry.entities[it.entityId]?.room},
@@ -177,7 +174,9 @@ import kotlin.math.ceil
             }
         }
         if(status==HaStatus.NOT_CONFIGURED) {Text(stringResource(R.string.ha_setup_instruction));return@Column}
-        if(feedback!=null) Text(stringResource(if(feedback==HaFeedback.FAILED) R.string.ha_v2_failed else R.string.ha_v2_done),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        androidx.compose.animation.Crossfade(feedback, animationSpec = app.stova.core.theme.stovaMotion.fade(), label = "ha-feedback") { shown ->
+            if(shown!=null) Text(stringResource(if(shown==HaFeedback.FAILED) R.string.ha_v2_failed else R.string.ha_v2_done),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         if(cards.isEmpty()) {
             Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(32.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 Icon(StovaIcons.Home,null,Modifier.size(40.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -221,14 +220,15 @@ import kotlin.math.ceil
         }
     }
     val hintCard=cards.find {it.id==focusedId}
-    val hintAlpha by animateFloatAsState(if(hintVisible) 1f else 0f,tween(if(app.stova.core.theme.LocalReduceMotion.current) 0 else 180))
+    val motion=app.stova.core.theme.stovaMotion
+    val hintAlpha by animateFloatAsState(if(hintVisible) 1f else 0f,motion.fade(motion.quick))
     if(hintCard!=null && hintAlpha>0f) Text(remoteHint(hintCard,entities[hintCard.entityId],!canControl(profile),profile.kid,editing),
         Modifier.align(Alignment.BottomCenter).padding(horizontal=StovaLayout.TvSafeEdge,vertical=12.dp).alpha(hintAlpha).testTag("remote-hint"),
         style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1,overflow=TextOverflow.Ellipsis)
     }
     lightsToTurnOff?.let {ids ->
         fun dismiss() {lightsToTurnOff=null;runCatching {summaryFocus.requestFocus()}}
-        Dialog(::dismiss) {
+        StovaDialog(::dismiss) {
             val cancelFocus=remember {FocusRequester()}
             Column(Modifier.widthIn(max=480.dp).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                 Text(stringResource(R.string.ha_action_all_lights,ids.size),style=MaterialTheme.typography.titleLarge)
@@ -293,7 +293,7 @@ import kotlin.math.ceil
     var limit by remember {mutableStateOf(false)}
     val scope=rememberCoroutineScope()
     fun save(updated:CardConfig) {onConfigure(updated);onDismiss()}
-    Dialog(onDismiss) {
+    StovaDialog(onDismiss) {
         Column(Modifier.widthIn(max=560.dp).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Text(label,style=MaterialTheme.typography.titleLarge)
             LazyColumn(Modifier.heightIn(max=320.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {

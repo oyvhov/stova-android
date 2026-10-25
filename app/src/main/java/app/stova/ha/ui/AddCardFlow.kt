@@ -107,9 +107,13 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
             }
         }
     }
-    choosing?.let {entity -> AlertDialog(onDismissRequest={choosing=null},title={Text(stringResource(R.string.ha_choose_type))},text={
-        Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {cardTypesFor(entity).forEach {type -> StovaButton(stringResource(cardTypeLabel(type)),{add(entity,type)})}}
-    },confirmButton={StovaButton(stringResource(R.string.ha_close),{choosing=null})})}
+    choosing?.let {entity -> StovaDialog({choosing=null}) {
+        Column(Modifier.widthIn(max=480.dp).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.ha_choose_type),style=MaterialTheme.typography.titleLarge)
+            cardTypesFor(entity).forEach {type -> StovaButton(stringResource(cardTypeLabel(type)),{add(entity,type)})}
+            StovaButton(stringResource(R.string.ha_close),{choosing=null})
+        }
+    }}
 }
 
 @Composable private fun EntityTile(item:HaCatalogItem,added:Boolean,enabled:Boolean,onClick:()->Unit) {

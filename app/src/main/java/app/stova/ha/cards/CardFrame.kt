@@ -81,8 +81,10 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
             }
             Text(label,Modifier.weight(1f),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)
             if (locked) Icon(StovaIcons.Lock,stringResource(R.string.ha_locked),Modifier.size(18.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
-            if (pending) Text(stringResource(R.string.ha_v2_pending),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-            else if (badge != null) Text(badge,Modifier.clip(MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal=8.dp,vertical=4.dp),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            androidx.compose.animation.Crossfade(pending to badge, animationSpec = app.stova.core.theme.stovaMotion.fade(), label = "card-status") { (busy, text) ->
+                if (busy) Text(stringResource(R.string.ha_v2_pending),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                else if (text != null) Text(text,Modifier.clip(MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal=8.dp,vertical=4.dp),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         Column(Modifier.weight(1f),verticalArrangement=Arrangement.Bottom) {
             Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {

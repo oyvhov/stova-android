@@ -19,8 +19,8 @@ import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.unit.dp
 import app.stova.core.theme.LocalReduceMotion
 import app.stova.core.theme.LocalStrongFocus
-import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.LocalAppearance
+import app.stova.core.theme.stovaMotion
 import app.stova.home.LocalRowHasFocus
 import app.stova.profiles.FocusEffect
 
@@ -31,20 +31,20 @@ import app.stova.profiles.FocusEffect
 fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean = false): Modifier {
     val focused by source.collectIsFocusedAsState()
     val reduceMotion = LocalReduceMotion.current
+    val motion = stovaMotion
     val effect = LocalAppearance.current.focusEffect
     val dim = zoom && effect == FocusEffect.LIGHT_UP && LocalRowHasFocus.current && !focused
-    val brightness = animateFloatAsState(if (dim) 0.72f else 1f,
-        tween(if (reduceMotion) 0 else StovaLayout.FocusFadeMillis), label = "focus-brightness")
+    val brightness = animateFloatAsState(if (dim) 0.72f else 1f, motion.fade(motion.focusRing), label = "focus-brightness")
     // Controls always retain their ring. Artwork uses the selected effect.
     val showRing = !zoom || effect == FocusEffect.RING || effect == FocusEffect.RING_ZOOM || (reduceMotion && effect == FocusEffect.ZOOM)
     val alpha = animateFloatAsState(
         targetValue = if (focused && showRing) 1f else 0f,
-        animationSpec = tween(if (reduceMotion) 0 else StovaLayout.FocusFadeMillis),
+        animationSpec = motion.fade(motion.focusRing),
         label = "focus-outline",
     )
     val scale = animateFloatAsState(
         if (zoom && focused && !reduceMotion && (effect == FocusEffect.ZOOM || effect == FocusEffect.RING_ZOOM)) 1.05f else 1f,
-        tween(if (reduceMotion) 0 else StovaLayout.TransitionMillis), label = "focus-scale")
+        motion.fade(motion.focusZoom), label = "focus-scale")
     val color = MaterialTheme.colorScheme.primary
     val ink = MaterialTheme.colorScheme.background
     val width = if (LocalStrongFocus.current) 4.dp else LocalAppearance.current.ringWidth.dp.dp

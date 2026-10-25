@@ -51,8 +51,6 @@ object StovaLayout {
     val RowGap = 16.dp
     val SectionTop = 22.dp
     val SectionBottom = 10.dp
-    const val TransitionMillis = 180
-    const val FocusFadeMillis = 110
 }
 
 /** Spole's eight accent hues, desaturated to sit with the muted palette, as profile avatar colours. */

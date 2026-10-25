@@ -13,10 +13,9 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import app.stova.R
 import app.stova.core.ui.StovaButton
+import app.stova.core.ui.StovaDialog
 import app.stova.ha.*
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
@@ -52,7 +51,7 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
     if(dialog==null) return
     val entity=entities[dialog.entityId]
     val energyGraph=dialog is CardDialog.Graph && dialog.today
-    Dialog(onDismiss,properties=DialogProperties(usePlatformDefaultWidth=dialog !is CardDialog.Camera && !energyGraph)) {
+    StovaDialog(onDismiss) {
         val windowHeight=with(LocalDensity.current) {LocalWindowInfo.current.containerSize.height.toDp()}
         val frame=if(dialog is CardDialog.Camera) Modifier.fillMaxSize() else Modifier
             .width(if(energyGraph) 640.dp else 480.dp).heightIn(max=(windowHeight-96.dp).coerceAtLeast(160.dp))

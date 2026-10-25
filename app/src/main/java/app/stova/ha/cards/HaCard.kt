@@ -88,7 +88,9 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
             CardType.WEATHER -> WeatherCard(shown,forecast,config.size,connection?.timeZone ?: java.time.ZoneId.systemDefault())
             CardType.ENERGY_PRICE -> EnergyPriceCard(energy?.copy(state=shown.state) ?: shown,connection?.timeZone ?: java.time.ZoneId.systemDefault())
             CardType.MEDIA_PLAYER -> MediaPlayerCard(shown,true,{},config.size)
-            CardType.SCENE -> if(completed) CardValue(stringResource(app.stova.R.string.ha_action_ran)) else SceneCard()
+            CardType.SCENE -> androidx.compose.animation.Crossfade(completed, animationSpec = app.stova.core.theme.stovaMotion.fade(), label = "scene-receipt") { done ->
+                if(done) CardValue(stringResource(app.stova.R.string.ha_action_ran)) else SceneCard()
+            }
             CardType.CAMERA -> CameraCard(shown,images,visible,config.size)
             CardType.COVER -> {CardValue(entityStateLabel(shown));shown.attributes.number("current_position")?.let {CardDetail(stringResource(R.string.ha_percent,it.toInt()))}}
             CardType.LOCK -> CardValue(entityStateLabel(shown))

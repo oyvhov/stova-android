@@ -12,7 +12,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import app.stova.R
 import app.stova.core.ui.*
 import app.stova.profiles.Profile
@@ -27,7 +26,7 @@ fun AppearanceProfileActions(others: List<Profile>, onReset: () -> Unit, onCopy:
         SettingsNavRow(stringResource(R.string.custom_reset)) { resetting = true }
         if (others.isNotEmpty()) SettingsNavRow(stringResource(R.string.custom_copy)) { copying = true }
     }
-    if (resetting) Dialog(onDismissRequest = { resetting = false }) {
+    if (resetting) StovaDialog({ resetting = false }) {
         val cancel = remember { FocusRequester() }
         Surface(shape = MaterialTheme.shapes.large) {
             Column(Modifier.width(420.dp).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -39,7 +38,7 @@ fun AppearanceProfileActions(others: List<Profile>, onReset: () -> Unit, onCopy:
         }
         LaunchedEffect(Unit) { cancel.requestFocus() }
     }
-    if (copying) Dialog(onDismissRequest = { copying = false }) {
+    if (copying) StovaDialog({ copying = false }) {
         Surface(shape = MaterialTheme.shapes.large) {
             Column(Modifier.width(420.dp).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.custom_copy), style = MaterialTheme.typography.headlineSmall)

@@ -3,6 +3,8 @@ package app.stova.ha.ui
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -63,6 +65,20 @@ class SmartHomeScreenTest {
         compose.onNodeWithText("sensor.3").performScrollTo().performClick()
         compose.onNodeWithText("Vis på heim").performClick()
         compose.onNodeWithText("Maks tre kort på heim").assertExists()
+    }
+    // "Utført" and "lukkast ikkje" fade out with their own words instead of vanishing.
+    @Test fun feedbackFadesOutInsteadOfVanishing() {
+        var feedback by androidx.compose.runtime.mutableStateOf<HaFeedback?>(HaFeedback.DONE)
+        compose.setContent { StovaTheme { SmartHomeContent(adult,listOf(CardConfig("1",CardType.LIGHT,"light.x")),emptyMap(),HaStatus.CONNECTED,feedback=feedback) } }
+        compose.onNodeWithText("Utført").assertExists()
+        compose.mainClock.autoAdvance=false
+        compose.runOnIdle { feedback=null }
+        compose.waitForIdle() // deliver the change; the frames below recompose it
+        compose.mainClock.advanceTimeByFrame();compose.mainClock.advanceTimeByFrame()
+        compose.onNodeWithText("Utført").assertExists() // still fading, same words
+        compose.mainClock.autoAdvance=true
+        compose.waitForIdle()
+        compose.onNodeWithText("Utført").assertDoesNotExist()
     }
     @Test fun notConfiguredShowsInstructions() {
         compose.setContent { StovaTheme { SmartHomeContent(adult,emptyList(),emptyMap(),HaStatus.NOT_CONFIGURED) } }
