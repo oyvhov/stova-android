@@ -22,17 +22,20 @@ import coil3.request.SuccessResult
 import android.content.Context
 import androidx.compose.runtime.*
 private fun backdropRequest(context:Context,url:String)=ImageRequest.Builder(context).data(url).size(1920,1080).build()
-@Composable fun BackdropLayer(url:String?,modifier:Modifier=Modifier,imageLoader:ImageLoader=SingletonImageLoader.get(LocalContext.current)) {
+/** What the backdrop shows, kept by the app shell so a return to Home never fades in from ink. */
+class BackdropState { var shown by mutableStateOf<String?>(null) }
+@Composable fun rememberBackdropState() = remember { BackdropState() }
+@Composable fun BackdropLayer(url:String?,modifier:Modifier=Modifier,imageLoader:ImageLoader=SingletonImageLoader.get(LocalContext.current),state:BackdropState=rememberBackdropState()) {
  val ink=MaterialTheme.colorScheme.background
  val dimming=app.stova.core.theme.LocalAppearance.current.backdropDimming
  val context=LocalContext.current
  // The next title fades in only once its image is decoded, so a change never dips to the bare
  // background; a failed load keeps the current picture.
- var shown by remember { mutableStateOf<String?>(null) }
  LaunchedEffect(url,imageLoader) {
-  if(url==null) shown=null
-  else if(imageLoader.execute(backdropRequest(context,url)) is SuccessResult) shown=url
+  if(url==null) state.shown=null
+  else if(url!=state.shown && imageLoader.execute(backdropRequest(context,url)) is SuccessResult) state.shown=url
  }
+ val shown=state.shown
  Box(modifier.fillMaxSize().background(ink)) {
   Crossfade(shown,animationSpec=tween(if(LocalReduceMotion.current) 0 else 900),label="backdrop") { image ->
    if(image!=null) AsyncImage(backdropRequest(context,image),null,imageLoader,Modifier.fillMaxSize().testTag("backdrop:$image"),contentScale=ContentScale.Crop)

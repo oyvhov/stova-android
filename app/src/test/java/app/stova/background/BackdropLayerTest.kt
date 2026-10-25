@@ -27,12 +27,33 @@ class BackdropLayerTest {
     @get:Rule val compose = createComposeRule()
     private val gates = ConcurrentHashMap<String, CompletableDeferred<Unit>>()
     private fun gate(url: String) = gates.getOrPut(url) { CompletableDeferred() }
-    private fun loader(context: android.content.Context) = ImageLoader.Builder(context).components {
+    private fun loader(context: android.content.Context, memory: Boolean = true) = ImageLoader.Builder(context).components {
         add(Fetcher.Factory<Uri> { data, _, _ ->
             Fetcher { gate(data.toString()).await(); ImageFetchResult(Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888).asImage(), false, DataSource.MEMORY) }
         })
-    }.build()
+    }.apply { if (!memory) memoryCachePolicy(coil3.request.CachePolicy.DISABLED) }.build()
     private fun shown(url: String) = compose.onAllNodesWithTag("backdrop:$url").fetchSemanticsNodes().isNotEmpty()
+
+    // Review finding 7: every return to Home faded the backdrop in from the bare background again.
+    @Test fun comingBackToHomeShowsTheBackdropAtOnce() {
+        val a = "https://demo.invalid/a"
+        var onHome by mutableStateOf(true)
+        gate(a).complete(Unit)
+        compose.setContent {
+            val context = LocalContext.current
+            val images = remember { loader(context, memory = false) }
+            val state = rememberBackdropState()
+            StovaTheme(reduceMotion = true) { if (onHome) BackdropLayer(a, imageLoader = images, state = state) }
+        }
+        compose.waitUntil(5_000) { shown(a) }
+        compose.runOnIdle { onHome = false }
+        compose.waitForIdle()
+        // A second load of the same picture would now wait for ever: what shows must not depend on one.
+        gates[a] = kotlinx.coroutines.CompletableDeferred()
+        compose.runOnIdle { onHome = true }
+        compose.waitForIdle()
+        compose.onNodeWithTag("backdrop:$a").assertExists()
+    }
 
     @Test fun keepsTheShownBackdropUntilTheNextHasLoaded() {
         val a = "https://demo.invalid/a"; val b = "https://demo.invalid/b"

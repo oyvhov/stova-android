@@ -76,10 +76,15 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season()) } }
     val date = app.stova.core.theme.LocalSeasonDate.current
     LaunchedEffect(home, date) { home.setCalendarDate(date) }
-    val spotlight by home.spotlight.collectAsStateWithLifecycle()
+    // Kept here, not in the layer: a return to Home shows the same picture at once, not a fade from ink.
+    val backdrop = app.stova.background.rememberBackdropState()
     // No side rail: home is the whole screen, and Apps and Settings are pages that Back closes.
     Box(Modifier.fillMaxSize().testTag("screen-${current.name}")) {
-        if (current == Destination.HOME) app.stova.background.BackdropLayer(spotlight?.item?.art?.backdrop)
+        // Collected only on Home: the spotlight's rotation ticks while Home is on screen, nowhere else.
+        if (current == Destination.HOME) {
+            val spotlight by home.spotlight.collectAsStateWithLifecycle()
+            app.stova.background.BackdropLayer(spotlight?.item?.art?.backdrop, state = backdrop)
+        }
         when (current) {
             Destination.HOME -> HomeScreen(
                 home, container.appArt, container.appCatalog,
