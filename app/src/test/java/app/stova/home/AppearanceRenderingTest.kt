@@ -50,11 +50,11 @@ class AppearanceRenderingTest {
         compose.onNodeWithTag("wide").assertWidthIsEqualTo(248.dp)
         compose.onNodeWithText("Fjordlys").assertDoesNotExist()
         compose.onNodeWithContentDescription("Fjordlys").assertExists()
-        compose.runOnIdle { prefs = prefs.copy(cardSize = CardSize.LARGE, showTitles = true) }
+        compose.runOnIdle { prefs = prefs.copy(cardSize = ArtworkSize.LARGE, showTitles = true) }
         compose.onNodeWithTag("wide").assertWidthIsEqualTo(296.dp)
         compose.onNodeWithTag("poster").assertWidthIsEqualTo((132f * 296 / 248).dp)
         compose.onNodeWithText("Fjordlys").assertExists()
-        compose.runOnIdle { prefs = prefs.copy(cardSize = CardSize.SMALL, showTitles = false) }
+        compose.runOnIdle { prefs = prefs.copy(cardSize = ArtworkSize.SMALL, showTitles = false) }
         compose.onNodeWithTag("wide").assertWidthIsEqualTo(200.dp)
     }
 
@@ -73,7 +73,7 @@ class AppearanceRenderingTest {
         } }
         compose.onNodeWithTag("app").assertWidthIsEqualTo(248.dp).assertHeightIsEqualTo(139.5.dp)
         compose.onNodeWithText("App").assertIsDisplayed() // no artwork: title in placeholder
-        compose.runOnIdle { prefs = prefs.copy(cardSize = CardSize.SMALL, appStyle = AppStyle.ICON) }
+        compose.runOnIdle { prefs = prefs.copy(cardSize = ArtworkSize.SMALL, appStyle = AppStyle.ICON) }
         compose.onNodeWithTag("app").assertWidthIsEqualTo(112.5.dp).assertHeightIsEqualTo(112.5.dp)
     }
 
@@ -106,7 +106,7 @@ class AppearanceRenderingTest {
 
     @Test fun largestPosterAndItsTitleFitBelowTheFixedHero() {
         val row = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, listOf(film), false)
-        compose.setContent { StovaTheme(appearance = AppearancePrefs(cardSize = CardSize.LARGE, showTitles = true, heroSize = HeroSize.LARGE), reduceMotion = true) {
+        compose.setContent { StovaTheme(appearance = AppearancePrefs(cardSize = ArtworkSize.LARGE, showTitles = true, heroSize = HeroSize.LARGE), reduceMotion = true) {
             val ctx = LocalContext.current
             HomeContent(listOf(row), null, row.key, AppArtCache(ctx), PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {}, spotlight = SpotlightEntry(film, account, false))
         } }
@@ -120,7 +120,7 @@ class AppearanceRenderingTest {
         val item = film.copy(title = "Ein svært lang tittel om ei ferd gjennom fjordane og eit ukjent landskap langt mot nord",
             year = 2024, ratings = Ratings(7.8, 91, "TV-MA"), genres = listOf("Science fiction", "Drama", "Eventyr", "Thriller", "Mystery", "Adventure"), overview = "Ei lang omtale av ei ferd gjennom fjordar og opne landskap. ".repeat(5))
         val row = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, listOf(item), false)
-        compose.setContent { StovaTheme(appearance = AppearancePrefs(cardSize = CardSize.LARGE, showTitles = true, heroSize = HeroSize.LARGE, showOverview = true), reduceMotion = true) {
+        compose.setContent { StovaTheme(appearance = AppearancePrefs(cardSize = ArtworkSize.LARGE, showTitles = true, heroSize = HeroSize.LARGE, showOverview = true), reduceMotion = true) {
             val ctx = LocalContext.current
             HomeContent(listOf(row), null, row.key, AppArtCache(ctx), PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {},
                 topBar = { app.stova.navigation.TopBar(Profile("p", "Demo", AvatarColor.LIME), {}, {}, {}) },

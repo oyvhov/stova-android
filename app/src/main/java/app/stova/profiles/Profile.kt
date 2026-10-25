@@ -46,7 +46,7 @@ data class AppearancePrefs(
     val iconFill: IconFill = IconFill.CENTER,
     val reduceMotion: Boolean = false,
     val strongFocus: Boolean = false,
-    val cardSize: CardSize = CardSize.MEDIUM,
+    val cardSize: ArtworkSize = ArtworkSize.MEDIUM,
     val showTitles: Boolean = false,
     val appStyle: AppStyle = AppStyle.BANNER,
     val movieStyle: MovieStyle = MovieStyle.POSTER,
@@ -66,7 +66,7 @@ data class AppearancePrefs(
     @kotlinx.serialization.Transient val seasonOverlay: SeasonOverlay? = null,
 )
 
-@Serializable enum class CardSize(val width: Int) { SMALL(200), MEDIUM(248), LARGE(296) }
+@Serializable enum class ArtworkSize(val width: Int) { SMALL(200), MEDIUM(248), LARGE(296) }
 @Serializable enum class AppStyle { BANNER, ICON }
 @Serializable enum class IconColor { ORIGINAL, ACCENT }
 @Serializable enum class IconFill { CENTER, CROP }

@@ -56,7 +56,7 @@ fun AppearanceSettingsContent(p: AppearancePrefs, packs: List<app.stova.apps.Ico
         Choice(R.string.appearance_row_spacing, p.rowSpacing, RowSpacing.entries, listOf(R.string.appearance_tight, R.string.appearance_normal, R.string.appearance_airy)) { onChange(p.copy(rowSpacing = it)) }
     }
     SettingsGroup(stringResource(R.string.appearance_cards)) {
-        Choice(R.string.appearance_card_size, p.cardSize, CardSize.entries, listOf(R.string.appearance_small, R.string.appearance_medium, R.string.appearance_large)) { onChange(p.copy(cardSize = it)) }
+        Choice(R.string.appearance_card_size, p.cardSize, ArtworkSize.entries, listOf(R.string.appearance_small, R.string.appearance_medium, R.string.appearance_large)) { onChange(p.copy(cardSize = it)) }
         Toggle(R.string.appearance_titles, p.showTitles) { onChange(p.copy(showTitles = it)) }
         Choice(R.string.appearance_app_style, p.appStyle, AppStyle.entries, listOf(R.string.appearance_banner, R.string.appearance_icon)) { onChange(p.copy(appStyle = it)) }
         Choice(R.string.row_latest_movies, p.movieStyle, MovieStyle.entries, listOf(R.string.appearance_poster, R.string.appearance_wide)) { onChange(p.copy(movieStyle = it)) }

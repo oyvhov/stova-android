@@ -53,8 +53,8 @@ class SettingsScreenTest {
         openSettings()
         rule.onNodeWithText("Utsjånad").performClick()
         rule.onNodeWithText("Kortstorleik").performScrollTo().performClick()
-        rule.waitUntil(5_000) { profile("A").appearance.cardSize == app.stova.profiles.CardSize.LARGE }
-        assertEquals(app.stova.profiles.CardSize.MEDIUM, profile("B").appearance.cardSize)
+        rule.waitUntil(5_000) { profile("A").appearance.cardSize == app.stova.profiles.ArtworkSize.LARGE }
+        assertEquals(app.stova.profiles.ArtworkSize.MEDIUM, profile("B").appearance.cardSize)
     }
 
     @Test fun kidSeesOnlySwitchProfile() {

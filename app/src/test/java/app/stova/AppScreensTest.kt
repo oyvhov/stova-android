@@ -320,12 +320,12 @@ class AppScreensTest {
     }
 
     @Test fun appearanceLargeWithTitles() {
-        renderMediaHome(appearance = AppearancePrefs(cardSize = CardSize.LARGE, showTitles = true, heroSize = HeroSize.LARGE))
+        renderMediaHome(appearance = AppearancePrefs(cardSize = ArtworkSize.LARGE, showTitles = true, heroSize = HeroSize.LARGE))
         rule.saveScreen("appearance-large-titles")
     }
 
     @Test fun appearanceSmallIcons() {
-        renderMediaHome(appearance = AppearancePrefs(cardSize = CardSize.SMALL, appStyle = AppStyle.ICON), showApps = true)
+        renderMediaHome(appearance = AppearancePrefs(cardSize = ArtworkSize.SMALL, appStyle = AppStyle.ICON), showApps = true)
         rule.saveScreen("appearance-small-icons")
     }
 
@@ -335,7 +335,7 @@ class AppScreensTest {
     }
 
     @Test fun appearanceOverviewHasTwoReadableLines() {
-        renderMediaHome(appearance = AppearancePrefs(showOverview = true, cardSize = CardSize.LARGE, showTitles = true))
+        renderMediaHome(appearance = AppearancePrefs(showOverview = true, cardSize = ArtworkSize.LARGE, showTitles = true))
         rule.onNodeWithText("Ei ferd gjennom stille fjordar og opne landskap. Vegen vidare byr på nye møte og ukjende stader.").assertIsDisplayed()
         rule.saveScreen("appearance-overview")
     }

@@ -8,7 +8,7 @@ class AppearancePrefsTest {
     @Test fun oldProfilesKeepTheNewDefaults() {
         val old = Json.decodeFromString<AppearancePrefs>("""{"reduceMotion":true,"strongFocus":true}""")
         assertEquals(AppearancePrefs(reduceMotion = true, strongFocus = true), old)
-        assertEquals(CardSize.MEDIUM, old.cardSize)
+        assertEquals(ArtworkSize.MEDIUM, old.cardSize)
         assertFalse(old.showTitles)
         assertEquals(AppStyle.BANNER, old.appStyle)
         assertEquals(MovieStyle.POSTER, old.movieStyle)
@@ -25,7 +25,7 @@ class AppearancePrefsTest {
     }
 
     @Test fun allChoicesSurviveJson() {
-        val prefs = AppearancePrefs(cardSize = CardSize.LARGE, showTitles = true, appStyle = AppStyle.ICON,
+        val prefs = AppearancePrefs(cardSize = ArtworkSize.LARGE, showTitles = true, appStyle = AppStyle.ICON,
             movieStyle = MovieStyle.WIDE, heroSize = HeroSize.LARGE, showOverview = true, showGenres = false,
             spotlightTime = SpotlightTime.SLOW, backdropDimming = BackdropDimming.LIGHT, corners = Corners.SHARP,
             focusEffect = FocusEffect.ZOOM, accent = Accent.OCEAN, clock = ClockMode.H12, rowSpacing = RowSpacing.AIRY)

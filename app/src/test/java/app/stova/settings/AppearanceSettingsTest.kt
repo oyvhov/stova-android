@@ -44,7 +44,7 @@ class AppearanceSettingsTest {
             row.performKeyInput { pressKey(Key.Enter) }
             assertNotEquals("OK changes $label", before, prefs)
         }
-        assertEquals(CardSize.LARGE, prefs.cardSize)
+        assertEquals(ArtworkSize.LARGE, prefs.cardSize)
         assertTrue(prefs.showTitles)
         assertEquals(AppStyle.ICON, prefs.appStyle)
         assertEquals(MovieStyle.WIDE, prefs.movieStyle)
