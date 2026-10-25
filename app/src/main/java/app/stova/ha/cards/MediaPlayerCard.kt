@@ -17,21 +17,20 @@ import app.stova.core.ui.StovaIcons
 import app.stova.core.ui.focusOutline
 import app.stova.ha.HaEntity
 import app.stova.ha.text
-import kotlinx.coroutines.delay
 
 @Composable fun MediaPlayerCard(entity:HaEntity,locked:Boolean=false,perform:(ServiceCall)->Unit={},size:CardSize=CardSize.S) {
-    var now by remember {mutableLongStateOf(System.currentTimeMillis())}
-    LaunchedEffect(entity.state) {if(entity.state=="playing") while(true) {delay(1_000);now=System.currentTimeMillis()}}
+    // Read only inside the progress lambda: the tick redraws the bar, never the card.
+    val now=rememberResumedNow(1_000,active=entity.state=="playing")
     val duration=entity.attributes.number("media_duration")
     val position=entity.attributes.number("media_position")
     val updated=entity.attributes.text("media_position_updated_at")?.let {runCatching {app.stova.ha.haMillis(it)}.getOrNull()}
-    val elapsed=if(entity.state=="playing" && updated!=null) ((now-updated)/1000.0).coerceAtLeast(0.0) else 0.0
+    fun elapsed()=if(entity.state=="playing" && updated!=null) ((now.value-updated)/1000.0).coerceAtLeast(0.0) else 0.0
     Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
         Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(2.dp)) {
             Text(entity.attributes.text("media_title") ?: entityStateLabel(entity),style=MaterialTheme.typography.titleMedium,maxLines=if(size==CardSize.L) 3 else 1,overflow=TextOverflow.Ellipsis)
             entity.attributes.text("media_artist")?.let {CardDetail(it)}
             if(position!=null && duration!=null && duration>0) LinearProgressIndicator(
-                progress={((position+elapsed)/duration).toFloat().coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().height(3.dp),
+                progress={((position+elapsed())/duration).toFloat().coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().height(3.dp),
                 color=MaterialTheme.colorScheme.primary,trackColor=MaterialTheme.colorScheme.surfaceVariant,drawStopIndicator={})
             Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
                 listOf("media_play_pause","media_next_track").forEach {service ->

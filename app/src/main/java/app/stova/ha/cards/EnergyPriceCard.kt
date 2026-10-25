@@ -16,7 +16,6 @@ import app.stova.R
 import app.stova.ha.HaEntity
 import app.stova.ha.text
 import app.stova.core.theme.StovaColors
-import kotlinx.coroutines.delay
 import java.time.*
 
 @Composable fun EnergyPriceCard(entity:HaEntity,zone:ZoneId=ZoneId.systemDefault()) {
@@ -26,8 +25,7 @@ import java.time.*
 
 @Composable fun PriceChart(entity:HaEntity,tomorrow:Boolean=false,modifier:Modifier=Modifier,
     quarters:Boolean=false,detailed:Boolean=true,zone:ZoneId=ZoneId.systemDefault()) {
-    var now by remember {mutableLongStateOf(System.currentTimeMillis())}
-    LaunchedEffect(Unit) {while(true) {delay(60_000);now=System.currentTimeMillis()}}
+    val now by rememberResumedNow(60_000)
     val date=Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
     val points=remember(entity,tomorrow,quarters,zone,date) {
         val raw=pricePoints(entity,tomorrow,date,zone)
