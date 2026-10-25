@@ -238,6 +238,8 @@ spole://open?kind=jellyfin|emby&user=<userId>&item=<itemId>&action=details|play
   i Spole.».
 - `details` hentar tittelen frå serveren om han ikkje alt er lasta, og opnar detaljsida.
   `play` startar avspeling med resume-posisjon.
+- Når Stova har opna Spole, er det Spole som styrer navigasjonen. Tilbake går til Spole si eiga
+  heimeside, ikkje tilbake til Stova (avgjort av brukaren 25.10.2026). Home-knappen fører til Stova.
 - Er Spole ikkje installert, viser Stova ein dialog: «Spole trengst for å spele av. Last ned frå
   github.com/oyvhov/spole-android/releases.»
 
