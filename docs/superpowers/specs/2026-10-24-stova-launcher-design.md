@@ -62,8 +62,10 @@ Kjelder: `C:\JellyBin\reelstack-android\docs\DESIGN_SYSTEM.md`, `docs\LAYOUT.md`
   til 1,05 skjer berre i `graphicsLayer` over 180 ms. Lys opp teiknar flat 28 % temademping
   på nabokorta i den aktive rada; kunsten held seg ugjennomsiktig. Redusert rørsle gir straks
   fokus utan skalering; rein Forstørring får ring som reserve. Gamal `strongFocus` blir 4 dp.
-- **Rørsle:** 180 ms standardovergang, FastOutSlowIn, ingen fjør eller overshoot. «Reduser
-  rørsle» slår av krysstoning og rotasjon.
+- **Rørsle:** `StovaMotion` eig raske overgangar på 150 ms, inngangar på 240 ms,
+  spotlight-utgang på 360 ms og roleg bakgrunn/spotlight-inngang på 900 ms. Fokus er
+  110/180 ms. Berre laganimasjonar for alfa, skala og forskyving; inga ny kontinuerleg rørsle,
+  fjør eller storleiksanimasjon. «Reduser rørsle» gir null varigheit og slår av parallax og rotasjon.
 - **TV-margin:** 48 dp trygg kant (5 % av 1080p).
 - **Tekst skal tole skriftstorleik 2,0.** Ingen kontroll har fast høgd som teksten må passe inni.
 - **Ingen fargelitteralar utanfor `core/theme`.** Alle flater bruker tokena.
@@ -154,8 +156,15 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
     år, aldersgrense og kritikarprosent med tomatikon. Ingen speletid eller omtale som standard.
     Sjangerlinja bruker `Muted`, med typen («Film»/«Serie») først og sjangrar etterpå.
     Berre community-score i 0–10 blir vist; til dømes 39,0 gir inga stjerne.
-    Profilen kan velje «Alltid tittel» i staden for clearlogo.
-  - Heroen har fast høgd for profil- og skriftvala, uavhengig av tittel, logo eller omtaletekst.
+    Profilen kan velje «Alltid tittel» i staden for clearlogo. Tittelen er òg reserve medan logoen
+    lastar og når lasting feilar, slik at heroen aldri mister namnet på filmen eller serien.
+  - Heroen er ei **rullande parallax-overskrift i same liste som radene** (brukarønske 25.10.2026).
+    Når fokus går ned til neste rad, rullar heroen heilt ut av syne og mediaradene får heile høgda
+    under topplinja. Opp til første rad viser heroen att. Teksten blir forskyvd 35 % av rullestillinga
+    i `graphicsLayer` og tonar ut; redusert rørsle bruker vanleg rulling. Siste rad har nok botnrom
+    til å nå toppen. Topplinja blir ståande. Heroen har fast **elementhøgd** for profil- og skriftvala,
+    uavhengig av tittel, logo eller omtaletekst; han reserverer ikkje plass når han er rulla bort.
+    Fokus til topplinja rullar også til toppen, slik at heroen alltid kan hentast fram med Opp.
     Kompakt og Stor reserverer høvesvis inntil 40 % og 52 % av området under toppfeltet. Ved
     vanleg skrift og avslått omtale blir høgda avgrensa slik at ei heil rad med vald kunststorleik
     og valfri tittel får plass. Påslått omtale reserverer minst 208 dp til heroen, slik at to
@@ -478,8 +487,14 @@ Endringa i Spole er Plan 3 og blir gjord i Spole-repoet etter Spole sine eigne r
   (`a`/`c`/`r`, nøklar `s`/`a`/`lc`/`lu`). Kvar kommando har aukande `id`. Tenestekall med
   `call_service`. Grafar med `history/history_during_period` (`minimal_response`, `no_attributes`).
 - **Kamera:** `GET /api/camera_proxy/{entity_id}` med Bearer-token.
-- **Livssyklus:** socketen koplar til i `onStart` og fråkoplar 30 s etter `onStop`. Ny tilkopling
-  med backoff 1, 2, 4, 8, 16, 30 s (maks). Status blir vist i Smarthus-overskrifta.
+- **Livssyklus:** socketen koplar berre til når appen er starta og det finst synlege Heim-brikker
+  eller Smarthus/legg-til-flyten er open. Han fråkoplar 30 s etter `onStop` eller bortfall av behov.
+  Heim abonnerer på høgst tre viste brikker; dashbordet på alle profilen sine kort. Ny tilkopling
+  med backoff 1, 2, 4, 8, 16, 30, 60, 120 og 300 s (maks). Status blir vist i Smarthus-overskrifta.
+- **Delte data:** HA-registeret er bufra i seks timar; historikk i fem minutt og prognosar i 15 minutt,
+  delte mellom kort og kontrollpanel. Token blir haldne i minnet etter første dekryptering og
+  ugyldiggjorde ved lagring/utlogging. Snapshot blir skrive høgst kvart minutt, utan skriving for
+  reine tidsstempelendringar, og forsøkt flusha når Stova går i bakgrunnen.
 - **Utgått access-token** blir fornya med `refresh_token` 60 s før utløp og ved `auth_invalid`.
 
 Smarthus v2 utvidar protokollen utan å endre innlogginga:

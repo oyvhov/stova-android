@@ -37,7 +37,8 @@ class HomeScrollTest {
         val context = LocalContext.current
         StovaTheme(reduceMotion = true) {
             HomeContent(rows, focused, rows.first().key, AppArtCache(context), PackageManagerAppCatalog(context, emptySet()),
-                {}, {}, {}, {})
+                {}, {}, {}, {}, topBar = { app.stova.core.ui.StovaButton("Toppen", {}) },
+                spotlight = SpotlightEntry(MediaItem("hero", "a", ItemType.MOVIE, "Heroen"), account, false))
         }
     }
 
@@ -45,6 +46,32 @@ class HomeScrollTest {
         render()
         compose.waitForIdle()
         compose.onNode(isFocused()).assert(hasText("Fyrste", substring = true))
+    }
+
+    @Test fun movingDownReclaimsHeroSpaceAndMovingUpRestoresIt() {
+        render()
+        compose.onNodeWithText("Heroen").assertIsDisplayed()
+        val firstTop = compose.onNodeWithText("Fyrste").getUnclippedBoundsInRoot().top
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Heroen").assertIsNotDisplayed()
+        val secondTop = compose.onNodeWithText("Andre").getUnclippedBoundsInRoot().top
+        org.junit.Assert.assertTrue("the row uses the hero's former space", secondTop < firstTop)
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionUp) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Heroen").assertIsDisplayed()
+        compose.onNode(isFocused()).assert(hasText("Fyrste", substring = true))
+    }
+
+    @Test fun returningToTheTopBarRevealsTheHero() {
+        render()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.onNodeWithText("Heroen").assertIsNotDisplayed()
+        compose.onNodeWithText("Toppen").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.waitForIdle()
+        compose.onNodeWithText("Heroen").assertIsDisplayed()
+        compose.onNodeWithText("Toppen").assertIsFocused()
     }
 
     @Test fun focusedRowSnapsToTheTopWithoutThePreviousRowPeeking() {

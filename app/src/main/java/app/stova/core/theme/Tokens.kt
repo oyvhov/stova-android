@@ -42,6 +42,8 @@ object StovaLayout {
     /** About 5 % of a 1080p panel; sets that still overscan keep the last row on screen. */
     val TvSafeEdge = 48.dp
     val Gutter = 24.dp
+    val SettingsNavigationWidth = 236.dp
+    val SettingsRowMinHeight = 52.dp
     val RailCollapsed = 80.dp
     val RailExpanded = 200.dp
     val PosterWidth = 132.dp

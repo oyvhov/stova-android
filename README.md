@@ -6,6 +6,12 @@ Ein flat og rask Android TV-launcher for NVIDIA Shield, med media frå Jellyfin 
 
 Stova har favorittappar, bufra heimerader, Watch Next, PIN og barnemodus. Home-knappen kan opne Stova medan systemlauncheren framleis er tilgjengeleg.
 
+Heroen rullar bort med ein lett parallax-effekt når du går nedover, slik at mediaradene får heile
+høgda under topplinja. Opp til første rad viser heroen att. Redusert rørsle bruker vanleg rulling.
+
+For utviklarar og AI-agentar: [arkitektur og filkart](docs/ARCHITECTURE.md),
+[arbeidsflyt og testar](CONTRIBUTING.md), [arbeidsreglar](AGENTS.md).
+
 ## Krav og oppsett
 
 - NVIDIA Shield med Android TV 11 / API 30 eller nyare.

@@ -17,6 +17,7 @@ import app.stova.core.theme.stovaMotion
 import app.stova.media.SpotlightEntry
 import app.stova.media.ui.*
 import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.request.transformations
 /** The rotating library spotlight: a film or series, its logo, a calm line of facts and the start of its story. */
@@ -29,7 +30,7 @@ import coil3.request.transformations
   val logoHeight=minOf(72.dp,(maxHeight-(if(prefs.showOverview) 150.dp else 110.dp)).coerceAtLeast(24.dp))
   // The new title arrives at the backdrop's pace, once the old one has mostly left.
   AnimatedContent(entry,contentKey={ it?.item?.id },contentAlignment=Alignment.TopStart,label="spotlight",
-   transitionSpec={ (fadeIn(motion.enter(motion.ambient,delayMillis=motion.standard)) togetherWith fadeOut(motion.exit(motion.emphasized))).using(SizeTransform(clip=false)) }) { current ->
+   transitionSpec={ (fadeIn(motion.enter(motion.ambient,delayMillis=motion.standard)) togetherWith fadeOut(motion.exit(motion.emphasized))).using(null) }) { current ->
    Column(Modifier.widthIn(max=400.dp).fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
     if(current==null) {
      val season = if(prefs.seasonalDecor == SeasonalDecor.OFF) Season.NONE else prefs.season()
@@ -42,7 +43,8 @@ import coil3.request.transformations
     }
     else {
      val item=current.item;val logo=item.art.logo
-     if(logo!=null && prefs.heroTitle==HeroTitle.LOGO) AsyncImage(ImageRequest.Builder(LocalContext.current).data(logo).size(800,240).transformations(TrimTransparent()).build(),item.title,Modifier.widthIn(max=320.dp).height(logoHeight),contentScale=ContentScale.Fit,alignment=Alignment.CenterStart)
+     if(logo!=null && prefs.heroTitle==HeroTitle.LOGO) SubcomposeAsyncImage(ImageRequest.Builder(LocalContext.current).data(logo).size(800,240).transformations(TrimTransparent()).build(),item.title,Modifier.widthIn(max=320.dp).fillMaxWidth().height(logoHeight),contentScale=ContentScale.Fit,alignment=Alignment.CenterStart,
+         loading = { HeroTitle(item.title, large || prefs.showOverview) }, error = { HeroTitle(item.title, large || prefs.showOverview) })
      else Text(item.title,style=MaterialTheme.typography.headlineMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=if(large || prefs.showOverview) 1 else 2,overflow=TextOverflow.Ellipsis)
      FlowRow(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalArrangement=Arrangement.spacedBy(6.dp),itemVerticalAlignment=Alignment.CenterVertically) {
       if(current.newSeason) Text(stringResource(R.string.spotlight_new_season),Modifier.background(MaterialTheme.colorScheme.primaryContainer,MaterialTheme.shapes.small).padding(horizontal=10.dp,vertical=3.dp),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.primary)
@@ -54,4 +56,9 @@ import coil3.request.transformations
    }
   }
  }
+}
+
+@Composable private fun HeroTitle(title: String, compact: Boolean) {
+    Text(title, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface,
+        maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
 }

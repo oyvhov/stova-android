@@ -24,6 +24,12 @@ class HeroPanelTest {
     @get:Rule val compose = createComposeRule()
     private val account = MediaAccount("a", "p", ServerKind.JELLYFIN, "s", "Midttunet", "http://jf", "u", "U")
 
+    @Test fun aLogoThatCannotBeLoadedStillShowsTheTitle() {
+        val film = MediaItem("missing", "a", ItemType.MOVIE, "Fjordlys", art = ItemArt(logo = "missing-logo"))
+        compose.setContent { StovaTheme(reduceMotion = true) { HeroPanel(SpotlightEntry(film, account, false)) } }
+        compose.onNodeWithText("Fjordlys").assertIsDisplayed()
+    }
+
     @Test fun newSeasonIsMarkedAndTheSeriesNamed() {
         val series = MediaItem("s1", "a", ItemType.SERIES, "Kystvakta", year = 2022, overview = "Livet langs kysten.")
         compose.setContent { StovaTheme(reduceMotion = true) { HeroPanel(SpotlightEntry(series, account, newSeason = true)) } }

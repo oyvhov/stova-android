@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import app.stova.core.theme.stovaMotion
@@ -56,9 +58,14 @@ fun StovaDialog(
     ) {
         AnimatedVisibility(visible, enter = fadeIn(motion.enter()), exit = fadeOut(motion.exit()), label = "dialog") {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Box(Modifier.matchParentSize().background(MaterialTheme.colorScheme.background.copy(alpha = SCRIM_ALPHA)))
+                Box(Modifier.matchParentSize().background(MaterialTheme.colorScheme.background.copy(alpha = SCRIM_ALPHA))
+                    .pointerInput(still, properties.dismissOnClickOutside) {
+                        detectTapGestures { if (properties.dismissOnClickOutside) {
+                            if (still) dismiss() else visible.targetState = false
+                        } }
+                    })
                 Box(
-                    Modifier.animateEnterExit(
+                    Modifier.pointerInput(Unit) { detectTapGestures { } }.animateEnterExit(
                         enter = scaleIn(motion.enter(), initialScale = PANEL_FROM),
                         exit = scaleOut(motion.exit(), targetScale = PANEL_TO),
                         label = "panel",

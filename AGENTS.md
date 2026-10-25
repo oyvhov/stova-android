@@ -6,6 +6,9 @@ kan ta over frå kvarandre midt i ein plan.
 
 ## Les først
 
+Start med `docs/ARCHITECTURE.md` (ansvar og filkart), `CONTRIBUTING.md` (arbeidsflyt og testar)
+og siste oppføring i `docs/HANDOFF.md`. Dei peikar til den aktuelle bestillinga. Deretter:
+
 1. Spesifikasjon: `docs/superpowers/specs/2026-10-24-stova-launcher-design.md`
 2. Planane, i denne rekkjefølgja:
    1. `docs/superpowers/plans/2026-10-24-plan-1-fundament.md`
@@ -18,7 +21,8 @@ kan ta over frå kvarandre midt i ein plan.
 ## Halde fram der førre agent slapp
 
 1. `git -C C:\Launcher status` og `git -C C:\Launcher log --oneline -15`.
-2. Finn første plan med `- [ ]`, og første steg som ikkje er avkryssa.
+2. Følg den aktuelle planen frå siste overlevering. Utsette Shield-/signerings-/release-steg i
+   eldre planar er ikkje ei ny bestilling. Utan nyare overlevering: finn første plan med `- [ ]`.
 3. Ligg det ucommitta endringar som høyrer til det steget, fullfør steget i staden for å starte på nytt. Endringar du ikkje forstår, tilhøyrer brukaren: ikkje slett dei, spør.
 4. Køyr testane i oppgåva før du går vidare, sjølv om førre agent har kryssa av.
 
@@ -33,6 +37,8 @@ kan ta over frå kvarandre midt i ein plan.
 - Emulator: berre `Stova_TV` på port 5580 (`scripts/Start-StovaEmulator.ps1`; skjermen blir vist i scrcpy med mus og tastatur, sjå `scripts/Show-StovaScreen.ps1`, som òg fungerer mot Shield med `-Serial <ip>:5555`) og Shield via `adb connect <ip>:5555`. **Aldri** installer Stova eller køyr testar på emulator-5560, -5562 eller -5564. Dei tilhøyrer Spole og har ekte brukardata.
 - Design: ingen glas eller blur, ingen fargelitteralar utanfor `core/theme`, og lime berre for handling. `DesignRulesTest` må alltid vere grøn.
 - UI-tekst på nynorsk i `res/values`, engelsk i `res/values-en`. Ingen hardkoda tekst.
+- `*Screen` koplar data og livssyklus; `*Content` teiknar kontrollerte verdiar og kallar tilbake.
+  Hald rullestilling og animasjonsverdiar i lag-/layoutfasen når dei endrar seg per ramme.
 - Ikkje publiser noko (GitHub-repo, release eller Pages) og ikkje push utan at brukaren ber om det.
 - Systemlauncheren på Shield skal aldri slåast av (`pm disable-user`).
 
