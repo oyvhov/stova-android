@@ -17,19 +17,27 @@ class IconPackRepository(private val source: IconPackSource, private val directo
     private val mutablePacks = MutableStateFlow<List<IconPack>>(emptyList())
     val packs = mutablePacks.asStateFlow()
     private val mutex = Mutex()
+    private val discoveryMutex = Mutex()
     private val memory = mutableMapOf<String, IconPackIndex>()
     @Volatile private var scanned = false
 
-    suspend fun refresh() = withContext(Dispatchers.IO) {
+    /** Package callbacks invalidate the index; an unused integration does no discovery work. */
+    suspend fun packagesChanged() {
+        if (scanned) refresh()
+    }
+
+    suspend fun refresh() = discoveryMutex.withLock { discover() }
+
+    private suspend fun discover() = withContext(Dispatchers.IO) {
         val installed = source.installed()
         mutablePacks.value = installed
         scanned = true
         mutex.withLock { memory.keys.retainAll(installed.map { it.cacheKey }.toSet()) }
     }
 
-    suspend fun installed(): List<IconPack> {
-        if (!scanned) refresh()
-        return packs.value
+    suspend fun installed(): List<IconPack> = discoveryMutex.withLock {
+        if (!scanned) discover()
+        packs.value
     }
 
     suspend fun index(pack: IconPack): IconPackIndex = withContext(Dispatchers.IO) {

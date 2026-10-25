@@ -30,7 +30,8 @@ class AppRepository(
      * same package callback, and a page that opens again gets the last scan at once. Re-scans
      * whenever a package is added, removed or changed.
      */
-    private val installed: Flow<List<InstalledApp>> = catalog.changes().onStart { emit(Unit) }.map { catalog.installed() }
+    val packageChanges = catalog.changes().shareIn(scope, SharingStarted.WhileSubscribed(5_000), replay = 0)
+    private val installed: Flow<List<InstalledApp>> = packageChanges.onStart { emit(Unit) }.map { catalog.installed() }
         .shareIn(scope, SharingStarted.WhileSubscribed(5_000), replay = 1)
 
     /** All an arrangement depends on; an appearance edit or any other profile change never re-sorts. */

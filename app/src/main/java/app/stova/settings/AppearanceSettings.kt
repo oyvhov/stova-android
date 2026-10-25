@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.first
 fun AppearanceSettings(container: AppContainer, profile: Profile, pinnedPreview: Boolean = false, onEditRows: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
     val packs by container.iconPacks.packs.collectAsStateWithLifecycle()
+    LaunchedEffect(container.iconPacks) { container.iconPacks.installed() }
     val profiles by container.profiles.file.collectAsStateWithLifecycle(initialValue = ProfilesFile())
     var picking by remember(profile.id) { mutableStateOf(false) }
     var draft by remember(profile.id) { mutableStateOf(profile.appearance) }

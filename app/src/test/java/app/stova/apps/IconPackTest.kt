@@ -17,6 +17,18 @@ import org.robolectric.annotation.Config
 class IconPackTest {
     @get:Rule val tmp = TemporaryFolder()
 
+    @Test fun packageChangesDoNotScanUntilPacksAreNeeded() = runTest {
+        val source = FakeIconPackSource()
+        val repo = IconPackRepository(source, tmp.root)
+        repo.packagesChanged()
+        assertEquals(0, source.scans)
+        repo.installed()
+        assertEquals(1, source.scans)
+        repo.packagesChanged()
+        repo.installed()
+        assertEquals(2, source.scans)
+    }
+
     @Test fun discoversEverySupportedActionOnceAndDeclaresVisibility() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val pm = org.robolectric.Shadows.shadowOf(context.packageManager)
@@ -91,9 +103,10 @@ class FakeIconPackSource : IconPackSource {
     var filter = """<item component="ComponentInfo{org.jellyfin.mobile/.MainActivity}" drawable="jellyfin"/>"""
     var catalog: String? = null
     var reads = 0
+    var scans = 0
     var missingDrawables: Set<String> = emptySet()
     val requested = mutableListOf<Pair<String, Int>>()
-    override fun installed() = packs
+    override fun installed(): List<IconPack> { scans++; return packs }
     override fun appFilter(pack: IconPack): String { reads++; return filter }
     override fun drawableCatalog(pack: IconPack) = catalog
     override fun drawable(pack: IconPack, name: String, density: Int): Drawable? {

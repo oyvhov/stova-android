@@ -89,11 +89,9 @@ class AppContainer(
 
     init {
         appScope.launch {
-            appsIconPackChanges().collect { iconPacks.refresh() }
+            apps.packageChanges.collect { iconPacks.packagesChanged() }
         }
     }
-
-    private fun appsIconPackChanges() = appCatalog.changes().onStart { emit(Unit) }
 
     val media = app.stova.media.MediaRepository(mediaAccounts, { account ->
         mediaAccounts.token(account.id)?.let { app.stova.media.net.JellyfinEmbyClient(account, it, mediaHttp, identity.await()) }
