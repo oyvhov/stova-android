@@ -68,12 +68,6 @@ fun HomeScreen(
             while (true) { refresh(); delay(300_000) }
         }
     }
-    val chips = if (haRepository != null && haConnection != null) {
-        val cards by haRepository.homeCards.collectAsStateWithLifecycle()
-        val entities by haRepository.entities.collectAsStateWithLifecycle()
-        val locale = LocalConfiguration.current.locales[0]
-        cards.map { chipText(it, entities[it.entityId], locale) }
-    } else emptyList()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val focused by vm.focused.collectAsStateWithLifecycle()
     val initial by vm.initialFocus.collectAsStateWithLifecycle()
@@ -96,7 +90,7 @@ fun HomeScreen(
         }
     }
     HomeContent(rows, focused, initial, art, catalog, onOpenApps, vm::focus,
-        onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { topBar(chips) },
+        onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { HomeChips(haRepository, topBar) },
         spotlight = spotlight, appIconOverrides = profile?.apps?.iconOverrides.orEmpty(),
         onAppLongClick = { app -> if (profile?.kid == false) appMenu = app },
         homePrefs = profile?.home ?: HomePrefs(),
