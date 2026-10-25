@@ -60,9 +60,6 @@ fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean
     return zIndex(if (focused) 1f else 0f).graphicsLayer {
         scaleX = scale.value; scaleY = scale.value
         translationY = -StovaFocus.Lift.toPx() * lift.value
-        shadowElevation = StovaFocus.Elevation.toPx() * emphasis.value
-        ambientShadowColor = light.copy(alpha = 0.18f)
-        spotShadowColor = light.copy(alpha = 0.12f)
         this.shape = shape
     }.drawWithCache {
         val artOutline = shape.createOutline(size, layoutDirection, this)

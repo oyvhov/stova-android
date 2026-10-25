@@ -41,7 +41,6 @@ object StovaFocus {
     const val ControlScale = 1.015f
     const val SurfaceAlpha = 0.10f
     val Lift = 2.dp
-    val Elevation = 6.dp
 }
 
 /** Five steps, and every corner in the app is one of them. */

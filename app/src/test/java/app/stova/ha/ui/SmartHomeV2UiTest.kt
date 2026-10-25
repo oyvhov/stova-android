@@ -23,6 +23,57 @@ import org.robolectric.annotation.Config
 class SmartHomeV2UiTest {
     @get:Rule val compose=createComposeRule()
     private val adult=Profile("a","A",AvatarColor.LIME)
+    @Test fun downFromHeaderReturnsToCardsInsteadOfFollowingTheButtonsHorizontalPosition() {
+        val cards=listOf(CardConfig("a",CardType.SENSOR,"sensor.a",name="Veranda",size=CardSize.L),
+            CardConfig("b",CardType.SENSOR,"sensor.b",name="Kontor",size=CardSize.S),
+            CardConfig("c",CardType.SENSOR,"sensor.c",name="Stove",size=CardSize.S))
+        compose.setContent {StovaTheme(reduceMotion=true) {SmartHomeContent(adult,cards,emptyMap(),HaStatus.CONNECTED)}}
+        compose.onNodeWithText("Legg til kort").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithText("Veranda").assertIsFocused()
+    }
+    @Test fun topRowUpReturnsToTheHeaderAndDownRestoresTheLastCard() {
+        val cards=listOf(CardConfig("a",CardType.SENSOR,"sensor.a",name="Veranda"),
+            CardConfig("b",CardType.SENSOR,"sensor.b",name="Kontor"))
+        compose.setContent {StovaTheme(reduceMotion=true) {SmartHomeContent(adult,cards,emptyMap(),HaStatus.CONNECTED)}}
+        compose.onNodeWithText("Legg til kort").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithText("Veranda").assertIsFocused()
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionRight)}
+        compose.onNodeWithText("Kontor").assertIsFocused()
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionUp)}
+        compose.onNodeWithText("Legg til kort").assertIsFocused()
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithText("Kontor").assertIsFocused()
+    }
+    @Test fun mixedCardSizesReachLazyBandsWithoutDiagonalJumpsOrEscapingTheBottom() {
+        val cards=listOf(CardConfig("a",CardType.SENSOR,"sensor.a",name="Veranda",size=CardSize.L))+
+            listOf("b","c","d","e","f").map {CardConfig(it,CardType.SENSOR,"sensor.$it",size=CardSize.S)}
+        compose.setContent {StovaTheme(reduceMotion=true) {SmartHomeContent(adult,cards,emptyMap(),HaStatus.CONNECTED)}}
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionRight)}
+        compose.onNodeWithText("sensor.b").assertIsFocused()
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithText("sensor.c").assertIsFocused()
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithText("sensor.f").assertIsFocused()
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionDown);pressKey(Key.DirectionRight)}
+        compose.onNodeWithText("sensor.f").assertIsFocused()
+    }
+    @Test fun mediaPreviewKeepsOneCardFocusStopAndDoesNotPerformActionsWhileNavigating() {
+        val entity=HaEntity("media_player.a","playing",buildJsonObject {put("media_title","Musikk")},0,0)
+        val cards=listOf(CardConfig("p",CardType.MEDIA_PLAYER,entity.id,name="Spelar",size=CardSize.M),
+            CardConfig("s",CardType.SENSOR,"sensor.side"),CardConfig("b",CardType.SENSOR,"sensor.below"))
+        var calls=0
+        compose.setContent {StovaTheme(reduceMotion=true) {SmartHomeContent(adult,cards,mapOf(entity.id to entity),HaStatus.CONNECTED,onPerform={_,_->calls++})}}
+        compose.onNodeWithContentDescription("Pause").assertIsNotEnabled()
+        compose.onNodeWithContentDescription("Neste spor").assertIsNotEnabled()
+        compose.onNodeWithText("Spelar").assertIsFocused()
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionRight)}
+        compose.onNodeWithText("sensor.side").assertIsFocused()
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithText("sensor.below").assertIsFocused()
+        assertEquals(0,calls)
+    }
     @Test fun firstCardReceivesInitialRemoteFocus() {
         compose.setContent {StovaTheme {SmartHomeContent(adult,listOf(CardConfig("a",CardType.LIGHT,"light.a",name="Leselys")),emptyMap(),HaStatus.CONNECTED)}}
         compose.onNodeWithText("Leselys").assertIsFocused()

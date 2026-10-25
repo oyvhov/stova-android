@@ -1,3 +1,10 @@
+# Stova utan glød og med faste fokusvegar – installert; Spole beta22 under bygg
+2026-10-25: Plan `2026-10-25-directional-focus.md` er fullført. Heim, Innstillingar og Smarthus har eksplisitte fokusvegar; fokusskuggen er heilt fjerna. Tre underagentar deltok; hovudagenten eigde samla QA.
+609/609 testar inkludert skjermprøver, 0 hoppa over; lint 0 feil (39 åtvaringar, 1 hint), debug-bygg OK. Endeleg APK a05d0c47931a9f57a8e1e25f1a5fae134f6bd09c89ba09bf1483e47478e75297 er installert med -r på emulator-5580 og Shield; installerte hash-ar er like.
+D-pad toppikon/rader, lange innstillingslister og appmeny etter touch-hald er prøvde med ekte data. Smarthus-kort er prøvde på emulator; Shield har tomt dashbord. Profil- og kontofiler er byteidentiske før/etter navigasjonsrunden. Sjå `docs/verification/directional-focus.md`.
+Spole beta21/158 er signert/installert og opnar direkte varm/kald lenkje etter eigaren si innlogging. Faktisk Stova-korttrykk avdekte ein ekstra Android-task-feil; Spole-agenten byggjer beta22/159 med raw-URI-mottak og separat receiver-affinity i `C:/JellyBin/spole-launcher-link`. Ekte korttrykk/retur må prøvast før Spole blir meldt ferdig.
+Ingen push. Kontoar, favorittar, eigaren sine nye radformat og standardlauncher er bevarte. Ingen HA-styring eller datatømming.
+
 # Shield installert; glød, fokusvegar og Spole-oppdatering under arbeid
 2026-10-25: Etter uttrykkeleg bestilling er Stova `0ed3e34` og Projectivy 1.1.9 installerte med -r på Shield. Installerte hash-ar er verifiserte; Projectivy og transparente appkort er valde. Kontoar og andre profilval/favorittar er bevarte. Sjå `docs/verification/shield-projectivy-install.md`.
 Eigaren melder kraftig glød og D-pad som hoppar feil i toppfelt, Smarthus og menyar. Ny plan: `2026-10-25-directional-focus.md`. Ingen slik kode er endra enno; fjern shadowElevation/ambientShadowColor/spotShadowColor og legg eksplisitte fokusvegar med tastetestar.

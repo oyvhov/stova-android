@@ -58,7 +58,8 @@ Kjelder: `C:\JellyBin\reelstack-android\docs\DESIGN_SYSTEM.md`, `docs\LAYOUT.md`
   Gamle SHARP/ROUND blir 4/20 dp; gamle felt blir berre haldne for lesekompatibilitet.
 - **Typografi:** Spole sin `reelstackTypography()`-skala (sans-serif, 12 nivå), kopiert uendra.
 - **Fokus (25.10, eigaren sitt val):** Svakt løft er standard på både kort og menyval:
-  2 dp opp, 2,5 % forstørring på kunst / 1,5 % på kontrollar, svak skugge og 10 % lysare flate.
+  2 dp opp, 2,5 % forstørring på kunst / 1,5 % på kontrollar og 10 % lysare kontrollflate.
+  Ingen fokusskugge eller glød. Transparent kunst bevarer fargane og får inga ekstra flate.
   Gamalt standardval `RING` blir lese som `LIFT` utan omskriving av profilen. Forstørring,
   Lys opp, Ring og Ring + forstørring kan veljast uttrykkeleg. Ringen er 2/3/4 dp og følgjer
   kunstforma; menyar tvingar ikkje fram ring. Forstørring skjer berre i `graphicsLayer`.
@@ -249,7 +250,7 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
 
 Smarthus v2 (25.10.2026) er ein naturleg del av Stova. Tunet er funksjonsreferansen;
 korta brukar Stova sine matte `Surface`-flater, `MaterialTheme.shapes`, typografi og
-`focusOutline` berre rundt kortflata. Ingen skalering, glas eller blur. Ikon står i ei
+den felles fokusmarkeringa på kortflata, utan fokusskugge eller glød. Ingen glas eller blur. Ikon står i ei
 `Raised`-rute. Påslåtte lys har flat glød frå `HaTokens`: 8–22 % etter lysstyrken,
 varm som standard og avmetta frå `hs_color`/`rgb_color` i fargemodus. Ikonruta er fylt
 med glødfargen; avslåtte lys er nøytrale med dempa ikon. Verdiar, romnamn og passive

@@ -104,10 +104,39 @@ fun HomeContent(
     val firstItem = remember { FocusRequester() }
     var placedRow by remember { mutableStateOf<HomeRowKey?>(null) }
     var viewerMoved by remember { mutableStateOf(false) }
+    val topBarFocus = remember { FocusRequester() }
+    val focusScope = rememberCoroutineScope()
+    var rowNavigation by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    fun scrollIndex(index: Int) = if (index == 0 || appearance.heroSize == HeroSize.OFF) index else index + 1
+    val initialRow = rows.orEmpty().indexOfFirst { it.key == restoreRow }.coerceAtLeast(0)
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = scrollIndex(initialRow))
+    fun focusRow(index: Int) {
+        rowNavigation?.cancel()
+        if (index < 0) { runCatching { topBarFocus.requestFocus(FocusDirection.Enter) }; return }
+        val key = currentRows?.getOrNull(index)?.key ?: return
+        rowNavigation = focusScope.launch {
+            withFrameNanos { }
+            listState.scrollToItem(scrollIndex(index))
+            repeat(12) {
+                if (runCatching { requesters[key]?.requestFocus(FocusDirection.Enter) == true }.getOrDefault(false)) return@launch
+                withFrameNanos { }
+            }
+        }
+    }
+    fun nextRow(from: Int, step: Int): Int? = currentRows.orEmpty().indices
+        .filter { if (step > 0) it > from else it < from }
+        .let { if (step > 0) it else it.reversed() }
+        .firstOrNull { currentRows!![it].hasFocusableItems() }
     Box(Modifier.fillMaxSize()) {
     SeasonalScene(Modifier.matchParentSize())
     Column(Modifier.fillMaxSize().onPreviewKeyEvent { event ->
-        if (event.type == KeyEventType.KeyDown) viewerMoved = true
+        if (event.type == KeyEventType.KeyDown) {
+            viewerMoved = true
+            // A newer arrow owns focus, even when it only moves within the header or a row.
+            // Never let a lazy-row request from an earlier Down steal it on the next frame.
+            if (event.key in listOf(Key.DirectionUp, Key.DirectionDown, Key.DirectionLeft, Key.DirectionRight))
+                rowNavigation?.cancel()
+        }
         val key = movingRow
         if (key == null) false else when (event.key) {
             Key.DirectionUp, Key.DirectionDown -> {
@@ -126,7 +155,12 @@ fun HomeContent(
         // Automation marker, not user-facing copy. Null rows mean sources are still loading.
         if (rows != null) contentDescription = "home-ready"
     }) {
-        Box(Modifier.fillMaxWidth().onFocusChanged { state ->
+        Box(Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
+            if (event.key != Key.DirectionDown) false else {
+                if (event.type == KeyEventType.KeyDown) nextRow(-1, 1)?.let(::focusRow)
+                true
+            }
+        }.focusRequester(topBarFocus).focusRestorer().onFocusChanged { state ->
             if (state.hasFocus && !topBarFocused) topReturn++
             topBarFocused = state.hasFocus
         }.focusGroup()) { topBar() }
@@ -155,9 +189,6 @@ fun HomeContent(
                     }
                     else -> {
                         val headerItems = if (appearance.heroSize == HeroSize.OFF) 0 else 1
-                        fun scrollIndex(rowIndex: Int) = if (rowIndex == 0) 0 else rowIndex + headerItems
-                        val firstRow = rows.indexOfFirst { it.key == restoreRow }.coerceAtLeast(0)
-                        val listState = rememberLazyListState(initialFirstVisibleItemIndex = scrollIndex(firstRow))
                         LaunchedEffect(restoreRow, rows) {
                             // Media rows can arrive after the apps row; start focus follows them until the viewer has moved.
                             if (restoreRow == null || restoreRow == placedRow || (placedRow != null && viewerMoved)) return@LaunchedEffect
@@ -200,7 +231,18 @@ fun HomeContent(
                                         LaunchedEffect(movingRow, index) {
                                             if (movingRow == row.key) listState.scrollToItem(scrollIndex(index))
                                         }
-                                        Box(Modifier.focusRestorer().onFocusChanged { state ->
+                                        Box(Modifier.onPreviewKeyEvent { event ->
+                                            if (event.key !in listOf(Key.DirectionUp, Key.DirectionDown)) false else {
+                                                if (event.type == KeyEventType.KeyDown) {
+                                                    val step = if (event.key == Key.DirectionUp) -1 else 1
+                                                    val next = nextRow(index, step)
+                                                    if (next != null) focusRow(next) else if (step < 0) focusRow(-1)
+                                                }
+                                                true
+                                            }
+                                        }.focusProperties {
+                                            onExit = { if (requestedFocusDirection in listOf(FocusDirection.Left, FocusDirection.Right)) cancelFocusChange() }
+                                        }.focusRestorer().onFocusChanged { state ->
                                             val gainedFocus = state.hasFocus && !hasFocus
                                             hasFocus = state.hasFocus
                                             if (gainedFocus) scope.launch {
@@ -271,4 +313,10 @@ fun HomeContent(
 
 private val StayPut = object : BringIntoViewSpec {
     override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float) = 0f
+}
+
+private fun HomeRowUi.hasFocusableItems(): Boolean = when (this) {
+    is HomeRowUi.Apps -> apps.isNotEmpty()
+    is HomeRowUi.Media -> items.isNotEmpty()
+    is HomeRowUi.WatchNext -> entries.isNotEmpty()
 }

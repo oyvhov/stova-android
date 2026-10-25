@@ -2,6 +2,9 @@ package app.stova.ha.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,6 +37,7 @@ import app.stova.ha.cards.*
 import app.stova.profiles.Profile
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import kotlin.math.ceil
 
 /** Rendering works from HaSnapshot before the network is ready. */
@@ -54,6 +58,7 @@ import kotlin.math.ceil
     var hintVisible by remember {mutableStateOf(false)}
     var lightsToTurnOff by remember {mutableStateOf<List<String>?>(null)}
     val summaryFocus=remember {FocusRequester()}
+    val headerFocus=remember {FocusRequester()}
     var editHeld by remember {mutableStateOf(false)}
     var editBackDown by remember {mutableStateOf(false)}
     var editConsumed by remember {mutableStateOf(false)}
@@ -66,7 +71,39 @@ import kotlin.math.ceil
     var gridFocused by remember {mutableStateOf(false)}
     val visible by remember {derivedStateOf {list.layoutInfo.visibleItemsInfo.map {it.key}.toSet()}}
     val sections=remember(cards,registry) {dashboardSections(cards,registry)}
-    val firstId=cards.find {it.id==initialFocusId}?.id ?: cards.firstOrNull()?.id
+    val cells=remember(sections) {cardFocusCells(sections)}
+    var navigation by remember {mutableStateOf<Job?>(null)}
+    val firstId=cards.find {it.id==initialFocusId}?.id ?: cells.firstOrNull()?.id
+    fun requestCard(id:String) {
+        val target=cells.firstOrNull {it.id==id} ?: return
+        navigation?.cancel()
+        navigation=scope.launch {
+            list.scrollToItem(target.listIndex)
+            // A later band may not be composed until the scroll has reached layout.
+            repeat(8) {
+                if(runCatching {focus[id]?.requestFocus()}.getOrNull()==true) return@launch
+                withFrameNanos {}
+            }
+        }
+    }
+    fun navigate(key:Key):Boolean {
+        val direction=when(key) {
+            Key.DirectionUp->CardFocusDirection.UP
+            Key.DirectionDown->CardFocusDirection.DOWN
+            Key.DirectionLeft->CardFocusDirection.LEFT
+            Key.DirectionRight->CardFocusDirection.RIGHT
+            else->return false
+        }
+        navigation?.cancel()
+        val id=focusedId ?: return true
+        val next=cardFocusNeighbor(cells,id,direction)
+        if(next!=null) requestCard(next)
+        else if(direction==CardFocusDirection.UP) {
+            navigation?.cancel()
+            runCatching {headerFocus.requestFocus(FocusDirection.Enter)}
+        }
+        return true
+    }
     fun listIndex(id:String):Int {
         var index=0
         sections.forEach {section ->
@@ -94,8 +131,8 @@ import kotlin.math.ceil
         hintVisible=gridFocused && !overlayOpen && menuId==null
         if(hintVisible) {delay(4_000);hintVisible=false}
     }
-    DisposableEffect(Unit) {onDispose {holdJob?.cancel()}}
-    LaunchedEffect(overlayOpen,menuId) {if(overlayOpen || menuId!=null) {holdJob?.cancel();editHeld=false;editConsumed=true}}
+    DisposableEffect(Unit) {onDispose {holdJob?.cancel();navigation?.cancel()}}
+    LaunchedEffect(overlayOpen,menuId) {if(overlayOpen || menuId!=null) {holdJob?.cancel();navigation?.cancel();editHeld=false;editConsumed=true}}
     BackHandler(enabled=editing) {editing=false;menuId=null;restoreId=focusedId}
     Box(Modifier.fillMaxSize().onPreviewKeyEvent {event ->
         if(event.key==Key.Back && (editBackDown || (editing && menuId==null && !overlayOpen))) {
@@ -124,7 +161,16 @@ import kotlin.math.ceil
         } else false
     }) {
     Column(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().focusRequester(headerFocus).focusRestorer()
+            .onPreviewKeyEvent {event ->
+                if(event.key==Key.DirectionDown && cells.isNotEmpty() && !overlayOpen && menuId==null) {
+                    if(event.type==KeyEventType.KeyDown) requestCard(focusedId?.takeIf {id->cells.any {it.id==id}} ?: cells.first().id)
+                    true
+                } else {
+                    if(event.type==KeyEventType.KeyDown) navigation?.cancel()
+                    false
+                }
+            }.focusGroup(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
             Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                 Row(horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
                     Text(stringResource(R.string.nav_smart_home),style=MaterialTheme.typography.headlineMedium)
@@ -151,7 +197,12 @@ import kotlin.math.ceil
             }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
-        LazyColumn(Modifier.fillMaxSize().onFocusChanged {gridFocused=it.hasFocus},state=list,verticalArrangement=Arrangement.spacedBy(16.dp),contentPadding=PaddingValues(4.dp,4.dp,4.dp,28.dp)) {
+        LazyColumn(Modifier.fillMaxSize().onFocusChanged {gridFocused=it.hasFocus}.onPreviewKeyEvent {event ->
+            if(!overlayOpen && menuId==null && !editHeld && event.key in listOf(Key.DirectionUp,Key.DirectionDown,Key.DirectionLeft,Key.DirectionRight)) {
+                if(event.type==KeyEventType.KeyDown) navigate(event.key)
+                true
+            } else false
+        },state=list,verticalArrangement=Arrangement.spacedBy(16.dp),contentPadding=PaddingValues(4.dp,4.dp,4.dp,28.dp)) {
             sections.forEachIndexed {index,section ->
                 item(key="section-$index") {
                     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {

@@ -14,6 +14,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.input.key.Key
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.AppContainer
 import app.stova.MainActivity
@@ -41,6 +44,26 @@ class SettingsScreenTest {
         rule.waitForIdle()
         rule.onAllNodesWithText("Innstillingar")[0].performClick()
         rule.waitForIdle()
+    }
+
+    @Test fun leftFromAScrolledSettingReturnsToItsOwnSection() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        val appearance=hasText("Utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role,Role.Tab)
+        rule.onNode(appearance).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        rule.onNodeWithText("Ikonpakke").performScrollTo().performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        rule.onNodeWithText("Ikonpakke").performKeyInput { keyDown(Key.DirectionLeft);keyUp(Key.DirectionLeft) }
+        rule.onNode(appearance).assertIsFocused()
+        rule.onNodeWithText("Ikonpakke").assertExists()
+    }
+
+    @Test fun rightFromTheSectionEntersItsFirstControl() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        val appearance=hasText("Utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role,Role.Tab)
+        rule.onNode(appearance).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        rule.onNode(appearance).performKeyInput { keyDown(Key.DirectionRight);keyUp(Key.DirectionRight) }
+        rule.onNode(hasText("Tema") and hasClickAction()).assertIsFocused()
     }
 
     @Test fun reduceMotionPersists() {
@@ -81,8 +104,8 @@ class SettingsScreenTest {
         rule.onNodeWithText("Bakgrunnsrotasjon").assertExists()
     }
 
-    // The section content crossfades; the list follows focus, so the focus must stay on the tab throughout.
-    @Test fun sectionCrossfadeKeepsFocusOnTheTab() {
+    // Switching a section leaves a single pane in the focus tree and keeps focus on its tab.
+    @Test fun sectionSwitchKeepsFocusOnTheTabWithoutLeavingOldControls() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
         rule.onNodeWithText("Set PIN").assertExists()
@@ -92,8 +115,7 @@ class SettingsScreenTest {
         rule.onNode(tab).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
         rule.mainClock.advanceTimeByFrame()
         rule.mainClock.advanceTimeByFrame()
-        // Mid-fade: the old section is still leaving while the new one arrives, and the tab keeps focus.
-        rule.onNodeWithText("Set PIN").assertExists()
+        rule.onNodeWithText("Set PIN").assertDoesNotExist()
         rule.onNodeWithText("Bakgrunnsrotasjon").assertExists()
         rule.onNode(tab).assertIsFocused()
         rule.mainClock.autoAdvance = true

@@ -15,7 +15,7 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 | Smarthus på Heim | `home/HomeChips.kt` | Berre synlege brikketekstar; hendingar teiknar ikkje mediaradene på nytt |
 | Smarthus-skjermen | `ha/ui/SmartHomeScreen.kt` | Livssyklus, datakopling og kontrollpanel |
 | Smarthus-layout | `ha/ui/SmartHomeContent.kt` | Kontrollerte kort, fokus og grupper |
-| Innstillingar | `settings/SettingsScreen.kt`, `settings/SettingsNavigation.kt` | Val av seksjon og fast overskrift |
+| Innstillingar | `settings/SettingsScreen.kt`, `settings/SettingsLayout.kt`, `settings/SettingsNavigation.kt` | Datakopling, fokus mellom meny/innhald og fast overskrift |
 | Utsjånad | `settings/AppearanceSettings.kt`, `settings/AppearanceSettingsContent.kt` | Lagring/førehandsvising og rein vising kvar for seg |
 | Fargar, mål og rørsle | `core/theme/` | Felles tokens; ingen fargelitteralar i skjermane |
 | Dialogar og fokus | `core/ui/` | Gjenbrukbare TV-komponentar, éin dialogovergang |
@@ -67,12 +67,28 @@ oppstart direkte på ei medierad.
 `StovaMotion` eig varigheit og easing. Bruk berre laganimasjonar for alfa, skala og forskyving.
 `LocalReduceMotion` gir null varigheit og slår av parallax. Dialogar går gjennom `StovaDialog`.
 Felles fokus er svakt løft, 2,5 % forstørring på kunst og 1,5 % på kontrollar, og lysare flate.
+Fokus teiknar ingen skugge eller glød; transparent kunst får inga ekstra flate.
 Gamalt standardval `RING` blir lese som `LIFT`; ei synleg ramme krev valet `OUTLINE` eller
 `RING_ZOOM`. Redusert rørsle bevarer flateforskjellen utan løft eller skalering. Menyar tvingar ikkje fram ring.
 Tekstfelt bruker fylt flate og nøytral understrek ved fokus; dei lagar ikkje ei aksentramme rundt feltet.
 Dialogvindauget godtek OK/Enter berre når trykket byrja med ein ny KeyDown i det vindauget.
 Repetisjonar og slepp frå eit langt trykk på kortet bak blir etne opp, utan å sperre neste
 vanlege trykk. Eigarskap til trykket blir rydda når vindauget mister fokus.
+
+## Retningar med fjernkontroll
+
+Heim sender Ned frå alle toppkontrollane til første ikkje-tomme rad. Opp/Ned følgjer
+radrekkjefølgja, medan Opp frå første rad gjenopprettar siste toppkontroll.
+Ei rad utanfor lazy-lista blir rulla inn før fokus blir bede om; eit nyare piltrykk avbryt
+ventande flytting. Radflytting i redigeringsmodus har framleis eigarskap til pilene.
+
+`SettingsLayout` eig innstikket frå sidekolonnen og viser berre den valde seksjonen i
+fokustreet. Opp/Ned held seg i sitt område. Venstre får først flytte mellom kontrollar
+eller i tekst; ved utgang frå innhaldet går fokus til den valde menyseksjonen.
+
+Smarthus bruker `ha/cards/CardFocusNavigation.kt` for retningar mellom logiske kortrektangel
+frå same pakking som visinga. Venstre/Høgre held seg på same kortband; Opp/Ned vel næraste
+neste rad og tek omsyn til breie/høge kort. Fokus utanfor skjermen blir rulla inn før flytting.
 
 ## Verifisering
 

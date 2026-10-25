@@ -21,6 +21,7 @@ Stova opnar med ekte Midttunet-rader og viser det nye Spole-merket. Standardlaun
 og er Google TV; ingen launcher er slått av eller omvald. Ingen HA-styring eller publisering.
 
 Under eigaren si prøve kom ny bestilling om å fjerne fokusskuggen og rette navigasjonen.
-Dette blir følgt i `2026-10-25-directional-focus.md`; vidare D-pad-/menyverifisering skjer etter rettinga.
-Eigaren bad også om å oppdatere Spole for tittellenkjer. Shield har `app.reelstack` 1.0.0-beta20 / 157;
-kode for `spole://open` finst på den reine greina i `C:/JellyBin/spole-launcher-link`, men er ikkje publisert.
+Dette er no retta, bygd og installert på begge einingar. Sjå [fokus- og navigasjonsprøva](directional-focus.md)
+for endeleg Stova-hash, 609/609 testar, native D-pad og menyprøve. Planen for Shield-installasjon er fullført.
+Spole er òg oppdatert lokalt med same signeringsnøkkel; sluttverifisering av tittellenkje frå faktisk
+Stova-kort blir ført i `C:/JellyBin/spole-launcher-link/docs/VERIFICATION_v1.0.0-beta22-local.md`.
