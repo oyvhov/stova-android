@@ -152,8 +152,12 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
     bibliotekspørjingar gir eit nytt utval, med sesongprioritering og «Ny sesong» innanfor valet.
   - Innhald (Utsjånad v2): teksten står øvst til venstre rett under toppfeltet. Clearlogo er
     høgst 320 × 72 dp og får transparent kant trimma; utan logo blir tittelen vist i
-    `headlineMedium`. Små, matte kantlinjepillar viser «Ny sesong» når det gjeld, stjernescore,
-    år, aldersgrense og kritikarprosent med tomatikon. Ingen speletid eller omtale som standard.
+    `headlineMedium`. «Ny sesong», stjernescore, år, aldersgrense og kritikarprosent står som
+    rein tekst utan eigne bakgrunnar, kantar eller rundingar (brukarønske 25.10.2026).
+    Numeriske aldersgrenser, også «NO-15», får lokaliserte einingar: «15 år» / «15 years».
+    Andre sertifiseringar, som «TV-MA», held originalmerkinga. Kritikarprosenten har raud tomat
+    ved minst 60 %, grøn Rotten-markering under 60 %; statusfargane følgjer ikkje profilaksenten.
+    Ingen speletid eller omtale som standard.
     Sjangerlinja bruker `Muted`, med typen («Film»/«Serie») først og sjangrar etterpå.
     Berre community-score i 0–10 blir vist; til dømes 39,0 gir inga stjerne.
     Profilen kan velje «Alltid tittel» i staden for clearlogo. Tittelen er òg reserve medan logoen

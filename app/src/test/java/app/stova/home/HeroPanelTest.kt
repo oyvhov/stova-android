@@ -42,7 +42,7 @@ class HeroPanelTest {
         val film = MediaItem("f1", "a", ItemType.MOVIE, "Fjordlys", year = 2024, runtimeMinutes = 112, ratings = Ratings(official = "12"))
         compose.setContent { StovaTheme(reduceMotion = true) { HeroPanel(SpotlightEntry(film, account, newSeason = false)) } }
         compose.onNodeWithText("2024").assertIsDisplayed()
-        compose.onAllNodesWithText("12").assertCountEquals(1)
+        compose.onAllNodesWithText("12 år").assertCountEquals(1)
         compose.onNodeWithText("Ny sesong").assertDoesNotExist()
         compose.onNodeWithText("Midttunet").assertDoesNotExist()
     }
@@ -68,7 +68,7 @@ class HeroPanelTest {
             Box(Modifier.fillMaxSize()) { HeroPanel(SpotlightEntry(item, account, newSeason = true), Modifier.fillMaxWidth()) }
         } }
         compose.onRoot().assertWidthIsEqualTo(960.dp)
-        listOf(title, "Ny sesong", "2024", "★ 7,8", app.stova.media.ui.criticText(91, java.util.Locale.forLanguageTag("nn")), "12").forEach { text ->
+        listOf(title, "Ny sesong", "2024", "★ 7,8", app.stova.media.ui.criticText(91, java.util.Locale.forLanguageTag("nn")), "12 år").forEach { text ->
             val bounds = compose.onNodeWithText(text).assertIsDisplayed().getUnclippedBoundsInRoot()
             assertTrue("Hero text must be at most 400 dp wide: $text ($bounds)", bounds.right - bounds.left <= 400.dp)
             assertTrue("Hero text must stay inside the 400 dp column: $text ($bounds)", bounds.left >= 48.dp && bounds.right <= 448.dp)

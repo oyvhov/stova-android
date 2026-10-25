@@ -1,3 +1,10 @@
+# Rein hero-metadata – fullført
+2026-10-25: Bestillinga i `2026-10-25-hero-metadata.md` er fullført. Rating, år, alder og «Ny sesong» har ingen eigne bakgrunnar, kantar eller rundingar. Numerisk alder (også NO-15) viser lokaliserte år; andre sertifiseringar er bevarte.
+Raud tomat ved minst 60 %, grøn Rotten-markering under 60 %. Statusfargar er samla i `core/theme/RatingColors`, uavhengige av profilaksent; alder brukar språkressursar med eintal/fleirtal.
+Sluttkontroll: 87/87 Heim-, media-UI-, design- og relevante skjermtestar, ingen hoppa over; lint 0 feil (38 åtvaringar, 1 hint), debug-bygg OK. Stor skrift og lys/medium/mørk bakgrunn er visuelt kontrollerte; sjå `docs/verification/hero-metadata.md`.
+Endeleg APK er installert på emulator-5580 og Shield med ekte data. Profil- og kontofiler er byteidentiske med før denne bestillinga. APK SHA-256: `e41c73cc28e5be98758f976e09a3e7e4d9183f39e5dcfac3d2616f3d4df8e4b4`; sti `app/build/outputs/apk/debug/app-debug.apk`.
+Ingen påbyrja steg eller spørsmål står att i denne bestillinga. Hovudgrein/repo: `main` i det private `oyvhov/stova-android`. Eldre restpunkt om produksjonsrelease er uendra.
+
 # Brukstest og releaseklargjering – fullført
 2026-10-25: Plan `2026-10-25-brukstest-og-releaseklargjering.md` er fullført: ekte ikonpakke, spelarretur, profilkontroll, Shield og signeringssperre. Rapport: `docs/verification/brukstest-og-release.md`.
 Retta Android/ICU-problemet som gjorde store ikonpakkar svært trege. Retur frå ei tittellenkje til Spole oppdaterer no framdrift éin gong for rett profil; vanleg femminuttsbuffer og spotlight-buffer er bevarte.

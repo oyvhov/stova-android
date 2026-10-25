@@ -29,6 +29,12 @@ object StovaColors {
     val Divider = Color(0xFF3D443C)
 }
 
+/** Critic status colours stay independent of the profile's action accent. */
+object RatingColors {
+    val Fresh = Color(0xFFFA320A)
+    val Rotten = Color(0xFF8DB448)
+}
+
 /** Five steps, and every corner in the app is one of them. */
 object StovaShapes {
     val ExtraSmall = 4.dp

@@ -1,6 +1,5 @@
 package app.stova.home
 import androidx.compose.animation.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -46,8 +45,8 @@ import coil3.request.transformations
      if(logo!=null && prefs.heroTitle==HeroTitle.LOGO) SubcomposeAsyncImage(ImageRequest.Builder(LocalContext.current).data(logo).size(800,240).transformations(TrimTransparent()).build(),item.title,Modifier.widthIn(max=320.dp).fillMaxWidth().height(logoHeight),contentScale=ContentScale.Fit,alignment=Alignment.CenterStart,
          loading = { HeroTitle(item.title, large || prefs.showOverview) }, error = { HeroTitle(item.title, large || prefs.showOverview) })
      else Text(item.title,style=MaterialTheme.typography.headlineMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=if(large || prefs.showOverview) 1 else 2,overflow=TextOverflow.Ellipsis)
-     FlowRow(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalArrangement=Arrangement.spacedBy(6.dp),itemVerticalAlignment=Alignment.CenterVertically) {
-      if(current.newSeason) Text(stringResource(R.string.spotlight_new_season),Modifier.background(MaterialTheme.colorScheme.primaryContainer,MaterialTheme.shapes.small).padding(horizontal=10.dp,vertical=3.dp),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.primary)
+     FlowRow(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp),itemVerticalAlignment=Alignment.CenterVertically) {
+      if(current.newSeason) Text(stringResource(R.string.spotlight_new_season),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurface)
       RatingRow(item.ratings, year = item.year)
      }
      if(prefs.showGenres) Text((listOf(stringResource(if(item.type==app.stova.media.model.ItemType.MOVIE) R.string.appearance_movie else R.string.appearance_series))+item.genres).joinToString(" · "),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1,overflow=TextOverflow.Ellipsis)
