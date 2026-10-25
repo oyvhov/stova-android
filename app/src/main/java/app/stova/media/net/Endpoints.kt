@@ -2,7 +2,7 @@ package app.stova.media.net
 import app.stova.media.model.ServerKind
 import java.net.URLEncoder
 enum class Endpoint { RESUME, NEXT_UP, LATEST_MOVIES, LATEST_SERIES, SPOTLIGHT, NEW_SEASONS }
-const val ITEM_FIELDS = "Fields=Overview,ProductionYear,RunTimeTicks,OfficialRating,CommunityRating,CriticRating,ParentId,SeriesId&EnableUserData=true&EnableImageTypes=Primary,Backdrop,Logo,Thumb&ImageTypeLimit=1"
+const val ITEM_FIELDS = "Fields=Overview,ProductionYear,RunTimeTicks,OfficialRating,CommunityRating,CriticRating,Genres,ParentId,SeriesId&EnableUserData=true&EnableImageTypes=Primary,Backdrop,Logo,Thumb&ImageTypeLimit=1"
 const val ITEM_QUERY = "$ITEM_FIELDS&Limit=20"
 /** Several known items in one request, such as the series behind new seasons. */
 fun idsCandidates(kind: ServerKind, userId: String, ids: List<String>): List<String> {

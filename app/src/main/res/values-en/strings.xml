@@ -207,4 +207,8 @@
     <string name="ha_home_limit">At most three cards on home</string>
     <string name="ha_remove">Remove</string>
     <string name="spotlight_new_season">New season</string>
+    <!-- Utsjånad v2 -->
+    <string name="appearance_movie">Movie</string>
+    <string name="appearance_series">Series</string>
+    <string name="appearance_star_score">★ %1$s</string>
 </resources>

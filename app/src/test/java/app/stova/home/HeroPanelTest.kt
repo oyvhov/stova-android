@@ -29,16 +29,22 @@ class HeroPanelTest {
         compose.setContent { StovaTheme(reduceMotion = true) { HeroPanel(SpotlightEntry(series, account, newSeason = true)) } }
         compose.onNodeWithText("Kystvakta").assertIsDisplayed()
         compose.onNodeWithText("Ny sesong").assertIsDisplayed()
-        compose.onNodeWithText("Livet langs kysten.").assertIsDisplayed()
+        compose.onNodeWithText("Livet langs kysten.").assertDoesNotExist()
     }
 
     @Test fun filmShowsYearRuntimeAndRatingButNoServer() {
         val film = MediaItem("f1", "a", ItemType.MOVIE, "Fjordlys", year = 2024, runtimeMinutes = 112, ratings = Ratings(official = "12"))
         compose.setContent { StovaTheme(reduceMotion = true) { HeroPanel(SpotlightEntry(film, account, newSeason = false)) } }
-        compose.onNodeWithText("2024 · 1 t 52 min").assertIsDisplayed()
+        compose.onNodeWithText("2024").assertIsDisplayed()
         compose.onAllNodesWithText("12").assertCountEquals(1)
         compose.onNodeWithText("Ny sesong").assertDoesNotExist()
         compose.onNodeWithText("Midttunet").assertDoesNotExist()
+    }
+
+    @Test fun invalidCommunityScoreIsHidden() {
+        val film = MediaItem("f", "a", ItemType.MOVIE, "Fjordlys", ratings = Ratings(39.0))
+        compose.setContent { StovaTheme { HeroPanel(SpotlightEntry(film, account, false)) } }
+        compose.onNodeWithText("39", substring = true).assertDoesNotExist()
     }
 
     @Test fun seriesShowsItsYearWithoutAnEpisodeRuntime() {
@@ -56,7 +62,7 @@ class HeroPanelTest {
             Box(Modifier.fillMaxSize()) { HeroPanel(SpotlightEntry(item, account, newSeason = true), Modifier.fillMaxWidth()) }
         } }
         compose.onRoot().assertWidthIsEqualTo(960.dp)
-        listOf(title, "Ny sesong", "2024 · 1 t 52 min", "TMDB", "7,8", app.stova.media.ui.criticText(91, java.util.Locale.forLanguageTag("nn")), "12", overview).forEach { text ->
+        listOf(title, "Ny sesong", "2024", "★ 7,8", app.stova.media.ui.criticText(91, java.util.Locale.forLanguageTag("nn")), "12").forEach { text ->
             val bounds = compose.onNodeWithText(text).assertIsDisplayed().getUnclippedBoundsInRoot()
             assertTrue("Hero text must be at most 560 dp wide: $text ($bounds)", bounds.right - bounds.left <= 560.dp)
             assertTrue("Hero text must stay inside the 560 dp column: $text ($bounds)", bounds.left >= 48.dp && bounds.right <= 608.dp)

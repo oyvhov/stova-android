@@ -207,4 +207,8 @@
     <string name="ha_home_limit">Maks tre kort på heim</string>
     <string name="ha_remove">Fjern</string>
     <string name="spotlight_new_season">Ny sesong</string>
+    <!-- Utsjånad v2 -->
+    <string name="appearance_movie">Film</string>
+    <string name="appearance_series">Serie</string>
+    <string name="appearance_star_score">★ %1$s</string>
 </resources>
