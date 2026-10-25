@@ -2,6 +2,7 @@ package app.stova.ha.cards
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -57,5 +58,15 @@ class HaPolishUiTest {
         val name=compose.onNodeWithText("Varmepumpe",useUnmergedTree=true).fetchSemanticsNode().boundsInRoot
         val value=compose.onNodeWithText("25",useUnmergedTree=true).fetchSemanticsNode().boundsInRoot
         assertTrue(name.bottom<=value.top)
+    }
+    @Test fun mediumArtworkFillsTheEntireLeftSide() {
+        compose.setContent {StovaTheme {CardFrame(CardConfig("m",CardType.MEDIA_PLAYER,"media_player.a",size=CardSize.M),app.stova.core.ui.StovaIcons.Play,"Musikk",null,false,{},{},
+            modifier=Modifier.width(544.dp),leading={Box(it.testTag("album"))}) {CardValue("Spor")}}}
+        val card=compose.onNodeWithText("Musikk").getUnclippedBoundsInRoot()
+        val art=compose.onNodeWithTag("album",useUnmergedTree=true).getUnclippedBoundsInRoot()
+        assertEquals(card.top,art.top)
+        assertEquals(card.bottom,art.bottom)
+        assertEquals(card.left,art.left)
+        assertEquals(136.dp,art.right-art.left)
     }
 }

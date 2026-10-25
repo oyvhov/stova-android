@@ -5,6 +5,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.CornerRadius
@@ -37,6 +38,9 @@ import java.time.*
     val unit=entity.attributes.text("unit_of_measurement").orEmpty()
     val accent=MaterialTheme.colorScheme.primary
     val lowest=points.minBy {it.value};val highest=points.maxBy {it.value}
+    val day=if(tomorrow) date.plusDays(1) else date
+    val begin=day.atStartOfDay(zone).toInstant().toEpochMilli()
+    val duration=day.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()-begin
     if(detailed) {
         points.find {now>=it.start && now<it.end}?.let {
             Text(stringResource(R.string.ha_v2_chart_now,formatNumber(it.value,locale),unit),style=MaterialTheme.typography.titleMedium,color=accent)
@@ -45,10 +49,9 @@ import java.time.*
     Canvas(modifier.fillMaxWidth()) {
         val min=minOf(0.0,lowest.value);val max=maxOf(0.0,highest.value);val range=(max-min).coerceAtLeast(.001)
         val zero=(size.height*max/range).toFloat()
-        val begin=points.first().start;val duration=(points.last().end-begin).coerceAtLeast(1)
         points.forEach {p ->
-            val x=(size.width*(p.start-begin)/duration).toFloat()
-            val width=(size.width*(p.end-p.start)/duration).toFloat()
+            val x=size.width*(p.start-begin)/duration
+            val width=size.width*(p.end-p.start)/duration
             val y=(size.height*(max-p.value)/range).toFloat()
             val current=now>=p.start && now<p.end
             val level=when(priceLevel(p.value,lowest.value,highest.value)) {
@@ -60,8 +63,16 @@ import java.time.*
         }
     }
     if(detailed) {
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+        val ticks=remember(day,zone) {priceAxisFractions(day,zone)}
+        Layout(modifier=Modifier.fillMaxWidth(),content={
             (0..24 step 6).forEach {Text(it.toString().padStart(2,'0'),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+        }) {measurables,constraints ->
+            val labels=measurables.map {it.measure(constraints.copy(minWidth=0,minHeight=0))}
+            layout(constraints.maxWidth,labels.maxOf {it.height}) {
+                labels.forEachIndexed {index,label ->
+                    label.placeRelative((ticks[index]*constraints.maxWidth-label.width/2).toInt().coerceIn(0,(constraints.maxWidth-label.width).coerceAtLeast(0)),0)
+                }
+            }
         }
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
             Column {CardDetail(stringResource(R.string.ha_v2_cheapest,priceWindow(lowest,zone,quarters)));CardDetail("${formatNumber(lowest.value,locale)} $unit")}

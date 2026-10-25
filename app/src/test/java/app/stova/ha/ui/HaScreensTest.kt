@@ -63,4 +63,16 @@ class HaScreensTest {
         }}}
         compose.saveScreen("ha-double-font-header")
     }
+    @Test fun doubleFontPolishedDashboard() {
+        val entities=listOf(
+            entity("light.reading","on","""{"friendly_name":"Leselys","brightness":222,"color_temp_kelvin":2700}"""),
+            entity("climate.home","heat","""{"friendly_name":"Varmepumpe","temperature":23.5,"current_temperature":25}"""),
+            entity("sensor.temp","21.5","""{"friendly_name":"Innetemperatur","unit_of_measurement":"°C"}"""))
+        compose.setContent {StovaTheme {CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density,2f)) {
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                SmartHomeContent(Profile("a","A",AvatarColor.LIME),entities.mapIndexed {i,e->CardConfig("$i",cardTypesFor(e).first(),e.id)},entities.associateBy {it.id},HaStatus.CONNECTED)
+            }
+        }}}
+        compose.saveScreen("ha-polish-double-font-dashboard")
+    }
 }

@@ -19,7 +19,7 @@ import app.stova.ha.HaEntity
 import app.stova.ha.text
 import kotlinx.coroutines.delay
 
-@Composable fun MediaPlayerCard(entity:HaEntity,images:HaImageSource?,locked:Boolean=false,perform:(ServiceCall)->Unit={},size:CardSize=CardSize.S) {
+@Composable fun MediaPlayerCard(entity:HaEntity,locked:Boolean=false,perform:(ServiceCall)->Unit={},size:CardSize=CardSize.S) {
     var now by remember {mutableLongStateOf(System.currentTimeMillis())}
     LaunchedEffect(entity.state) {if(entity.state=="playing") while(true) {delay(1_000);now=System.currentTimeMillis()}}
     val duration=entity.attributes.number("media_duration")
@@ -27,9 +27,6 @@ import kotlinx.coroutines.delay
     val updated=entity.attributes.text("media_position_updated_at")?.let {runCatching {app.stova.ha.haMillis(it)}.getOrNull()}
     val elapsed=if(entity.state=="playing" && updated!=null) ((now-updated)/1000.0).coerceAtLeast(0.0) else 0.0
     Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
-        if(size!=CardSize.S) entity.attributes.text("entity_picture")?.let {
-            HaImage(it,images,Modifier.width(if(size==CardSize.L) 184.dp else 80.dp).height(if(size==CardSize.L) 224.dp else 80.dp).clip(MaterialTheme.shapes.medium),contentScale=androidx.compose.ui.layout.ContentScale.Crop)
-        }
         Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(2.dp)) {
             Text(entity.attributes.text("media_title") ?: entityStateLabel(entity),style=MaterialTheme.typography.titleMedium,maxLines=if(size==CardSize.L) 3 else 1,overflow=TextOverflow.Ellipsis)
             entity.attributes.text("media_artist")?.let {CardDetail(it)}

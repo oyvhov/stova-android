@@ -31,4 +31,12 @@ class PricePresentationTest {
         assertEquals(PriceLevel.HIGH,priceLevel(100.0,-20.0,100.0))
         assertEquals(PriceLevel.MEDIUM,priceLevel(30.0,30.0,30.0))
     }
+    @Test fun timeAxisTracksTheClockAcrossWinterTime() {
+        val normal=priceAxisFractions(LocalDate.of(2026,10,24),zone)
+        assertEquals(listOf(0f,.25f,.5f,.75f,1f),normal)
+        val winter=priceAxisFractions(LocalDate.of(2026,10,25),zone)
+        assertEquals(7f/25,winter[1],.0001f)
+        assertEquals(13f/25,winter[2],.0001f)
+        assertEquals(1f,winter.last(),0f)
+    }
 }

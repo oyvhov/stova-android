@@ -5,6 +5,15 @@ import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 
 enum class PriceLevel { LOW, MEDIUM, HIGH }
+
+fun priceAxisFractions(date:LocalDate,zone:ZoneId):List<Float> {
+    val start=date.atStartOfDay(zone).toInstant().toEpochMilli()
+    val end=date.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+    return (0..24 step 6).map {hour ->
+        val time=if(hour==24) end else date.atTime(hour,0).atZone(zone).toInstant().toEpochMilli()
+        (time-start).toFloat()/(end-start)
+    }
+}
 fun priceLevel(value:Double,min:Double,max:Double):PriceLevel = when {
     max<=min -> PriceLevel.MEDIUM
     (value-min)/(max-min)<1.0/3 -> PriceLevel.LOW

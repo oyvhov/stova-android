@@ -275,7 +275,6 @@
     <string name="ha_v2_history">Last 24 hours</string>
     <string name="ha_v2_today">Today</string>
     <string name="ha_v2_tomorrow">Tomorrow</string>
-    <string name="ha_v2_minmax">Min %1$s · max %2$s</string>
     <string name="ha_v2_no_tomorrow">Tomorrow is not available yet</string>
     <string name="ha_v2_forecast_missing">Forecast is unavailable</string>
     <string name="ha_v2_condition_sunny">Sunny</string>
@@ -287,8 +286,6 @@
     <string name="ha_v2_condition_fog">Fog</string>
     <string name="ha_v2_condition_lightning">Thunderstorms</string>
     <string name="ha_v2_condition_night">Clear night</string>
-    <string name="ha_v2_brightness">Brightness %1$d %%</string>
-    <string name="ha_v2_color_temp">%1$d K</string>
     <string name="ha_v2_camera_live">Snapshot · 10 s</string>
     <string name="ha_v2_fullscreen">Full screen · 2 s</string>
     <string name="ha_v2_sun_icon">Sun</string>

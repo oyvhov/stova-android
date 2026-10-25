@@ -6,6 +6,7 @@ ingen push. Dei eldre release-/Shield-stega er utanfor denne bestillinga.
 - [x] 1. Raud/grøn: temperaturord og lysglød etter lysstyrke/farge; eigne HaTokens.
 - [x] 2. Raud/grøn: prisnivå og timesnitt; felles graf med 15-minuttsval, akse og tider.
 - [x] 3. Raud/grøn: namn før verdi, kompakte S/M/L, klima/media, romtekst og fokus/rulling.
+- [x] 3b. Visuell gjennomgang: heil venstreside med albumkunst, synlege oppløysingsval og tidsakse ved vintertid; dobbel skriftstorleik.
 - [ ] 4. Ekte emulator-5580/HA: install -r, styring og stadfesta tilbakeføring, kritisk biletkontroll.
 - [ ] 5. Grøn sluttkontroll, spesifikasjon §5.2, verifikasjonsrapport og HANDOFF.
 

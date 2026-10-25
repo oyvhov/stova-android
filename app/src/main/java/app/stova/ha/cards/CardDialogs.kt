@@ -36,11 +36,12 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
     if(dialog==null) return
     val entity=entities[dialog.entityId]
     val locale=LocalConfiguration.current.locales[0]
-    Dialog(onDismiss,properties=DialogProperties(usePlatformDefaultWidth=dialog !is CardDialog.Camera)) {
+    val energyGraph=dialog is CardDialog.Graph && dialog.today
+    Dialog(onDismiss,properties=DialogProperties(usePlatformDefaultWidth=dialog !is CardDialog.Camera && !energyGraph)) {
         val windowHeight=with(LocalDensity.current) {LocalWindowInfo.current.containerSize.height.toDp()}
         val frame=if(dialog is CardDialog.Camera) Modifier.fillMaxSize() else Modifier
             .heightIn(max=(windowHeight-96.dp).coerceAtLeast(160.dp)).verticalScroll(rememberScrollState())
-        Column(frame.background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+        Column((if(energyGraph) frame.width(640.dp) else frame).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(if(energyGraph) 12.dp else 16.dp)) {
             when(dialog) {
                 is CardDialog.Brightness -> {
                     var percent by remember(dialog.entityId) { mutableIntStateOf(((entity?.attributes?.number("brightness") ?: 255.0)/255*100).toInt().coerceIn(1,100)) }
@@ -76,12 +77,13 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
                     if(dialog.today && entity!=null) {
                         var tomorrow by remember {mutableStateOf(false)}
                         var quarters by remember {mutableStateOf(false)}
-                        Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                             StovaButton(stringResource(R.string.ha_v2_today),{tomorrow=false},primary=!tomorrow)
                             StovaButton(stringResource(R.string.ha_v2_tomorrow),{tomorrow=true},primary=tomorrow)
-                            StovaButton(stringResource(if(quarters) R.string.ha_v2_quarter_hours else R.string.ha_v2_hourly),{quarters=!quarters})
+                            StovaButton(stringResource(R.string.ha_v2_hourly),{quarters=false},primary=!quarters)
+                            StovaButton(stringResource(R.string.ha_v2_quarter_hours),{quarters=true},primary=quarters)
                         }
-                        PriceChart(energy ?: entity,tomorrow,Modifier.width(496.dp).height(148.dp),quarters=quarters,zone=socket.timeZone)
+                        PriceChart(energy ?: entity,tomorrow,Modifier.fillMaxWidth().height(132.dp),quarters=quarters,zone=socket.timeZone)
                     } else {
                         Text(stringResource(R.string.ha_v2_history),style=MaterialTheme.typography.labelLarge)
                         if(history.size<2) Text(stringResource(R.string.ha_no_history)) else Sparkline(history,Modifier.width(496.dp).height(180.dp))

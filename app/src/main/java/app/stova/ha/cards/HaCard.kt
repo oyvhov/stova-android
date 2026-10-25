@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,6 +41,10 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
     }
     LaunchedEffect(adjustment) {adjustment?.let {delay(250);perform(it);adjustment=null}}
     val shown=if(adjustment!=null) adjusting else entity
+    val artwork=shown?.attributes?.text("entity_picture")?.takeIf {config.type==CardType.MEDIA_PLAYER && config.size!=CardSize.S}
+    val leading:(@Composable (Modifier)->Unit)?=if(artwork!=null && images!=null) {
+        {imageModifier -> HaImage(artwork,images,imageModifier,contentScale=ContentScale.Crop)}
+    } else null
     val badge=if(unavailable || shown==null) null else when(config.type) {
         CardType.MEDIA_PLAYER -> if(shown.state=="playing") entityStateLabel(shown) else null
         else -> null
@@ -65,7 +70,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
                 CardType.SENSOR,CardType.ENERGY_PRICE -> openDialog(CardDialog.Graph(entity.id,config.type==CardType.ENERGY_PRICE))
                 else -> Unit
             }
-        },modifier=modifier,glow=if(config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,onDirection={direction ->
+        },modifier=modifier,glow=if(config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,leading=leading,onDirection={direction ->
             val call=shown?.takeUnless {unavailable}?.let {directionAction(config.type,it,direction)}
             if(call!=null && onEdit==null) {
                 if(!locked && !pending) {adjusting=optimisticEntity(shown!!,call);adjustment=call}
@@ -80,7 +85,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
             CardType.SENSOR -> {SensorCard(shown);if(history.size>1) Sparkline(history,Modifier.height(28.dp))}
             CardType.WEATHER -> WeatherCard(shown,forecast,config.size,connection?.timeZone ?: java.time.ZoneId.systemDefault())
             CardType.ENERGY_PRICE -> EnergyPriceCard(energy?.copy(state=shown.state) ?: shown,connection?.timeZone ?: java.time.ZoneId.systemDefault())
-            CardType.MEDIA_PLAYER -> MediaPlayerCard(shown,images,locked || pending,perform,config.size)
+            CardType.MEDIA_PLAYER -> MediaPlayerCard(shown,locked || pending,perform,config.size)
             CardType.SCENE -> SceneCard()
             CardType.CAMERA -> CameraCard(shown,images,visible,config.size)
             CardType.COVER -> {CardValue(entityStateLabel(shown));shown.attributes.number("current_position")?.let {CardDetail(stringResource(R.string.ha_percent,it.toInt()))}}

@@ -275,7 +275,6 @@
     <string name="ha_v2_history">Siste 24 timar</string>
     <string name="ha_v2_today">I dag</string>
     <string name="ha_v2_tomorrow">I morgon</string>
-    <string name="ha_v2_minmax">Min %1$s · maks %2$s</string>
     <string name="ha_v2_no_tomorrow">Morgondagen er ikkje klar enno</string>
     <string name="ha_v2_forecast_missing">Vêrvarsel er ikkje tilgjengeleg</string>
     <string name="ha_v2_condition_sunny">Sol</string>
@@ -287,8 +286,6 @@
     <string name="ha_v2_condition_fog">Tåke</string>
     <string name="ha_v2_condition_lightning">Torevêr</string>
     <string name="ha_v2_condition_night">Klår natt</string>
-    <string name="ha_v2_brightness">Lysstyrke %1$d %%</string>
-    <string name="ha_v2_color_temp">%1$d K</string>
     <string name="ha_v2_camera_live">Stillbilete · 10 s</string>
     <string name="ha_v2_fullscreen">Fullskjerm · 2 s</string>
     <string name="ha_v2_sun_icon">Sol</string>
