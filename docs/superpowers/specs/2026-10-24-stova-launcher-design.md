@@ -336,6 +336,10 @@ einings-ID og rom; flisane er sorterte på rom og namn og viser ikon, tilstand o
 Gruppebrikkene er Alle, Lys, Brytarar, Klima, Sensorar, Vêr, Media, Scener, Kamera,
 Straumpris, Gardiner/port og Lås. «Vis alle» inkluderer skjulte, diagnostiske, konfigurasjons-
 og deaktiverte registereiningar; deaktiverte einingar utan tilstand blir viste som utilgjengelege.
+Pil Opp/Ned følgjer søk/Vis alle → kategoriar → einingsrutenett og tilbake. Ei horisontalt
+rulla kategoriliste må aldri svare på Ned med sidelengs fokus. Rutenettet hoppar over
+einingar som alt er lagde til; kategori og eining blir hugsa ved retur, og lazy-innhald
+blir rulla inn før fokus. Ved lastefeil kan ein nå «Prøv igjen» frå kategoriane.
 
 Straumgraf og minigraf brukar same dempa nivåfargar: `Success` under nedste tredel av
 dagsspennet, `Caution` i midten og `Warning` øvst. Jamne prisar brukar `Caution`.

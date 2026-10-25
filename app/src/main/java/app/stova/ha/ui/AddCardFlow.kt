@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -13,6 +14,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.Role
@@ -52,6 +57,8 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
     var loading by remember { mutableStateOf(true) }
     var failed by remember { mutableStateOf(false) }
     var retry by remember { mutableIntStateOf(0) }
+    var completedLoads by remember { mutableIntStateOf(0) }
+    var restoreAfterRetry by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var group by remember { mutableStateOf(CardGroup.ALL) }
     var showAll by remember { mutableStateOf(false) }
@@ -67,7 +74,7 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
             val found=states.await();val rooms=registry.await() ?: HaRegistry()
             catalog=withContext(Dispatchers.Default) {entityCatalog(found,rooms)}
         }} catch(e:CancellationException) {throw e} catch(_:Exception) {failed=true}
-        finally {loading=false}
+        finally {loading=false;if(currentCoroutineContext().isActive) completedLoads++}
     }
     fun add(entity:HaEntity,type:CardType) {
         if(adding || entity.id in existing) return
@@ -78,6 +85,106 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
         (showAll || !item.hidden) && (group.type==null || group.type in cardTypesFor(item.entity)) &&
             (item.name.contains(query,true) || item.entity.id.contains(query,true) || item.room?.contains(query,true)==true)
     }}
+    val grid=rememberLazyGridState()
+    val categories=rememberLazyListState()
+    val searchFocus=remember {FocusRequester()}
+    val showAllFocus=remember {FocusRequester()}
+    val retryFocus=remember {FocusRequester()}
+    val categoryFocus=remember {CardGroup.entries.associateWith {FocusRequester()}}
+    val entityFocus=remember {mutableMapOf<String,FocusRequester>()}
+    var searchOrigin by remember {mutableStateOf(searchFocus)}
+    var lastCategory by remember {mutableStateOf<CardGroup?>(null)}
+    var retryCategory by remember {mutableStateOf<CardGroup?>(null)}
+    var lastEntity by remember {mutableStateOf<String?>(null)}
+    var pendingEntity by remember {mutableStateOf<String?>(null)}
+    var navigation by remember {mutableStateOf<Job?>(null)}
+    val cells=remember(filtered,existing,adding,loading,failed,status) {
+        if(loading || failed || adding || status!=HaStatus.CONNECTED) emptyList()
+        else filtered.mapIndexedNotNull {index,item ->
+            if(item.entity.id in existing) null
+            else CardFocusCell(item.entity.id,index%3,index/3,1,1,index)
+        }
+    }
+    val latestCells by rememberUpdatedState(cells)
+    fun requestCategory(target:CardGroup=lastCategory ?: group,afterLayout:Boolean=false) {
+        navigation?.cancel();pendingEntity=null
+        navigation=scope.launch {
+            if(afterLayout) withFrameNanos {}
+            categories.scrollToItem(target.ordinal)
+            repeat(8) {
+                if(runCatching {categoryFocus.getValue(target).requestFocus()}.getOrDefault(false)) return@launch
+                withFrameNanos {}
+            }
+        }
+    }
+    fun requestEntity(id:String) {
+        val target=cells.firstOrNull {it.id==id} ?: return
+        navigation?.cancel()
+        pendingEntity=id
+        navigation=scope.launch {
+            grid.scrollToItem(target.listIndex)
+            // Scrolling can compose the destination after this coroutine resumes.
+            repeat(8) {
+                if(latestCells.none {it.id==id}) return@launch
+                if(runCatching {entityFocus[id]?.requestFocus()}.getOrNull()==true) return@launch
+                withFrameNanos {}
+            }
+            if(pendingEntity==id) pendingEntity=null
+        }
+    }
+    fun requestRetry(afterLayout:Boolean=false) {
+        navigation?.cancel();pendingEntity=null
+        navigation=scope.launch {
+            if(afterLayout) withFrameNanos {}
+            repeat(8) {
+                if(runCatching {retryFocus.requestFocus()}.getOrDefault(false)) return@launch
+                withFrameNanos {}
+            }
+        }
+    }
+    fun navigateCategories(event:KeyEvent):Boolean {
+        when(event.key) {
+            Key.DirectionDown -> if(event.type==KeyEventType.KeyDown) {
+                if(failed) requestRetry()
+                else if(cells.isNotEmpty()) requestEntity(lastEntity?.takeIf {id->cells.any {it.id==id}} ?: cells.first().id)
+            }
+            Key.DirectionUp -> if(event.type==KeyEventType.KeyDown) {
+                navigation?.cancel();pendingEntity=null
+                searchOrigin.requestFocus()
+            }
+            else -> {
+                if(event.type==KeyEventType.KeyDown) {navigation?.cancel();pendingEntity=null}
+                return false
+            }
+        }
+        // An empty/loading grid must not turn Down into a horizontal category move.
+        return true
+    }
+    fun navigateEntities(event:KeyEvent):Boolean {
+        val direction=when(event.key) {
+            Key.DirectionUp->CardFocusDirection.UP
+            Key.DirectionDown->CardFocusDirection.DOWN
+            Key.DirectionLeft->CardFocusDirection.LEFT
+            Key.DirectionRight->CardFocusDirection.RIGHT
+            else->return false
+        }
+        if(event.type!=KeyEventType.KeyDown) return true
+        val id=pendingEntity ?: lastEntity ?: return true
+        val next=cardFocusNeighbor(cells,id,direction)
+        if(next!=null) requestEntity(next)
+        else if(direction==CardFocusDirection.UP) requestCategory()
+        return true
+    }
+    LaunchedEffect(completedLoads) {
+        if(restoreAfterRetry) {
+            restoreAfterRetry=false
+            // Let removal of the focused Retry button finish before restoring its origin.
+            if(failed) requestRetry(afterLayout=true)
+            else if(status==HaStatus.CONNECTED) requestCategory(retryCategory ?: lastCategory ?: group,afterLayout=true)
+        }
+    }
+    LaunchedEffect(cells) {if(pendingEntity!=null && cells.none {it.id==pendingEntity}) {navigation?.cancel();pendingEntity=null}}
+    DisposableEffect(Unit) {onDispose {navigation?.cancel()}}
     Column(Modifier.fillMaxSize(),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(16.dp)) {
             Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
@@ -87,23 +194,46 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
             HaStatusLabel(status)
             StovaButton(stringResource(R.string.ha_close),onDone)
         }
-        Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-            RemoteTextField(query,{query=it},stringResource(R.string.ha_v2_search),Modifier.weight(1f))
-            StovaButton(stringResource(if(showAll) R.string.ha_v2_hide_extra else R.string.ha_v2_show_all),{showAll=!showAll})
+        Row(Modifier.onPreviewKeyEvent {event ->
+            if(event.key==Key.DirectionDown) {
+                if(event.type==KeyEventType.KeyDown) requestCategory()
+                true
+            } else {
+                if(event.type==KeyEventType.KeyDown) {navigation?.cancel();pendingEntity=null}
+                false
+            }
+        },verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+            RemoteTextField(query,{query=it},stringResource(R.string.ha_v2_search),Modifier.weight(1f).focusRequester(searchFocus)
+                .onFocusChanged {if(it.isFocused) {searchOrigin=searchFocus;navigation?.cancel();pendingEntity=null}})
+            StovaButton(stringResource(if(showAll) R.string.ha_v2_hide_extra else R.string.ha_v2_show_all),{showAll=!showAll},
+                Modifier.focusRequester(showAllFocus).onFocusChanged {if(it.isFocused) {searchOrigin=showAllFocus;navigation?.cancel();pendingEntity=null}})
         }
-        LazyRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+        LazyRow(Modifier.onPreviewKeyEvent(::navigateCategories),state=categories,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             items(CardGroup.entries,key={it.name}) {entry ->
-                StovaButton(stringResource(entry.label),{group=entry},Modifier.semantics {selected=group==entry},primary=group==entry)
+                val requester=categoryFocus.getValue(entry)
+                StovaButton(stringResource(entry.label),{group=entry},Modifier.focusRequester(requester)
+                    .onFocusChanged {if(it.isFocused) {lastCategory=entry;navigation?.cancel();pendingEntity=null}}.semantics {selected=group==entry},primary=group==entry)
             }
         }
         if(failed) Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
-            Text(stringResource(R.string.ha_v2_failed_load));StovaButton(stringResource(R.string.ha_v2_retry),{retry++})
+            Text(stringResource(R.string.ha_v2_failed_load))
+            StovaButton(stringResource(R.string.ha_v2_retry),{retryCategory=lastCategory ?: group;restoreAfterRetry=true;retry++},Modifier.focusRequester(retryFocus).onPreviewKeyEvent {event ->
+                when(event.key) {
+                    Key.DirectionUp -> {if(event.type==KeyEventType.KeyDown) requestCategory();true}
+                    Key.DirectionDown -> true
+                    else -> false
+                }
+            })
         }
         if(!loading && !failed && status==HaStatus.CONNECTED) Text(pluralStringResource(R.plurals.ha_v2_entities,filtered.size,filtered.size),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
-        LazyVerticalGrid(GridCells.Fixed(3),Modifier.weight(1f),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        LazyVerticalGrid(GridCells.Fixed(3),Modifier.weight(1f).onPreviewKeyEvent(::navigateEntities),state=grid,horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             if(loading) items(6) { EntitySkeleton() }
             else if(status==HaStatus.CONNECTED && !failed) {
-                items(filtered,key={it.entity.id}) {item -> EntityTile(item,item.entity.id in existing,!adding) {
+                items(filtered,key={it.entity.id}) {item ->
+                    val requester=remember(item.entity.id) {entityFocus.getOrPut(item.entity.id) {FocusRequester()}}
+                    EntityTile(item,item.entity.id in existing,!adding,Modifier.focusRequester(requester).onFocusChanged {
+                        if(it.isFocused) {lastEntity=item.entity.id;if(pendingEntity==item.entity.id) pendingEntity=null}
+                    }) {
                     val types=cardTypesFor(item.entity)
                     if(types.size==1) add(item.entity,types.single()) else choosing=item.entity
                 }}
@@ -120,10 +250,10 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
     }}
 }
 
-@Composable private fun EntityTile(item:HaCatalogItem,added:Boolean,enabled:Boolean,onClick:()->Unit) {
+@Composable private fun EntityTile(item:HaCatalogItem,added:Boolean,enabled:Boolean,modifier:Modifier=Modifier,onClick:()->Unit) {
     val source=remember {MutableInteractionSource()};val shape=MaterialTheme.shapes.large
     val type=cardTypesFor(item.entity).first()
-    Column(Modifier.fillMaxWidth().heightIn(min=128.dp).focusOutline(source,shape).clip(shape).background(MaterialTheme.colorScheme.surface)
+    Column(modifier.fillMaxWidth().heightIn(min=128.dp).focusOutline(source,shape).clip(shape).background(MaterialTheme.colorScheme.surface)
         .clickable(source,null,enabled=enabled && !added,role=Role.Button,onClick=onClick).padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             Icon(cardIcon(type,item.entity),null,Modifier.size(24.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)

@@ -1,3 +1,10 @@
+# Smarthus-einingsveljaren er retta og oppdatert på Shield
+2026-10-25: Plan `2026-10-25-entity-picker-focus.md` er fullført. Feilen var i «Legg til kort», ikkje dashbordet: Ned frå Kamera gjekk sidelengs til Straumpris. Søk/kategoriar/einingar har no eksplisitte vertikale vegar og stabil retur.
+616/616 testar inkludert skjermprøver, 0 skip; lint 0 feil (39 åtvaringar, 1 hint), debug-bygg OK. Endeleg testa APK a25e7e61171514de7113fb544bf58f8312b0fb48c9379b14b34b8a84af38d327 er installert med -r på emulator-5580 og Shield; einingshash-ar er like. APK-kopi ligg i `.superpowers/entity-picker-focus/`.
+Faktisk veljar med ekte data er prøvd på begge einingar: rulla Kamera/Cameras → Ned til eining → Opp til same kategori og fleire Ned gjennom rader utanfor første synsfelt. Allereie tillagde einingar, tom/fråkopla liste og tilgjengeleg Prøv igjen er dekte av tastetestane. Rapport: `docs/verification/entity-picker-focus.md`.
+Profil- og kontofiler er byteidentiske før/etter. Ingen einingar lagde til eller styrte. Shield står i veljaren og er frigjeven til eigaren. Ingen påbyrja steg i denne planen står att; ingen push.
+Det kom samstundes andre endringar i tema/utsjånad/innstillingar og tilhøyrande testar i det delte arbeidstreet etter sluttbygget. Dei er urørde og er ikkje del av Smarthus-commiten eller den testa APK-en. Brukarvedlegg er òg urørde.
+
 # Ferdig: fokus/navigering og Spole-tittellenkje på Shield
 2026-10-25: Stova-plan `2026-10-25-directional-focus.md` og Shield-installasjonsplanen er fullførte, kodecommit 9784990. Glød er fjerna; faste fokusvegar i Heim, Innstillingar og Smarthus er prøvde med tastar og ekte data.
 609/609 Stova-testar med skjermprøver, 0 skip; lint 0 feil (39 åtvaringar, 1 hint). Stova a05d0c47931a9f57a8e1e25f1a5fae134f6bd09c89ba09bf1483e47478e75297 er installert/verifisert på emulator-5580 og Shield. Rapport: `docs/verification/directional-focus.md`.
