@@ -164,7 +164,8 @@ class SettingsScreenTest {
             container.profiles.create("K", AvatarColor.ROSE, true)
         }
         openSettings()
-        rule.onNodeWithText("K").performClick()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("K").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("K").performScrollTo().performClick()
         rule.onAllNodesWithText("Utsjånad")[1].performScrollTo().performClick()
         rule.onNode(hasText("Kort og rader") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Kortstorleik").performScrollTo().performClick()
@@ -197,7 +198,8 @@ class SettingsScreenTest {
             container.profiles.create("K", AvatarColor.ROSE, true)
         }
         openSettings()
-        rule.onNodeWithText("K").performClick()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("K").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("K").performScrollTo().performClick()
         rule.onNodeWithText("Tillatne appar").performClick()
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Banan").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("Banan").performClick()

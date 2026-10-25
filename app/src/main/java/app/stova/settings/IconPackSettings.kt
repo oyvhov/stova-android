@@ -14,8 +14,8 @@ import app.stova.profiles.IconColor
 import app.stova.profiles.IconFill
 
 @Composable
-fun IconPackSettingsContent(p: AppearancePrefs, packs: List<IconPack>, groupTitle: String? = null, description: String? = null, firstControl: Modifier = Modifier, onChange: (AppearancePrefs) -> Unit) {
-    SettingsGroup(groupTitle ?: stringResource(R.string.icon_pack_group)) {
+fun IconPackSettingsContent(p: AppearancePrefs, packs: List<IconPack>, groupTitle: String? = null, description: String? = null, firstControl: Modifier = Modifier, showHeading: Boolean = true, onChange: (AppearancePrefs) -> Unit) {
+    SettingsGroup(groupTitle ?: stringResource(R.string.icon_pack_group), showHeading) {
         if (description != null) Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         val choices = listOf<String?>(null) + packs.map { it.packageName } + listOfNotNull(p.iconPack?.takeIf { saved -> packs.none { it.packageName == saved } })
         val index = choices.indexOf(p.iconPack)

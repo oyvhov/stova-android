@@ -10,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import app.stova.AppContainer
 import app.stova.R
 import app.stova.core.ui.StovaButton
+import app.stova.core.ui.PageHeader
 import app.stova.home.HomeViewModel
 import app.stova.homebutton.HomeButtonSettings
 import app.stova.profiles.Profile
@@ -42,6 +43,8 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
     var section by rememberSaveable { mutableStateOf(SettingsSection.PROFILE) }
     val context = androidx.compose.ui.platform.LocalContext.current
     SettingsLayout(section, { section = it }, { app.stova.navigation.openSystemSettings(context) }) { shown, openSection ->
+        if (shown != SettingsSection.APPEARANCE) PageHeader(stringResource(shown.pageTitle), shown.icon,
+            subtitle = stringResource(shown.hint), tint = shown.tone)
         when (shown) {
             SettingsSection.PROFILE -> ProfileSettings(container, profile)
             SettingsSection.ACCOUNTS -> AccountsSettings(profile, container)

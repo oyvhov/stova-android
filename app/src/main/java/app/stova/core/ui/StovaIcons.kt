@@ -14,6 +14,51 @@ import androidx.compose.ui.unit.dp
  * language. The stroke colour is a placeholder; `Icon` tints it.
  */
 object StovaIcons {
+    val Palette by lazy { icon("palette") {
+        moveTo(12f, 3f); curveTo(6f, 3f, 3f, 7f, 3f, 12f); curveTo(3f, 18f, 7f, 21f, 12f, 21f)
+        curveTo(16f, 21f, 15f, 17f, 17f, 16f); curveTo(19f, 15f, 21f, 16f, 21f, 12f); curveTo(21f, 7f, 17f, 3f, 12f, 3f); close()
+        moveTo(7f, 10f); lineTo(7.1f, 10f); moveTo(11f, 7f); lineTo(11.1f, 7f); moveTo(16f, 8f); lineTo(16.1f, 8f)
+    } }
+    val Rows by lazy { icon("rows") {
+        moveTo(3f, 5f); lineTo(21f, 5f); lineTo(21f, 10f); lineTo(3f, 10f); close()
+        moveTo(3f, 14f); lineTo(21f, 14f); lineTo(21f, 19f); lineTo(3f, 19f); close()
+    } }
+    val Image by lazy { icon("image") {
+        moveTo(4f, 3f); lineTo(20f, 3f); lineTo(20f, 21f); lineTo(4f, 21f); close()
+        moveTo(4f, 16f); lineTo(9f, 11f); lineTo(13f, 15f); lineTo(16f, 12f); lineTo(20f, 16f)
+        moveTo(15f, 7f); lineTo(15.1f, 7f)
+    } }
+    val Focus by lazy { icon("focus") {
+        moveTo(8f, 3f); lineTo(3f, 3f); lineTo(3f, 8f); moveTo(16f, 3f); lineTo(21f, 3f); lineTo(21f, 8f)
+        moveTo(3f, 16f); lineTo(3f, 21f); lineTo(8f, 21f); moveTo(21f, 16f); lineTo(21f, 21f); lineTo(16f, 21f)
+        moveTo(15f, 12f); arcTo(3f, 3f, 0f, true, true, 9f, 12f); arcTo(3f, 3f, 0f, true, true, 15f, 12f)
+    } }
+    val Clock by lazy { icon("clock") {
+        moveTo(21f, 12f); arcTo(9f, 9f, 0f, true, true, 3f, 12f); arcTo(9f, 9f, 0f, true, true, 21f, 12f)
+        moveTo(12f, 7f); lineTo(12f, 12f); lineTo(16f, 14f)
+    } }
+    val User by lazy { icon("user") {
+        moveTo(16f, 7f); arcTo(4f, 4f, 0f, true, true, 8f, 7f); arcTo(4f, 4f, 0f, true, true, 16f, 7f)
+        moveTo(4f, 21f); curveTo(4f, 11f, 20f, 11f, 20f, 21f)
+    } }
+    val Link by lazy { icon("link") {
+        moveTo(9f, 14f); lineTo(15f, 8f); moveTo(7f, 12f); lineTo(5f, 14f); curveTo(0f, 19f, 5f, 24f, 10f, 19f); lineTo(12f, 17f)
+        moveTo(12f, 7f); lineTo(14f, 5f); curveTo(19f, 0f, 24f, 5f, 19f, 10f); lineTo(17f, 12f)
+    } }
+    val Info by lazy { icon("info") {
+        moveTo(21f, 12f); arcTo(9f, 9f, 0f, true, true, 3f, 12f); arcTo(9f, 9f, 0f, true, true, 21f, 12f)
+        moveTo(12f, 11f); lineTo(12f, 17f); moveTo(12f, 7f); lineTo(12.1f, 7f)
+    } }
+    val ChevronRight by lazy { icon("chevron-right") { moveTo(9f, 5f); lineTo(16f, 12f); lineTo(9f, 19f) } }
+    val ChevronLeft by lazy { icon("chevron-left") { moveTo(15f, 5f); lineTo(8f, 12f); lineTo(15f, 19f) } }
+    val Edit by lazy { icon("edit") {
+        moveTo(4f, 16f); lineTo(16f, 4f); lineTo(20f, 8f); lineTo(8f, 20f); lineTo(3f, 21f); close()
+        moveTo(13f, 7f); lineTo(17f, 11f)
+    } }
+    val Star by lazy { icon("star") {
+        moveTo(12f, 3f); lineTo(15f, 9f); lineTo(21f, 10f); lineTo(16.5f, 14.5f); lineTo(18f, 21f)
+        lineTo(12f, 17.5f); lineTo(6f, 21f); lineTo(7.5f, 14.5f); lineTo(3f, 10f); lineTo(9f, 9f); close()
+    } }
     val Pumpkin by lazy { icon("pumpkin") {
         moveTo(12f, 7f); quadTo(11.8f, 4.6f, 12.8f, 3.2f)
         moveTo(12.4f, 5.2f); quadTo(15.2f, 2.9f, 17.4f, 4.9f); quadTo(14.8f, 6.5f, 12.4f, 5.2f)

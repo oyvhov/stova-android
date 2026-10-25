@@ -12,10 +12,10 @@ Ingen push eller styring av verkelege HA-einingar. Profil-/konto-/hushaldshashar
 - [x] Verifiser format, store skrifter, tomme rader, retur, flytting/skjuling og redusert rørsle; commit og ledger.
 
 ## Task 2: Visuelle innstillingar
-- [ ] Skriv/køyr testar for ikon gjennom navigasjonen og ny radvisingsinnstilling.
-- [ ] Lag felles streksymbol, overskrifter og kompakte kategoriar; fjern doble titlar.
-- [ ] Lag små konkrete førehandsvisingar og samstem tekst/verdi/handling i innstillingsradene.
-- [ ] Kontroller fokus, profilisolasjon og native skjermprøver; commit og ledger.
+- [x] Skriv/køyr testar for ikon gjennom navigasjonen og ny radvisingsinnstilling.
+- [x] Lag felles streksymbol, overskrifter og kompakte kategoriar; fjern doble titlar.
+- [x] Lag små konkrete førehandsvisingar og samstem tekst/verdi/handling i innstillingsradene.
+- [x] Kontroller fokus, profilisolasjon og native skjermprøver; commit og ledger.
 
 ## Task 3: Smarthus og dei andre flatene
 - [ ] Skriv/køyr relevante testar før endra kontraktar.

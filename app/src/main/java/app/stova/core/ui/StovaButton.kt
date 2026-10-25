@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
@@ -24,7 +25,7 @@ import app.stova.core.theme.StovaShapes
 
 /**
  * The one button. Raised fill by default; lime only when it is the direct action of its surface.
- * At least 48 dp high and free to grow with the font, never a fixed height around its text.
+ * Standard actions are 48 dp high; compact toolbars use 36 dp. Both grow with the font.
  */
 @Composable
 fun StovaButton(
@@ -34,20 +35,22 @@ fun StovaButton(
     primary: Boolean = false,
     icon: ImageVector? = null,
     enabled: Boolean = true,
+    compact: Boolean = false,
+    quiet: Boolean = false,
 ) {
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.medium
     val colors = MaterialTheme.colorScheme
-    val fill = if (primary) colors.primary else colors.surfaceVariant
+    val fill = if (quiet) Color.Transparent else if (primary) colors.primary else colors.surfaceVariant
     val content = if (primary) colors.onPrimary else colors.onSurface
     Row(
         modifier
-            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+            .defaultMinSize(minWidth = 36.dp, minHeight = if (compact) 36.dp else 48.dp)
             .focusOutline(source, shape)
             .clip(shape)
             .background(if (enabled) fill else fill.copy(alpha = DISABLED_ALPHA))
             .clickable(source, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = if (compact) 12.dp else 20.dp, vertical = if (compact) 8.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
     ) {

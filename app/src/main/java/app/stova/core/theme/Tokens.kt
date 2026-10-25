@@ -58,6 +58,9 @@ object StovaLayout {
     val Gutter = 24.dp
     val SettingsNavigationWidth = 200.dp
     val SettingsRowMinHeight = 44.dp
+    val SettingsControlMinHeight = 48.dp
+    val PageIconSize = 40.dp
+    val CategoryIconSize = 34.dp
     val RailCollapsed = 80.dp
     val RailExpanded = 200.dp
     val PosterWidth = 132.dp

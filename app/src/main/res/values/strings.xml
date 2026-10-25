@@ -309,7 +309,7 @@
     <string name="appearance_series">Serie</string>
     <string name="appearance_star_score">★ %1$s</string>
     <string name="appearance_choice_hint">→ eller OK byter verdi. ← går tilbake til menyen. Opp/ned vel neste rad.</string>
-    <string name="appearance_choice_value">‹ %1$s ›</string>
+    <string name="appearance_choice_value">%1$s</string>
     <string name="appearance_background">Bakgrunn</string>
     <string name="appearance_hero_size">Herostorleik</string>
     <string name="appearance_overview">Omtale i heroen</string>
@@ -572,4 +572,16 @@
     <string name="home_row_low">Nedst</string>
     <string name="home_row_balanced">Litt opp</string>
     <string name="home_row_high">Heva</string>
+    <string name="settings_title_home">Framsida di</string>
+    <string name="settings_title_profile">Dine profilar</string>
+    <string name="settings_title_accounts">Medietenestene dine</string>
+    <string name="settings_title_smart_home">Kopling til heimen</string>
+    <string name="settings_title_home_button">Heim på fjernkontrollen</string>
+    <string name="settings_title_about">Om Stova</string>
+    <string name="settings_hint_home">Vel startpunkt, rekkjefølgje og innhald.</string>
+    <string name="settings_hint_profile">Personlege val, namn og tryggleik for kvar person.</string>
+    <string name="settings_hint_accounts">Filmane og seriane frå Jellyfin og Emby.</string>
+    <string name="settings_hint_smart_home">Home Assistant og korta du vil ha nær deg.</string>
+    <string name="settings_hint_home_button">La eit trykk ta deg tilbake til Stova.</string>
+    <string name="settings_hint_about">Utgåve, lisensar og informasjon om appen.</string>
 </resources>

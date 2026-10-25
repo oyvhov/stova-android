@@ -36,6 +36,21 @@ class AppearanceSettingsTest {
         assertTrue(prefs.appTileBackground)
     }
 
+    @Test fun homePresentationAndPositionAreVisibleAndChangeOnlyTheirOwnPreference() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        compose.setContent { StovaTheme {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                AppearanceSettingsContent(prefs, category = AppearanceCategory.HERO, includePreview = false) { prefs = it }
+            }
+        } }
+        compose.onNodeWithText("Synlege rader").performClick()
+        assertEquals(HomeRows.TWO, prefs.homeRows)
+        compose.onNodeWithText("Plassering av radene").performScrollTo().performClick()
+        assertEquals(HomeRowInset.BALANCED, prefs.homeRowInset)
+        assertEquals(ArtworkSize.MEDIUM, prefs.cardSize)
+        assertEquals(HeroSize.COMPACT, prefs.heroSize)
+    }
+
     @Test fun everyChoiceChangesItsPreferenceWithDpadAndOk() {
         var prefs by mutableStateOf(AppearancePrefs())
         compose.setContent { StovaTheme(appearance = prefs) {

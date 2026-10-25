@@ -17,11 +17,11 @@ import app.stova.core.ui.*
 import app.stova.profiles.Profile
 
 @Composable
-fun AppearanceProfileActions(others: List<Profile>, onReset: () -> Unit, onCopy: (String) -> Unit, firstControl: Modifier = Modifier) {
+fun AppearanceProfileActions(others: List<Profile>, onReset: () -> Unit, onCopy: (String) -> Unit, firstControl: Modifier = Modifier, showHeading: Boolean = true) {
     var resetting by remember { mutableStateOf(false) }
     var copying by remember { mutableStateOf(false) }
-    SettingsGroup(stringResource(R.string.settings_profile)) {
-        Text(stringResource(R.string.custom_profile_hint), Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall,
+    SettingsGroup(stringResource(R.string.settings_profile), showHeading) {
+        if (showHeading) Text(stringResource(R.string.custom_profile_hint), Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         SettingsNavRow(stringResource(R.string.custom_reset), firstControl) { resetting = true }
         if (others.isNotEmpty()) SettingsNavRow(stringResource(R.string.custom_copy)) { copying = true }

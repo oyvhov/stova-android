@@ -59,6 +59,14 @@ class AppearanceMenuTest {
         }
         compose.onNode(hasText("Ikon") and hasClickAction()).assertIsDisplayed()
     }
+
+    @Test fun categoryHasOneTitleAndTheSameSymbolAsItsOverviewTile() {
+        render()
+        compose.onNodeWithTag("appearance-icon-FOCUS", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNode(hasText("Fokus") and hasClickAction()).performClick()
+        compose.onAllNodesWithText("Fokus").assertCountEquals(1)
+        compose.onNodeWithTag("appearance-header-icon-FOCUS", useUnmergedTree = true).assertIsDisplayed()
+    }
     @Test fun largeTextCanReachLastCategoryAndReturnWithoutChangingValues() {
         render(2f)
         compose.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
@@ -77,5 +85,26 @@ class AppearanceMenuTest {
         compose.saveScreen("menu-overview")
         compose.onNode(hasText("Fokus") and hasClickAction()).performClick()
         compose.saveScreen("menu-focus")
+    }
+
+    @Test fun allCategoriesEnterTheirOwnFirstControlAndBackReturnsToTheirTile() {
+        render()
+        val first = listOf("Tema", "Synlege rader", "Kortstorleik", "Bakgrunnskjelde", "Fokuseffekt", "Klokkeformat", "Ikonpakke", "Tilbakestill utsjånad")
+        AppearanceCategory.entries.forEachIndexed { index, category ->
+            compose.onNodeWithTag("appearance-icon-${category.name}", useUnmergedTree = true)
+                .onParent().performClick()
+            compose.onNode(hasText(first[index]) and hasClickAction()).assertIsFocused()
+            compose.onRoot().performKeyInput { pressKey(Key.Back) }
+            compose.onNodeWithTag("appearance-icon-${category.name}", useUnmergedTree = true)
+                .onParent().assertIsFocused()
+        }
+    }
+
+    @Test fun homeLayoutScreen() {
+        assumeScreensEnabled()
+        render()
+        compose.onNode(hasText("Heim og hero") and hasClickAction()).performClick()
+        compose.onNodeWithText("Synlege rader").assertIsFocused()
+        compose.saveScreen("menu-home-layout")
     }
 }

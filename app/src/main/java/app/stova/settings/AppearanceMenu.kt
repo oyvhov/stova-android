@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -18,12 +19,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.ui.StovaButton
+import app.stova.core.ui.StovaIcons
+import app.stova.core.ui.PageHeader
+import app.stova.core.ui.CategoryIcon
+import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.focusOutline
 import app.stova.core.ui.softEntrance
 
@@ -50,7 +56,7 @@ internal fun AppearanceMenu(scrollable: Boolean = true, content: @Composable (Ap
     val sidebar = LocalSettingsSectionFocus.current
     fun show(category: AppearanceCategory?) {
         transferring = true
-        (sidebar ?: breadcrumb).requestFocus()
+        (sidebar ?: if (selected != null) breadcrumb else categories.getValue(last)).requestFocus()
         if (category != null) last = category
         selected = category
     }
@@ -81,11 +87,9 @@ internal fun AppearanceMenu(scrollable: Boolean = true, content: @Composable (Ap
             }
         }
     }.focusGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            StovaButton(stringResource(R.string.settings_all_appearance), { show(null) }, Modifier.focusRequester(breadcrumb))
-            selected?.let { Text(stringResource(it.title), style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface) }
+        if (selected != null) {
+            StovaButton(stringResource(R.string.settings_all_appearance), { show(null) },
+                Modifier.focusRequester(breadcrumb), icon = StovaIcons.ChevronLeft, compact = true, quiet = true)
         }
         key(selected) {
             val scroll = rememberScrollState()
@@ -94,8 +98,8 @@ internal fun AppearanceMenu(scrollable: Boolean = true, content: @Composable (Ap
             }.focusGroup().then(if (scrollable) Modifier.verticalScroll(scroll) else Modifier), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 val category = selected
                 if (category == null) {
-                    Text(stringResource(R.string.settings_appearance_intro), style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    PageHeader(stringResource(R.string.settings_appearance), StovaIcons.Palette,
+                        subtitle = stringResource(R.string.settings_appearance_intro), tint = AppearanceCategory.THEME.tone)
                     // Large text gets one column; no fixed heights squeeze labels or descriptions.
                     val columns = if (LocalDensity.current.fontScale >= 1.5f) 1 else 2
                     AppearanceCategory.entries.chunked(columns).forEach { band ->
@@ -103,22 +107,31 @@ internal fun AppearanceMenu(scrollable: Boolean = true, content: @Composable (Ap
                             band.forEach { entry ->
                                 val source = remember { MutableInteractionSource() }
                                 val shape = MaterialTheme.shapes.medium
-                                Column(Modifier.weight(1f).focusRequester(categories.getValue(entry))
+                                Row(Modifier.weight(1f).focusRequester(categories.getValue(entry))
                                     .focusOutline(source, shape).clip(shape)
                                     .background(MaterialTheme.colorScheme.surface)
                                     .clickable(source, indication = null, role = Role.Button) { show(entry) }
                                     .padding(horizontal = 14.dp, vertical = 12.dp),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Text(stringResource(entry.title), style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurface)
-                                    Text(stringResource(entry.hint), style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    CategoryIcon(entry.icon, Modifier.testTag("appearance-icon-${entry.name}"),
+                                        entry.tone, StovaLayout.CategoryIconSize)
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Text(stringResource(entry.title), style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurface)
+                                        Text(stringResource(entry.hint), style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Icon(StovaIcons.ChevronRight, null, Modifier.size(14.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
                     }
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        PageHeader(stringResource(category.title), category.icon, subtitle = stringResource(category.hint),
+                            tint = category.tone, iconModifier = Modifier.testTag("appearance-header-icon-${category.name}"))
                         content(category, Modifier.focusRequester(controls))
                     }
                 }

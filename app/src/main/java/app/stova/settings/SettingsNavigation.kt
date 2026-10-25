@@ -9,6 +9,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,12 +21,15 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.focusOutline
+import app.stova.core.ui.StovaIcons
 
 /** The title stays put while the section list scrolls, including at font scale 2. */
 @Composable
@@ -67,7 +71,7 @@ internal fun SettingsNavigation(
                             if (event.type == KeyEventType.KeyDown) onEnterContent?.invoke(entry)
                             true
                         }
-                    }) {
+                    }, icon = entry.icon, iconTint = entry.tone, iconTag = "settings-icon-${entry.name}") {
                     if (onEnterContent != null) onEnterContent(entry) else onSelect(entry)
                 }
             }
@@ -83,15 +87,19 @@ internal fun SettingsNavigation(
 }
 
 @Composable
-private fun SectionTab(label: String, selected: Boolean, onFocused: (() -> Unit)? = null, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun SectionTab(label: String, selected: Boolean, onFocused: (() -> Unit)? = null, modifier: Modifier = Modifier,
+    icon: ImageVector = StovaIcons.Gear, iconTint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    iconTag: String = "settings-icon-system", onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.large
-    Box(modifier.fillMaxWidth().heightIn(min = StovaLayout.SettingsRowMinHeight)
+    Row(modifier.fillMaxWidth().heightIn(min = StovaLayout.SettingsRowMinHeight)
         .onFocusChanged { if (it.isFocused) onFocused?.invoke() }
         .focusOutline(source, shape).clip(shape)
         .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
         .selectable(selected, source, indication = null, role = Role.Tab, onClick = onClick)
-        .padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.CenterStart) {
-        Text(label, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+        .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Icon(icon, null, Modifier.size(20.dp).testTag(iconTag), tint = iconTint)
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
     }
 }

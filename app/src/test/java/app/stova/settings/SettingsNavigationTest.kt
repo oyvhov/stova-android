@@ -27,4 +27,11 @@ class SettingsNavigationTest {
         compose.onNodeWithText("Android-innstillingar").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Innstillingar").assertIsDisplayed()
     }
+
+    @Test fun everySectionHasItsOwnVisualSymbol() {
+        compose.setContent { StovaTheme { SettingsNavigation(SettingsSection.HOME, {}, {}) } }
+        SettingsSection.entries.forEach { section ->
+            compose.onNodeWithTag("settings-icon-${section.name}", useUnmergedTree = true).assertExists()
+        }
+    }
 }

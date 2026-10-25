@@ -16,6 +16,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -29,17 +31,16 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.res.stringResource
 import app.stova.R
 import app.stova.core.theme.StovaShapes
+import app.stova.core.theme.StovaLayout
 
-/** A group of settings on one matte surface, separated from its neighbours by fill, not lines. */
+/** Open rows share one text edge; the focused action supplies the only filled surface. */
 @Composable
-fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
+fun SettingsGroup(title: String, showHeading: Boolean = true, content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (showHeading) Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Column(
             Modifier.fillMaxWidth()
-                .clip(MaterialTheme.shapes.large)
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(8.dp),
+                .padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             content = content,
         )
@@ -53,7 +54,7 @@ fun SettingsSwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Un
     val shape = MaterialTheme.shapes.medium
     Row(
         Modifier.fillMaxWidth()
-            .heightIn(min = 56.dp)
+            .heightIn(min = StovaLayout.SettingsControlMinHeight)
             .focusOutline(source, shape)
             .clip(shape)
             .toggleable(checked, source, indication = null, role = Role.Switch, onValueChange = onChange)
@@ -83,7 +84,7 @@ fun SettingsNavRow(title: String, modifier: Modifier = Modifier, value: String? 
     val shape = MaterialTheme.shapes.medium
     Row(
         modifier.fillMaxWidth()
-            .heightIn(min = 56.dp)
+            .heightIn(min = StovaLayout.SettingsControlMinHeight)
             .focusOutline(source, shape)
             .clip(shape)
             .clickable(source, indication = null, role = Role.Button, onClick = onClick)
@@ -92,7 +93,7 @@ fun SettingsNavRow(title: String, modifier: Modifier = Modifier, value: String? 
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         RowText(title, value, Modifier.weight(1f))
-        Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Icon(StovaIcons.ChevronRight, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -111,7 +112,7 @@ private fun RowText(title: String, subtitle: String?, modifier: Modifier) {
 fun SettingsChoiceRow(title: String, value: String, preview: (@Composable () -> Unit)? = null, modifier: Modifier = Modifier, onStep: (Int) -> Unit) {
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.medium
-    Row(modifier.fillMaxWidth().heightIn(min = 56.dp).focusOutline(source, shape).clip(shape)
+    Row(modifier.fillMaxWidth().heightIn(min = StovaLayout.SettingsControlMinHeight).focusOutline(source, shape).clip(shape)
         .semantics { stateDescription = value }
         // Right and OK step forward and wrap; Left is left alone, so it leads back to the section list.
         .onPreviewKeyEvent { event ->
@@ -129,5 +130,6 @@ fun SettingsChoiceRow(title: String, value: String, preview: (@Composable () -> 
         Text(stringResource(R.string.appearance_choice_value, value), Modifier.weight(0.8f),
             textAlign = androidx.compose.ui.text.style.TextAlign.End,
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Icon(StovaIcons.ChevronRight, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

@@ -309,7 +309,7 @@
     <string name="appearance_series">Series</string>
     <string name="appearance_star_score">★ %1$s</string>
     <string name="appearance_choice_hint">→ or OK changes a value. ← goes back to the menu. Up/down selects a row.</string>
-    <string name="appearance_choice_value">‹ %1$s ›</string>
+    <string name="appearance_choice_value">%1$s</string>
     <string name="appearance_background">Background</string>
     <string name="appearance_hero_size">Hero size</string>
     <string name="appearance_overview">Hero overview</string>
@@ -572,4 +572,16 @@
     <string name="home_row_low">At the bottom</string>
     <string name="home_row_balanced">Slightly raised</string>
     <string name="home_row_high">Raised</string>
+    <string name="settings_title_home">Your home screen</string>
+    <string name="settings_title_profile">Your profiles</string>
+    <string name="settings_title_accounts">Your media services</string>
+    <string name="settings_title_smart_home">Connected home</string>
+    <string name="settings_title_home_button">Home on your remote</string>
+    <string name="settings_title_about">About Stova</string>
+    <string name="settings_hint_home">Choose where to start and what belongs here.</string>
+    <string name="settings_hint_profile">Personal choices, identity and security for each person.</string>
+    <string name="settings_hint_accounts">Your films and series from Jellyfin and Emby.</string>
+    <string name="settings_hint_smart_home">Home Assistant and the cards you want nearby.</string>
+    <string name="settings_hint_home_button">One press brings you back to Stova.</string>
+    <string name="settings_hint_about">Version, licences and information about the app.</string>
 </resources>
