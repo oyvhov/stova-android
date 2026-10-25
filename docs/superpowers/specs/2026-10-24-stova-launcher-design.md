@@ -53,13 +53,15 @@ Kjelder: `C:\JellyBin\reelstack-android\docs\DESIGN_SYSTEM.md`, `docs\LAYOUT.md`
   skjermlesartekst eller fokusmål. Ingen blur eller nye HA-filer.
 - **Aksenten er berre handling.** Aksenten blir brukt på val, framdrift og direkte handlingar,
   aldri på tal, typemerke eller kjeldenamn. «Ny sesong» følgjer òg den valde aksenten (Utsjånad v2). Ingen skarpe eller metta fargar.
-- **Hjørne:** fem runde steg, 4 / 8 / 12 / 16 / 24 dp. Profilvalet «Skarpe» gir 0 dp
-  i temastyrte flater og kunstkort.
+- **Hjørne (Tilpassing v3):** Skarp 4 / Mjuk 12 / Rund 20 / Ekstra rund 28 dp. Same radius
+  går gjennom alle `MaterialTheme.shapes`, kunstkort, appflisar, dialogar, knappar og HA-kort.
+  Gamle SHARP/ROUND blir 4/20 dp; gamle felt blir berre haldne for lesekompatibilitet.
 - **Typografi:** Spole sin `reelstackTypography()`-skala (sans-serif, 12 nivå), kopiert uendra.
-- **Fokus:** 3 dp strek i vald aksent som tonar inn på 110 ms og følgjer forma til kunsten
-  (4 dp ved kraftig fokus). Standard er berre ring. Valfri forstørring til 1,05 skjer i
-  teiknelaget på kunsten, animert over 180 ms, og endrar aldri layout eller plassering av titlar.
-  Redusert rørsle slår av forstørringa og animasjonen.
+- **Fokus:** Ring (standard), Forstørring, Ring + forstørring eller Lys opp. Ringen er
+  2/3/4 dp (Normal 3 er standard), tonar inn på 110 ms og følgjer kunstforma. Forstørring
+  til 1,05 skjer berre i `graphicsLayer` over 180 ms. Lys opp teiknar flat 28 % temademping
+  på nabokorta i den aktive rada; kunsten held seg ugjennomsiktig. Redusert rørsle gir straks
+  fokus utan skalering; rein Forstørring får ring som reserve. Gamal `strongFocus` blir 4 dp.
 - **Rørsle:** 180 ms standardovergang, FastOutSlowIn, ingen fjør eller overshoot. «Reduser
   rørsle» slår av krysstoning og rotasjon.
 - **TV-margin:** 48 dp trygg kant (5 % av 1080p).
@@ -142,12 +144,17 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   merka «Ny sesong». Medan ein sesong gjeld, kjem sesongtitlar med backdrop først, deretter
   det vanlege utvalet; kvar tittel blir vist éin gong per konto. Aldri episodekunst, episodenummer
   eller tenestemerke i heroen.
+  - Hero kan vere Av, Kompakt (standard) eller Stor. Av fjernar heroen heilt, lar radene starte
+    rett under toppfeltet og stoppar spotlight-rotasjon og bakgrunnszoom. Spotlight-kjelda kan vere
+    heile biblioteket, berre filmar, berre seriar eller favorittar (`UserData.IsFavorite`). Eigne
+    bibliotekspørjingar gir eit nytt utval, med sesongprioritering og «Ny sesong» innanfor valet.
   - Innhald (Utsjånad v2): teksten står øvst til venstre rett under toppfeltet. Clearlogo er
     høgst 320 × 72 dp og får transparent kant trimma; utan logo blir tittelen vist i
     `headlineMedium`. Små, matte kantlinjepillar viser «Ny sesong» når det gjeld, stjernescore,
     år, aldersgrense og kritikarprosent med tomatikon. Ingen speletid eller omtale som standard.
     Sjangerlinja bruker `Muted`, med typen («Film»/«Serie») først og sjangrar etterpå.
     Berre community-score i 0–10 blir vist; til dømes 39,0 gir inga stjerne.
+    Profilen kan velje «Alltid tittel» i staden for clearlogo.
   - Heroen har fast høgd for profil- og skriftvala, uavhengig av tittel, logo eller omtaletekst.
     Kompakt og Stor reserverer høvesvis inntil 40 % og 52 % av området under toppfeltet. Ved
     vanleg skrift og avslått omtale blir høgda avgrensa slik at ei heil rad med vald kunststorleik
@@ -156,10 +163,18 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
     Sjangerlinja er éi linje med ellipse ved behov. Logoen krympar vidare ved trong plass. Ved skriftstorleik ≥ 1,5 får heroen
     16 prosentpoeng meir høgd; omtalen blir utelaten som før for å prioritere logo og metadata.
   - Kvar tittel står i 12 s som standard (profilval: 8/12/20 s). Neste bakgrunn blir lasta ferdig før han tonar inn over 900 ms,
-    så det blir aldri eit svart blink. Ingen kontinuerleg rørsle (zoom), så Shield kan kvile.
+    så det blir aldri eit svart blink. Valfri roleg zoom 1,00→1,04 over tittelvisinga er Av
+    som standard. Animasjonsverdien blir lesen berre i `graphicsLayer`; han stoppar straks ved
+    redusert rørsle, under STARTED, eller når Heim blir teken ut av komposisjonen.
   - Rotasjonen tikkar berre medan Heim er synleg, og held fram der han slapp.
     «Bakgrunnsrotasjon» av eller redusert rørsle stoppar han på første tittel.
-- **Statuslinje** øvst til høgre: klokke og opptil tre HA-statusbrikker (kort merka «Vis på heim»).
+- **Bakgrunnskjelde:** Spotlight (standard), fast bibliotekstittel eller einsfarga tema. Ein enkel,
+  søkbar veljar finn filmar/seriar med backdrop på tvers av profilen sine kontoar. ID og kontotilhøyrsle
+  blir lagra i profilen, kunsten i snapshotet. Fråkopla server kan bruke snapshot; fjerna konto
+  fjernar biletet. Fast bakgrunn følgjer ikkje spotlight-rotasjonen.
+- **Statuslinje** øvst til høgre: klokke (24/12 t/skjult), Normal/Stor og valfri lokal dato;
+  HA-brikker, sesongnedteljing, Appar, Smarthus og profilbilete kan visast/skjulast kvar for seg.
+  Innstillingar er alltid tilgjengeleg. Smarthus krev framleis oppsett HA.
 - **Rader**, i denne standardrekkjefølgja, kvar for seg per konto og teneste (Jellyfin og Emby
   blir aldri blanda):
   1. Favorittappar
@@ -176,7 +191,14 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   blir ikkje viste. Det vanlege spotlight-utvalet ligg framleis i snapshotet; sesongprioriteringa
   blir avleidd frå den bufra sesongrada, også utan nett.
 
-  Profilen kan slå av og sortere rader i Innstillingar → Heim. Ei tom rad blir ikkje vist.
+  Profilen kan slå av og sortere rader i Innstillingar → Heim. Meny eller lang OK på eit kort
+  gir òg seksjonen «Rada»: Flytt rada, Skjul rada, Kortformat, Storleik og Vis radtittel.
+  Flyttemodus rammar inn heile rada; opp/ned flyttar live og lagrar `rowOrder`. OK/Tilbake
+  avsluttar på det same kortet. Skjul lagrar `hiddenRows` og gir Angre i åtte sekund.
+  Angre hugsar rada og kortet sjølv om fokus har flytta seg. Ei tom rad blir ikkje vist.
+  `HomePrefs.rowFormats: Map<HomeRowKey, RowStyle>` lagrar valfritt format/storleik og radtittel
+  (På som standard). Manglande overstyring følgjer dei globale vala og dagens standard per rad.
+  Innstillingar → Heim viser dei same vala og ei formatprøve; flytteknappane kan styrast med D-pad.
   Radoverskrifta er namnet på rada («Hald fram», «Nyleg lagt til · Filmar»), følgt av
   servernamnet i `Muted` (utan tenestelogo), slik at to kontoar kan skiljast.
 - **Kunstformat:** filmar i «Nyleg lagt til» bruker plakat (2:3, 132 × 198 dp). Hald fram,
@@ -187,7 +209,9 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   bannerhøgda. Filmrada kan òg velje breie kort. Ingen kunstige botnkantar på plakatar.
   Titlar under kunst er av som standard, men tittelen er alltid tilgjengeleg for skjermlesar.
   Manglande kunst viser tittelen inne i plasshaldaren. Fokusringen rammar berre kunsten.
-- **Framdrift:** 4 dp strek i vald aksent i botnen av 16:9-kort for påbyrja titlar.
+  Radformat kan overstyrast til Plakat (2:3), Brei (16:9), Stor brei (1,2×), Liten brei (0,8×)
+  eller Ikon (kvadrat). Storleik S/M/L gjeld oppå formatet. Vassrett avstand er 8/16/24 dp.
+- **Framdrift:** Tynn 2 dp / Tjukk 4 dp (standard) / Skjult i vald aksent for påbyrja titlar.
 - **OK** på ein tittel opnar detaljsida i Spole. **Lang OK / Meny** opnar ein liten handlingsmeny:
   «Spel», «Detaljar i Spole».
 - **Startfokus** (profilinnstilling): første medierad (standard) eller Favorittappar.
@@ -299,20 +323,18 @@ Grupper (som i Spole sine innstillingar):
 - **Heim:** rader av/på og rekkjefølgje, bakgrunnsrotasjon av/på.
 - **Smarthus:** HA-tilkopling (hushald), kortutval og rekkjefølgje for profilen.
 - **Home-knappen:** status for tilgjengetenesta og adb-oppskrifta (sjå 9).
-- **Utsjånad:** profilstyrte val i gruppene Tema, Heim, Kort, Bakgrunn, Farge og fokus, og Klokke.
-  Tema ligg øvst med Tema, Aksentfarge, Sesong og Sesongpynt. Alle seks tema og ti aksentar har
-  små fargeprøver i valrada; eit lite førehandsvisingskort viser effektiv stemning, aksent og
-  sesongmerke. Eit direkte temaval slår av kalenderen; eit sesongtema vel òg sesongaksenten.
-  Ei rad er eitt D-pad-stopp med namnet til venstre og gjeldande verdi med piler til høgre.
-  Venstre går til førre verdi; høgre og OK går til neste, med omløp. Opp/ned flyttar fokus.
-  Gruppa Appikon gir Ikonpakke (Ingen eller installerte pakkar), Farge (Original/Aksent) og
-  Fyll (Sentrert/Fyll flata). Aksent fargar monokrome ikon med effektiv temaaksent, også under
-  kalenderstyrt Halloween/jul; fargeikon beheld originalfargane. Arcticons blir gjenkjend som
-  linjepakke; andre pakkeikon blir klassifiserte ved dekoding, og Spole-reserven følgjer inntil
-  tre prøveikon frå pakken. Innstillingane hugsar ein utilgjengeleg pakke til brukaren endrar valet.
-  Endringar blir lagra straks for den aktive profilen. Barneprofilar har same sperre som resten
-  av innstillingane: berre «Byt profil» er tilgjengeleg.
-  Reduser rørsle og kraftig fokus (4 dp strek) er bevarte.
+- **Utsjånad:** åtte grupper med korte forklaringar: Tema, Heim og hero, Kort og rader,
+  Bakgrunn, Fokus, Toppfelt, Ikon og Profil. Ei førehandsvising står fast øvst medan ein rullar
+  vala: bibliotekkunst når ho er bufra, valt hero/tittel, kortformat, hjørne, fokus og aksent.
+  Førehandsvisinga tek ikkje fokus. Alle verdiar kan endrast med venstre/høgre eller OK;
+  opp/ned flyttar mellom vala. Endringane blir viste straks og lagra per profil.
+  Temagruppa bevarer fargeprøver og kalenderoverlegg; Ikon bevarer ikonpakke, Original/Aksent
+  og Sentrert/Fyll flata. Eit direkte temaval slår av kalenderen. Utilgjengelege pakkar blir hugsa.
+  Profil gir Tilbakestill utsjånad (stadfesting, Avbryt har første fokus) og Kopier frå profil.
+  Begge omfattar utsjånad og heimerader; identitet, PIN, appar, kontoar og HA-oppsett blir bevarte.
+  Kopiering omset radnøklar til mottakaren sine kontoar på same server. Fast bakgrunn blir vald
+  på nytt i mottakaren sitt eige bibliotek. Barneprofilar ser framleis berre «Byt profil»;
+  ein vaksen kan endre barnet sine globale utsjånadsval og rader via Profil → barnet → Utsjånad.
 - **Om:** versjon og lisensar.
 
 Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
@@ -323,19 +345,31 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Tema | Aksentfarge | **Lime** / Hav / Iris / Korall / Gull / Mint / Rose / Perle / Kristtorn / Gresskar; ≥ 7:1 mot alle temabakgrunnar |
 | Tema | Sesong | Ingen / **Etter kalenderen** / Jul / Halloween; kalenderoverlegg blir ikkje lagra |
 | Tema | Sesongpynt | Av / Roleg / **Mykje**; rørsle stoppar automatisk ved redusert rørsle og utanfor synleg Heim |
-| Heim | Herostorleik | **Kompakt** / Stor; fast høgd per profilval, meir plass til biletet i Stor |
-| Heim | Omtale i heroen | **Av** / På; opptil to linjer |
-| Heim | Sjangrar i heroen | **På** / Av; typen står først |
-| Heim | Spotlight-tid | 8 s / **12 s** / 20 s; tek effekt utan å hente biblioteket på nytt |
-| Heim | Radavstand | Tett (12 dp) / **Normal (22 dp)** / Luftig (34 dp) over radoverskrifta |
-| Kort | Kortstorleik | Liten (200 dp) / **Middels (248 dp)** / Stor (296 dp); plakat og appikon skalerer proporsjonalt |
-| Kort | Titlar under kort | **Av** / På; skjermlesarnamn er alltid med |
-| Kort | Appstil | **Banner** (16:9) / Ikon (kvadrat) |
-| Kort | Nyleg lagt til · Filmar | **Plakat** / Breie kort |
-| Kort | Hjørne | **Runde** / Skarpe |
-| Bakgrunn | Bakgrunnsdemping | Lys / **Middels** / Mørk; Mørk bevarer den tidlegare scrimen |
-| Farge og fokus | Fokuseffekt | **Ring** / Ring + forstørring (1,05); redusert rørsle slår av forstørringa |
-| Klokke | Klokkeformat | **24 t** / 12 t / Skjult; skjult fjernar òg klokkesloten |
+| Heim og hero | Herostorleik | Av / **Kompakt** / Stor; Av løftar radene og stoppar spotlight-rotasjonen |
+| Heim og hero | Logo eller tittel | **Logo når han finst** / Alltid tittel |
+| Heim og hero | Omtale / sjangrar | Omtale **Av**, sjangrar **På**; to omtale-linjer ved vanleg skrift |
+| Heim og hero | Spotlight-tid | 8 / **12** / 20 s |
+| Kort og rader | Kortstorleik | Liten (200) / **Middels (248)** / Stor (296 dp brei); proporsjonale plakatar/ikon |
+| Kort og rader | Titlar under kort | **Av** / På; alltid skjermlesarnamn |
+| Kort og rader | Appstil / filmrad | **Banner** / Ikon; filmrada **Plakat** / Brei |
+| Kort og rader | Hjørne | Skarp 4 / Mjuk 12 / **Rund 20** / Ekstra rund 28 dp |
+| Kort og rader | Kortavstand | Tett 8 / **Normal 16** / Luftig 24 dp vassrett |
+| Kort og rader | Radavstand | Tett 12 / **Normal 22** / Luftig 34 dp loddrett |
+| Kort og rader | Framdriftsstrek | Tynn 2 / **Tjukk 4** dp / Skjult |
+| Kvar rad | Format | Plakat / Brei / Stor brei / Liten brei / Ikon; **arv eksisterande format** |
+| Kvar rad | Storleik / tittel | Liten / Middels / Stor (**arv global**); radtittel **På** / Av |
+| Bakgrunn | Kjelde | **Spotlight** / Fast bilete / Einsfarga tema |
+| Bakgrunn | Spotlight-kjelde | **Heile biblioteket** / Berre filmar / Berre seriar / Favorittar |
+| Bakgrunn | Demping | Lys / **Middels** / Mørk |
+| Bakgrunn | Roleg rørsle | **Av** / På; 1,00→1,04; alltid av ved redusert rørsle, hero Av og utanfor Heim |
+| Fokus | Effekt | **Ring** / Forstørring / Ring + forstørring / Lys opp |
+| Fokus | Ringbreidd | Tynn 2 / **Normal 3** / Tjukk 4 dp |
+| Fokus | Reduser rørsle | **Av** / På; ingen skalering, krysstoning eller kontinuerleg rørsle |
+| Toppfelt | Klokke | **24 t** / 12 t / Skjult; **Normal** / Stor |
+| Toppfelt | Dato | **Av** / På; lokal vekedag, dag og månad, òg med skjult klokke |
+| Toppfelt | HA / nedteljing / Appar / Smarthus / profilbilete | Alle **På** / Av; Innstillingar kan alltid nåast |
+| Ikon | Pakke / farge / fyll | **Ingen** eller installert pakke; **Original** / Aksent; **Sentrert** / Fyll flata |
+| Profil | Tilbakestill / kopier | Stadfesta standard eller kopi frå annan profil, utan konto-/tryggleiksendringar |
 
 ## 6. Media: Jellyfin og Emby
 
