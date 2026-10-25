@@ -52,7 +52,9 @@ class JsonFileStore<T : Any>(
     suspend fun current(): T = state.value ?: mutex.withLock { loadedLocked() }
 
     suspend fun update(transform: (T) -> T): T = mutex.withLock {
-        val next = transform(loadedLocked())
+        val previous = loadedLocked()
+        val next = transform(previous)
+        if (next == previous) return@withLock previous
         withContext(io) { write(next) }
         state.value = next
         next

@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import app.stova.core.security.KeystoreSecretStore
 import app.stova.ha.*
 import okhttp3.OkHttpClient
@@ -56,8 +57,10 @@ class AppContainer(
     val apps = AppRepository(appCatalog, profiles, appScope)
 
     val household = JsonFileStore(File(appContext.filesDir, "household.json"), HouseholdSettings.serializer(), HouseholdSettings())
-    private val deviceSettings = household.writeBlocking { if (it.deviceId.isBlank()) it.copy(deviceId = java.util.UUID.randomUUID().toString()) else it }
-    val identity = app.stova.media.net.ClientIdentity(android.os.Build.MODEL, deviceSettings.deviceId, BuildConfig.VERSION_NAME)
+    private val identity = appScope.async(Dispatchers.IO) {
+        val settings = household.update { if (it.deviceId.isBlank()) it.copy(deviceId = java.util.UUID.randomUUID().toString()) else it }
+        app.stova.media.net.ClientIdentity(android.os.Build.MODEL, settings.deviceId, BuildConfig.VERSION_NAME)
+    }
     val mediaHttp = app.stova.media.net.mediaHttp()
 
     val mediaAccounts = app.stova.media.MediaAccountRepository(
@@ -65,11 +68,12 @@ class AppContainer(
         app.stova.core.security.KeystoreSecretStore(appContext),
     )
     val serverProbe = app.stova.media.net.ServerProbe(mediaHttp)
-    val mediaAuth = app.stova.media.net.MediaAuth(mediaHttp, identity)
+    val mediaAuth = app.stova.media.net.MediaAuth(mediaHttp) { identity.await() }
     val lanDiscovery = app.stova.media.net.LanDiscovery()
 
     @Volatile private var imageTokens: Map<String, Pair<app.stova.media.model.ServerKind, String>> = emptyMap()
-    val imageAuth = app.stova.media.ui.MediaAuthInterceptor({ imageTokens }, identity)
+    // OkHttp invokes this supplier on its network thread, never while composing or starting Home.
+    val imageAuth = app.stova.media.ui.MediaAuthInterceptor({ imageTokens }) { kotlinx.coroutines.runBlocking { identity.await() } }
     init {
         appScope.launch {
             session.active.distinctUntilChangedBy { it?.id }.flatMapLatest { profile ->
@@ -92,7 +96,7 @@ class AppContainer(
     private fun appsIconPackChanges() = appCatalog.changes().onStart { emit(Unit) }
 
     val media = app.stova.media.MediaRepository(mediaAccounts, { account ->
-        mediaAccounts.token(account.id)?.let { app.stova.media.net.JellyfinEmbyClient(account, it, mediaHttp, identity) }
+        mediaAccounts.token(account.id)?.let { app.stova.media.net.JellyfinEmbyClient(account, it, mediaHttp, identity.await()) }
     }, File(appContext.filesDir, "snapshots"), appScope)
 
     val watchNext = app.stova.watchnext.WatchNextReader(appContext.contentResolver, {

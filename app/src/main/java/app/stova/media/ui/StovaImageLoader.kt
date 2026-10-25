@@ -10,10 +10,11 @@ import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import coil3.request.allowHardware
-class MediaAuthInterceptor(private val tokensByHost: () -> Map<String,Pair<ServerKind,String>>,private val identity: ClientIdentity): Interceptor {
+class MediaAuthInterceptor(private val tokensByHost: () -> Map<String,Pair<ServerKind,String>>,private val identity: () -> ClientIdentity): Interceptor {
+ constructor(tokensByHost: () -> Map<String,Pair<ServerKind,String>>, identity: ClientIdentity) : this(tokensByHost, { identity })
  override fun intercept(chain:Interceptor.Chain):Response {
   val request=chain.request();val builder=request.newBuilder().removeHeader("Authorization").removeHeader("X-Emby-Authorization")
-  tokensByHost()["${request.url.host}:${request.url.port}"]?.let { (kind,token) -> val (key,value)=authHeader(kind,identity,token);builder.header(key,value) }
+  tokensByHost()["${request.url.host}:${request.url.port}"]?.let { (kind,token) -> val (key,value)=authHeader(kind,identity(),token);builder.header(key,value) }
   return chain.proceed(builder.build())
  }
 }

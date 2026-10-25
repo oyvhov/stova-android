@@ -71,4 +71,19 @@ class JsonFileStoreTest {
         store(f).writeBlocking { it.copy(s = "kræsj") }
         assertEquals("kræsj", kotlinx.coroutines.runBlocking { store(f).current().s })
     }
+
+    // Lean core 7: update wrote, synced and moved the file over even when nothing had changed.
+    @Test fun anUnchangedUpdateLeavesTheFileUntouched() = runTest {
+        val f = tmp.root.resolve("s.json"); val s = store(f); s.update { it.copy(n = 1) }
+        // The store keeps its value in memory, so a word written from outside only survives if nothing is written back.
+        f.writeText("outside")
+        assertEquals(1, s.update { it }.n)
+        assertEquals("outside", f.readText())
+    }
+
+    @Test fun anUnchangedStartWriteCreatesNoFile() {
+        val f = tmp.root.resolve("s.json")
+        assertEquals(Sample(), store(f).writeBlocking { it })
+        org.junit.Assert.assertFalse(f.exists())
+    }
 }

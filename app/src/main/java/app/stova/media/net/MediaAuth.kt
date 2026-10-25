@@ -9,9 +9,10 @@ import kotlinx.coroutines.withTimeout
 
 data class AuthResult(val token: String, val userId: String, val userName: String)
 data class QuickConnectCode(val code: String, val secret: String)
-class MediaAuth(private val http: OkHttpClient, private val identity: ClientIdentity) {
+class MediaAuth(private val http: OkHttpClient, private val identity: suspend () -> ClientIdentity) {
+ constructor(http: OkHttpClient, identity: ClientIdentity) : this(http, { identity })
  private suspend fun request(server: ServerInfo,path: String,body: JsonObject?=null): String {
-  val header=authHeader(server.kind,identity,null)
+  val header=authHeader(server.kind,identity(),null)
   val r=Request.Builder().url("${server.baseUrl}/$path").header(header.first,header.second)
   if(body!=null) r.post(body.toString().toRequestBody("application/json".toMediaType()))
   return http.fetch(r.build())
