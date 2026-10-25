@@ -2,6 +2,9 @@ package app.stova.ha.ui
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
 import app.stova.core.storage.StovaJson
@@ -15,12 +18,26 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk=[30],qualifiers=TV_QUALIFIERS)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class SmartHomeScreenTest {
     @get:Rule val compose=createComposeRule()
     private val adult=Profile("a","A",AvatarColor.LIME)
+    private fun assertStatusCentered(fontScale: Float) {
+        compose.setContent { StovaTheme {
+            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
+                SmartHomeContent(adult, emptyList(), emptyMap(), HaStatus.CONNECTED)
+            }
+        } }
+        val heading = compose.onNodeWithText("Smarthus").fetchSemanticsNode().boundsInRoot
+        val status = compose.onNodeWithText("Tilkopla").fetchSemanticsNode().boundsInRoot
+        assertEquals("Status must share the heading's vertical centre", heading.center.y, status.center.y, 1f)
+    }
+    @Test fun statusIsCenteredWithHeading() = assertStatusCentered(1f)
+    @Test fun statusIsCenteredWithHeadingAtDoubleFont() = assertStatusCentered(2f)
     @Test fun emptyStateOffersAddForAdult() {
         var adding=false
         compose.setContent { StovaTheme { SmartHomeContent(adult,emptyList(),emptyMap(),HaStatus.CONNECTED,onAdd={adding=true}) } }

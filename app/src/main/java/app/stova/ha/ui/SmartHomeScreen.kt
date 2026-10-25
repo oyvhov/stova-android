@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -61,7 +62,7 @@ import kotlinx.coroutines.launch
     val visible by remember {derivedStateOf {grid.layoutInfo.visibleItemsInfo.map {it.key}.toSet()}}
     BackHandler(enabled=editing) {editing=false;menuId=null}
     Column(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        Row(horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+        Row(horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
             Text(stringResource(R.string.nav_smart_home),style=MaterialTheme.typography.headlineMedium)
             HaStatusLabel(status)
         }

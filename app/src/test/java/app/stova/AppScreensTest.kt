@@ -12,6 +12,8 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasText
 import app.stova.home.*
 import app.stova.ha.HaEntity
+import app.stova.ha.HaStatus
+import app.stova.ha.ui.SmartHomeContent
 import app.stova.ha.cards.CardConfig
 import app.stova.ha.cards.CardType
 import app.stova.ha.ui.ChipContent
@@ -236,6 +238,25 @@ class AppScreensTest {
         assertTrue("Top bar contrast over bright art: $contrast (expected >= 6)", contrast >= 6.0)
         // The additional scrim ends at 30%; the right-side sky below it stays bright.
         assertTrue("Bright fixture must actually be loaded", ColorUtils.calculateLuminance(bitmap.getPixel(1900, 380)) > 0.6)
+    }
+
+    @Test fun smartHomeHeadingAndStatus() {
+        val weather = HaEntity("weather.demo", "sunny", buildJsonObject {
+            put("friendly_name", "Vêret ute"); put("temperature", 4); put("temperature_unit", "°C")
+        }, 0, 0)
+        val price = HaEntity("sensor.demo_price", "135", buildJsonObject {
+            put("friendly_name", "Straumpris"); put("unit_of_measurement", "øre")
+        }, 0, 0)
+        val light = HaEntity("light.demo", "off", buildJsonObject { put("friendly_name", "Stovelys") }, 0, 0)
+        val entities = listOf(weather, price, light).associateBy { it.id }
+        val cards = listOf(CardConfig("w", CardType.WEATHER, weather.id),
+            CardConfig("p", CardType.SENSOR, price.id), CardConfig("l", CardType.LIGHT, light.id))
+        rule.runOnUiThread { rule.activity.setContent { StovaTheme {
+            SmartHomeContent(Profile("demo", "Demo", AvatarColor.LIME), cards, entities, HaStatus.CONNECTED)
+        } } }
+        rule.onNodeWithText("Smarthus").assertIsDisplayed()
+        rule.onNodeWithText("Tilkopla").assertIsDisplayed()
+        rule.saveScreen("14-smarthome-heading-aligned")
     }
 
     @Test fun mediaHeroAtDoubleFontSize() {

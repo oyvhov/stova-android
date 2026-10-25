@@ -1,3 +1,10 @@
+# Cache og finpuss
+2026-10-25: Alle fire bestilte punkt er fullførte med raud/grøn TDD i `polish` på `polish-cache`; ingen påbyrja steg står att.
+HA-cache: `a6856d9` (berre aktivt kortutval og nødvendige attributt/tidsstempel, aldri token, maks éi skriving per 5 s, tomme ferske svar ryddar cachen). Førehandslasting: `cd53232` (3 første titlar per rad, unike URL-ar, maks 12, Coil 1920 × 1080).
+Toppscrim: `1928c0c` (flat Ink-gradient øvst i 30 %). Smarthus-status er sentrert i denne committen, verifisert ved skriftstorleik 1 og 2.
+Sluttkontroll: `testDebugUnitTest lintDebug assembleDebug '-Pstova.screens=true'` → 264/264 bestått, 0 hoppa over, DesignRulesTest 3/3; lint 0 feil (20 åtvaringar, 1 hint), debug-APK OK. Separat `testDebugUnitTest --tests app.stova.AppScreensTest '-Pstova.screens=true'` → 12/12. Alle Gradle-kall via `pwsh -NoProfile -File scripts/gradle.ps1`.
+Nye skjermbilete: `docs/images/cache-home-bright-backdrop.png` og `docs/images/cache-smarthome-aligned.png`, begge 1920 × 1080 og visuelt kontrollerte; kjelder i `app/build/screens/13-home-bright-backdrop.png` og `14-smarthome-heading-aligned.png`. Ekte HA/Shield er ikkje prøvd; ingen spørsmål og ingen push.
+
 # Status
 2026-10-25: Alle 17 utsette Plan 1-småfunn er behandla i `C:/Launcher/.worktrees/minors`, greina `review-minors`.
 15 funn er retta med raud/grøn TDD og éin commit per funn; 2 er hoppa over med grunn under «Småfunn».
