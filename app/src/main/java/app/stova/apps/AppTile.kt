@@ -28,10 +28,15 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import app.stova.core.theme.LocalAppearance
+import app.stova.profiles.AppStyle
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.StovaShapes
 import app.stova.core.ui.focusOutline
@@ -49,46 +54,43 @@ fun AppTile(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val prefs = LocalAppearance.current
     val source = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(StovaShapes.Medium)
-    val banner by produceState<ImageBitmap?>(null, app.key, app.lastUpdateTime) { value = art.banner(app) }
-    Box(
-        modifier
-            .size(StovaLayout.WideWidth, StovaLayout.WideHeight)
-            .focusOutline(source, shape)
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .onKeyEvent { event ->
-                if (event.type == KeyEventType.KeyUp && event.key == Key.Menu) { onLongClick(); true } else false
+    val shape = MaterialTheme.shapes.medium
+    val iconStyle = prefs.appStyle == AppStyle.ICON
+    val wide = prefs.cardSize.width.dp
+    val height = wide * 9 / 16
+    val width = if (iconStyle) height else wide
+    val banner by produceState<ImageBitmap?>(null, app.key, app.lastUpdateTime, iconStyle) {
+        value = if (iconStyle) art.icon(app) else art.banner(app)
+    }
+    Column(modifier.width(width).semantics { contentDescription = app.label }
+        .onKeyEvent { event ->
+            if (event.type == KeyEventType.KeyUp && event.key == Key.Menu) { onLongClick(); true } else false
+        }.combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick, onClick = onClick)) {
+        Box(Modifier.size(width, height).focusOutline(source, shape, zoom = true).clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
+            val image = banner
+            if (image != null) {
+                Image(image, contentDescription = null, contentScale = if (iconStyle) ContentScale.Fit else ContentScale.Crop,
+                    modifier = if (iconStyle) Modifier.size(height * 0.65f) else Modifier.fillMaxSize())
+            } else {
+                IconAndName(app, art, iconStyle)
             }
-            .combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        val image = banner
-        if (image != null) {
-            Image(image, contentDescription = app.label, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-        } else {
-            IconAndName(app, art)
         }
+        if (prefs.showTitles) Text(app.label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
 @Composable
-private fun IconAndName(app: InstalledApp, art: AppArtCache) {
+private fun IconAndName(app: InstalledApp, art: AppArtCache, iconStyle: Boolean) {
     val icon by produceState<ImageBitmap?>(null, app.key, app.lastUpdateTime) { value = art.icon(app) }
-    Column(
-        Modifier.padding(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)) {
         icon?.let { Image(it, contentDescription = null, modifier = Modifier.size(56.dp)) }
-        Text(
-            app.label,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-        )
+        if (icon == null || !iconStyle) Text(app.label, style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface, maxLines = 1,
+            overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
     }
 }

@@ -1,0 +1,110 @@
+package app.stova.home
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.unit.dp
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.stova.TV_QUALIFIERS
+import app.stova.apps.*
+import app.stova.core.theme.*
+import app.stova.media.*
+import app.stova.media.model.*
+import app.stova.media.ui.MediaCard
+import app.stova.profiles.*
+import org.junit.Assert.*
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+
+@RunWith(AndroidJUnit4::class)
+@Config(sdk = [30], qualifiers = TV_QUALIFIERS)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class AppearanceRenderingTest {
+    @get:Rule val compose = createComposeRule()
+    private val account = MediaAccount("a", "p", ServerKind.JELLYFIN, "s", "Demo", "https://demo.invalid", "u", "U")
+    private val film = MediaItem("f", "a", ItemType.MOVIE, "Fjordlys", overview = "Ei ferd langs kysten.",
+        genres = listOf("Drama"), art = ItemArt(wide = "missing", poster = "missing"))
+
+    @Test fun cardSizesTitlesAndMissingArt() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        compose.setContent { StovaTheme(appearance = prefs) { Row {
+            MediaCard(film, false, {}, {}, {}, Modifier.testTag("wide"))
+            MediaCard(film.copy(id = "p", title = "Plakat"), true, {}, {}, {}, Modifier.testTag("poster"))
+        } } }
+        compose.onNodeWithTag("wide").assertWidthIsEqualTo(248.dp)
+        compose.onNodeWithText("Fjordlys").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Fjordlys").assertExists()
+        compose.runOnIdle { prefs = prefs.copy(cardSize = CardSize.LARGE, showTitles = true) }
+        compose.onNodeWithTag("wide").assertWidthIsEqualTo(296.dp)
+        compose.onNodeWithTag("poster").assertWidthIsEqualTo((132f * 296 / 248).dp)
+        compose.onNodeWithText("Fjordlys").assertExists()
+        compose.runOnIdle { prefs = prefs.copy(cardSize = CardSize.SMALL, showTitles = false) }
+        compose.onNodeWithTag("wide").assertWidthIsEqualTo(200.dp)
+    }
+
+    @Test fun appStyleUsesSquareIconsAndProportionalSizes() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        compose.setContent { StovaTheme(appearance = prefs) {
+            AppTile(InstalledApp("missing/.Main", "missing", ".Main", "App", true), AppArtCache(LocalContext.current), {}, {}, Modifier.testTag("app"))
+        } }
+        compose.onNodeWithTag("app").assertWidthIsEqualTo(248.dp).assertHeightIsEqualTo(139.5.dp)
+        compose.onNodeWithText("App").assertIsDisplayed() // no artwork: title in placeholder
+        compose.runOnIdle { prefs = prefs.copy(cardSize = CardSize.SMALL, appStyle = AppStyle.ICON) }
+        compose.onNodeWithTag("app").assertWidthIsEqualTo(112.5.dp).assertHeightIsEqualTo(112.5.dp)
+    }
+
+    @Test fun heroChoicesControlOverviewAndGenres() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        compose.setContent { StovaTheme(appearance = prefs) { HeroPanel(SpotlightEntry(film, account, false)) } }
+        compose.onNodeWithText("Film · Drama").assertIsDisplayed()
+        compose.onNodeWithText(film.overview!!).assertDoesNotExist()
+        compose.runOnIdle { prefs = prefs.copy(showOverview = true, showGenres = false) }
+        compose.onNodeWithText(film.overview!!).assertIsDisplayed()
+        compose.onNodeWithText("Film · Drama").assertDoesNotExist()
+    }
+
+    @Test fun homeUsesMovieStyleHeroSizeAndRowSpacing() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        val row = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, listOf(film), false)
+        compose.setContent { StovaTheme(appearance = prefs, reduceMotion = true) {
+            val ctx = LocalContext.current
+            HomeContent(listOf(row), null, row.key, AppArtCache(ctx), PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {}, spotlight = SpotlightEntry(film, account, false))
+        } }
+        compose.onNodeWithContentDescription("Fjordlys").assertWidthIsEqualTo(132.dp)
+        val before = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot().top
+        compose.runOnIdle { prefs = prefs.copy(movieStyle = MovieStyle.WIDE, heroSize = HeroSize.LARGE, rowSpacing = RowSpacing.AIRY) }
+        compose.onNodeWithContentDescription("Fjordlys").assertWidthIsEqualTo(248.dp)
+        val after = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot().top
+        assertTrue(after > before)
+        compose.runOnIdle { prefs = prefs.copy(rowSpacing = RowSpacing.TIGHT) }
+        assertTrue(compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot().top < after)
+    }
+
+    @Test fun accentAndCornersReachTheTheme() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        var primary = Color.Unspecified
+        var round = false
+        compose.setContent { StovaTheme(appearance = prefs) {
+            primary = MaterialTheme.colorScheme.primary
+            round = MaterialTheme.shapes.medium.topStart.toPx(androidx.compose.ui.geometry.Size(100f,100f), androidx.compose.ui.platform.LocalDensity.current) > 0f
+        } }
+        Accent.entries.forEach { accent ->
+            compose.runOnIdle { prefs = prefs.copy(accent = accent) }
+            compose.waitForIdle()
+            assertEquals(accent.color, primary)
+        }
+        assertTrue(round)
+        compose.runOnIdle { prefs = prefs.copy(corners = Corners.SHARP) }
+        compose.waitForIdle()
+        assertFalse(round)
+    }
+}

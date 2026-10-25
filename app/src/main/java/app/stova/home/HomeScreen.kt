@@ -110,6 +110,7 @@ fun HomeContent(
     topBar: @Composable () -> Unit = {},
     spotlight: SpotlightEntry? = null,
 ) {
+    val appearance = app.stova.core.theme.LocalAppearance.current
     // The last focused title survives leaving Home for Spole or another launcher page.
     val restoreTarget = remember { focused }
     val restoreRow = rows?.firstOrNull { row ->
@@ -130,7 +131,7 @@ fun HomeContent(
     }) {
         topBar()
         BoxWithConstraints(Modifier.weight(1f)) {
-            val heroHeight = maxHeight * 0.45f
+            val heroHeight = maxHeight * appearance.heroSize.fraction
             Column {
                 // A fixed height: the rows never move when the spotlight turns to a longer title.
                 HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
@@ -200,7 +201,7 @@ private fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Focu
             horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap)) {
             itemsIndexed(row.items, key = { _, item -> item.id }) { i, item ->
                 val target = FocusedTarget.Media(item, row.account)
-                MediaCard(item, row.kind == MediaRowKind.LATEST_MOVIES,
+                MediaCard(item, row.kind == MediaRowKind.LATEST_MOVIES && app.stova.core.theme.LocalAppearance.current.movieStyle == app.stova.profiles.MovieStyle.POSTER,
                     { onClick(target) }, { onLongClick(target) }, { onFocus(target) },
                     if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
             }

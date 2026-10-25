@@ -8,9 +8,13 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.unit.dp
+import app.stova.profiles.AppearancePrefs
+import app.stova.profiles.Corners
 
 val LocalReduceMotion = staticCompositionLocalOf { false }
 val LocalStrongFocus = staticCompositionLocalOf { false }
+val LocalAppearance = staticCompositionLocalOf { AppearancePrefs() }
 
 /**
  * Every Material role is assigned, so no default purple leaks into a control. The values match
@@ -67,17 +71,22 @@ private val StovaTypography = stovaTypography()
 fun StovaTheme(
     reduceMotion: Boolean = false,
     strongFocus: Boolean = false,
+    appearance: AppearancePrefs = AppearancePrefs(),
     content: @Composable () -> Unit,
 ) {
     MaterialTheme(
-        colorScheme = StovaColorScheme,
-        shapes = StovaMaterialShapes,
+        colorScheme = StovaColorScheme.copy(primary = appearance.accent.color,
+            primaryContainer = appearance.accent.container, onPrimaryContainer = appearance.accent.color),
+        shapes = if (appearance.corners == Corners.SHARP) Shapes(
+            RoundedCornerShape(0.dp), RoundedCornerShape(0.dp), RoundedCornerShape(0.dp),
+            RoundedCornerShape(0.dp), RoundedCornerShape(0.dp)) else StovaMaterialShapes,
         typography = StovaTypography,
     ) {
         CompositionLocalProvider(
             LocalContentColor provides StovaColors.Text,
-            LocalReduceMotion provides reduceMotion,
-            LocalStrongFocus provides strongFocus,
+            LocalReduceMotion provides (reduceMotion || appearance.reduceMotion),
+            LocalStrongFocus provides (strongFocus || appearance.strongFocus),
+            LocalAppearance provides appearance,
             content = content,
         )
     }

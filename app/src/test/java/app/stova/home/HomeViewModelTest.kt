@@ -8,6 +8,7 @@ import app.stova.media.model.*
 import app.stova.profiles.ProfileRepository
 import app.stova.profiles.ProfileSession
 import app.stova.profiles.ProfilesFile
+import app.stova.profiles.SpotlightTime
 import app.stova.profiles.StartFocus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -97,6 +98,24 @@ class HomeViewModelTest {
         val vm = spotlightVm("a", "b")
         vm.setSpotlightRotation(false)
         advanceTimeBy(SPOTLIGHT_MILLIS * 5); assertEquals("a", vm.spotlight.value?.item?.id)
+    }
+
+    @Test fun spotlightTimingFollowsActiveProfileAndChangesWithoutReloadingPool() = runTest(UnconfinedTestDispatcher()) {
+        val repo = ProfileRepository(JsonFileStore(tmp.root.resolve("timing.json"), ProfilesFile.serializer(), ProfilesFile(), UnconfinedTestDispatcher(testScheduler)))
+        val id = repo.create("A", AvatarColor.LIME, false).id
+        val session = ProfileSession(repo, backgroundScope).also { it.enter(id) }
+        var loads = 0
+        val vm = HomeViewModel(session, emptyList()) { loads++; flowOf(listOf(entry("a"), entry("b"))) }
+        backgroundScope.launch { vm.spotlight.collect {} }
+        for (time in listOf(SpotlightTime.FAST, SpotlightTime.SLOW, SpotlightTime.NORMAL)) {
+            repo.update(id) { it.copy(appearance = it.appearance.copy(spotlightTime = time)) }
+            val before = vm.spotlight.value
+            advanceTimeBy(time.millis - 1)
+            assertEquals(before, vm.spotlight.value)
+            advanceTimeBy(2)
+            org.junit.Assert.assertNotEquals(before, vm.spotlight.value)
+        }
+        assertEquals(1, loads)
     }
 
     @Test fun focusingACardLeavesTheSpotlightAlone() = runTest(UnconfinedTestDispatcher()) {

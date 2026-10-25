@@ -53,14 +53,14 @@ class HomeViewModel(
      * The title the hero shows, stepping through the library pool. It only ticks while Home is on
      * screen, and picks up where it left off when Home comes back.
      */
-    val spotlight: StateFlow<SpotlightEntry?> = combine(spotlightPool, rotation) { pool, rotate -> pool to rotate }
-        .flatMapLatest { (pool, rotate) ->
+    val spotlight: StateFlow<SpotlightEntry?> = combine(spotlightPool, rotation, session.active.map { it?.appearance?.spotlightTime?.millis ?: SPOTLIGHT_MILLIS }.distinctUntilChanged()) { pool, rotate, millis -> Triple(pool, rotate, millis) }
+        .flatMapLatest { (pool, rotate, millis) ->
             flow {
                 if (pool.isEmpty()) { emit(null); return@flow }
                 while (true) {
                     emit(pool[spotlightIndex % pool.size])
                     if (!rotate || pool.size < 2) return@flow
-                    delay(SPOTLIGHT_MILLIS)
+                    delay(millis)
                     spotlightIndex = (spotlightIndex + 1) % pool.size
                 }
             }

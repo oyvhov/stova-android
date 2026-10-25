@@ -37,6 +37,7 @@ fun StovaApp(container: AppContainer) {
     StovaTheme(
         reduceMotion = active?.appearance?.reduceMotion ?: false,
         strongFocus = active?.appearance?.strongFocus ?: false,
+        appearance = active?.appearance ?: app.stova.profiles.AppearancePrefs(),
     ) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             if (active == null) {

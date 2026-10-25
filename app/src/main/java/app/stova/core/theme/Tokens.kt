@@ -66,3 +66,10 @@ enum class AvatarColor(val argb: Long) {
 }
 
 val AvatarColor.color: Color get() = Color(argb)
+
+/** Appearance accents share the same muted palette as profile avatars. */
+val app.stova.profiles.Accent.color: Color get() = AvatarColor.valueOf(name).color
+
+val app.stova.profiles.Accent.container: Color get() =
+    if (this == app.stova.profiles.Accent.LIME) StovaColors.PrimaryContainer
+    else androidx.compose.ui.graphics.lerp(StovaColors.Ink, color, 0.18f)
