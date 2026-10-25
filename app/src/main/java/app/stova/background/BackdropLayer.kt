@@ -25,6 +25,7 @@ import coil3.request.ImageRequest
   Canvas(Modifier.fillMaxSize()) {
    drawRect(Brush.horizontalGradient(listOf(ink,ink.copy(alpha=0f)),endX=size.width*0.6f))
    drawRect(Brush.verticalGradient(listOf(ink.copy(alpha=0f),ink),startY=size.height*0.45f,endY=size.height),topLeft=Offset(0f,size.height*0.45f),size=Size(size.width,size.height*0.55f))
+   drawRect(Brush.verticalGradient(listOf(ink,ink.copy(alpha=0f)),endY=size.height*0.3f),size=Size(size.width,size.height*0.3f))
   }
  }
 }

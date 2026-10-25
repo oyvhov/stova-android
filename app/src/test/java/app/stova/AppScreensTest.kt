@@ -26,6 +26,9 @@ import app.stova.profiles.Profile
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.BitmapFactory
+import androidx.core.graphics.ColorUtils
+import org.junit.Assert.assertTrue
 import java.io.File
 import java.util.Locale
 import kotlinx.serialization.json.buildJsonObject
@@ -130,13 +133,14 @@ class AppScreensTest {
     }
 
     /** Local geometric art, painted deterministically; these screens never contact a server. */
-    private fun demoArt(name: String, tint: Int): String {
+    private fun demoArt(name: String, tint: Int, brightTop: Boolean = false): String {
         val bitmap = Bitmap.createBitmap(1280, 720, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        canvas.drawColor(tint)
+        canvas.drawColor(if (brightTop) android.graphics.Color.rgb(235, 229, 211) else tint)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint.color = android.graphics.Color.rgb(175, 180, 155)
-        canvas.drawCircle(900f, 150f, 85f, paint)
+        paint.color = if (brightTop) android.graphics.Color.rgb(255, 252, 236) else android.graphics.Color.rgb(175, 180, 155)
+        if (brightTop) canvas.drawCircle(1000f, 55f, 230f, paint)
+        else canvas.drawCircle(900f, 150f, 85f, paint)
         paint.color = android.graphics.Color.rgb(46, 67, 62)
         canvas.drawPath(android.graphics.Path().apply {
             moveTo(0f, 500f); lineTo(350f, 160f); lineTo(700f, 510f)
@@ -149,8 +153,8 @@ class AppScreensTest {
         return file.absolutePath
     }
 
-    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList()) {
-        val backdrop = demoArt("demo-landscape", android.graphics.Color.rgb(79, 95, 88))
+    private fun renderMediaHome(poster: Boolean = false, fontScale: Float = 1f, chips: List<ChipContent> = emptyList(), brightTop: Boolean = false) {
+        val backdrop = demoArt("demo-landscape", android.graphics.Color.rgb(79, 95, 88), brightTop)
         val second = demoArt("demo-evening", android.graphics.Color.rgb(68, 77, 95))
         val account = MediaAccount("demo-account", "demo-profile", ServerKind.JELLYFIN, "demo-server", "Demoarkiv", "https://demo.invalid", "demo-user", "Demo")
         val item = MediaItem("demo-film", account.id, ItemType.MOVIE, "Fjordlys", year = 2024, runtimeMinutes = 112,
@@ -219,6 +223,19 @@ class AppScreensTest {
     @Test fun homeWithMoviePosters() {
         renderMediaHome(poster = true)
         rule.saveScreen("10-home-media-posters")
+    }
+
+    @Test fun topBarIsReadableOverBrightSun() {
+        renderMediaHome(brightTop = true)
+        val file = rule.saveScreen("13-home-bright-backdrop")
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+        // At clock/icon height, beyond the safe edge so no glyph contaminates the sample.
+        val skyBehindTopBar = bitmap.getPixel(1900, 96)
+        val foreground = android.graphics.Color.rgb(233, 233, 226)
+        val contrast = ColorUtils.calculateContrast(foreground, skyBehindTopBar)
+        assertTrue("Top bar contrast over bright art: $contrast (expected >= 6)", contrast >= 6.0)
+        // The additional scrim ends at 30%; the right-side sky below it stays bright.
+        assertTrue("Bright fixture must actually be loaded", ColorUtils.calculateLuminance(bitmap.getPixel(1900, 380)) > 0.6)
     }
 
     @Test fun mediaHeroAtDoubleFontSize() {

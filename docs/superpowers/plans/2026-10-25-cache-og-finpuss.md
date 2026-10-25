@@ -12,8 +12,11 @@ Kvart punkt: raud test → implementasjon → grøn test → éin commit med pla
 - [x] 2. Rein URL-veljar: dei tre første titlane per medierad, unike URL-ar, maks tolv totalt.
   Coil-førehandslasting i 1920 × 1080 når radene er klare. Test grenser og duplikat.
   Raud: URL-veljaren mangla. Grøn: BackdropPreloadTest 4/4, BackdropControllerTest og DesignRulesTest.
-- [ ] 3. Flat Ink → gjennomsiktig-gradient øvst i 30 % av BackdropLayer, bevar eksisterande
+- [x] 3. Flat Ink → gjennomsiktig-gradient øvst i 30 % av BackdropLayer, bevar eksisterande
   scrim. Raud/grøn pikseltest og visuelt kontrollert skjermbilete med lys sol bak klokka.
+  Raud: kontrast 1,03:1. Grøn: krav minst 6:1 ved topplinja; lys testkunst stadfesta under
+  gradienten. AppScreensTest.topBarIsReadableOverBrightSun + DesignRulesTest 4/4.
+  Visuelt kontrollert: `docs/images/cache-home-bright-backdrop.png` (1920 × 1080).
 - [ ] 4. Sentrer HA-status vertikalt mot Smarthus-overskrifta. Raud/grøn geometrisk UI-test
   og skjermbilete. Sluttkontroll: testDebugUnitTest lintDebug assembleDebug og separat
   AppScreensTest med '-Pstova.screens=true'. Oppdater HANDOFF; ingen push.
