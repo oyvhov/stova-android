@@ -76,8 +76,29 @@ class MediaRepositoryTest {
   val a=accounts();add(a,ServerKind.JELLYFIN);val calls=mutableListOf<Endpoint>();var now=1_000L;var fail=false
   val r=MediaRepository(a,{ spotClient(it,calls,fail) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ now })
   r.refresh("p");fail=true;now+=3*60*60*1000L;r.refresh("p")
-  assertEquals(listOf(item(a.forProfile("p").first().single())),r.rows("p").first().single().items)
+  val row=r.rows("p").first().single()
+  assertEquals(listOf(item(a.forProfile("p").first().single())),row.items)
+  // Review finding 2: a failing async spotlight child cancelled the whole account and the rows went Offline.
+  assertFalse(row.offline)
   assertEquals(listOf("f1"),r.spotlight("p").first().map { it.item.id })
+ }
+ // Review finding 10: two whole-library Halloween queries ran on every 5-minute refresh.
+ @Test fun seasonRowsAreFetchedAtMostHourly()=runTest {
+  val a=accounts();add(a,ServerKind.JELLYFIN);var seasonalCalls=0;var now=1_000L
+  val client=object:MediaServerClient {
+   override suspend fun resume()=listOf(item(a.forProfile("p").first().single()))
+   override suspend fun nextUp()=emptyList<MediaItem>()
+   override suspend fun latest(endpoint:Endpoint)=emptyList<MediaItem>()
+   override suspend fun seasonal(season:app.stova.profiles.Season):List<MediaItem> { seasonalCalls++;return listOf(MediaItem("h",a.forProfile("p").first().single().id,ItemType.MOVIE,"Hocus")) }
+  }
+  val r=MediaRepository(a,{ client },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ now })
+  r.rows("p",app.stova.profiles.Season.HALLOWEEN).first()
+  r.refresh("p");r.refresh("p")
+  assertEquals(1,seasonalCalls)
+  val halloween=r.rows("p",app.stova.profiles.Season.HALLOWEEN).first().single { it.kind==MediaRowKind.HALLOWEEN }
+  assertFalse(halloween.offline)
+  now+=61*60*1000L;r.refresh("p")
+  assertEquals(2,seasonalCalls)
  }
  @Test fun newSeasonsCarryTheirSeriesStory()=runTest {
   val a=accounts();add(a,ServerKind.JELLYFIN)

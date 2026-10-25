@@ -17,14 +17,16 @@ import kotlinx.coroutines.sync.withLock
 const val SPOTLIGHT_REFRESH_MILLIS = 2 * 60 * 60 * 1000L
 /** Spotlight and season rows query the whole library; they get longer than the rows, and their own clock. */
 const val EXTRA_TIMEOUT_MILLIS = 20_000L
+const val SEASONAL_REFRESH_MILLIS = 60 * 60 * 1000L
 
 class MediaRepository(private val accounts: MediaAccountRepository,private val clientFor: suspend (MediaAccount) -> MediaServerClient?,private val snapshotDir: File,private val scope: CoroutineScope,private val io: CoroutineDispatcher=Dispatchers.IO,private val clock: () -> Long=System::currentTimeMillis) {
  private class Slot(val store: JsonFileStore<MediaSnapshot>) {
   var season: Season = Season.NONE
   val mutex=Mutex();val rows=MutableStateFlow<List<HomeRowUi.Media>?>(null)
   val spotlight=MutableStateFlow<List<SpotlightEntry>>(emptyList());var spotlightAt=0L
+  var seasonalAt=0L;var seasonalFor: Season = Season.NONE
  }
- private class Fetched(val rows: List<HomeRowUi.Media>,val spotlight: List<SpotlightEntry>,val spotlightOk: Boolean)
+ private class Fetched(val rows: List<HomeRowUi.Media>,val spotlight: List<SpotlightEntry>,val spotlightOk: Boolean,val seasonalOk: Boolean=true)
  private val slots=ConcurrentHashMap<String,Slot>()
  private fun slot(id: String): Slot { require(id.matches(Regex("[A-Za-z0-9_-]{1,128}"))); return slots.getOrPut(id) { Slot(JsonFileStore(File(snapshotDir,"$id.json"),MediaSnapshot.serializer(),MediaSnapshot(),io)) } }
  private suspend fun loaded(id:String): Slot {
@@ -67,6 +69,8 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    val list=accounts.forProfile(profileId).first().filterNot { it.needsSignIn }.sortedWith(compareBy({it.kind},{it.serverName}))
    // Never fetched, stale, or a clock that went backwards: fetch the spotlight again.
    val now=clock();val spotlightDue=slot.spotlightAt==0L || now-slot.spotlightAt !in 0 until SPOTLIGHT_REFRESH_MILLIS
+   // Season rows query the whole library too: once an hour, and again when the season changes.
+   val seasonalDue=season!=Season.NONE && (slot.seasonalFor!=season || slot.seasonalAt==0L || now-slot.seasonalAt !in 0 until SEASONAL_REFRESH_MILLIS)
    val today=Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate()
    val fetched=supervisorScope { list.map { account -> async {
     val cached=slot.rows.value.orEmpty().filter { it.account.id==account.id }.map { it.copy(offline=true) }
@@ -77,18 +81,23 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
       // Extras run beside the rows under their own limits: a slow whole-library query must never
       // turn the account's rows "Offline".
       val seasonalRows=async {
-       if(season==Season.NONE) emptyList() else withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(null) {
-        listOf(HomeRowUi.Media(HomeRowKey.seasonal(account.id,season),account,if(season==Season.HALLOWEEN) MediaRowKind.HALLOWEEN else MediaRowKind.CHRISTMAS,client.seasonal(season),false))
-       } } ?: cached.filter { it.kind.season==season }
+       when {
+        season==Season.NONE -> emptyList<HomeRowUi.Media>() to true
+        !seasonalDue -> slot.rows.value.orEmpty().filter { it.account.id==account.id && it.kind.season==season } to true
+        else -> withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(null) {
+         listOf(HomeRowUi.Media(HomeRowKey.seasonal(account.id,season),account,if(season==Season.HALLOWEEN) MediaRowKind.HALLOWEEN else MediaRowKind.CHRISTMAS,client.seasonal(season),false))
+        } }?.let { it to true } ?: (cached.filter { it.kind.season==season } to false)
+       }
       }
       // A spotlight failure never costs the rows; the cached titles stay until the next try.
       val spotlightJob=async {
-       if(!spotlightDue) null else withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(null) {
+       // supervisorScope: a failing spotlight query is "no spotlight this time", never a cancelled account.
+       if(!spotlightDue) null else withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(null) { supervisorScope {
         val seasons=async { orElse(emptyList()) { client.latest(Endpoint.NEW_SEASONS) } }
         val pool=async { client.latest(Endpoint.SPOTLIGHT) }
         val series=orElse(emptyList()) { client.items(newSeasonSeriesIds(seasons.await(),today)) }
         spotlightEntries(account,pool.await(),seasons.await(),today,series)
-       } }
+       } } }
       }
       val core=withTimeoutOrNull(10_000) {
        val resume=async { client.resume() };val next=async { client.nextUp() }
@@ -98,9 +107,9 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
         HomeRowUi.Media(HomeRowKey.latestMovies(account.id),account,MediaRowKind.LATEST_MOVIES,movies.await(),false),
         HomeRowUi.Media(HomeRowKey.latestSeries(account.id),account,MediaRowKind.LATEST_SERIES,series.await(),false))
       }
-      val spotlight=spotlightJob.await()
-      Fetched(((core ?: cached.filter { it.kind.season==Season.NONE })+seasonalRows.await()).filter { it.items.isNotEmpty() },
-       spotlight ?: cachedSpotlight,spotlight!=null)
+      val spotlight=spotlightJob.await();val (seasonal,seasonalOk)=seasonalRows.await()
+      Fetched(((core ?: cached.filter { it.kind.season==Season.NONE })+seasonal).filter { it.items.isNotEmpty() },
+       spotlight ?: cachedSpotlight,spotlight!=null,seasonalOk)
      }
     } catch(_: MediaError.Unauthorized) { accounts.markNeedsSignIn(account.id);Fetched(emptyList(),emptyList(),true) }
       catch(e: CancellationException) { throw e }
@@ -111,6 +120,7 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    val valid=active.filterNot { it.needsSignIn }.mapTo(mutableSetOf()) { it.id }
    val spotlight=fetched.flatMap { it.spotlight }.filter { it.account.id in valid }.sortedByDescending { it.newSeason }
    if(spotlightDue && fetched.all { it.spotlightOk }) slot.spotlightAt=now
+   if(seasonalDue && fetched.all { it.seasonalOk }) { slot.seasonalAt=now;slot.seasonalFor=season }
    slot.rows.value=current;slot.spotlight.value=spotlight
    slot.store.update { MediaSnapshot(current.map { SnapshotRow(it.key,it.account.id,it.kind,it.items) },now,
     spotlight.map { SnapshotSpotlight(it.account.id,it.item,it.newSeason) },slot.spotlightAt) }
