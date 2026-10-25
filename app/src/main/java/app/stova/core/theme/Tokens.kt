@@ -61,6 +61,7 @@ object StovaLayout {
     val SettingsControlMinHeight = 48.dp
     val PageIconSize = 40.dp
     val CategoryIconSize = 34.dp
+    val RowSourceMaxWidth = 200.dp
     val RailCollapsed = 80.dp
     val RailExpanded = 200.dp
     val PosterWidth = 132.dp

@@ -61,6 +61,7 @@ fun HomeContent(
     canEditRows: Boolean = false,
     onMediaPlay: (FocusedTarget.Media) -> Unit = onMediaClick,
     appActions: (@Composable (InstalledApp, @Composable () -> Unit, () -> Unit) -> Unit)? = null,
+    onRowFocus: (HomeRowKey) -> Unit = {},
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
     val deck = appearance.homeRows != HomeRows.SCROLLING
@@ -89,15 +90,15 @@ fun HomeContent(
     }
     // The last focused title survives leaving Home for Spole or another launcher page.
     val restoreTarget = remember { focused }
-    val requestedRow = availableRows?.firstOrNull { row ->
-        when (row) {
+    fun matchesRestore(row: HomeRowUi): Boolean = when (row) {
             is HomeRowUi.Media -> (restoreTarget as? FocusedTarget.Media)?.let { target ->
                 row.account.id == target.account.id && row.items.any { it.id == target.item.id }
             } == true
             is HomeRowUi.Apps -> restoreTarget is FocusedTarget.App && row.apps.any { it.label == restoreTarget.label }
             is HomeRowUi.WatchNext -> restoreTarget is FocusedTarget.App && row.entries.any { it.title == restoreTarget.label }
-        }
-    }?.key ?: initial
+    }
+    val requestedRow = availableRows?.firstOrNull { it.key == initial && matchesRestore(it) }?.key
+        ?: availableRows?.firstOrNull(::matchesRestore)?.key ?: initial
     val restoreRow = if (deck) requestedRow?.takeIf { key -> availableRows.orEmpty().any { it.key == key } }
         ?: availableRows?.firstOrNull()?.key else requestedRow
     val firstItem = remember { FocusRequester() }
@@ -111,7 +112,7 @@ fun HomeContent(
     var navigationVersion by remember { mutableIntStateOf(0) }
     val motion = stovaMotion
     fun scrollIndex(index: Int) = if (deck || index == 0 || appearance.heroSize == HeroSize.OFF) index else index + 1
-    val initialRow = availableRows.orEmpty().indexOfFirst { it.key == restoreRow }.coerceAtLeast(0)
+    val initialRow = availableRows.orEmpty().indexOfFirst { it.key == (activeRow ?: restoreRow) }.coerceAtLeast(0)
     val listState = key(appearance.homeRows) { rememberLazyListState(initialFirstVisibleItemIndex = scrollIndex(initialRow)) }
     LaunchedEffect(focusReturn) {
         if (focusReturn == 0) return@LaunchedEffect
@@ -123,7 +124,14 @@ fun HomeContent(
             if (runCatching { requesters[returnRow]?.requestFocus() == true }.getOrDefault(false)) return@LaunchedEffect
         }
     }
-    LaunchedEffect(appearance.homeRows) { rowNavigation?.cancel(); pendingRow = null }
+    LaunchedEffect(appearance.homeRows) {
+        rowNavigation?.cancel(); pendingRow = null
+        // Switching presentation replaces the lazy list, but keeps the viewer's row and card.
+        if (placedRow != null && !topBarFocused) repeat(12) {
+            withFrameNanos { }
+            if (runCatching { requesters[activeRow]?.requestFocus(FocusDirection.Enter) == true }.getOrDefault(false)) return@LaunchedEffect
+        }
+    }
     fun focusRow(index: Int) {
         rowNavigation?.cancel()
         navigationVersion++
@@ -176,7 +184,7 @@ fun HomeContent(
             else -> true
         }
     }.semantics {
-        // Automation marker, not user-facing copy. Null availableRows mean sources are still loading.
+        // Automation marker, not user-facing copy. Null rows mean sources are still loading.
         if (availableRows != null) contentDescription = "home-ready"
     }) {
         Box(Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
@@ -224,11 +232,11 @@ fun HomeContent(
                             Spacer(Modifier.weight(1f))
                         }
                         LaunchedEffect(restoreRow, availableRows) {
-                            // Media availableRows can arrive after the apps row; start focus follows them until the viewer has moved.
+                            // Media rows can arrive after apps; start focus follows them until the viewer has moved.
                             if (restoreRow == null || restoreRow == placedRow || (placedRow != null && viewerMoved)) return@LaunchedEffect
                             // A row inserted above the visible ones is not composed yet: bring it in first.
                             availableRows.indexOfFirst { it.key == restoreRow }.takeIf { it >= 0 }?.let { listState.scrollToItem(scrollIndex(it)) }
-                            // Lazy availableRows compose during layout, after this effect starts; give the requester a few frames to attach.
+                            // Lazy rows compose during layout, after this effect starts; allow the requester to attach.
                             repeat(10) {
                                 if (runCatching { firstItem.requestFocus(FocusDirection.Enter) }.getOrDefault(false)) { placedRow = restoreRow; return@LaunchedEffect }
                                 withFrameNanos { }
@@ -280,7 +288,7 @@ fun HomeContent(
                                         }.focusRestorer().onFocusChanged { state ->
                                             val gainedFocus = state.hasFocus && !hasFocus
                                             hasFocus = state.hasFocus
-                                            if (gainedFocus) activeRow = row.key
+                                            if (gainedFocus) { activeRow = row.key; onRowFocus(row.key) }
                                             if (gainedFocus && pendingRow == null) scope.launch {
                                                 listState.smoothScrollToItem(scrollIndex(index), motion)
                                             }

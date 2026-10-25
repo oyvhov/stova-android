@@ -10,6 +10,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import app.stova.profiles.*
@@ -26,8 +27,8 @@ internal fun SettingsOptionPreview(value: Any?) {
     val card = lerp(colors.surface, ink, 0.32f)
     Canvas(Modifier.size(64.dp, 34.dp).clearAndSetSemantics {}) {
         val unit = size.width / 64f
-        fun tile(x: Float, y: Float, w: Float, h: Float, radius: Float = 2f, active: Boolean = false) {
-            drawRoundRect(if (active) colors.primary else card, Offset(x * unit, y * unit), Size(w * unit, h * unit),
+        fun tile(x: Float, y: Float, w: Float, h: Float, radius: Float = 2f, active: Boolean = false, tone: Color = card) {
+            drawRoundRect(if (active) colors.primary else tone, Offset(x * unit, y * unit), Size(w * unit, h * unit),
                 CanvasRadius(radius * unit))
         }
         fun screen() {
@@ -80,12 +81,14 @@ internal fun SettingsOptionPreview(value: Any?) {
                 if (value != ProgressStyle.HIDDEN) tile(5f, 30f - value.dp, 34f, value.dp.toFloat(), 0f, true)
             }
             is FocusEffect -> {
-                tile(5f, 12f, 13f, 14f)
-                tile(46f, 12f, 13f, 14f)
                 val focused = value.resolved()
+                val sides = if (focused == FocusEffect.LIGHT_UP) lerp(card, colors.surface, .28f) else card
+                tile(5f, 12f, 13f, 14f, tone = sides)
+                tile(46f, 12f, 13f, 14f, tone = sides)
                 val zoom = focused == FocusEffect.ZOOM || focused == FocusEffect.RING_ZOOM
                 val y = if (focused == FocusEffect.LIFT || zoom) 6f else 12f
-                tile(24f, y, 16f, if (zoom) 22f else 14f, active = focused == FocusEffect.LIGHT_UP)
+                tile(24f, y, 16f, if (zoom) 22f else 14f,
+                    tone = if (focused == FocusEffect.LIGHT_UP) lerp(card, ink, .2f) else card)
                 if (focused == FocusEffect.OUTLINE || focused == FocusEffect.RING_ZOOM)
                     drawRoundRect(colors.primary, Offset(22 * unit, (y - 2) * unit), Size(20 * unit, (if (zoom) 26 else 18) * unit),
                         CanvasRadius(3 * unit), style = Stroke(1.5f * unit))

@@ -49,16 +49,18 @@ class HomeViewModel(
     }.distinctUntilChangedBy { it?.id to it?.appearance?.season() }
     private val focusedState = MutableStateFlow<FocusedTarget?>(null)
     val focused: StateFlow<FocusedTarget?> = focusedState
+    private val focusedRow = MutableStateFlow<HomeRowKey?>(null)
     private val rotation = MutableStateFlow(true)
     private var spotlightIndex = 0
     private var spotlightProfileSeason: Pair<String, app.stova.profiles.Season>? = null
     init {
-        viewModelScope.launch { session.active.distinctUntilChangedBy { it?.id }.collect { focusedState.value = null; spotlightIndex = 0 } }
+        viewModelScope.launch { session.active.distinctUntilChangedBy { it?.id }.collect { focusedState.value = null; focusedRow.value = null; spotlightIndex = 0 } }
     }
     fun rotationEnabled() = session.active.value?.home?.backdropRotation ?: false
     fun setSpotlightRotation(enabled: Boolean) { rotation.value = enabled }
     /** Remembers the card for focus restore; the hero and backdrop follow the spotlight, not focus. */
     fun focus(target: FocusedTarget) { focusedState.value = target }
+    fun focusRow(key: HomeRowKey) { focusedRow.value = key }
 
     private val spotlightPool: Flow<List<SpotlightEntry>> = combine(seasonalProfile,
         session.active.map { it?.appearance?.spotlightSource }.distinctUntilChanged()) { profile, source ->
@@ -132,9 +134,10 @@ class HomeViewModel(
     val availableRows: StateFlow<List<HomeRowKey>> = available.map { rows -> rows.orEmpty().map { it.key } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val initialFocus: StateFlow<HomeRowKey?> = combine(rows, session.active) { rows, profile ->
+    val initialFocus: StateFlow<HomeRowKey?> = combine(rows, session.active, focusedRow) { rows, profile, lastRow ->
         when {
             rows.isNullOrEmpty() -> null
+            lastRow != null && rows.any { it.key == lastRow } -> lastRow
             profile?.home?.startFocus == StartFocus.FAVORITE_APPS && rows.any { it.key == HomeRowKey.APPS } -> HomeRowKey.APPS
             else -> rows.firstOrNull { it.key != HomeRowKey.APPS }?.key ?: rows.first().key
         }

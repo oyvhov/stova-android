@@ -63,6 +63,15 @@ class HomeViewModelTest {
         val vm = HomeViewModel(session(backgroundScope, StartFocus.FIRST_MEDIA_ROW), listOf(source(HomeRowUi.Apps(HomeRowKey.APPS, listOf(app)))))
         assertEquals(HomeRowKey.APPS, vm.initialFocus.value)
     }
+    @Test fun returningHomeUsesTheLastRowAndLeavingTheProfileForgetsIt() = runTest(UnconfinedTestDispatcher()) {
+        val session = session(backgroundScope, StartFocus.FAVORITE_APPS)
+        val later = HomeRowKey("later")
+        val vm = HomeViewModel(session,listOf(source(HomeRowUi.Apps(HomeRowKey.APPS,listOf(app)),HomeRowUi.Apps(later,listOf(app)))))
+        vm.focusRow(later)
+        assertEquals(later,vm.initialFocus.value)
+        session.leave()
+        assertEquals(null,vm.initialFocus.value)
+    }
 
     @Test fun firstMediaRowWinsWhenPresent() = runTest(UnconfinedTestDispatcher()) {
         val x = HomeRowKey("x")

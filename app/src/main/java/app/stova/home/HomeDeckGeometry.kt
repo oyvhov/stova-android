@@ -26,10 +26,11 @@ internal fun homeDeckGeometry(rows: List<HomeRowUi>, home: HomePrefs, p: Appeara
     val measures = rows.map { row ->
         val style = home.rowFormats[row.key] ?: RowStyle()
         val textStyle = style.headingTextStyle()
-        val source = (row as? HomeRowUi.Media)?.let { media ->
-            listOfNotNull(media.account.serverName.takeIf { style.showSource }, offline.takeIf { media.offline }).joinToString("   ")
-        }.orEmpty()
-        val sourceWidth = if (source.isEmpty()) 0 else measurer.measure(source, body, maxLines = 1).size.width.coerceAtMost(with(density) { 200.dp.roundToPx() })
+        val sourceWidth = (row as? HomeRowUi.Media)?.let { media ->
+            (if (style.showSource) measurer.measure(media.account.serverName, body, maxLines = 1).size.width
+                .coerceAtMost(with(density) { StovaLayout.RowSourceMaxWidth.roundToPx() }) else 0) +
+                (if (media.offline) measurer.measure(offline, body, maxLines = 1).size.width else 0)
+        } ?: 0
         val titleWidth = (with(density) { (width - StovaLayout.TvSafeEdge * 2 - 40.dp).roundToPx() } - sourceWidth).coerceAtLeast(1)
         val titleHeight = with(density) {
             measurer.measure(style.heading(rowLabel(row.key)), textStyle, maxLines = 2, constraints = Constraints(maxWidth = titleWidth)).size.height.toDp()

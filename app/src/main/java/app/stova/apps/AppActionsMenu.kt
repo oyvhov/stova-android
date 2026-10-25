@@ -62,7 +62,7 @@ fun AppActionsMenu(
                 StovaButton(stringResource(R.string.app_move_left), { onMove(-1); onDismiss() }, full, icon = StovaIcons.ChevronLeft, compact = true, quiet = true)
                 StovaButton(stringResource(R.string.app_move_right), { onMove(+1); onDismiss() }, full, icon = StovaIcons.ChevronRight, compact = true, quiet = true)
             }
-            StovaButton(stringResource(if (hidden) R.string.app_show else R.string.app_hide), { onToggleHidden(); onDismiss() }, full, icon = StovaIcons.Hide, compact = true, quiet = true)
+            StovaButton(stringResource(if (hidden) R.string.app_show else R.string.app_hide), { onToggleHidden(); onDismiss() }, full, icon = if (hidden) StovaIcons.Show else StovaIcons.Hide, compact = true, quiet = true)
             StovaButton(stringResource(R.string.app_info), { onAppInfo(); onDismiss() }, full, icon = StovaIcons.Info, compact = true, quiet = true)
             StovaButton(stringResource(R.string.icon_change), onChangeIcon, full, icon = StovaIcons.Palette, compact = true, quiet = true)
             rowActions()

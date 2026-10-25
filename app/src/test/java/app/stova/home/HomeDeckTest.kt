@@ -34,17 +34,20 @@ class HomeDeckTest {
         HomeRowUi.Media(HomeRowKey.continueWatching("a"), account, MediaRowKind.CONTINUE,
             listOf(MediaItem("film", "a", ItemType.MOVIE, "Film")), false),
     )
-    private fun render(prefs: AppearancePrefs = AppearancePrefs(), third: Boolean = false, fontScale: Float = 1f, home: HomePrefs = HomePrefs()) {
+    private fun render(prefs: AppearancePrefs = AppearancePrefs(), third: Boolean = false, fontScale: Float = 1f, home: HomePrefs = HomePrefs(),
+        currentPrefs: () -> AppearancePrefs = { prefs }, initial: HomeRowKey = HomeRowKey.APPS,
+        target: FocusedTarget? = null, duplicate: Boolean = false, longSource: Boolean = false) {
         val data = if (third) rows + (rows[1] as HomeRowUi.Media).copy(key = HomeRowKey.latestMovies("a"),
-            items = listOf(MediaItem("third", "a", ItemType.MOVIE, "Tredje"))) else rows
+            kind = MediaRowKind.LATEST_MOVIES, items = if (duplicate) (rows[1] as HomeRowUi.Media).items else listOf(MediaItem("third", "a", ItemType.MOVIE, "Tredje"))) else rows
+        val rendered = if (longSource) data.map { if (it is HomeRowUi.Media) it.copy(account = account.copy(serverName = "Eit svært langt namn på medietenaren i heimen vår"), offline = true) else it } else data
         compose.setContent {
             val density = LocalDensity.current
             val input = LocalInputModeManager.current
             SideEffect { input.requestInputMode(InputMode.Keyboard) }
             CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
-            StovaTheme(reduceMotion = true, appearance = prefs) {
+            StovaTheme(reduceMotion = true, appearance = currentPrefs()) {
                 val context = LocalContext.current
-                HomeContent(data, null, HomeRowKey.APPS, AppArtCache(context), PackageManagerAppCatalog(context, emptySet()),
+                HomeContent(rendered, target, initial, AppArtCache(context), PackageManagerAppCatalog(context, emptySet()),
                     {}, {}, {}, {}, homePrefs = home,
                     spotlight = SpotlightEntry(MediaItem("spot", "a", ItemType.MOVIE, "Spotlight"), account, false))
             }
@@ -93,5 +96,33 @@ class HomeDeckTest {
         val app = compose.onNode(hasContentDescription("Min app") and hasClickAction()).assertIsDisplayed()
         val bottom = compose.onRoot().fetchSemanticsNode().boundsInRoot.bottom
         assertTrue(app.fetchSemanticsNode().boundsInRoot.bottom > bottom - 140f)
+    }
+
+    @Test fun liveModeChangesKeepTheSameVisibleFocusedRow() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        render(third = true, currentPrefs = { prefs })
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.DirectionDown) }
+        compose.onNodeWithContentDescription("Tredje").assertIsFocused().assertIsDisplayed()
+        for (mode in listOf(HomeRows.TWO, HomeRows.SCROLLING, HomeRows.ONE)) {
+            compose.runOnIdle { prefs = prefs.copy(homeRows = mode) }
+            compose.onNodeWithContentDescription("Tredje").assertIsFocused().assertIsDisplayed()
+        }
+    }
+
+    @Test fun duplicateMediaReturnsToTheRememberedRowInsteadOfTheFirstMatch() {
+        render(third = true, duplicate = true, initial = HomeRowKey.latestMovies("a"),
+            target = FocusedTarget.Media((rows[1] as HomeRowUi.Media).items[0], account))
+        compose.onNodeWithText("Nyleg lagt til · Filmar").assertIsDisplayed()
+        compose.onNodeWithText("Hald fram").assertIsNotDisplayed()
+    }
+
+    @Test fun longServerAndOfflineStateDoNotSqueezeTheDoubleFontRowHeading() {
+        render(fontScale = 2f, longSource = true, initial = HomeRowKey.continueWatching("a"))
+        compose.onNodeWithText("Hald fram").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Film").assertIsFocused().assertIsDisplayed()
+        val heading = compose.onNodeWithText("Hald fram").getUnclippedBoundsInRoot()
+        assertTrue("A short heading must have useful width", (heading.right - heading.left).value > 100f)
+        val source = compose.onNodeWithText("Eit svært langt namn på medietenaren i heimen vår").getUnclippedBoundsInRoot()
+        assertTrue("The measured and rendered source share a width cap", (source.right - source.left).value <= 200.5f)
     }
 }

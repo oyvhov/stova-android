@@ -73,7 +73,7 @@ fun HomeScreen(
         spotlight = spotlight, appIconOverrides = profile?.apps?.iconOverrides.orEmpty(),
         onAppLongClick = { app -> if (profile?.kid == false) appMenu = app },
         homePrefs = profile?.home ?: HomePrefs(),
-        onHomeChange = onHomeChange, canEditRows = profile?.kid == false,
+        onHomeChange = onHomeChange, canEditRows = profile?.kid == false, onRowFocus = vm::focusRow,
         onMediaPlay = { open(it, SpoleAction.PLAY) },
         appActions = { app, rowActions, dismiss ->
             if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog, rowActions, dismiss)

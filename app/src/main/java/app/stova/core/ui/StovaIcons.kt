@@ -15,6 +15,10 @@ import androidx.compose.ui.unit.dp
  */
 object StovaIcons {
     val Check by lazy { icon("check") { moveTo(4f, 12f); lineTo(9f, 17f); lineTo(20f, 6f) } }
+    val Show by lazy { icon("show") {
+        moveTo(3f, 12f); curveTo(8f, 3f, 16f, 3f, 21f, 12f); curveTo(16f, 21f, 8f, 21f, 3f, 12f); close()
+        moveTo(15f, 12f); arcTo(3f, 3f, 0f, true, true, 9f, 12f); arcTo(3f, 3f, 0f, true, true, 15f, 12f)
+    } }
     val Hide by lazy { icon("hide") {
         moveTo(3f, 12f); curveTo(8f, 3f, 16f, 3f, 21f, 12f); curveTo(16f, 21f, 8f, 21f, 3f, 12f); close()
         moveTo(3f, 21f); lineTo(21f, 3f)

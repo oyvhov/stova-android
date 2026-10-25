@@ -16,7 +16,8 @@ import app.stova.home.headingTextStyle
   app.stova.home.SeasonalMark(row.kind.season)
   Text(LocalRowStyle.current.heading(stringResource(when(row.kind){MediaRowKind.CONTINUE->R.string.row_continue;MediaRowKind.LATEST_MOVIES->R.string.row_latest_movies;MediaRowKind.LATEST_SERIES->R.string.row_latest_series;MediaRowKind.HALLOWEEN->R.string.theme_halloween;MediaRowKind.CHRISTMAS->R.string.theme_christmas})),style=LocalRowStyle.current.headingTextStyle(),color=MaterialTheme.colorScheme.onSurface,
    modifier=Modifier.weight(1f,fill=false),maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-  if(LocalRowStyle.current.showSource) Text(row.account.serverName,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
-  if(row.offline) Text(stringResource(R.string.offline),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+  if(LocalRowStyle.current.showSource) Text(row.account.serverName,Modifier.widthIn(max=StovaLayout.RowSourceMaxWidth),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant,
+   maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+  if(row.offline) Text(stringResource(R.string.offline),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1)
  }
 }

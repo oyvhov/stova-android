@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
                     }
                     "size" -> items(CardSize.entries) {size -> StovaButton(stringResource(when(size) {CardSize.S->R.string.ha_v2_size_s;CardSize.M->R.string.ha_v2_size_m;CardSize.L->R.string.ha_v2_size_l}),{save(card.copy(size=size))},primary=card.size==size)}
                     "icon" -> items(listOf(null,"light","sun","home","climate","sensor","lock")) {icon ->
-                        val type=when(icon) {"light"->CardType.LIGHT;"sun"->CardType.WEATHER;"home"->CardType.SCENE;"climate"->CardType.CLIMATE;"lock"->CardType.LOCK;else->CardType.SENSOR}
+                        val type=when(icon) {null->card.type;"light"->CardType.LIGHT;"sun"->CardType.WEATHER;"home"->CardType.SCENE;"climate"->CardType.CLIMATE;"lock"->CardType.LOCK;else->CardType.SENSOR}
                         StovaButton(stringResource(when(icon) {null->R.string.ha_v2_icon_default;"sun"->R.string.ha_v2_sun_icon;"home"->R.string.nav_home;else->cardTypeLabel(type)}),{save(card.copy(icon=icon))},icon=cardIcon(type,override=icon))
                     }
                     else -> {
