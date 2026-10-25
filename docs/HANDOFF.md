@@ -1,3 +1,11 @@
+# Brukstest og releaseklargjering – fullført
+2026-10-25: Plan `2026-10-25-brukstest-og-releaseklargjering.md` er fullført: ekte ikonpakke, spelarretur, profilkontroll, Shield og signeringssperre. Rapport: `docs/verification/brukstest-og-release.md`.
+Retta Android/ICU-problemet som gjorde store ikonpakkar svært trege. Retur frå ei tittellenkje til Spole oppdaterer no framdrift éin gong for rett profil; vanleg femminuttsbuffer og spotlight-buffer er bevarte.
+Sluttkontroll: 558/558 JVM-/skjermtestar utførte og beståtte over to køyringar, Android-regresjon 1/1, måleskript 27/27; lint 0 feil (38 åtvaringar, 1 hint), debug-bygg OK. Signeringssperra avslår release utan eigaren sitt oppsett som venta.
+Endeleg APK er installert med `-r` på emulator-5580 og fysisk Shield; ekte kontoar er bevarte. APK: `app/build/outputs/apk/debug/app-debug.apk`, SHA-256 `1f3f7815146bd2217eb58e4b3019d8691e00e9bbb9509425fd57fd87364a52e2`. Arcticons ligg på emulatoren; mellombelse ikonval er sette tilbake.
+Shield: parallax, lange rader, Back/Home og ny framdrift frå biblioteket er prøvde. Debug-måling: kaldstartmedian 2138,5 ms, varm Home 348 ms, hakkande ramer 4,15 %, PSS 182,98 MiB. Fartskrava er ikkje release-godkjende.
+Restpunkt: Spole beta20 på Shield manglar tittellenkjer. Eigaren sin produksjonsnøkkel/oppsett manglar; ingen ny nøkkel er laga. Signert release, ytelsesmåling og sertifikatfast oppdatering må gjerast seinare, sjå `docs/RELEASE_SIGNING.md`. Hovudgrein/repo: `main` i `oyvhov/stova-android` (privat).
+
 # Design, parallax og privat GitHub – fullført
 2026-10-25: Claude sine uferdige kjerne-, HA- og rørsleendringar er fullførte; ny design-/vedlikehaldsplan er ferdig. Kodecommit `2c4bb32`; ingen påbyrja steg står att i denne bestillinga.
 Heim har rullande parallax, frigjord plass nedover, retur via første rad/topplinja og tittelreserve ved logofeil. Skjermar er delte i datakopling, vising og mindre komponentar; sjå `docs/ARCHITECTURE.md` og `CONTRIBUTING.md`.

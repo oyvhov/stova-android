@@ -1,0 +1,6 @@
+# Copy to signing.properties only after the owner's key has been created or restored.
+# This example has no credentials and cannot sign a release.
+storeFile=.signing/stova-release.jks
+storePassword=
+keyAlias=stova
+keyPassword=

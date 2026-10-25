@@ -1,9 +1,38 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
     id("androidx.baselineprofile")
 }
+
+val releaseSigning = Properties().apply {
+    val file = rootProject.file("signing.properties")
+    if (file.isFile) file.reader(Charsets.UTF_8).use(::load)
+}
+val releaseKeyFile = releaseSigning.getProperty("storeFile")?.takeIf(String::isNotBlank)?.let { rootProject.file(it) }
+val releaseSigningConfigured = listOf("storeFile", "storePassword", "keyAlias", "keyPassword").all {
+    !releaseSigning.getProperty(it).isNullOrBlank()
+} && releaseKeyFile?.isFile == true
+
+abstract class VerifyReleaseSigning : DefaultTask() {
+    @get:Input abstract val configured: Property<Boolean>
+
+    @TaskAction fun verify() {
+        check(configured.get()) {
+            "Release krev signing.properties og Stova-nøkkelen. Ikkje lag ein ny nøkkel. Sjå docs/RELEASE_SIGNING.md."
+        }
+    }
+}
+
+val verifyReleaseSigning = tasks.register<VerifyReleaseSigning>("verifyReleaseSigning") {
+    group = "verification"
+    description = "Refuses a production build without the owner's existing signing key."
+    configured.set(releaseSigningConfigured)
+}
+tasks.matching { it.name in setOf("assembleRelease", "bundleRelease", "packageRelease", "validateSigningRelease", "signReleaseBundle") }
+    .configureEach { dependsOn(verifyReleaseSigning) }
 
 android {
     namespace = "app.stova"
@@ -26,6 +55,14 @@ android {
             versionNameSuffix = "-debug"
         }
         release {
+            if (releaseSigningConfigured) {
+                signingConfig = signingConfigs.create("stableRelease") {
+                    storeFile = releaseKeyFile
+                    storePassword = releaseSigning.getProperty("storePassword")
+                    keyAlias = releaseSigning.getProperty("keyAlias")
+                    keyPassword = releaseSigning.getProperty("keyPassword")
+                }
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

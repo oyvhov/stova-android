@@ -32,15 +32,20 @@ object AppFilter {
 
     fun validDrawable(name: String): Boolean = resourceName.matches(name)
 
-    private fun attributes(xml: String): Sequence<Map<String, String>> =
-        items.findAll(comments.replace(xml, "")).mapNotNull { match ->
-            try {
+    private fun attributes(xml: String): Sequence<Map<String, String>> = sequence {
+        // Kotlin MatchResult.next() resets the matcher on each item. Android's ICU copies
+        // the whole input on reset, making a large icon pack take minutes to index.
+        val matcher = items.toPattern().matcher(comments.replace(xml, ""))
+        while (matcher.find()) {
+            val attrs = try {
                 val parser = Xml.newPullParser()
-                val item = match.value.removeSuffix(">").removeSuffix("/") + "/>"
+                val item = matcher.group().removeSuffix(">").removeSuffix("/") + "/>"
                 parser.setInput(item.reader())
                 if (parser.nextTag() != XmlPullParser.START_TAG) null
                 else (0 until parser.attributeCount).associate { parser.getAttributeName(it) to parser.getAttributeValue(it) }
             } catch (_: org.xmlpull.v1.XmlPullParserException) { null }
             catch (_: java.io.IOException) { null }
+            if (attrs != null) yield(attrs)
         }
+    }
 }

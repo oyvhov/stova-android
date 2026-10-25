@@ -12,6 +12,12 @@ function Get-StartTotalTime([string]$amOutput) {
     }
     return [int]$Matches[1]
 }
+function Get-LaunchComponent([string]$resolveOutput) {
+    if ($resolveOutput -notmatch '(?m)^([A-Za-z0-9_.]+/[A-Za-z0-9_.$]+)\s*$') {
+        throw 'Fann ingen Android TV-startaktivitet for pakken'
+    }
+    return $Matches[1]
+}
 function Get-JankPercent([string]$gfxinfo) {
     if ($gfxinfo -notmatch 'Janky frames:\s*\d+\s*\((\d+(?:\.\d+)?)%\)') {
         throw 'gfxinfo manglar Janky frames med prosent'
@@ -73,6 +79,9 @@ function Invoke-SelfTest {
     }
     Assert-Equal 812 (Get-StartTotalTime "Status: ok`nLaunchState: COLD`nTotalTime: 812`nWaitTime: 830")
     Assert-Equal 0 (Get-StartTotalTime "TotalTime: 0`r`nWaitTime: 10")
+    Assert-Equal 'app.stova.debug/app.stova.MainActivity' (Get-LaunchComponent "priority=0`napp.stova.debug/app.stova.MainActivity")
+    Assert-Equal 'app.stova/.MainActivity' (Get-LaunchComponent 'app.stova/.MainActivity')
+    Assert-Rejected { Get-LaunchComponent 'No activity found' }
     Assert-Equal 3.0 (Get-JankPercent "Total frames rendered: 1200`nJanky frames: 36 (3.00%)")
     Assert-Equal 0.0 (Get-JankPercent "Total frames rendered: 1200`nJanky frames: 0 (0.00%)")
     Assert-Equal 187654 (Get-TotalPssKb '           TOTAL PSS:   187654            TOTAL RSS:   250000')
@@ -111,7 +120,7 @@ try {
         'C:/Android/sdk/platform-tools/adb.exe'
     } else { (Get-Command adb -ErrorAction Stop).Source }
     Invoke-Adb -Arguments @('get-state') | Out-Null
-    $component = "$Package/.MainActivity"
+    $component = Get-LaunchComponent (Invoke-Adb -Arguments @('shell', 'cmd', 'package', 'resolve-activity', '--brief', '-a', 'android.intent.action.MAIN', '-c', 'android.intent.category.LEANBACK_LAUNCHER', '-p', $Package))
     Write-Output "Måler $Package på $Serial. Emulatortal validerer skriptet; Shield-release avgjer budsjetta."
     $cold = @(for ($i = 0; $i -lt 10; $i++) {
         Invoke-Adb -Arguments @('shell', 'am', 'force-stop', $Package) | Out-Null

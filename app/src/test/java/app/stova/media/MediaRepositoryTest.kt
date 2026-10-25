@@ -49,6 +49,30 @@ class MediaRepositoryTest {
   val r=MediaRepository(a,{ client(it) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler));r.refresh("p")
   assertTrue(r.rows("p").first().all { it.kind==MediaRowKind.CONTINUE })
  }
+ @Test fun playbackReturnUpdatesYoungRowsOnceAndKeepsSpotlightCached()=runTest {
+  val a=accounts();val account=add(a,ServerKind.JELLYFIN)
+  var progress=0.1f;var resumeCalls=0;var spotlightCalls=0
+  val server=object:MediaServerClient {
+   override suspend fun resume():List<MediaItem> { resumeCalls++;return listOf(item(account).copy(progress=progress)) }
+   override suspend fun nextUp()=emptyList<MediaItem>()
+   override suspend fun latest(endpoint:Endpoint):List<MediaItem> { if(endpoint==Endpoint.SPOTLIGHT) spotlightCalls++;return emptyList() }
+  }
+  val r=MediaRepository(a,{ server },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ 1_000L })
+  r.refresh("p")
+  progress=0.2f
+  r.refresh("p")
+  assertEquals(1,resumeCalls)
+  r.playbackOpened("another-profile")
+  r.refresh("p")
+  assertEquals("another profile cannot invalidate these rows",1,resumeCalls)
+  r.playbackOpened("p")
+  r.refresh("p")
+  assertEquals(0.2f,r.rows("p").first().single().items.single().progress)
+  assertEquals(2,resumeCalls)
+  assertEquals(1,spotlightCalls)
+  r.refresh("p")
+  assertEquals("ordinary returns still use the cache",2,resumeCalls)
+ }
  private fun spot(a:MediaAccount)=MediaItem("f1",a.id,ItemType.MOVIE,"Fjordlys",art=ItemArt(backdrop="b",logo="l"))
  private fun spotClient(a:MediaAccount,calls:MutableList<Endpoint>,failSpotlight:Boolean=false)=object:MediaServerClient {
   override suspend fun resume()=listOf(item(a))

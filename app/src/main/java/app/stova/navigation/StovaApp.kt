@@ -128,6 +128,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             profile = profile, apps = container.apps,
                             onHomeChange = { prefs -> scope.launch { container.profiles.update(profile.id) { it.copy(home = prefs) } } },
                             onRefresh = { container.media.refresh(profile.id) },
+                            onPlaybackOpened = { container.media.playbackOpened(profile.id) },
                             haRepository = container.haRepository,
                             haConnection = container.haSocket,
                             topBar = { chips ->

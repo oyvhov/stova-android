@@ -10,6 +10,7 @@ import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
@@ -20,7 +21,7 @@ const val SPOTLIGHT_REFRESH_MILLIS = 2 * 60 * 60 * 1000L
 /** Spotlight and season rows query the whole library; they get longer than the rows, and their own clock. */
 const val EXTRA_TIMEOUT_MILLIS = 20_000L
 const val SEASONAL_REFRESH_MILLIS = 60 * 60 * 1000L
-/** A return to Home never refetches rows younger than this; Home's 5-minute loop is the only scheduler. */
+/** Ordinary returns reuse young rows; returning from Spole invalidates them once. */
 const val REFRESH_MIN_AGE_MILLIS = 5 * 60 * 1000L
 
 class MediaRepository(private val accounts: MediaAccountRepository,private val clientFor: suspend (MediaAccount) -> MediaServerClient?,private val snapshotDir: File,private val scope: CoroutineScope,private val io: CoroutineDispatcher=Dispatchers.IO,private val clock: () -> Long=System::currentTimeMillis) {
@@ -31,6 +32,7 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   var seasonalAt=0L;var seasonalFor: Season = Season.NONE
   /** The last attempt, and the season and accounts it was for: a new account or season is never made to wait. */
   var refreshedAt=0L;var refreshedFor: Pair<Season,List<String>>?=null
+  val playbackRevision=AtomicLong();var refreshedPlaybackRevision=0L
   /** Narrower hero pools (films, series, favourites) and when each is next due; shared by every entry to Home. */
   val extra=MutableStateFlow<Map<SpotlightSource,List<SpotlightEntry>>>(emptyMap());val extraDue=mutableMapOf<SpotlightSource,Long>();val extraMutex=Mutex()
  }
@@ -142,14 +144,17 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   return rows.mapNotNull { row -> valid[row.account.id]?.let { row.copy(account=it) } }.filter { it.items.isNotEmpty() }
  }
  private suspend fun <T> orElse(fallback: T,block: suspend () -> T): T = try { block() } catch(e: CancellationException) { throw e } catch(_: Exception) { fallback }
+ /** Spole may change progress even when opened on its own home. Keep invalidation profile-scoped. */
+ fun playbackOpened(profileId:String) { slot(profileId).playbackRevision.incrementAndGet() }
  suspend fun refresh(profileId:String,minAgeMillis:Long=REFRESH_MIN_AGE_MILLIS) {
   val slot=loaded(profileId)
   slot.mutex.withLock {
    val season=slot.season
    val list=accounts.forProfile(profileId).first().filterNot { it.needsSignIn }.sortedWith(compareBy({it.kind},{it.serverName}))
    val now=clock();val key=season to list.map { it.id }
-   // Young enough, and for the same season and accounts: a return to Home asks the servers nothing.
-   if(slot.refreshedAt!=0L && now-slot.refreshedAt in 0 until minAgeMillis && slot.refreshedFor==key) return
+   val playbackRevision=slot.playbackRevision.get()
+   // A trip to the player can change progress before the ordinary five-minute interval expires.
+   if(slot.refreshedAt!=0L && now-slot.refreshedAt in 0 until minAgeMillis && slot.refreshedFor==key && slot.refreshedPlaybackRevision==playbackRevision) return
    slot.refreshedAt=now;slot.refreshedFor=key
    // Nobody to ask: the rows stay as the accounts filter leaves them, and the snapshot is not touched.
    if(list.isEmpty()) return
@@ -213,6 +218,7 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    val next=saved.copy(rows=current.map { row -> SnapshotRow(row.key,row.account.id,row.kind,row.items) },
     spotlight=spotlight.map { entry -> SnapshotSpotlight(entry.account.id,entry.item,entry.newSeason) },spotlightAt=slot.spotlightAt)
    if(next!=saved) slot.store.update { it.copy(rows=next.rows,spotlight=next.spotlight,spotlightAt=next.spotlightAt,savedAt=now) }
+   slot.refreshedPlaybackRevision=playbackRevision
   }
  }
 }
