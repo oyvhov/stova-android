@@ -1,3 +1,10 @@
+# Shield installert; glød, fokusvegar og Spole-oppdatering under arbeid
+2026-10-25: Etter uttrykkeleg bestilling er Stova `0ed3e34` og Projectivy 1.1.9 installerte med -r på Shield. Installerte hash-ar er verifiserte; Projectivy og transparente appkort er valde. Kontoar og andre profilval/favorittar er bevarte. Sjå `docs/verification/shield-projectivy-install.md`.
+Eigaren melder kraftig glød og D-pad som hoppar feil i toppfelt, Smarthus og menyar. Ny plan: `2026-10-25-directional-focus.md`. Ingen slik kode er endra enno; fjern shadowElevation/ambientShadowColor/spotShadowColor og legg eksplisitte fokusvegar med tastetestar.
+Eigaren ber òg om Spole som opnar rett tittel. Shield har produksjon `app.reelstack` beta20 / 157 utan tittellenkje. Implementasjonen er på rein eksisterande grein `feat/spole-launcher-link` i `C:/JellyBin/spole-launcher-link` (b850ea0, base beta18); origin/main er no beta20 (1a8003a). Primærmappa reelstack-android er rein, men beta13 og skal ikkje brukast som grunnlag for ny oppdatering.
+Gjeldande Spole release-reglar er lesne. Same eigarnøkkel finst; signing.properties finst i primærmappa, men ikkje i feature-worktree. Neste: flett beta20 inn i featuregreina, bygg/verifiser høgare lokal signert utgåve og installer på Shield. Ingen publisering er bestilt.
+Éin agent arbeider. Stova-testgrunnlag er 588/588 grøne før nye fokusrettingar. Ingen nye testar for desse rettingane eller ny Spole-APK er køyrde/bygde enno. Ingen push.
+
 # Projectivy og originalt transparent Spole-merke – fullført
 2026-10-25: Plan `2026-10-25-projectivy-spole.md` er fullført. Offisiell Projectivy Icon Pack 1.1.9 er installert separat og vald på emulator-5580; appkortbakgrunn er Av. Pakka sine 953 mappingar / 899 ikon blir brukte, pluss Stova sitt eige Spole-supplement i veljaren.
 Eigaren bad om originalen: endeleg Spole SVG/PNG/Android-vektor bevarer dei seks originale stiane og transformasjonane frå Spole sitt TV-banner; berre bakgrunnen er fjerna. Sjå `docs/icons/PROJECTIVY.md`. Breie logoar bevarer sideforholdet.
