@@ -25,12 +25,25 @@ fun weatherIcon(state:String) = when(state) {
     else -> StovaIcons.Cloud
 }
 @Composable fun WeatherCard(entity:HaEntity,forecast:List<ForecastDay> = emptyList(),size:CardSize=CardSize.S,zone:ZoneId=ZoneId.systemDefault()) {
+    if(size==CardSize.S) {
+        CurrentWeather(entity)
+        ForecastStrip(forecast,size,zone)
+    } else Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(24.dp),verticalAlignment=Alignment.CenterVertically) {
+        Column(Modifier.weight(1.3f),verticalArrangement=Arrangement.spacedBy(4.dp)) {CurrentWeather(entity)}
+        Box(Modifier.weight(3f)) {ForecastStrip(forecast,size,zone)}
+    }
+}
+
+@Composable private fun CurrentWeather(entity:HaEntity) {
     CardValue(entity.attributes.number("temperature")?.let { formatNumber(it,LocalConfiguration.current.locales[0]) } ?: stringResource(R.string.ha_dash), entity.attributes["temperature_unit"]?.jsonPrimitive?.contentOrNull)
     CardDetail(entityStateLabel(entity))
+}
+
+@Composable private fun ForecastStrip(forecast:List<ForecastDay>,size:CardSize,zone:ZoneId) {
     if(forecast.isEmpty()) CardDetail(stringResource(R.string.ha_v2_forecast_missing)) else {
         val locale=LocalConfiguration.current.locales[0]
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
-            forecast.take(5).forEach {day -> Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(4.dp)) {
+            forecast.take(5).forEach {day -> Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(2.dp)) {
                 Text(Instant.ofEpochMilli(day.time).atZone(zone).format(DateTimeFormatter.ofPattern("EEE",locale)),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 Icon(weatherIcon(day.condition),null,Modifier.size(18.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(formatNumber(day.high,locale)+"°",style=MaterialTheme.typography.labelMedium)

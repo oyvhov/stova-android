@@ -236,7 +236,7 @@
     <string name="ha_v2_pending">Ventar …</string>
     <string name="ha_v2_failed">Endringa lukkast ikkje. Prøv igjen.</string>
     <string name="ha_v2_done">Utført</string>
-    <string name="ha_v2_remote_hint">OK: styr · ← →: juster · Meny / hald OK: tilpass</string>
+    <string name="ha_v2_remote_hint">OK: styr · ← →: juster · Meny: tilpass</string>
     <string name="ha_v2_size">Storleik</string>
     <string name="ha_v2_size_s">S · 1 × 1</string>
     <string name="ha_v2_size_m">M · 2 × 1</string>
@@ -304,4 +304,5 @@
     <string name="ha_v2_dearest">Dyrast %1$s</string>
     <string name="ha_v2_hourly">Timesnitt</string>
     <string name="ha_v2_quarter_hours">15 minutt</string>
+    <string name="ha_v2_target_adjust">Mål %1$s° · ← − / + →</string>
 </resources>

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -26,7 +27,7 @@ data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader)
 }
 
 /** No bearer token crosses origins, no camera frames are cached, and paused/offscreen cards stop. */
-@Composable internal fun HaImage(path:String, source:HaImageSource?,modifier:Modifier=Modifier,refreshMillis:Long?=null) {
+@Composable internal fun HaImage(path:String, source:HaImageSource?,modifier:Modifier=Modifier,refreshMillis:Long?=null,contentScale:ContentScale=ContentScale.Fit) {
     val context=LocalContext.current
     val scope=rememberCoroutineScope()
     var token by remember(source,path) { mutableStateOf<String?>(null) }
@@ -54,5 +55,5 @@ data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader)
             .httpHeaders(NetworkHeaders.Builder().apply { if(sameOrigin && !token.isNullOrEmpty()) set("Authorization","Bearer $token") }.build())
             .memoryCachePolicy(CachePolicy.DISABLED).diskCachePolicy(CachePolicy.DISABLED).build()
     }
-    if(source!=null) AsyncImage(request,stringResource(R.string.ha_image),source.loader,modifier)
+    if(source!=null) AsyncImage(request,stringResource(R.string.ha_image),source.loader,modifier,contentScale=contentScale)
 }

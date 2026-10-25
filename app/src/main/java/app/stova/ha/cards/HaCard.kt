@@ -17,7 +17,7 @@ import kotlinx.coroutines.*
 @Composable
 fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCall)->Unit,openDialog:(CardDialog)->Unit,
     images:HaImageSource?=null,visible:Boolean=true,onEdit:(()->Unit)?=null,onMenu:(()->Unit)?=null,
-    pending:Boolean=false,connection:HaConnection?=null,modifier:Modifier=Modifier) {
+    pending:Boolean=false,connection:HaConnection?=null,modifier:Modifier=Modifier,room:String?=null) {
     val unavailable=stateText(entity)==StateText.Unavailable
     var adjusting by remember(config.entityId,entity) {mutableStateOf(entity)}
     var adjustment by remember(config.entityId) {mutableStateOf<ServiceCall?>(null)}
@@ -41,7 +41,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
     LaunchedEffect(adjustment) {adjustment?.let {delay(250);perform(it);adjustment=null}}
     val shown=if(adjustment!=null) adjusting else entity
     val badge=if(unavailable || shown==null) null else when(config.type) {
-        CardType.LIGHT,CardType.TOGGLE,CardType.MEDIA_PLAYER,CardType.CLIMATE,CardType.COVER,CardType.LOCK -> entityStateLabel(shown)
+        CardType.MEDIA_PLAYER -> if(shown.state=="playing") entityStateLabel(shown) else null
         else -> null
     }
     val menu=onMenu ?: onEdit
@@ -65,7 +65,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
                 CardType.SENSOR,CardType.ENERGY_PRICE -> openDialog(CardDialog.Graph(entity.id,config.type==CardType.ENERGY_PRICE))
                 else -> Unit
             }
-        },modifier=modifier,active=shown?.state=="on" && config.type==CardType.LIGHT,pending=pending,onDirection={direction ->
+        },modifier=modifier,glow=if(config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,onDirection={direction ->
             val call=shown?.takeUnless {unavailable}?.let {directionAction(config.type,it,direction)}
             if(call!=null && onEdit==null) {
                 if(!locked && !pending) {adjusting=optimisticEntity(shown!!,call);adjustment=call}
@@ -79,13 +79,14 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
             CardType.CLIMATE -> ClimateCard(shown)
             CardType.SENSOR -> {SensorCard(shown);if(history.size>1) Sparkline(history,Modifier.height(28.dp))}
             CardType.WEATHER -> WeatherCard(shown,forecast,config.size,connection?.timeZone ?: java.time.ZoneId.systemDefault())
-            CardType.ENERGY_PRICE -> EnergyPriceCard(energy?.copy(state=shown.state) ?: shown)
-            CardType.MEDIA_PLAYER -> MediaPlayerCard(shown,images,locked || pending,perform)
+            CardType.ENERGY_PRICE -> EnergyPriceCard(energy?.copy(state=shown.state) ?: shown,connection?.timeZone ?: java.time.ZoneId.systemDefault())
+            CardType.MEDIA_PLAYER -> MediaPlayerCard(shown,images,locked || pending,perform,config.size)
             CardType.SCENE -> SceneCard()
             CardType.CAMERA -> CameraCard(shown,images,visible,config.size)
             CardType.COVER -> {CardValue(entityStateLabel(shown));shown.attributes.number("current_position")?.let {CardDetail(stringResource(R.string.ha_percent,it.toInt()))}}
             CardType.LOCK -> CardValue(entityStateLabel(shown))
         }
+        if(!room.isNullOrBlank()) CardDetail(room)
     }
 }
 

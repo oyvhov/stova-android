@@ -13,6 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -75,6 +78,8 @@ import kotlin.math.ceil
     var initialFocusGiven by remember(profile.id) {mutableStateOf(false)}
     val focus=remember(profile.id) {mutableMapOf<String,FocusRequester>()}
     val list=rememberLazyListState()
+    val scope=rememberCoroutineScope()
+    var gridFocused by remember {mutableStateOf(false)}
     val visible by remember {derivedStateOf {list.layoutInfo.visibleItemsInfo.map {it.key}.toSet()}}
     val sections=remember(cards,registry) {dashboardSections(cards,registry)}
     LaunchedEffect(menuId) {if(menuId==null) restoreId?.let {runCatching {focus[it]?.requestFocus()};restoreId=null}}
@@ -86,7 +91,13 @@ import kotlin.math.ceil
                     Text(stringResource(R.string.nav_smart_home),style=MaterialTheme.typography.headlineMedium)
                     HaStatusLabel(status)
                 }
-                DashboardSummary(cards,entities)
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
+                    Box(Modifier.weight(1f)) {DashboardSummary(cards,entities)}
+                    if(cards.isNotEmpty() && gridFocused && LocalConfiguration.current.fontScale<1.5f) {
+                        Text(stringResource(if(canControl(profile)) R.string.ha_v2_remote_hint else R.string.ha_locked),
+                            style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
             }
             if(!profile.kid && status!=HaStatus.NOT_CONFIGURED) {
                 if(cards.isNotEmpty()) StovaButton(stringResource(if(editing) R.string.ha_done else R.string.ha_edit),{editing=!editing})
@@ -102,7 +113,8 @@ import kotlin.math.ceil
                 Text(stringResource(R.string.ha_v2_empty_hint),style=MaterialTheme.typography.bodyLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        LazyColumn(Modifier.weight(1f).fillMaxWidth(),state=list,verticalArrangement=Arrangement.spacedBy(16.dp),contentPadding=PaddingValues(bottom=16.dp)) {
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+        LazyColumn(Modifier.fillMaxSize().onFocusChanged {gridFocused=it.hasFocus},state=list,verticalArrangement=Arrangement.spacedBy(16.dp),contentPadding=PaddingValues(4.dp,4.dp,4.dp,28.dp)) {
             sections.forEachIndexed {index,section ->
                 item(key="section-$index") {
                     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
@@ -113,6 +125,7 @@ import kotlin.math.ceil
                 items(packCards(section.cards),key={band->"band-${band.first().card.id}"}) {band ->
                     CardBand(band) {card ->
                         val requester=remember(card.id) {focus.getOrPut(card.id) {FocusRequester()}}
+                        val intoView=remember(card.id) {BringIntoViewRequester()}
                         LaunchedEffect(card.id) {
                             if(!initialFocusGiven && card.id==cards.firstOrNull()?.id) {
                                 requester.requestFocus();initialFocusGiven=true
@@ -123,14 +136,18 @@ import kotlin.math.ceil
                                 visible="band-${band.first().card.id}" in visible,
                                 onEdit=if(editing) {{menuId=card.id;restoreId=card.id}} else null,
                                 onMenu=if(!profile.kid) {{menuId=card.id;restoreId=card.id}} else null,
-                                pending=card.entityId in pending,connection=connection,modifier=Modifier.weight(1f).focusRequester(requester))
+                                pending=card.entityId in pending,connection=connection,
+                                room=if(section.favorites) registry.entities[card.entityId]?.room else null,
+                                modifier=Modifier.weight(1f).bringIntoViewRequester(intoView).onFocusChanged {
+                                    if(it.isFocused) scope.launch {intoView.bringIntoView()}
+                                }.focusRequester(requester))
                             if(editing && !profile.kid) StovaButton(stringResource(R.string.ha_card_menu,card.name ?: entities[card.entityId]?.let(::friendlyName) ?: card.entityId),{menuId=card.id;restoreId=card.id})
                         }
                     }
                 }
             }
         }
-        if(cards.isNotEmpty()) Text(stringResource(if(canControl(profile)) R.string.ha_v2_remote_hint else R.string.ha_locked),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
     cards.find {it.id==menuId}?.takeUnless {profile.kid}?.let {card ->
         CardMenu(card,card.name ?: entities[card.entityId]?.let(::friendlyName) ?: card.entityId,onMove,onConfigure,onHome,onRemove) {menuId=null}
@@ -154,7 +171,7 @@ import kotlin.math.ceil
 @Composable private fun CardBand(band:List<PlacedCard>,content:@Composable (CardConfig)->Unit) {
     Layout(content={band.forEach {placed -> key(placed.card.id) {content(placed.card)}}}) {measurables,constraints ->
         val gap=16.dp.roundToPx();val cell=(constraints.maxWidth-2*gap)/3
-        val base=160.dp.roundToPx()
+        val base=152.dp.roundToPx()
         // Derive row heights from text before measuring: equal edges, including at font scale 2.
         val unit=measurables.mapIndexed {i,m ->
             val size=band[i].card.size

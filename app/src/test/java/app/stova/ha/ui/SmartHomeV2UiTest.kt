@@ -48,4 +48,21 @@ class SmartHomeV2UiTest {
         compose.setContent {StovaTheme {HaCard(CardConfig("d",CardType.SENSOR,door.id),door,false,{},{})}}
         compose.onNodeWithText("Open").assertExists();compose.onNodeWithText("På").assertDoesNotExist()
     }
+    @Test fun remoteScrollKeepsEntireFocusedCardInsideGrid() {
+        val cards=List(15) {CardConfig("$it",CardType.SENSOR,"sensor.$it")}
+        compose.setContent {StovaTheme {SmartHomeContent(adult,cards,emptyMap(),HaStatus.CONNECTED)}}
+        repeat(3) {compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)};compose.waitForIdle()}
+        val focused=compose.onNode(isFocused())
+        val grid=compose.onNode(hasScrollAction()).getUnclippedBoundsInRoot()
+        val bounds=focused.getUnclippedBoundsInRoot()
+        assertTrue("Focused top $bounds must stay in $grid",bounds.top>=grid.top)
+        assertTrue("Focused bottom $bounds must stay in $grid",bounds.bottom<=grid.bottom)
+        compose.onNodeWithText("sensor.9").assertIsFocused()
+    }
+    @Test fun remoteHintHidesWhenFocusLeavesGrid() {
+        compose.setContent {StovaTheme {SmartHomeContent(adult,listOf(CardConfig("a",CardType.SENSOR,"sensor.a")),emptyMap(),HaStatus.CONNECTED)}}
+        compose.onNodeWithText("OK: styr",substring=true).assertExists()
+        compose.onNodeWithText("Rediger").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithText("OK: styr",substring=true).assertDoesNotExist()
+    }
 }

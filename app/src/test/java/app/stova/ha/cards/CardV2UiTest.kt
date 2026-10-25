@@ -28,7 +28,7 @@ class CardV2UiTest {
         compose.setContent {StovaTheme {HaCard(CardConfig("a",CardType.LIGHT,"light.a",name="Leselys"),e("light.a",attrs="""{"brightness":128}"""),false,{call=it},{},onMenu={menus++})}}
         compose.onNodeWithText("Leselys").performSemanticsAction(SemanticsActions.RequestFocus)
         compose.onNodeWithText("Leselys").assertIsFocused().performKeyInput {pressKey(Key.DirectionRight)}
-        compose.onNodeWithText("Lysstyrke 60 %").assertExists()
+        compose.onNodeWithText("60 %").assertExists()
         compose.mainClock.advanceTimeBy(400);compose.waitForIdle();assertEquals(brightnessCall(60),call)
         compose.onNodeWithText("Leselys").performKeyInput {pressKey(Key.Menu)}
         assertEquals(1,menus)
@@ -70,8 +70,8 @@ class CardV2UiTest {
     @Test fun mediaButtonsCanNavigateWithoutAdjustingVolume() {
         val media=e("media_player.a","playing","""{"volume_level":0.5}""")
         compose.setContent {StovaTheme {HaCard(CardConfig("m",CardType.MEDIA_PLAYER,media.id),media,false,{},{})}}
-        compose.onNodeWithText("Neste spor").performSemanticsAction(SemanticsActions.RequestFocus)
-        compose.onNodeWithText("Neste spor").performKeyInput {pressKey(Key.DirectionLeft)}
-        compose.onNodeWithText("Pause").assertIsFocused()
+        compose.onNodeWithContentDescription("Neste spor").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithContentDescription("Neste spor").performKeyInput {pressKey(Key.DirectionLeft)}
+        compose.onNodeWithContentDescription("Pause").assertIsFocused()
     }
 }

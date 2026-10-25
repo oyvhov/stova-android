@@ -236,7 +236,7 @@
     <string name="ha_v2_pending">Pending …</string>
     <string name="ha_v2_failed">The change failed. Try again.</string>
     <string name="ha_v2_done">Done</string>
-    <string name="ha_v2_remote_hint">OK: control · ← →: adjust · Menu / hold OK: customise</string>
+    <string name="ha_v2_remote_hint">OK: control · ← →: adjust · Menu: customise</string>
     <string name="ha_v2_size">Size</string>
     <string name="ha_v2_size_s">S · 1 × 1</string>
     <string name="ha_v2_size_m">M · 2 × 1</string>
@@ -304,4 +304,5 @@
     <string name="ha_v2_dearest">Highest %1$s</string>
     <string name="ha_v2_hourly">Hourly</string>
     <string name="ha_v2_quarter_hours">15 minutes</string>
+    <string name="ha_v2_target_adjust">Target %1$s° · ← − / + →</string>
 </resources>
