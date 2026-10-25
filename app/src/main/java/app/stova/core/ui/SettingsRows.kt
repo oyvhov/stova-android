@@ -111,7 +111,7 @@ private fun RowText(title: String, subtitle: String?, modifier: Modifier) {
 
 /** A single D-pad stop. Left goes back, right and OK go forward, with wrapping at either end. */
 @Composable
-fun SettingsChoiceRow(title: String, value: String, onStep: (Int) -> Unit) {
+fun SettingsChoiceRow(title: String, value: String, preview: (@Composable () -> Unit)? = null, onStep: (Int) -> Unit) {
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.medium
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).focusOutline(source, shape).clip(shape)
@@ -128,6 +128,7 @@ fun SettingsChoiceRow(title: String, value: String, onStep: (Int) -> Unit) {
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface)
+        preview?.invoke()
         Text(stringResource(R.string.appearance_choice_value, value), Modifier.weight(0.8f),
             textAlign = androidx.compose.ui.text.style.TextAlign.End,
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

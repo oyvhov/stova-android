@@ -8,6 +8,7 @@ import androidx.compose.ui.res.stringResource
 import app.stova.AppContainer
 import app.stova.BuildConfig
 import app.stova.R
+import app.stova.core.theme.*
 import app.stova.core.ui.SettingsGroup
 import app.stova.core.ui.SettingsSwitchRow
 import app.stova.profiles.*
@@ -26,6 +27,23 @@ fun AppearanceSettings(container: AppContainer, profile: Profile) {
 fun AppearanceSettingsContent(p: AppearancePrefs, onChange: (AppearancePrefs) -> Unit) {
     Text(stringResource(R.string.appearance_choice_hint), style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
+    SettingsGroup(stringResource(R.string.theme_group)) {
+        Choice(R.string.theme_mood, p.visualTheme, VisualTheme.entries, themeLabels,
+            preview = { ThemeSwatches(p.visualTheme) }) { theme ->
+            onChange(when(theme) {
+                VisualTheme.NOEL -> SeasonChoice.CHRISTMAS.applyTo(p)
+                VisualTheme.HALLOWEEN -> SeasonChoice.HALLOWEEN.applyTo(p)
+                else -> p.copy(visualTheme=theme, seasonChoice=SeasonChoice.NONE, seasonOverlay=null)
+            })
+        }
+        Choice(R.string.appearance_accent, p.accent, Accent.entries, accentLabels,
+            preview = { AccentSwatches(p.accent) }) { onChange(p.copy(accent = it)) }
+        Choice(R.string.theme_season, p.seasonChoice, SeasonChoice.entries,
+            listOf(R.string.theme_none,R.string.theme_calendar,R.string.theme_christmas,R.string.theme_halloween)) { onChange(it.applyTo(p)) }
+        Choice(R.string.theme_decor, p.seasonalDecor, SeasonalDecor.entries,
+            listOf(R.string.appearance_off,R.string.theme_calm,R.string.theme_full)) { onChange(p.copy(seasonalDecor=it)) }
+        ThemePreview(p)
+    }
     SettingsGroup(stringResource(R.string.settings_home)) {
         Choice(R.string.appearance_hero_size, p.heroSize, HeroSize.entries, listOf(R.string.appearance_compact, R.string.appearance_large)) { onChange(p.copy(heroSize = it)) }
         Toggle(R.string.appearance_overview, p.showOverview) { onChange(p.copy(showOverview = it)) }
@@ -44,7 +62,6 @@ fun AppearanceSettingsContent(p: AppearancePrefs, onChange: (AppearancePrefs) ->
         Choice(R.string.appearance_dimming, p.backdropDimming, BackdropDimming.entries, listOf(R.string.appearance_light, R.string.appearance_medium, R.string.appearance_dark)) { onChange(p.copy(backdropDimming = it)) }
     }
     SettingsGroup(stringResource(R.string.appearance_color_focus)) {
-        Choice(R.string.appearance_accent, p.accent, Accent.entries, listOf(R.string.appearance_lime, R.string.appearance_ocean, R.string.appearance_iris, R.string.appearance_coral, R.string.appearance_gold, R.string.appearance_mint)) { onChange(p.copy(accent = it)) }
         Choice(R.string.appearance_focus_effect, p.focusEffect, FocusEffect.entries, listOf(R.string.appearance_ring, R.string.appearance_zoom)) { onChange(p.copy(focusEffect = it)) }
         SettingsSwitchRow(stringResource(R.string.appearance_reduce_motion), p.reduceMotion,
             { onChange(p.copy(reduceMotion = it)) }, stringResource(R.string.appearance_reduce_motion_hint))
@@ -58,12 +75,12 @@ fun AppearanceSettingsContent(p: AppearancePrefs, onChange: (AppearancePrefs) ->
 
 @Composable
 private fun Toggle(title: Int, value: Boolean, onChange: (Boolean) -> Unit) =
-    Choice(title, value, listOf(false, true), listOf(R.string.appearance_off, R.string.appearance_on), onChange)
+    Choice(title, value, listOf(false, true), listOf(R.string.appearance_off, R.string.appearance_on), onChange = onChange)
 
 @Composable
-private fun <T> Choice(title: Int, value: T, entries: List<T>, labels: List<Int>, onChange: (T) -> Unit) {
+private fun <T> Choice(title: Int, value: T, entries: List<T>, labels: List<Int>, preview: (@Composable () -> Unit)? = null, onChange: (T) -> Unit) {
     val index = entries.indexOf(value)
-    app.stova.core.ui.SettingsChoiceRow(stringResource(title), stringResource(labels[index])) { step ->
+    app.stova.core.ui.SettingsChoiceRow(stringResource(title), stringResource(labels[index]), preview) { step ->
         onChange(entries[Math.floorMod(index + step, entries.size)])
     }
 }
