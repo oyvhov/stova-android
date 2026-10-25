@@ -10,10 +10,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 
 class AppRepository(
@@ -22,8 +24,13 @@ class AppRepository(
     private val scope: CoroutineScope,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) {
-    /** Re-scans whenever a package is added, removed or changed. */
+    /**
+     * One scan, shared: the Home row, every Apps page and anyone else collect the same list and the
+     * same package callback, and a page that opens again gets the last scan at once. Re-scans
+     * whenever a package is added, removed or changed.
+     */
     private val installed: Flow<List<InstalledApp>> = catalog.changes().onStart { emit(Unit) }.map { catalog.installed() }
+        .shareIn(scope, SharingStarted.WhileSubscribed(5_000), replay = 1)
 
     fun arranged(profile: Flow<Profile?>): Flow<ArrangedApps> =
         combine(profile, installed) { p, apps -> p to apps }
