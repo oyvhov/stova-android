@@ -46,13 +46,13 @@ fun HomeButtonSettings(container: AppContainer) {
             color = MaterialTheme.colorScheme.onSurface,
             modifier = RowInset,
         )
+        // The Shield has no screen of its own for this: Android's settings open, and the path shows.
+        var showPath by remember { mutableStateOf(false) }
         StovaButton(stringResource(R.string.hb_open_accessibility), modifier = RowInset, onClick = {
-            try {
-                context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            } catch (_: ActivityNotFoundException) {
-                context.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            }
+            showPath = !app.stova.navigation.openAccessibilitySettings(context)
         })
+        if (showPath) Text(stringResource(R.string.hb_accessibility_path), style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = RowInset)
         SettingsSwitchRow(
             stringResource(R.string.hb_override),
             household?.homeButtonOverride ?: true,

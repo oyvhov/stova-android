@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.AppContainer
 import app.stova.MainActivity
@@ -63,6 +64,16 @@ class SettingsScreenTest {
         rule.onNodeWithText("Android-innstillingar").performScrollTo().performClick()
         val started = org.robolectric.Shadows.shadowOf(rule.activity).nextStartedActivity
         assertEquals(android.provider.Settings.ACTION_SETTINGS, started?.action)
+    }
+
+    // On the Shield the sections only changed on OK; on a TV the page follows focus.
+    @Test fun sectionFollowsFocus() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNodeWithText("Bakgrunnsrotasjon").assertDoesNotExist()
+        rule.onNodeWithText("Heim").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        rule.waitForIdle()
+        rule.onNodeWithText("Bakgrunnsrotasjon").assertExists()
     }
 
     @Test fun kidSeesOnlySwitchProfile() {

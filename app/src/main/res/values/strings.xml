@@ -461,5 +461,6 @@
     <string name="ha_action_yes_off">"Ja, slå av"</string>
     <!-- System -->
     <string name="nav_system_settings">Android-innstillingar</string>
+    <string name="hb_accessibility_path">Finn ho under Enhetsinnstillingar → Tilgjengelegheit → Stova Home-knapp, og slå ho på.</string>
     <string name="spole_update_for_links">Opna Spole. Oppdater Spole for å gå rett til tittelen.</string>
 </resources>

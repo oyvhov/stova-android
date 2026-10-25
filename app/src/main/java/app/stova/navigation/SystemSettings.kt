@@ -21,3 +21,22 @@ fun openSystemSettings(context: Context): Boolean {
     }
     return false
 }
+
+private const val GOOGLE_STUBS = "com.google.android.tv.frameworkpackagestubs"
+
+/**
+ * Accessibility settings, where the Home-button service is switched on. The Shield answers the
+ * standard action with Google's stub ("no app can do this"), so then Android's settings open
+ * instead; false tells the caller to show the path (Device preferences → Accessibility).
+ */
+fun openAccessibilitySettings(context: Context): Boolean {
+    val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+    val handler = context.packageManager.resolveActivity(intent, 0)?.activityInfo?.packageName
+    if (handler != null && handler != GOOGLE_STUBS) {
+        try { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); return true }
+        catch (_: ActivityNotFoundException) { }
+        catch (_: SecurityException) { }
+    }
+    openSystemSettings(context)
+    return false
+}

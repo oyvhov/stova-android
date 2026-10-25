@@ -26,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -69,7 +70,8 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
                 modifier = Modifier.padding(bottom = 16.dp),
             )
             SettingsSection.entries.forEach { entry ->
-                SectionTab(stringResource(entry.label), entry == section) { section = entry }
+                // A TV settings list follows focus: the page changes as you move, OK is not needed.
+                SectionTab(stringResource(entry.label), entry == section, onFocused = { section = entry }) { section = entry }
             }
             // Not a Stova section: a door to Android's own settings (network, picture, sound).
             val context = androidx.compose.ui.platform.LocalContext.current
@@ -93,12 +95,13 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
 }
 
 @Composable
-private fun SectionTab(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun SectionTab(label: String, selected: Boolean, onFocused: (() -> Unit)? = null, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val shape = RoundedCornerShape(StovaShapes.Large)
     Box(
         Modifier.fillMaxWidth()
             .heightIn(min = 56.dp)
+            .onFocusChanged { if (it.isFocused) onFocused?.invoke() }
             .focusOutline(source, shape)
             .clip(shape)
             .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)

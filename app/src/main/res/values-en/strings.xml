@@ -461,5 +461,6 @@
     <string name="ha_action_yes_off">"Yes, turn off"</string>
     <!-- System -->
     <string name="nav_system_settings">Android settings</string>
+    <string name="hb_accessibility_path">Find it under Device Preferences → Accessibility → Stova Home button, and switch it on.</string>
     <string name="spole_update_for_links">Opened Spole. Update Spole to go straight to the title.</string>
 </resources>
