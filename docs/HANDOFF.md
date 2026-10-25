@@ -1,3 +1,10 @@
+# Kortare retry etter fråkopla medierader – fullført
+2026-10-25: Ny bestilling om å halde fram etter Claude; planen `2026-10-25-offline-retry.md` er fullført. Feila henting kan prøvast att etter 30 sekund, også utan snapshot; vellukka henting held femminuttsbufferen og Spole-invalideringa.
+Tre regresjonar vart køyrde raude før retting; fire nye testar er grøne. Full sluttkontroll inkludert skjermtestar: 575/575, 0 hoppa over, lint 0 feil (38 åtvaringar, 1 hint), debug-bygg OK.
+Emulator-5580 er oppdatert med `install -r` og ekte data. Kald start og retur til Heim gir levande rader; snapshot kan vise «Offline» under første henting. Profil- og kontofiler er byteidentiske før/etter.
+Rapport: `docs/verification/offline-retry.md`; tre stillbilete i `docs/images/`. Overgangsklipp: `.superpowers/offline-retry-transitions.mp4`, 30,21 s, 1280 × 720, git-ignorert. Langt OK opnar vêrpanel, Back lukkar det; ingen styringshandlingar.
+Ingen påbyrja steg står att. Ingen push eller installasjon på Shield i denne bestillinga. Eldre utsette Shield-/signerings-/release-punkt er uendra; ingen spørsmål til brukaren.
+
 # Stoppvilkår: Plan 1 er allereie avkryssa
 2026-10-25 kl. 18:29 lokal tid: Lese AGENTS.md, arkitektur, arbeidsflyt, spesifikasjon og siste overlevering. Plan 1 har 65/65 avkryssa steg, sist oppgåve 13 steg 4; stoppar etter brukaren sitt uttrykkelege Plan 1-vilkår.
 Ingen nye kodesteg er påbyrja eller fullførte i denne økta. Plan `2026-10-25-offline-retry.md` frå førre overlevering står urørt frå første steg.

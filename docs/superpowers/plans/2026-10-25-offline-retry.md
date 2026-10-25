@@ -9,19 +9,19 @@ ved kald start) tel difor som fersk, og ein retur til Heim spør ikkje på nytt 
 Radene står «Fråkopla» heile tida. Regelen frå brukaren gjeld: «ikkje spør utan at det trengst», men
 heller ikkje i ei tett løkkje, og ei feila henting skal prøvast att snart.
 
-- [ ] Raud test i `MediaRepositoryTest`: første `refresh()` feilar for kontoen (radene blir `offline`).
+- [x] Raud test i `MediaRepositoryTest`: første `refresh()` feilar for kontoen (radene blir `offline`).
       `refresh()` på nytt etter 31 s med same klokke, når klienten svarar, hentar igjen og fjernar
       `offline`. `refresh()` på nytt etter berre 5 s gjer ingen ny førespurnad.
-- [ ] Rett: ei henting der minst éin konto fekk `offline`-rader eller kasta (ikkje `Unauthorized`)
+- [x] Rett: ei henting der minst éin konto fekk `offline`-rader eller kasta (ikkje `Unauthorized`)
       kan prøvast att etter `FAILED_REFRESH_RETRY_MILLIS = 30_000L` i staden for fem minutt.
       Vellukka hentingar held femminuttsregelen og `playbackRevision`-regelen uendra.
-- [ ] Prøv på emulator-5580 med ekte data: kald start (`am force-stop` og start) og retur til Heim.
+- [x] Prøv på emulator-5580 med ekte data: kald start (`am force-stop` og start) og retur til Heim.
       Ingen «Fråkopla» når Jellyfin er nåbar. Profil- og kontofiler skal vere byteidentiske før og etter.
-- [ ] Ta opp eit klipp (`adb -s emulator-5580 shell screenrecord`, ca. 20–30 s) som viser overgangane:
+- [x] Ta opp eit klipp (`adb -s emulator-5580 shell screenrecord`, ca. 20–30 s) som viser overgangane:
       Heim → ned i radene (parallax) → opp → Innstillingar (fleire seksjonar) → tilbake → Smarthus →
       opne eit kortpanel (langt OK) og lukk med Back (ingen styringshandlingar) → Heim.
       Legg klippet i `.superpowers/` (git-ignorert) og to–tre stillbilete i `docs/images/`.
-- [ ] Køyr full suite, lint og bygg (`scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug`);
+- [x] Køyr full suite, lint og bygg (`scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDebug`);
       dokumenter i `docs/verification/offline-retry.md` og commit.
 
 Avgrensing:

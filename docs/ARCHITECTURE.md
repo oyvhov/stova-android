@@ -40,6 +40,7 @@ rad- og tittel-id-ar som nøklar.
 
 - Media blir vist frå snapshot før nettverket svarar. Vanleg retur til Heim bruker femminuttsbufferen;
   etter ei tittellenkje frå Heim til Spole blir framdrifta henta på nytt éin gong for den aktive profilen.
+  Feila henting kan prøvast att ved neste retur etter 30 sekund, også utan bufra rader.
 - Smalare spotlight-utval blir brukte om att i to timar. Nye kontoar og sesongbyte kan oppdatere tidlegare.
 - Applista deler pakkeskanning og pakkelyttar. Ikonpakkar blir oppdaga når dei blir etterspurde.
 - HA-socketen treng synlege Heim-brikker eller ein open Smarthus-/legg-til-flyt. Bakgrunn og tapt behov har ein kort fråkoplingsfrist.

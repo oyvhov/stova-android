@@ -38,6 +38,50 @@ class MediaRepositoryTest {
   val r=MediaRepository(a,{ client(it,MediaError.Unreachable(Exception())) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))
   r.refresh("p");assertTrue(r.rows("p").first().single().offline);assertEquals(listOf(item(j)),r.rows("p").first().single().items)
  }
+ @Test fun failedRowsRetryAfterThirtySecondsAndRecoveryRestoresTheNormalCache()=runTest {
+  assertFailedRefreshRetries(cachedRows=true)
+ }
+ @Test fun aFailureWithoutCachedRowsAlsoRetriesSoon()=runTest {
+  assertFailedRefreshRetries(cachedRows=false)
+ }
+ @Test fun aCoreTimeoutAlsoRetriesSoon()=runTest {
+  assertFailedRefreshRetries(cachedRows=true,timeout=true)
+ }
+ @Test fun aHealthyAccountDoesNotHideAnotherAccountsFailure()=runTest {
+  assertFailedRefreshRetries(cachedRows=true,healthyAccount=true)
+ }
+ private suspend fun TestScope.assertFailedRefreshRetries(cachedRows:Boolean,timeout:Boolean=false,healthyAccount:Boolean=false) {
+  val a=accounts();val account=add(a,ServerKind.JELLYFIN)
+  if(healthyAccount) add(a,ServerKind.EMBY)
+  if(cachedRows) cached(account)
+  var now=1_000L;var failing=true;var calls=0
+  val server=object:MediaServerClient {
+   override suspend fun resume():List<MediaItem> {
+    calls++
+    if(failing) {
+     if(timeout) awaitCancellation() else throw MediaError.Unreachable(Exception())
+    }
+    return listOf(item(account))
+   }
+   override suspend fun nextUp()=emptyList<MediaItem>()
+   override suspend fun latest(endpoint:Endpoint)=emptyList<MediaItem>()
+  }
+  val r=MediaRepository(a,{ if(it.id==account.id) server else client(it) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ now })
+  r.refresh("p")
+  val offline=r.rows("p").first().filter { it.account.id==account.id }
+  assertEquals(if(cachedRows) 1 else 0,offline.size)
+  assertTrue(offline.all { it.offline })
+  failing=false
+  now+=5_000L;r.refresh("p")
+  assertEquals("a quick return must not hammer the server",1,calls)
+  now+=26_000L;r.refresh("p")
+  assertEquals("a failed attempt must not block recovery for five minutes",2,calls)
+  assertTrue(r.rows("p").first().all { !it.offline })
+  now+=31_000L;r.refresh("p")
+  assertEquals("recovered rows keep the normal five-minute cache",2,calls)
+  now+=REFRESH_MIN_AGE_MILLIS-31_000L;r.refresh("p")
+  assertEquals(3,calls)
+ }
  @Test fun unauthorizedMarksAccountAndDropsRows()=runTest {
   val a=accounts();add(a,ServerKind.JELLYFIN);val e=add(a,ServerKind.EMBY);cached(e)
   val r=MediaRepository(a,{ client(it,if(it.kind==ServerKind.EMBY) MediaError.Unauthorized() else null) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))

@@ -452,6 +452,9 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 - **Hurtigbuffer:** siste vellukka rader per profil i `files/snapshots/{profileId}.json`. Ved
   oppstart blir øyeblikksbiletet vist straks, og nettverket oppdaterer. Feil på nettverket viser
   bufra rader med ein diskret «Fråkopla · Jellyfin» i radoverskrifta.
+  Vellukka henting blir brukt om att i fem minutt ved retur til Heim. Dersom minst éin konto
+  feilar, får tidsavbrot eller viser fråkopla rader, kan neste retur prøve att etter 30 sekund;
+  dette gjeld også når kontoen enno ikkje har eit snapshot. Utgått innlogging krev ny innlogging.
 - **Bakgrunn frå media:** backdropen følgjer spotlighten, aldri kortfokus. Neste bilete blir
   dekoda før 900 ms krysstoning. Éin flat Ink-scrim kombinerer horisontal fading bak den korte
   venstre tekstgruppa, vern øvst i 30 % for toppfeltet og fading nedst bak radene. Middels og

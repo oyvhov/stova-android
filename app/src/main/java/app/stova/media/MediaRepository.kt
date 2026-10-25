@@ -23,6 +23,8 @@ const val EXTRA_TIMEOUT_MILLIS = 20_000L
 const val SEASONAL_REFRESH_MILLIS = 60 * 60 * 1000L
 /** Ordinary returns reuse young rows; returning from Spole invalidates them once. */
 const val REFRESH_MIN_AGE_MILLIS = 5 * 60 * 1000L
+/** Failed rows can recover on the next visit without hammering an unreachable server. */
+const val FAILED_REFRESH_RETRY_MILLIS = 30_000L
 
 class MediaRepository(private val accounts: MediaAccountRepository,private val clientFor: suspend (MediaAccount) -> MediaServerClient?,private val snapshotDir: File,private val scope: CoroutineScope,private val io: CoroutineDispatcher=Dispatchers.IO,private val clock: () -> Long=System::currentTimeMillis) {
  private class Slot(val store: JsonFileStore<MediaSnapshot>) {
@@ -32,11 +34,12 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   var seasonalAt=0L;var seasonalFor: Season = Season.NONE
   /** The last attempt, and the season and accounts it was for: a new account or season is never made to wait. */
   var refreshedAt=0L;var refreshedFor: Pair<Season,List<String>>?=null
+  var refreshFailed=false
   val playbackRevision=AtomicLong();var refreshedPlaybackRevision=0L
   /** Narrower hero pools (films, series, favourites) and when each is next due; shared by every entry to Home. */
   val extra=MutableStateFlow<Map<SpotlightSource,List<SpotlightEntry>>>(emptyMap());val extraDue=mutableMapOf<SpotlightSource,Long>();val extraMutex=Mutex()
  }
- private class Fetched(val rows: List<HomeRowUi.Media>,val spotlight: List<SpotlightEntry>,val spotlightOk: Boolean,val seasonalOk: Boolean=true)
+ private class Fetched(val rows: List<HomeRowUi.Media>,val spotlight: List<SpotlightEntry>,val spotlightOk: Boolean,val seasonalOk: Boolean=true,val rowsOk:Boolean=true)
  private val slots=ConcurrentHashMap<String,Slot>()
  private fun slot(id: String): Slot { require(id.matches(Regex("[A-Za-z0-9_-]{1,128}"))); return slots.getOrPut(id) { Slot(JsonFileStore(File(snapshotDir,"$id.json"),MediaSnapshot.serializer(),MediaSnapshot(),io)) } }
  private suspend fun loaded(id:String): Slot {
@@ -154,8 +157,8 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    val now=clock();val key=season to list.map { it.id }
    val playbackRevision=slot.playbackRevision.get()
    // A trip to the player can change progress before the ordinary five-minute interval expires.
-   if(slot.refreshedAt!=0L && now-slot.refreshedAt in 0 until minAgeMillis && slot.refreshedFor==key && slot.refreshedPlaybackRevision==playbackRevision) return
-   slot.refreshedAt=now;slot.refreshedFor=key
+   val refreshAge=if(slot.refreshFailed) minOf(minAgeMillis,FAILED_REFRESH_RETRY_MILLIS) else minAgeMillis
+   if(slot.refreshedAt!=0L && now-slot.refreshedAt in 0 until refreshAge && slot.refreshedFor==key && slot.refreshedPlaybackRevision==playbackRevision) return
    // Nobody to ask: the rows stay as the accounts filter leaves them, and the snapshot is not touched.
    if(list.isEmpty()) return
    // Never fetched, stale, or a clock that went backwards: fetch the spotlight again.
@@ -200,11 +203,11 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
       }
       val spotlight=spotlightJob.await();val (seasonal,seasonalOk)=seasonalRows.await()
       Fetched(((core ?: cached.filter { it.kind.season==Season.NONE })+seasonal).filter { it.items.isNotEmpty() },
-       spotlight ?: cachedSpotlight,spotlight!=null,seasonalOk)
+       spotlight ?: cachedSpotlight,spotlight!=null,seasonalOk,rowsOk=core!=null)
      }
     } catch(_: MediaError.Unauthorized) { accounts.markNeedsSignIn(account.id);Fetched(emptyList(),emptyList(),true) }
       catch(e: CancellationException) { throw e }
-      catch(_: Exception) { Fetched(cached,cachedSpotlight,false) }
+      catch(_: Exception) { Fetched(cached,cachedSpotlight,false,rowsOk=false) }
    } }.awaitAll() }
    val active=accounts.forProfile(profileId).first()
    val current=visible(fetched.flatMap { it.rows },active)
@@ -218,6 +221,8 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    val next=saved.copy(rows=current.map { row -> SnapshotRow(row.key,row.account.id,row.kind,row.items) },
     spotlight=spotlight.map { entry -> SnapshotSpotlight(entry.account.id,entry.item,entry.newSeason) },spotlightAt=slot.spotlightAt)
    if(next!=saved) slot.store.update { it.copy(rows=next.rows,spotlight=next.spotlight,spotlightAt=next.spotlightAt,savedAt=now) }
+   slot.refreshedAt=now;slot.refreshedFor=key
+   slot.refreshFailed=fetched.any { !it.rowsOk || it.rows.any { row -> row.offline } }
    slot.refreshedPlaybackRevision=playbackRevision
   }
  }
