@@ -51,6 +51,21 @@ class HaRepositoryTest {
         socket.entities.value=mapOf(cover.id to optimisticEntity(cover,call));runCurrent()
         assertTrue(job.await());assertTrue(repo.pending.value.isEmpty())
     }
+    // Review finding 1: HA reports brightness 64 for a predicted 63.75; the wait ran its full 2 s, and an
+    // adjustment inside it was refused as "busy" and shown as failed.
+    @Test fun integerBrightnessConfirmsAtOnceSoTheNextAdjustmentIsAccepted() = runTest {
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
+        fun light(brightness:Int)=HaEntity("light.ph","on",kotlinx.serialization.json.buildJsonObject {put("brightness",kotlinx.serialization.json.JsonPrimitive(brightness))},0,0)
+        repo.add(light(51),CardType.LIGHT);runCurrent();socket.entities.value=mapOf("light.ph" to light(51));runCurrent()
+        val first=backgroundScope.async {repo.perform(brightnessCall(25),"light.ph",adult)};runCurrent()
+        socket.entities.value=mapOf("light.ph" to light(64));runCurrent()
+        assertTrue(first.isCompleted);assertTrue(first.await());assertTrue(repo.pending.value.isEmpty())
+        val second=backgroundScope.async {repo.perform(brightnessCall(35),"light.ph",adult)};runCurrent()
+        socket.entities.value=mapOf("light.ph" to light(89));runCurrent()
+        assertTrue(second.await())
+    }
+
     @Test fun watchFollowsActiveProfileCards() = runTest {
         val p = profiles(); val s = ProfileSession(p, backgroundScope); val socket = FakeHaConnection()
         val repo = HaRepository(socket, s, p, backgroundScope)
