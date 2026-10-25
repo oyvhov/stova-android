@@ -26,10 +26,11 @@ import coil3.request.ImageRequest
  val height=if(poster) StovaLayout.PosterHeight else StovaLayout.WideHeight
  val density=LocalDensity.current;val context=LocalContext.current
  val request=remember(item.art,poster,density) { ImageRequest.Builder(context).data(if(poster) item.art.poster else item.art.wide).size(with(density){width.roundToPx()},with(density){height.roundToPx()}).build() }
- Column(modifier.width(width).onFocusChanged { if(it.isFocused) onFocused() }.focusOutline(source,shape)
+ // The ring frames the artwork only, so it never cuts through the title below it.
+ Column(modifier.width(width).onFocusChanged { if(it.isFocused) onFocused() }
   .onKeyEvent { if(it.key==Key.Menu && it.type==KeyEventType.KeyUp) { onLongClick();true } else false }
   .combinedClickable(source,indication=null,role=Role.Button,onClick=onClick,onLongClick=onLongClick)) {
-  Box(Modifier.size(width,height).clip(shape).background(MaterialTheme.colorScheme.surfaceVariant)) {
+  Box(Modifier.size(width,height).focusOutline(source,shape).clip(shape).background(MaterialTheme.colorScheme.surfaceVariant)) {
    AsyncImage(request,contentDescription=null,contentScale=ContentScale.Crop,modifier=Modifier.fillMaxSize())
    if(!poster) item.progress?.let { progress -> Box(Modifier.align(Alignment.BottomStart).fillMaxWidth(progress.coerceIn(0f,1f)).height(4.dp).background(MaterialTheme.colorScheme.primary)) }
   }
