@@ -24,6 +24,7 @@ class MainActivity : ComponentActivity() {
         container.haSocket.start()
     }
     override fun onStop() {
+        container.appScope.launch(Dispatchers.IO) { container.haRepository.flush() }
         container.haSocket.stop()
         super.onStop()
     }

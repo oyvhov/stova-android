@@ -45,11 +45,20 @@ class HaAuth(
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private val mutex = Mutex()
+    private var loaded = false
+    private var cached: HaTokens? = null
     private val mutableState = MutableStateFlow(HaAuthState.SIGNED_OUT)
     val state = mutableState.asStateFlow()
-    private suspend fun tokens() = secrets.read("ha/tokens")?.let { StovaJson.decodeFromString<HaTokens>(it) }
+    private suspend fun tokens(): HaTokens? {
+        if (!loaded) {
+            cached = secrets.read("ha/tokens")?.let { StovaJson.decodeFromString<HaTokens>(it) }
+            loaded = true
+        }
+        return cached
+    }
     private suspend fun save(tokens: HaTokens) {
         secrets.write("ha/tokens", StovaJson.encodeToString(tokens))
+        cached = tokens; loaded = true
         mutableState.value = HaAuthState.SIGNED_IN
     }
     suspend fun restore() = mutex.withLock { mutableState.value = if (tokens() == null) HaAuthState.SIGNED_OUT else HaAuthState.SIGNED_IN }
@@ -67,10 +76,10 @@ class HaAuth(
         t.access
     }
     suspend fun invalidateAccess() = mutex.withLock { tokens()?.let { save(it.copy(expiresAt = 0)) } }
-    internal suspend fun reject() = mutex.withLock { secrets.delete("ha/tokens"); mutableState.value = HaAuthState.SIGNED_OUT }
+    internal suspend fun reject() = mutex.withLock { secrets.delete("ha/tokens"); cached = null; loaded = true; mutableState.value = HaAuthState.SIGNED_OUT }
     suspend fun signOut() = mutex.withLock {
         val t = tokens()
-        secrets.delete("ha/tokens"); mutableState.value = HaAuthState.SIGNED_OUT
+        secrets.delete("ha/tokens"); cached = null; loaded = true; mutableState.value = HaAuthState.SIGNED_OUT
         val base = address()?.base
         if (t?.refresh != null && base != null) {
             try { withContext(Dispatchers.IO) { http.newCall(Request.Builder().url("$base/auth/token").post(form(mapOf("token" to t.refresh, "action" to "revoke"))).build()).execute().close() } }
@@ -82,7 +91,7 @@ class HaAuth(
         return withContext(Dispatchers.IO) {
             http.newCall(Request.Builder().url("$base/auth/token").post(form(fields)).build()).execute().use { response ->
                 if (oldRefresh != null && response.code in listOf(400, 401)) {
-                    secrets.delete("ha/tokens"); mutableState.value = HaAuthState.SIGNED_OUT; throw HaSignedOut()
+                    secrets.delete("ha/tokens"); cached = null; loaded = true; mutableState.value = HaAuthState.SIGNED_OUT; throw HaSignedOut()
                 }
                 if (!response.isSuccessful) throw IOException("HA token request failed (${response.code})")
                 val json = StovaJson.parseToJsonElement(response.body!!.string()).jsonObject

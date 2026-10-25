@@ -18,7 +18,7 @@ class HaRepositoryTest {
     @get:Rule val dir = TemporaryFolder()
     private fun profiles() = ProfileRepository(JsonFileStore(File(dir.root, "profiles.json"), ProfilesFile.serializer(), ProfilesFile(), UnconfinedTestDispatcher()))
     @Test fun alarmUnavailableAndRevokedPermissionNeverSend() = runTest {
-        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) }
         val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
         val alarm=HaEntity("alarm_control_panel.home","disarmed",JsonObject(emptyMap()),0,0)
         val missing=HaEntity("light.a","unavailable",JsonObject(emptyMap()),0,0)
@@ -31,7 +31,7 @@ class HaRepositoryTest {
         assertEquals(0,socket.calls)
     }
     @Test fun sceneReceiptBelongsToItsCardAndExpiresAfterTwoSeconds() = runTest {
-        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) }
         val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
         val scene=HaEntity("scene.night","off",JsonObject(emptyMap()),0,0)
         repo.add(scene,CardType.SCENE);runCurrent();socket.entities.value=mapOf(scene.id to scene);runCurrent()
@@ -41,7 +41,7 @@ class HaRepositoryTest {
         advanceTimeBy(1);runCurrent();assertFalse(scene.id in repo.completed.value)
     }
     @Test fun coverPositionWaitsForActualPositionEvent() = runTest {
-        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) }
         val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
         val cover=HaEntity("cover.curtain","open",kotlinx.serialization.json.buildJsonObject {put("current_position",kotlinx.serialization.json.JsonPrimitive(50))},0,0)
         repo.add(cover,CardType.COVER);runCurrent();socket.entities.value=mapOf(cover.id to cover);runCurrent()
@@ -54,7 +54,7 @@ class HaRepositoryTest {
     // Review finding 1: HA reports brightness 64 for a predicted 63.75; the wait ran its full 2 s, and an
     // adjustment inside it was refused as "busy" and shown as failed.
     @Test fun integerBrightnessConfirmsAtOnceSoTheNextAdjustmentIsAccepted() = runTest {
-        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) }
         val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
         fun light(brightness:Int)=HaEntity("light.ph","on",kotlinx.serialization.json.buildJsonObject {put("brightness",kotlinx.serialization.json.JsonPrimitive(brightness))},0,0)
         repo.add(light(51),CardType.LIGHT);runCurrent();socket.entities.value=mapOf("light.ph" to light(51));runCurrent()
@@ -68,7 +68,7 @@ class HaRepositoryTest {
 
     // Review finding 5: one registry list timing out replaced the rooms with an empty registry.
     @Test fun aPartlyFailedRegistryKeepsTheRoomsWeHave() = runTest {
-        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) }
         val rooms=HaRegistry(mapOf("light.a" to HaEntityInfo(room="Stove")))
         socket.registryValue=rooms;socket.status.value=HaStatus.DISCONNECTED;runCurrent()
         socket.status.value=HaStatus.CONNECTED;runCurrent()
@@ -80,7 +80,7 @@ class HaRepositoryTest {
 
     @Test fun watchFollowsActiveProfileCards() = runTest {
         val p = profiles(); val s = ProfileSession(p, backgroundScope); val socket = FakeHaConnection()
-        val repo = HaRepository(socket, s, p, backgroundScope)
+        val repo = HaRepository(socket, s, p, backgroundScope).also { it.showingDashboard(true) }
         val a = p.create("A", AvatarColor.LIME, false); val b = p.create("B", AvatarColor.ROSE, false)
         s.enter(a.id); runCurrent()
         repo.add(HaEntity("light.stove", "on", JsonObject(emptyMap()), 0, 0), CardType.LIGHT); runCurrent()
@@ -89,7 +89,7 @@ class HaRepositoryTest {
         assertTrue(repo.cards.value.isEmpty())
     }
     @Test fun maxThreeOnHomeAndReorderPersist() = runTest {
-        val p = profiles(); val s = ProfileSession(p, backgroundScope); val socket = FakeHaConnection(); val repo = HaRepository(socket, s, p, backgroundScope)
+        val p = profiles(); val s = ProfileSession(p, backgroundScope); val socket = FakeHaConnection(); val repo = HaRepository(socket, s, p, backgroundScope).also { it.showingDashboard(true) }
         s.enter(p.create("A", AvatarColor.LIME, false).id); runCurrent()
         repeat(4) { repo.add(HaEntity("sensor.$it", "1", JsonObject(emptyMap()),0,0), CardType.SENSOR); runCurrent() }
         val ids = repo.cards.value.map { it.id }
@@ -100,13 +100,13 @@ class HaRepositoryTest {
         repo.remove(ids[0]); runCurrent(); assertEquals(3, repo.cards.value.size)
     }
     @Test fun kidPerformIsNoop() = runTest {
-        val p = profiles(); val s = ProfileSession(p, backgroundScope); val socket = FakeHaConnection(); val repo = HaRepository(socket,s,p,backgroundScope)
+        val p = profiles(); val s = ProfileSession(p, backgroundScope); val socket = FakeHaConnection(); val repo = HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) }
         val kid = Profile("k","K",AvatarColor.ROSE,kid=true)
         assertFalse(repo.perform(ServiceCall("light","toggle"),"light.stove",kid)); assertEquals(0,socket.calls)
     }
     @Test fun optimisticToggleIsImmediatePendingAndRollsBackOnFailure() = runTest {
         val p=profiles(); val s=ProfileSession(p,backgroundScope); val socket=FakeHaConnection()
-        val repo=HaRepository(socket,s,p,backgroundScope)
+        val repo=HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) }
         val adult=p.create("A",AvatarColor.LIME,false); s.enter(adult.id); runCurrent()
         val light=HaEntity("light.a","off",JsonObject(emptyMap()),0,0)
         repo.add(light,CardType.LIGHT); runCurrent()
@@ -130,7 +130,7 @@ class HaRepositoryTest {
         assertEquals(card,p.current().profiles.single().dashboard.single())
     }
     @Test fun successfulToggleWaitsForServerAndClearsPending() = runTest {
-        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) }
         val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
         val light=HaEntity("light.a","off",JsonObject(emptyMap()),0,0)
         repo.add(light,CardType.LIGHT);runCurrent();socket.entities.value=mapOf(light.id to light);runCurrent()
@@ -143,7 +143,7 @@ class HaRepositoryTest {
         val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection().apply {
             registryValue=HaRegistry(mapOf("light.a" to HaEntityInfo(room="Stove"),"light.b" to HaEntityInfo(room="Gang"),"light.c" to HaEntityInfo(room="Stove")))
         }
-        val repo=HaRepository(socket,s,p,backgroundScope);s.enter(p.create("A",AvatarColor.LIME,false).id);runCurrent()
+        val repo=HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) };s.enter(p.create("A",AvatarColor.LIME,false).id);runCurrent()
         listOf("light.a","light.b","light.c").forEach {repo.add(HaEntity(it,"on",JsonObject(emptyMap()),0,0),CardType.LIGHT);runCurrent()}
         val last=repo.cards.value.last()
         repo.move(last.id,-1);runCurrent()

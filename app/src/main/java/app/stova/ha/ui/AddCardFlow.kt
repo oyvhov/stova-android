@@ -39,10 +39,14 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
 
 @Composable fun AddCardFlow(container:AppContainer,onDone:()->Unit) {
     val cards by container.haRepository.cards.collectAsStateWithLifecycle()
-    AddCardFlow(container.haSocket,{entity,type->container.haRepository.add(entity,type)},onDone,cards.map {it.entityId}.toSet())
+    AddCardFlow(container.haSocket,{entity,type->container.haRepository.add(entity,type)},onDone,cards.map {it.entityId}.toSet(),container.haRepository::loadRegistry)
 }
 
-@Composable fun AddCardFlow(connection:HaConnection,onAdd:suspend (HaEntity,CardType)->Unit,onDone:()->Unit,existing:Set<String> = emptySet()) {
+@Composable fun AddCardFlow(connection:HaConnection,onAdd:suspend (HaEntity,CardType)->Unit,onDone:()->Unit,existing:Set<String> = emptySet(),registryLoader:suspend ()->HaRegistry? = { connection.registry() }) {
+    androidx.lifecycle.compose.LifecycleResumeEffect(connection) {
+        connection.hold()
+        onPauseOrDispose { connection.release() }
+    }
     val status by connection.status.collectAsStateWithLifecycle()
     var catalog by remember(connection) { mutableStateOf(emptyList<HaCatalogItem>()) }
     var loading by remember { mutableStateOf(true) }
@@ -58,7 +62,7 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
         if(status!=HaStatus.CONNECTED) {loading=status==HaStatus.CONNECTING;return@LaunchedEffect}
         loading=true;failed=false
         try {coroutineScope {
-            val states=async {connection.states()};val registry=async {connection.registry()}
+            val states=async {connection.states()};val registry=async {registryLoader()}
             // A thousand-entity home: build the catalogue off the main thread. No rooms beat no picker.
             val found=states.await();val rooms=registry.await() ?: HaRegistry()
             catalog=withContext(Dispatchers.Default) {entityCatalog(found,rooms)}

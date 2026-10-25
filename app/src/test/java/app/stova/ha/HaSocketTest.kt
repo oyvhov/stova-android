@@ -42,10 +42,32 @@ class HaSocketTest {
             override fun onClosing(ws: WebSocket, code: Int, reason: String) { ws.close(code, reason) }
         }))
     }
-    private suspend fun socket(): HaSocket {
+    private suspend fun socket(graceMillis: Long = 30_000): HaSocket {
         val address = HaAddress(server.url("/").toString().trimEnd('/'), server.url("/api/websocket").toString().replaceFirst("http", "ws"))
         val auth = HaAuth(OkHttpClient(), InMemorySecretStore(), { address }); auth.useLongLivedToken("ll")
-        return HaSocket(OkHttpClient(), auth, { address }, scope, listOf(10, 20))
+        return HaSocket(OkHttpClient(), auth, { address }, scope, listOf(10, 20), graceMillis)
+    }
+    // «Ikkje spør utan at det trengst»: a profile without cards on Home keeps the socket closed all day.
+    @Test fun withoutWatchedIdsOrHoldersNoSocketIsOpened() = runBlocking {
+        try {
+            enqueue(); val s = socket(graceMillis = 50); s.start(); delay(300)
+            assertEquals(0, server.requestCount); assertEquals(HaStatus.DISCONNECTED, s.status.value)
+            s.watch(setOf("light.stove")); connected(s)
+            assertEquals(1, server.requestCount)
+            s.watch(emptySet())
+            withTimeout(5_000) { s.status.first { it == HaStatus.DISCONNECTED } }
+            delay(200); assertEquals(1, server.requestCount)
+        } finally { scope.cancel() }
+    }
+    @Test fun aHolderConnectsWithoutIdsAndReleasingRestsAfterTheGrace() = runBlocking {
+        try {
+            enqueue(); val s = socket(graceMillis = 50); s.start(); s.hold()
+            withTimeout(5_000) { s.status.first { it == HaStatus.CONNECTED } }
+            assertEquals(0, subscriptions().size)
+            s.release()
+            withTimeout(5_000) { s.status.first { it == HaStatus.DISCONNECTED } }
+            delay(200); assertEquals(1, server.requestCount)
+        } finally { scope.cancel() }
     }
     private fun subscriptions() = received.filter { it["type"]?.jsonPrimitive?.content == "subscribe_entities" }
     private suspend fun connected(s: HaSocket) = withTimeout(5_000) { s.entities.first { it["light.stove"]?.state == "on" } }
@@ -59,13 +81,13 @@ class HaSocketTest {
             cache.update { HaSnapshot(profile.id, mapOf("light.stove" to HaEntity("light.stove", "on", JsonObject(emptyMap()), 0, 0))) }
             val session = ProfileSession(profiles, scope)
             val socket = socket()
-            val repo = HaRepository(socket, session, profiles, scope, cache)
+            val repo = HaRepository(socket, session, profiles, scope, cache).also { it.showingDashboard(true) }
             session.enter(profile.id)
             withTimeout(5_000) { repo.entities.first { it["light.stove"]?.state == "on" } }
             socket.start()
             withTimeout(5_000) { repo.entities.first { it.isEmpty() } }
-            // Cache writes are spaced 5 s apart, so the empty snapshot can land just after a 5 s wait.
-            withTimeout(12_000) { cache.data.first { it.entities.isEmpty() } }
+            // A server deletion is also persisted on leaving the foreground.
+            repo.flush(); assertTrue(cache.current().entities.isEmpty())
             Unit
         } finally { scope.cancel() }
     }
@@ -89,7 +111,7 @@ class HaSocketTest {
     }
     @Test fun authInvalidTwiceSignsOut() = runBlocking {
         try {
-            enqueue(true); enqueue(true); val s = socket(); s.start()
+            enqueue(true); enqueue(true); val s = socket(); s.hold(); s.start()
             withTimeout(5_000) { s.status.first { it == HaStatus.SIGNED_OUT } }
             delay(100); assertEquals(2, server.requestCount)
         } finally { scope.cancel() }

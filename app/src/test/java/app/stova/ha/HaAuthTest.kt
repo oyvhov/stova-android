@@ -15,6 +15,20 @@ class HaAuthTest {
     private var now = 1_000_000L
     private val secrets = InMemorySecretStore()
     private fun auth() = HaAuth(OkHttpClient(), secrets, { HaAddress(server.url("/").toString().trimEnd('/'), "") }, { now })
+    @Test fun repeatedCameraReadsDecryptOnceAndSignOutInvalidatesMemory() = runTest {
+        var reads = 0
+        val counting = object : app.stova.core.security.SecretStore by secrets {
+            override suspend fun read(key: String): String? { reads++; return secrets.read(key) }
+        }
+        val a = HaAuth(OkHttpClient(), counting, { null })
+        a.useLongLivedToken("first")
+        repeat(10) { assertEquals("first", a.accessToken()) }
+        assertEquals(0, reads)
+        a.signOut()
+        try { a.accessToken(); fail("signed out") } catch (_: HaSignedOut) { }
+        a.useLongLivedToken("second")
+        assertEquals("second", a.accessToken())
+    }
     @Test fun authorizeUrlEncodes() = assertEquals("http://ha:8123/auth/authorize?response_type=code&client_id=https%3A%2F%2Foyvhov.github.io%2Fstova%2F&redirect_uri=https%3A%2F%2Foyvhov.github.io%2Fstova%2Fauth-callback&state=s1", authorizeUrl(HaAddress("http://ha:8123", ""), "s1"))
     @Test fun callbackNeedsMatchingStateAndExactDestination() {
         assertEquals("c1", parseCallback("$HA_REDIRECT_URI?code=c1&state=s1", "s1"))

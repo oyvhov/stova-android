@@ -32,7 +32,7 @@ class HaCacheTest {
         store().update { HaSnapshot(a.id, mapOf("weather.home" to entity("cloudy"))) }
         val session = ProfileSession(profiles, backgroundScope)
         val socket = FakeHaConnection().apply { status.value = HaStatus.DISCONNECTED }
-        val repo = HaRepository(socket, session, profiles, backgroundScope, store())
+        val repo = HaRepository(socket, session, profiles, backgroundScope, store()).also { it.showingDashboard(true) }
         session.enter(a.id); runCurrent()
         assertEquals("cloudy", repo.entities.value["weather.home"]?.state)
         assertEquals(4, repo.entities.value["weather.home"]?.attributes?.get("temperature")?.jsonPrimitive?.int)
@@ -40,7 +40,7 @@ class HaCacheTest {
         assertEquals(1, repo.homeCards.value.size)
         profiles.update(a.id) { it.copy(dashboard = emptyList()) }; runCurrent()
         assertTrue(repo.entities.value.isEmpty())
-        advanceTimeBy(5_000); runCurrent()
+        advanceTimeBy(60_000); runCurrent()
         assertTrue(store().current().entities.isEmpty())
         session.enter(b.id); runCurrent()
         assertTrue(repo.entities.value.isEmpty())
@@ -52,7 +52,7 @@ class HaCacheTest {
         profiles.update(a.id) { it.copy(dashboard = listOf(CardConfig("w", CardType.WEATHER, "weather.home"))) }
         val session = ProfileSession(profiles, backgroundScope)
         val socket = FakeHaConnection()
-        val repo = HaRepository(socket, session, profiles, backgroundScope, store())
+        val repo = HaRepository(socket, session, profiles, backgroundScope, store()).also { it.showingDashboard(true) }
         session.enter(a.id); runCurrent()
         socket.entities.value = mapOf("weather.home" to entity("cloudy"), "sensor.unused" to entity("unused").copy(id = "sensor.unused"))
         runCurrent()
@@ -66,13 +66,13 @@ class HaCacheTest {
         socket.entities.value = mapOf("weather.home" to entity("sunny")); runCurrent()
         assertEquals("sunny", repo.entities.value["weather.home"]?.state)
         assertEquals("cloudy", store().current().entities["weather.home"]?.state)
-        advanceTimeBy(3_999); runCurrent()
+        advanceTimeBy(58_999); runCurrent()
         assertEquals("cloudy", store().current().entities["weather.home"]?.state)
         advanceTimeBy(1); runCurrent()
         assertEquals("sunny", store().current().entities["weather.home"]?.state)
         socket.entities.value = emptyMap(); runCurrent()
         assertTrue(repo.entities.value.isEmpty())
-        advanceTimeBy(5_000); runCurrent()
+        advanceTimeBy(60_000); runCurrent()
         assertTrue(store().current().entities.isEmpty())
     }
 }

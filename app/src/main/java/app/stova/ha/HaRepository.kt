@@ -12,12 +12,15 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 enum class HaFeedback { FAILED, DONE }
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class HaRepository(private val socket: HaConnection, private val session: ProfileSession, private val profiles: ProfileRepository, private val scope: CoroutineScope,
     private val cache: JsonFileStore<HaSnapshot>? = null,
+    private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private val mutableEntities = MutableStateFlow<Map<String, HaEntity>>(emptyMap())
     private val optimistic = MutableStateFlow<Map<String,HaEntity>>(emptyMap())
@@ -32,35 +35,50 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
     private val receipts=mutableMapOf<String,kotlinx.coroutines.Job>()
     private val mutableRegistry = MutableStateFlow(HaRegistry())
     val registry = mutableRegistry.asStateFlow()
+    private val registryMutex = Mutex()
+    private var registryAt: Long? = null
+    fun invalidateRegistry() { registryAt = null; mutableRegistry.value = HaRegistry() }
+    suspend fun loadRegistry(): HaRegistry? = registryMutex.withLock {
+        val now = clock()
+        if (registryAt?.let { now - it in 0 until 6 * 60 * 60 * 1_000L } == true) return@withLock registry.value
+        if (socket.status.value != HaStatus.CONNECTED) return@withLock registry.value.takeIf { it.entities.isNotEmpty() }
+        socket.registry()?.also { mutableRegistry.value = it; registryAt = now }
+            ?: registry.value.takeIf { it.entities.isNotEmpty() }
+    }
     val cards: StateFlow<List<CardConfig>> = session.active.map { it?.dashboard.orEmpty() }.stateIn(scope, SharingStarted.Eagerly, emptyList())
     val homeCards: StateFlow<List<CardConfig>> = cards.map { it.filter(CardConfig::onHome).take(3) }.stateIn(scope, SharingStarted.Eagerly, emptyList())
     private val focusedCards=mutableMapOf<String,String>()
+    private val writes = HaSnapshotWriter(cache, scope)
+    suspend fun flush() = writes.flush()
+    private val dashboardVisible = MutableStateFlow(false)
+    fun showingDashboard(shown: Boolean) {
+        if (dashboardVisible.value == shown) return
+        dashboardVisible.value = shown
+        if (shown) socket.hold() else socket.release()
+    }
     fun lastFocused(profileId:String):String?=focusedCards[profileId]
     fun rememberFocus(profileId:String,cardId:String) {focusedCards[profileId]=cardId}
     init {
-        val writes = Channel<HaSnapshot>(Channel.CONFLATED)
         scope.launch {
-            socket.status.collectLatest { status ->
-                if(status==HaStatus.CONNECTED) {
+            combine(socket.status, cards, dashboardVisible) { status, selected, dashboard -> status to (selected.isNotEmpty() || dashboard) }
+                .distinctUntilChanged().collectLatest { (status, needed) ->
+                if(status==HaStatus.CONNECTED && needed) {
                     // A failed fetch keeps the rooms we have; the next connection tries again.
-                    socket.registry()?.let { mutableRegistry.value=it }
+                    loadRegistry()
                     val active=session.active.value
-                    if(active!=null) writes.trySend(HaSnapshot(active.id,snapshotEntities(active.dashboard,mutableEntities.value),selectedRegistry(active.dashboard)))
+                    if(active!=null && mutableEntities.value.isNotEmpty()) writes.offer(HaSnapshot(active.id,snapshotEntities(active.dashboard,mutableEntities.value),selectedRegistry(active.dashboard)))
                 }
             }
         }
         scope.launch {
-            for (snapshot in writes) {
-                try { cache?.update { snapshot } } catch (_: IOException) { /* Keep the live UI usable if disk is full. */ }
-                // Conflate updates while waiting, preserving the most recent value for the next write.
-                delay(5_000)
-            }
-        }
-        scope.launch {
             var previousProfileId: String? = null
-            session.active.map { it?.id to it?.dashboard.orEmpty() }.distinctUntilChanged().collectLatest { (profileId, cards) ->
+            combine(session.active, dashboardVisible) { profile, dashboard ->
+                val selected = profile?.dashboard.orEmpty()
+                Triple(profile?.id, selected, if (dashboard) selected else if (profile?.appearance?.showHaChips == true) selected.filter { it.onHome }.take(3) else emptyList())
+            }.distinctUntilChanged().collectLatest { (profileId, cards, visible) ->
                 val ids = cards.map(CardConfig::entityId).toSet()
-                socket.watch(ids)
+                val watched = visible.map(CardConfig::entityId).toSet()
+                socket.watch(watched)
                 if(profileId!=previousProfileId) {optimistic.value=emptyMap();mutablePending.value=emptySet();mutableFeedback.value=null;receipts.values.forEach {it.cancel()};receipts.clear();mutableCompleted.value=emptySet()}
                 val retained = if (profileId == previousProfileId) mutableEntities.value.filterKeys { it in ids } else emptyMap()
                 mutableEntities.value = retained
@@ -71,11 +89,13 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
                 mutableEntities.value = saved
                 if (profileId != null && stored?.profileId != null) {
                     val pruned = HaSnapshot(profileId, snapshotEntities(cards, saved),selectedRegistry(cards))
-                    if (pruned != stored) writes.trySend(pruned)
+                    if (pruned != stored) writes.offer(pruned)
                 }
-                socket.entitySnapshots(ids).collect { selected ->
-                    mutableEntities.value = selected
-                    if (cache != null) writes.trySend(HaSnapshot(profileId, snapshotEntities(cards, selected),selectedRegistry(cards)))
+                socket.entitySnapshots(watched).collect { selected ->
+                    // A live Home snapshot is authoritative only for its own small subscription.
+                    val merged = mutableEntities.value.filterKeys { it !in watched } + selected
+                    mutableEntities.value = merged
+                    if (cache != null) writes.offer(HaSnapshot(profileId, snapshotEntities(cards, merged),selectedRegistry(cards)))
                 }
             }
         }

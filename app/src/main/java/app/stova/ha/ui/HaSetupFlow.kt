@@ -42,6 +42,7 @@ fun HaSetupFlow(container: AppContainer, onDone: () -> Unit) {
             try {
                 if (code != null) container.haAuth.exchange(code, target) else container.haAuth.useLongLivedToken(token)
                 container.household.update { it.copy(haBaseUrl = target.base) }
+                container.haRepository.invalidateRegistry()
                 container.haSocket.reconfigure()
                 onDone()
             } catch (e: CancellationException) { throw e }
@@ -91,7 +92,7 @@ fun HaSettings(container: AppContainer) {
     household?.haBaseUrl?.let { Text(it) }
     StovaButton(stringResource(R.string.ha_connect), { setup = true })
     if (household?.haBaseUrl != null) {
-        StovaButton(stringResource(R.string.ha_sign_out), { scope.launch { container.haAuth.signOut(); container.household.update { it.copy(haBaseUrl = null) }; container.haSocket.reconfigure() } })
+        StovaButton(stringResource(R.string.ha_sign_out), { scope.launch { container.haAuth.signOut(); container.household.update { it.copy(haBaseUrl = null) }; container.haRepository.invalidateRegistry(); container.haSocket.reconfigure() } })
     }
     profiles?.profiles.orEmpty().filter { it.kid }.forEach { kid ->
         SettingsSwitchRow(stringResource(R.string.ha_kid_control, kid.name), kid.kidSmartHomeControl, { allowed ->

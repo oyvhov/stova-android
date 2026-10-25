@@ -43,6 +43,10 @@ import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
 @Composable fun SmartHomeScreen(container:AppContainer,profile:Profile,initialCardId:String?=null) {
+    androidx.lifecycle.compose.LifecycleResumeEffect(container.haRepository) {
+        container.haRepository.showingDashboard(true)
+        onPauseOrDispose { container.haRepository.showingDashboard(false) }
+    }
     val cards by container.haRepository.cards.collectAsStateWithLifecycle()
     val entities by container.haRepository.entities.collectAsStateWithLifecycle()
     val registry by container.haRepository.registry.collectAsStateWithLifecycle()

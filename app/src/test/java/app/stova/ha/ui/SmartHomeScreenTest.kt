@@ -3,16 +3,27 @@ package app.stova.ha.ui
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.stova.AppContainer
 import app.stova.TV_QUALIFIERS
+import app.stova.core.security.InMemorySecretStore
 import app.stova.core.storage.StovaJson
 import app.stova.core.theme.*
 import app.stova.ha.*
 import app.stova.ha.cards.*
 import app.stova.profiles.Profile
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -67,5 +78,37 @@ class SmartHomeScreenTest {
     @Test fun notConfiguredShowsInstructions() {
         compose.setContent { StovaTheme { SmartHomeContent(adult,emptyList(),emptyMap(),HaStatus.NOT_CONFIGURED) } }
         compose.onNodeWithText("Kople til Home Assistant i Innstillingar").assertExists()
+    }
+    // The socket rests until something needs it; the Smart Home page is such a need, even with no cards yet.
+    @Test fun smartHomePageWakesAnIdleSocket() {
+        val server=MockWebServer()
+        server.enqueue(MockResponse().withWebSocketUpgrade(object:WebSocketListener() {
+            override fun onOpen(ws:WebSocket,response:Response) {ws.send("""{"type":"auth_required"}""")}
+            override fun onMessage(ws:WebSocket,text:String) {if(text.contains("\"auth\"")) ws.send("""{"type":"auth_ok"}""")}
+        }))
+        try {
+            val container=AppContainer(ApplicationProvider.getApplicationContext(),secrets=InMemorySecretStore())
+            var show by mutableStateOf(false)
+            var ready by mutableStateOf(false)
+            compose.setContent {
+                var profile by remember { mutableStateOf<Profile?>(null) }
+                LaunchedEffect(Unit) {
+                    container.household.update {it.copy(haBaseUrl=server.url("/").newBuilder().host("127.0.0.1").build().toString().trimEnd('/'))}
+                    container.haAuth.useLongLivedToken("ll")
+                    profile=container.profiles.create("A",AvatarColor.LIME,false).also {container.session.enter(it.id)}
+                    container.haSocket.start()
+                    ready=true
+                }
+                if(show) profile?.let { StovaTheme { SmartHomeScreen(container,it) } }
+            }
+            compose.waitUntil(5_000) { ready }
+            assertNull("no cards, nothing shown: no connection",server.takeRequest(300,TimeUnit.MILLISECONDS))
+            compose.runOnIdle { show=true }
+            compose.waitForIdle()
+            assertNotNull("the page is shown: connect",server.takeRequest(5,TimeUnit.SECONDS))
+            compose.waitUntil(5_000) {container.haSocket.status.value==HaStatus.CONNECTED}
+            compose.runOnIdle { show=false }
+            container.haSocket.stop(0)
+        } finally {server.shutdown()}
     }
 }
