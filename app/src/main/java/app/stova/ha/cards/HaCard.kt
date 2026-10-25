@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -20,7 +21,7 @@ import kotlinx.coroutines.*
 fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCall)->Unit,openDialog:(CardDialog)->Unit,
     images:HaImageSource?=null,visible:Boolean=true,onEdit:(()->Unit)?=null,onMenu:(()->Unit)?=null,
     pending:Boolean=false,connection:HaConnection?=null,modifier:Modifier=Modifier,room:String?=null,
-    onMove:((Int)->Unit)?=null,editing:Boolean=false,completed:Boolean=false) {
+    onMove:((Int)->Unit)?=null,editing:Boolean=false,completed:Boolean=false,inputSuspended:Boolean=false) {
     val unavailable=stateText(entity)==StateText.Unavailable
     var history by remember(config.entityId) {mutableStateOf(emptyList<Double>())}
     var forecast by remember(config.entityId) {mutableStateOf(emptyList<ForecastDay>())}
@@ -65,8 +66,8 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
     }
     CardFrame(config,cardIcon(config.type,shown,config.icon),config.name ?: entity?.let(::friendlyName) ?: config.entityId,
         badge,locked,::click,onLongClick=::panel,onMenu=onMenu,
-        modifier=modifier,glow=if(config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,leading=leading,
-        onMove=onMove,editing=editing,onMediaKey={key ->
+        modifier=modifier.alpha(if(unavailable) 0.55f else 1f),glow=if(config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,leading=leading,
+        onMove=onMove,editing=editing,inputSuspended=inputSuspended,onMediaKey={key ->
             val service=when(key) {
                 Key.MediaPlayPause->"media_play_pause";Key.MediaPlay->"media_play";Key.MediaPause->"media_pause"
                 Key.MediaFastForward,Key.MediaNext->"media_next_track"

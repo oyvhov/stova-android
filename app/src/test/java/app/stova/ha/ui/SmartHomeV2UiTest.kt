@@ -61,8 +61,8 @@ class SmartHomeV2UiTest {
     }
     @Test fun remoteHintHidesWhenFocusLeavesGrid() {
         compose.setContent {StovaTheme {SmartHomeContent(adult,listOf(CardConfig("a",CardType.SENSOR,"sensor.a")),emptyMap(),HaStatus.CONNECTED)}}
-        compose.onNodeWithText("OK: styr",substring=true).assertExists()
+        compose.onNodeWithText("OK: utilgjengeleg",substring=true).assertExists()
         compose.onNodeWithText("Rediger").performSemanticsAction(SemanticsActions.RequestFocus)
-        compose.onNodeWithText("OK: styr",substring=true).assertDoesNotExist()
+        compose.onNodeWithText("OK: utilgjengeleg",substring=true).assertDoesNotExist()
     }
 }

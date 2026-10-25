@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.foundation.border
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -31,7 +32,7 @@ internal val LocalCardFocused = staticCompositionLocalOf { false }
 @Composable
 fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: String?, locked: Boolean, onClick: () -> Unit, onLongClick: () -> Unit,
     modifier:Modifier=Modifier,glow:LightGlow?=null,pending:Boolean=false,onMenu:(()->Unit)?=null,
-    onMediaKey:((Key)->Boolean)?=null,onMove:((Int)->Unit)?=null,editing:Boolean=false,
+    onMediaKey:((Key)->Boolean)?=null,onMove:((Int)->Unit)?=null,editing:Boolean=false,inputSuspended:Boolean=false,
     leading:(@Composable (Modifier)->Unit)?=null,content: @Composable () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusedAsState()
@@ -42,6 +43,8 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
     var longPress by remember {mutableStateOf<Job?>(null)}
     val latestClick by rememberUpdatedState(onClick)
     val latestLongClick by rememberUpdatedState(onLongClick)
+    val windowFocused=LocalWindowInfo.current.isWindowFocused
+    LaunchedEffect(focused,windowFocused,inputSuspended) {if(!focused || !windowFocused || inputSuspended) {longPress?.cancel();held=false;consumed=true}}
     DisposableEffect(Unit) {onDispose {longPress?.cancel()}}
     val shape = MaterialTheme.shapes.large
     val lit=glow!=null && glow.alpha>0f

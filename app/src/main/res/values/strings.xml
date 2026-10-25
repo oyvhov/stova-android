@@ -236,7 +236,7 @@
     <string name="ha_v2_pending">Ventar …</string>
     <string name="ha_v2_failed">Endringa lukkast ikkje. Prøv igjen.</string>
     <string name="ha_v2_done">Utført</string>
-    <string name="ha_v2_remote_hint">OK: styr · ← →: juster · Meny: tilpass</string>
+    <string name="ha_v2_remote_hint">Piler: naviger · Hald OK: fleire val · Meny: tilpass</string>
     <string name="ha_v2_size">Storleik</string>
     <string name="ha_v2_size_s">S · 1 × 1</string>
     <string name="ha_v2_size_m">M · 2 × 1</string>
@@ -301,7 +301,7 @@
     <string name="ha_v2_dearest">Dyrast %1$s</string>
     <string name="ha_v2_hourly">Timesnitt</string>
     <string name="ha_v2_quarter_hours">15 minutt</string>
-    <string name="ha_v2_target_adjust">Mål %1$s° · ← − / + →</string>
+    <string name="ha_v2_target_adjust">Mål %1$s°</string>
     <string name="ha_action_read_only">Lesemodus</string>
     <string name="ha_action_turn_off">Slå av</string>
     <string name="ha_action_turn_on">Slå på</string>
@@ -332,4 +332,24 @@
     <string name="ha_action_dry">Avfukting</string>
     <string name="ha_action_fan_mode">Vifte</string>
     <string name="ha_action_ran">Køyrt ✓</string>
+    <string name="ha_action_hint_edit">"OK: kortval · Hald OK + piler: flytt · Tilbake: ferdig"</string>
+    <string name="ha_action_hint_read">"OK: vis · Hald OK: vis · Lesemodus"</string>
+    <string name="ha_action_hint_unavailable">"OK: utilgjengeleg · Hald OK: vis"</string>
+    <string name="ha_action_hint_light_off">"OK: slå av · Hald OK: lysstyrke og farge"</string>
+    <string name="ha_action_hint_light_on">"OK: slå på · Hald OK: lysstyrke og farge"</string>
+    <string name="ha_action_hint_toggle_off">"OK: slå av · Hald OK: fleire val"</string>
+    <string name="ha_action_hint_toggle_on">"OK: slå på · Hald OK: fleire val"</string>
+    <string name="ha_action_hint_scene">"OK: køyr · Hald OK: sist køyrt"</string>
+    <string name="ha_action_hint_pause">"OK: pause · Hald OK: avspeling og volum"</string>
+    <string name="ha_action_hint_play">"OK: spel · Hald OK: avspeling og volum"</string>
+    <string name="ha_action_hint_climate">"OK: juster temperatur · Hald OK: fleire val"</string>
+    <string name="ha_action_hint_cover">"OK: kontrollpanel · Hald OK: fleire val"</string>
+    <string name="ha_action_hint_lock">"OK: vis lås · Hald OK: fleire val"</string>
+    <string name="ha_action_hint_camera">"OK: fullskjerm · Hald OK: fullskjerm"</string>
+    <string name="ha_action_hint_weather">"OK: timar og dagar · Hald OK: fleire val"</string>
+    <string name="ha_action_hint_price">"OK: straumgraf · Hald OK: fleire val"</string>
+    <string name="ha_action_hint_sensor">"OK: historikk og status · Hald OK: fleire val"</string>
+    <string name="ha_action_hint_menu">" · Meny: tilpass"</string>
+    <string name="ha_action_all_lights">"Slå av alle %1$d lys?"</string>
+    <string name="ha_action_yes_off">"Ja, slå av"</string>
 </resources>

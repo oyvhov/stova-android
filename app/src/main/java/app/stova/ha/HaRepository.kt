@@ -34,6 +34,9 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
     val registry = mutableRegistry.asStateFlow()
     val cards: StateFlow<List<CardConfig>> = session.active.map { it?.dashboard.orEmpty() }.stateIn(scope, SharingStarted.Eagerly, emptyList())
     val homeCards: StateFlow<List<CardConfig>> = cards.map { it.filter(CardConfig::onHome).take(3) }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+    private val focusedCards=mutableMapOf<String,String>()
+    fun lastFocused(profileId:String):String?=focusedCards[profileId]
+    fun rememberFocus(profileId:String,cardId:String) {focusedCards[profileId]=cardId}
     init {
         val writes = Channel<HaSnapshot>(Channel.CONFLATED)
         scope.launch {
