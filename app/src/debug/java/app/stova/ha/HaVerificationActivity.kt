@@ -52,7 +52,7 @@ class HaVerificationActivity:ComponentActivity() {
                 profile=selected
                 withTimeout(20_000) {container.haSocket.status.first {it==HaStatus.CONNECTED}}
                 val states=container.haSocket.states()
-                val registry=container.haSocket.registry()
+                val registry=container.haSocket.registry() ?: HaRegistry()
                 val catalog=entityCatalog(states,registry)
                 val safeAttributes=setOf("brightness","temperature","current_temperature","min_temp","max_temp","device_class","unit_of_measurement","supported_features","volume_level","color_temp_kelvin","supported_color_modes")
                 val report=buildJsonObject {

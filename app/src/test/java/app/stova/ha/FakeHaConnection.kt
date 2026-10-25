@@ -9,7 +9,7 @@ class FakeHaConnection : HaConnection {
     val watches = mutableListOf<Set<String>>()
     var calls = 0
     var allStates = emptyList<HaEntity>()
-    var registryValue = HaRegistry()
+    var registryValue: HaRegistry? = HaRegistry()
     var stateRequests = 0
     var historyRequests=0
     var service: suspend (String,String,String,JsonObject) -> Boolean = {_,_,_,_->true}

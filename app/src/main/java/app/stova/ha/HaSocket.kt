@@ -26,7 +26,8 @@ interface HaConnection {
     suspend fun callService(domain: String, service: String, entityId: String, data: JsonObject = JsonObject(emptyMap())): Boolean
     suspend fun history(entityId: String, hours: Int = 24): List<Pair<Long, Double>>
     suspend fun states(): List<HaEntity>
-    suspend fun registry(): HaRegistry = HaRegistry()
+    /** Null when any of the three lists failed: a partial registry would erase the rooms. */
+    suspend fun registry(): HaRegistry? = HaRegistry()
     suspend fun forecast(entityId: String): List<ForecastDay> = emptyList()
     suspend fun hourlyForecast(entityId:String):List<ForecastDay> = emptyList()
     suspend fun energy(entity:HaEntity):HaEntity = entity
@@ -176,16 +177,17 @@ class HaSocket(
         val response = request { historyRequest(it, entityId, Instant.now().minusSeconds(hours.toLong() * 3600)) }
         return (response?.get("result") as? JsonObject)?.let { parseHistory(it, entityId) }.orEmpty()
     }
-    override suspend fun states(): List<HaEntity> = (request(::getStates)?.get("result") as? JsonArray)?.let(::parseStates)
-        ?: throw java.io.IOException("HA states unavailable")
-    override suspend fun registry(): HaRegistry = coroutineScope {
+    override suspend fun states(): List<HaEntity> = withContext(Dispatchers.Default) { (request(::getStates)?.get("result") as? JsonArray)?.let(::parseStates)
+        ?: throw java.io.IOException("HA states unavailable") }
+    override suspend fun registry(): HaRegistry? = coroutineScope {
         val config=async {request(::getConfig)?.get("result") as? JsonObject}
         val results = HaRegistryKind.entries.map { kind -> async {
-            val response = request { registryRequest(it, kind) }
-            response?.get("result") as? JsonArray ?: JsonArray(emptyList())
+            request { registryRequest(it, kind) }?.get("result") as? JsonArray
         } }.awaitAll()
         config.await()?.text("time_zone")?.let {zone->runCatching {ZoneId.of(zone)}.getOrNull()?.let {homeZone=it}}
-        parseRegistry(results[0], results[1], results[2])
+        if(results.any { it==null }) null
+        // Thousands of entries: parse off the main thread the socket's callers run on.
+        else withContext(Dispatchers.Default) { parseRegistry(results[0]!!, results[1]!!, results[2]!!) }
     }
     override suspend fun forecast(entityId: String): List<ForecastDay> =
         (request { forecastRequest(it, entityId) }?.get("result") as? JsonObject)?.let { parseForecast(it, entityId) }.orEmpty()

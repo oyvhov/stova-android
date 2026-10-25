@@ -42,7 +42,8 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
         scope.launch {
             socket.status.collectLatest { status ->
                 if(status==HaStatus.CONNECTED) {
-                    mutableRegistry.value=socket.registry()
+                    // A failed fetch keeps the rooms we have; the next connection tries again.
+                    socket.registry()?.let { mutableRegistry.value=it }
                     val active=session.active.value
                     if(active!=null) writes.trySend(HaSnapshot(active.id,snapshotEntities(active.dashboard,mutableEntities.value),selectedRegistry(active.dashboard)))
                 }

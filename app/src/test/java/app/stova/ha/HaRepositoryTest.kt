@@ -66,6 +66,18 @@ class HaRepositoryTest {
         assertTrue(second.await())
     }
 
+    // Review finding 5: one registry list timing out replaced the rooms with an empty registry.
+    @Test fun aPartlyFailedRegistryKeepsTheRoomsWeHave() = runTest {
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope)
+        val rooms=HaRegistry(mapOf("light.a" to HaEntityInfo(room="Stove")))
+        socket.registryValue=rooms;socket.status.value=HaStatus.DISCONNECTED;runCurrent()
+        socket.status.value=HaStatus.CONNECTED;runCurrent()
+        assertEquals(rooms,repo.registry.value)
+        socket.registryValue=null;socket.status.value=HaStatus.DISCONNECTED;runCurrent()
+        socket.status.value=HaStatus.CONNECTED;runCurrent()
+        assertEquals(rooms,repo.registry.value)
+    }
+
     @Test fun watchFollowsActiveProfileCards() = runTest {
         val p = profiles(); val s = ProfileSession(p, backgroundScope); val socket = FakeHaConnection()
         val repo = HaRepository(socket, s, p, backgroundScope)
@@ -135,6 +147,6 @@ class HaRepositoryTest {
         listOf("light.a","light.b","light.c").forEach {repo.add(HaEntity(it,"on",JsonObject(emptyMap()),0,0),CardType.LIGHT);runCurrent()}
         val last=repo.cards.value.last()
         repo.move(last.id,-1);runCurrent()
-        assertEquals(listOf("light.c","light.a"),dashboardSections(repo.cards.value,socket.registryValue).first {it.room=="Stove"}.cards.map {it.entityId})
+        assertEquals(listOf("light.c","light.a"),dashboardSections(repo.cards.value,socket.registryValue!!).first {it.room=="Stove"}.cards.map {it.entityId})
     }
 }

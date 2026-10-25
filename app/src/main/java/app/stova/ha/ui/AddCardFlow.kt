@@ -59,7 +59,9 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
         loading=true;failed=false
         try {coroutineScope {
             val states=async {connection.states()};val registry=async {connection.registry()}
-            catalog=entityCatalog(states.await(),registry.await())
+            // A thousand-entity home: build the catalogue off the main thread. No rooms beat no picker.
+            val found=states.await();val rooms=registry.await() ?: HaRegistry()
+            catalog=withContext(Dispatchers.Default) {entityCatalog(found,rooms)}
         }} catch(e:CancellationException) {throw e} catch(_:Exception) {failed=true}
         finally {loading=false}
     }
