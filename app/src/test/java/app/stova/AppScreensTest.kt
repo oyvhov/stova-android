@@ -261,6 +261,12 @@ class AppScreensTest {
         rule.saveScreen("appearance-light")
     }
 
+    @Test fun appearanceOverviewHasTwoReadableLines() {
+        renderMediaHome(appearance = AppearancePrefs(showOverview = true, cardSize = CardSize.LARGE, showTitles = true))
+        rule.onNodeWithText("Ei ferd gjennom stille fjordar og opne landskap. Vegen vidare byr på nye møte og ukjende stader.").assertIsDisplayed()
+        rule.saveScreen("appearance-overview")
+    }
+
     @Test fun appearanceOceanAccent() {
         renderMediaHome(appearance = AppearancePrefs(accent = Accent.OCEAN))
         val bitmap = BitmapFactory.decodeFile(rule.saveScreen("appearance-ocean").absolutePath)

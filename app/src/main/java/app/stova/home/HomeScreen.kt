@@ -138,8 +138,9 @@ fun HomeContent(
                 (if (appearance.showTitles) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp
             // Fixed for these profile/font choices, independent of each spotlight title. Reserve
             // room for a whole row; even a large poster's optional caption must remain reachable.
-            val heroHeight = if (fontScale >= 1.5f) maxHeight * (appearance.heroSize.fraction + 0.16f)
+            val baseHeroHeight = if (fontScale >= 1.5f) maxHeight * (appearance.heroSize.fraction + 0.16f)
                 else minOf(maxHeight * appearance.heroSize.fraction, (maxHeight - rowHeight).coerceAtLeast(0.dp))
+            val heroHeight = if (appearance.showOverview && fontScale < 1.5f) maxOf(baseHeroHeight, 208.dp) else baseHeroHeight
             Column {
                 // A fixed height: the rows never move when the spotlight turns to a longer title.
                 HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))

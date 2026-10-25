@@ -116,6 +116,26 @@ class AppearanceRenderingTest {
         assertTrue(compose.onNodeWithText("Film · Drama").getUnclippedBoundsInRoot().bottom <= header.top)
     }
 
+    @Test fun denseHeroWithLongFactsAndOverviewStaysAboveTheRowHeader() {
+        val item = film.copy(title = "Ein svært lang tittel om ei ferd gjennom fjordane og eit ukjent landskap langt mot nord",
+            year = 2024, ratings = Ratings(7.8, 91, "TV-MA"), genres = listOf("Science fiction", "Drama", "Eventyr", "Thriller", "Mystery", "Adventure"), overview = "Ei lang omtale av ei ferd gjennom fjordar og opne landskap. ".repeat(5))
+        val row = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, listOf(item), false)
+        compose.setContent { StovaTheme(appearance = AppearancePrefs(cardSize = CardSize.LARGE, showTitles = true, heroSize = HeroSize.LARGE, showOverview = true), reduceMotion = true) {
+            val ctx = LocalContext.current
+            HomeContent(listOf(row), null, row.key, AppArtCache(ctx), PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {},
+                topBar = { app.stova.navigation.TopBar(Profile("p", "Demo", AvatarColor.LIME), {}, {}, {}) },
+                spotlight = SpotlightEntry(item, account, true))
+        } }
+        val overviewNode = compose.onNodeWithText(item.overview!!).assertIsDisplayed()
+        val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+        overviewNode.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        assertEquals(2, layouts.single().lineCount)
+        assertTrue("Both overview lines must fit", layouts.single().getLineBottom(1) <= layouts.single().size.height + 0.5f)
+        val overview = overviewNode.getUnclippedBoundsInRoot()
+        val header = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot()
+        assertTrue("Hero overview must not cover row heading: $overview vs $header", overview.bottom <= header.top)
+    }
+
     @Test fun accentAndCornersReachTheTheme() {
         var prefs by mutableStateOf(AppearancePrefs())
         var primary = Color.Unspecified
