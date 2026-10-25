@@ -3,6 +3,11 @@ package app.stova.settings
 import android.content.ComponentName
 import android.content.Intent
 import android.content.IntentFilter
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -74,6 +79,28 @@ class SettingsScreenTest {
         rule.onNodeWithText("Heim").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
         rule.waitForIdle()
         rule.onNodeWithText("Bakgrunnsrotasjon").assertExists()
+    }
+
+    // The section content crossfades; the list follows focus, so the focus must stay on the tab throughout.
+    @Test fun sectionCrossfadeKeepsFocusOnTheTab() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNodeWithText("Set PIN").assertExists()
+        rule.onNodeWithText("Bakgrunnsrotasjon").assertDoesNotExist()
+        val tab = hasText("Heim") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)
+        rule.mainClock.autoAdvance = false
+        rule.onNode(tab).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        rule.mainClock.advanceTimeByFrame()
+        rule.mainClock.advanceTimeByFrame()
+        // Mid-fade: the old section is still leaving while the new one arrives, and the tab keeps focus.
+        rule.onNodeWithText("Set PIN").assertExists()
+        rule.onNodeWithText("Bakgrunnsrotasjon").assertExists()
+        rule.onNode(tab).assertIsFocused()
+        rule.mainClock.autoAdvance = true
+        rule.waitForIdle()
+        rule.onNodeWithText("Set PIN").assertDoesNotExist()
+        rule.onNodeWithText("Bakgrunnsrotasjon").assertExists()
+        rule.onNode(tab).assertIsFocused()
     }
 
     @Test fun adultCanEditKidAppearanceWithoutChangingAdult() {

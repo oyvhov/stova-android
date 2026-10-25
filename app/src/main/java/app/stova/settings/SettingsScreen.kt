@@ -1,6 +1,7 @@
 package app.stova.settings
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -36,6 +38,7 @@ import app.stova.AppContainer
 import app.stova.R
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.StovaShapes
+import app.stova.core.theme.stovaMotion
 import app.stova.core.ui.StovaButton
 import app.stova.core.ui.focusOutline
 import app.stova.home.HomeViewModel
@@ -60,7 +63,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
         return
     }
     var section by rememberSaveable { mutableStateOf(SettingsSection.PROFILE) }
-    val contentScroll = rememberScrollState()
+    val motion = stovaMotion
     Row(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
         // Scrolls: the entries no longer fit 540 dp, and the last ones must stay reachable by focus.
         Column(Modifier.width(260.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -78,18 +81,24 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
             val context = androidx.compose.ui.platform.LocalContext.current
             SectionTab(stringResource(R.string.nav_system_settings), false) { app.stova.navigation.openSystemSettings(context) }
         }
-        Column(
-            Modifier.weight(1f).then(if (section == SettingsSection.APPEARANCE) Modifier.fillMaxSize() else Modifier.verticalScroll(contentScroll)),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-        ) {
-            when (section) {
-                SettingsSection.PROFILE -> ProfileSettings(container, profile)
-                SettingsSection.ACCOUNTS -> AccountsSettings(profile, container)
-                SettingsSection.HOME -> HomeRowSettings(container, profile, home)
-                SettingsSection.SMART_HOME -> app.stova.ha.ui.HaSettings(container)
-                SettingsSection.HOME_BUTTON -> HomeButtonSettings(container)
-                SettingsSection.APPEARANCE -> AppearanceSettings(container, profile, pinnedPreview = true, onEditRows = { section = SettingsSection.HOME })
-                SettingsSection.ABOUT -> AboutSettings()
+        // The list follows focus, so the content crossfades quickly and never asks for focus itself;
+        // the section on its way out cannot take it either. Each section starts at the top.
+        Crossfade(section, Modifier.weight(1f), animationSpec = motion.fade(motion.quick), label = "settings-section") { shown ->
+            val leaving = shown != section
+            Column(
+                Modifier.then(if (leaving) Modifier.focusProperties { canFocus = false } else Modifier)
+                    .then(if (shown == SettingsSection.APPEARANCE) Modifier.fillMaxSize() else Modifier.verticalScroll(rememberScrollState())),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+            ) {
+                when (shown) {
+                    SettingsSection.PROFILE -> ProfileSettings(container, profile)
+                    SettingsSection.ACCOUNTS -> AccountsSettings(profile, container)
+                    SettingsSection.HOME -> HomeRowSettings(container, profile, home)
+                    SettingsSection.SMART_HOME -> app.stova.ha.ui.HaSettings(container)
+                    SettingsSection.HOME_BUTTON -> HomeButtonSettings(container)
+                    SettingsSection.APPEARANCE -> AppearanceSettings(container, profile, pinnedPreview = true, onEditRows = { section = SettingsSection.HOME })
+                    SettingsSection.ABOUT -> AboutSettings()
+                }
             }
         }
     }
