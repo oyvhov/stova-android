@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import app.stova.core.theme.LocalReduceMotion
+import app.stova.core.theme.stovaMotion
 import androidx.compose.ui.platform.testTag
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
@@ -49,8 +50,9 @@ class BackdropState { var shown by mutableStateOf<String?>(null) }
   scale.snapTo(1f)
   if(moving && shown!=null) scale.animateTo(1.04f,tween(prefs.spotlightTime.millis.toInt(),easing=LinearEasing))
  }
+ val motion=stovaMotion
  Box(modifier.fillMaxSize().background(ink)) {
-  Crossfade(shown,modifier=Modifier.graphicsLayer { scaleX=scale.value;scaleY=scale.value },animationSpec=tween(if(LocalReduceMotion.current) 0 else 900),label="backdrop") { image ->
+  Crossfade(shown,modifier=Modifier.graphicsLayer { scaleX=scale.value;scaleY=scale.value },animationSpec=motion.fade(motion.ambient),label="backdrop") { image ->
    if(image!=null) {
     var ready by remember(image) { mutableStateOf(false) }
     // "backdrop-target" is what the layer shows; "backdrop" only once that picture has decoded.

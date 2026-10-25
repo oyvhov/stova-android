@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.testTag
@@ -221,7 +220,8 @@ import kotlin.math.ceil
         }
     }
     val hintCard=cards.find {it.id==focusedId}
-    val hintAlpha by animateFloatAsState(if(hintVisible) 1f else 0f,tween(if(app.stova.core.theme.LocalReduceMotion.current) 0 else 180))
+    val motion=app.stova.core.theme.stovaMotion
+    val hintAlpha by animateFloatAsState(if(hintVisible) 1f else 0f,motion.fade(motion.quick))
     if(hintCard!=null && hintAlpha>0f) Text(remoteHint(hintCard,entities[hintCard.entityId],!canControl(profile),profile.kid,editing),
         Modifier.align(Alignment.BottomCenter).padding(horizontal=StovaLayout.TvSafeEdge,vertical=12.dp).alpha(hintAlpha).testTag("remote-hint"),
         style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1,overflow=TextOverflow.Ellipsis)

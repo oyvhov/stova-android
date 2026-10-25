@@ -1,6 +1,5 @@
 package app.stova.home
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -13,8 +12,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.stova.profiles.*
 import app.stova.R
-import app.stova.core.theme.LocalReduceMotion
 import app.stova.core.theme.StovaLayout
+import app.stova.core.theme.stovaMotion
 import app.stova.media.SpotlightEntry
 import app.stova.media.ui.*
 import coil3.compose.AsyncImage
@@ -25,11 +24,12 @@ import coil3.request.transformations
  val large=LocalDensity.current.fontScale>=1.5f
  val prefs=app.stova.core.theme.LocalAppearance.current
  if(prefs.heroSize==HeroSize.OFF) return
- val calm=LocalReduceMotion.current
+ val motion=stovaMotion
  BoxWithConstraints(modifier.fillMaxWidth().padding(horizontal=StovaLayout.TvSafeEdge,vertical=16.dp),contentAlignment=Alignment.TopStart) {
   val logoHeight=minOf(72.dp,(maxHeight-(if(prefs.showOverview) 150.dp else 110.dp)).coerceAtLeast(24.dp))
+  // The new title arrives at the backdrop's pace, once the old one has mostly left.
   AnimatedContent(entry,contentKey={ it?.item?.id },contentAlignment=Alignment.TopStart,label="spotlight",
-   transitionSpec={ (fadeIn(tween(if(calm) 0 else 700,delayMillis=if(calm) 0 else 250)) togetherWith fadeOut(tween(if(calm) 0 else 350))).using(SizeTransform(clip=false)) }) { current ->
+   transitionSpec={ (fadeIn(motion.enter(motion.ambient,delayMillis=motion.standard)) togetherWith fadeOut(motion.exit(motion.emphasized))).using(SizeTransform(clip=false)) }) { current ->
    Column(Modifier.widthIn(max=400.dp).fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
     if(current==null) {
      val season = if(prefs.seasonalDecor == SeasonalDecor.OFF) Season.NONE else prefs.season()
