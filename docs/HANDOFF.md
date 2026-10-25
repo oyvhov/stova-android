@@ -1,3 +1,10 @@
+# Menysystem og mjuke overgangar – fullført på emulator
+2026-10-25: Plan `2026-10-25-menu-motion.md` er fullført. Innstillingar er grupperte, Utsjånad har åtte små sider, og langt-OK-menyane samlar radval under «Tilpass rada». Lenke-/profilfokus er retta. Kodecommit bd6bc49.
+626/626 testar med skjermprøver, 0 skip; lint 0 feil (46 åtvaringar, 1 hint), debug-bygg OK. APK 99aca2d90fc95d8931a38234c465247e1e1f49832470f1d16c3407bec78650b0 er installert/verifisert med -r på emulator-5580. Rapport: `docs/verification/menu-motion.md`.
+Heim/Smarthus bruker avbrytbar 560 ms rulling; side-/dialog-/fokusovergangar er mjukare, med null varigheit ved redusert rørsle. Faktisk Heim → Utsjånad, kategori/retur, lenkja til radredigering og appmeny/undermeny er prøvde med ekte data. Klipp: `.superpowers/menu-motion/row-motion.mp4` (12,04 s).
+Profil-, konto- og hushaldsfiler er byteidentiske før/etter. Ingen tenestestyring, datatømming, push eller Shield-installasjon. Shield har framleis Smarthus-bygget frå førre oppføring; fysisk fjernkontroll og Shield-rørsle er ikkje prøvde i denne bestillinga.
+Ingen påbyrja steg står att. Dei eksisterande Smarthus-endringane vart bevarte og ligg no i d25dc22 frå den førre oppgåva; brukarvedlegg er urørde. Emulatoren står på Heim. Ingen spørsmål til brukaren.
+
 # Smarthus-einingsveljaren er retta og oppdatert på Shield
 2026-10-25: Plan `2026-10-25-entity-picker-focus.md` er fullført. Feilen var i «Legg til kort», ikkje dashbordet: Ned frå Kamera gjekk sidelengs til Straumpris. Søk/kategoriar/einingar har no eksplisitte vertikale vegar og stabil retur.
 616/616 testar inkludert skjermprøver, 0 skip; lint 0 feil (39 åtvaringar, 1 hint), debug-bygg OK. Endeleg testa APK a25e7e61171514de7113fb544bf58f8312b0fb48c9379b14b34b8a84af38d327 er installert med -r på emulator-5580 og Shield; einingshash-ar er like. APK-kopi ligg i `.superpowers/entity-picker-focus/`.

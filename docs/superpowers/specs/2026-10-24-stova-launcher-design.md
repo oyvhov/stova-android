@@ -66,9 +66,11 @@ Kjelder: `C:\JellyBin\reelstack-android\docs\DESIGN_SYSTEM.md`, `docs\LAYOUT.md`
   Lys opp dempar nabokorta 28 % i aktiv rad. Redusert rørsle bevarer lysare flate, utan
   løft eller skalering og utan å leggje til ring. Gamal `strongFocus` bevarer 4 dp som eige tilgjengeval.
   Tekstfelt har lysare fylt flate og nøytral understrek, også i søk og overskrifteditoren.
-- **Rørsle:** `StovaMotion` eig raske overgangar på 150 ms, inngangar på 240 ms,
-  spotlight-utgang på 360 ms og roleg bakgrunn/spotlight-inngang på 900 ms. Fokus er
-  110/180 ms. Berre laganimasjonar for alfa, skala og forskyving; inga ny kontinuerleg rørsle,
+- **Rørsle (meny-/rørslebestilling 25.10):** `StovaMotion` eig små overgangar på 220 ms,
+  inngangar på 340 ms, spotlight-utgang på 420 ms og roleg bakgrunn/spotlight-inngang på 900 ms.
+  Fokus er 160/240 ms. Radflytting på Heim og Smarthus bruker 560 ms med mjuk start/stopp og
+  kan avbrytast/snuast av nye piler. Ingen innleiande `scrollToItem` ved pilflytting; initial
+  plassering og redusert rørsle kan framleis vere omgåande. Berre laganimasjonar for alfa, skala og forskyving; inga ny kontinuerleg rørsle,
   fjør eller storleiksanimasjon. «Reduser rørsle» gir null varigheit og slår av parallax og rotasjon.
 - **TV-margin:** 48 dp trygg kant (5 % av 1080p).
 - **Tekst skal tole skriftstorleik 2,0.** Ingen kontroll har fast høgd som teksten må passe inni.
@@ -212,7 +214,8 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   blir avleidd frå den bufra sesongrada, også utan nett.
 
   Profilen kan slå av og sortere rader i Innstillingar → Heim. Meny eller lang OK på eit kort
-  gir òg seksjonen «Rada»: Flytt rada, Skjul rada, Kortformat, Storleik og Vis radtittel.
+  gir òg seksjonen «Rada»: Flytt rada, Skjul rada og Tilpass rada. Det siste valet opnar
+  overskrift, kortformat, storleik og vising i ei eiga underflate; lukking gir fokus tilbake.
   Flyttemodus rammar inn heile rada; opp/ned flyttar live og lagrar `rowOrder`. OK/Tilbake
   avsluttar på det same kortet. Skjul lagrar `hiddenRows` og gir Angre i åtte sekund.
   Angre hugsar rada og kortet sjølv om fokus har flytta seg. Ei tom rad blir ikkje vist.
@@ -387,17 +390,23 @@ avinstallerte appar blir rydda bort. Barneprofilar får ingen appmeny. Ingen aut
 
 ### 5.4 Innstillingar
 
-Grupper (som i Spole sine innstillingar):
+Sidekolonnen er gruppert som **Heimeskjerm** (Heim, Utsjånad), **Tenester** (Kontoar,
+Smarthus) og **Profil og system** (Profil, Home-knappen, Om, Android-innstillingar).
+Han er 200 dp brei, med 44 dp minimumshøgd som kan vekse med skriftstorleiken.
+Opp/Ned følgjer denne rekkjefølgja. OK/Høgre går inn; Venstre går tilbake frå innhaldet.
+Lenkjer mellom sider sikrar fokus på målseksjonen før den gamle kontrollen blir fjerna.
 
 - **Profil:** namn, avatar, PIN, barnemodus, startfokus, «Start i sist brukte profil».
 - **Kontoar:** Jellyfin-/Emby-kontoar for profilen (legg til, logg ut).
 - **Heim:** rader av/på og rekkjefølgje, bakgrunnsrotasjon av/på.
 - **Smarthus:** HA-tilkopling (hushald), kortutval og rekkjefølgje for profilen.
 - **Home-knappen:** status for tilgjengetenesta og adb-oppskrifta (sjå 9).
-- **Utsjånad:** åtte grupper med korte forklaringar: Tema, Heim og hero, Kort og rader,
-  Bakgrunn, Fokus, Toppfelt, Ikon og Profil. Ei førehandsvising står fast øvst medan ein rullar
-  vala: bibliotekkunst når ho er bufra, valt hero/tittel, kortformat, hjørne, fokus og aksent.
-  Førehandsvisinga tek ikkje fokus. Alle verdiar kan endrast med venstre/høgre eller OK;
+- **Utsjånad:** ei kompakt oversikt opnar åtte eigne sider: Tema, Heim og hero, Kort og rader,
+  Bakgrunn, Fokus, Toppfelt, Ikon og Profil. Oversikta har to kolonnar, éi ved skriftstorleik ≥ 1,5.
+  Berre den opne kategorien sine kontrollar er i fokustreet. Tilbake/«Alle utsjånadval» gir fokus
+  tilbake til den valde kategorien. Ei førehandsvising etter vala viser bibliotekkunst når ho er
+  bufra, valt hero/tittel, kortformat, hjørne, fokus og aksent, utan å ta fast plass frå kontrollane.
+  Førehandsvisinga tek ikkje fokus. Alle verdiar kan endrast med høgre eller OK; venstre går til menyen;
   opp/ned flyttar mellom vala. Endringane blir viste straks og lagra per profil.
   Temagruppa bevarer fargeprøver og kalenderoverlegg; Ikon bevarer ikonpakke, Original/Aksent
   og Sentrert/Fyll flata. Eit direkte temaval slår av kalenderen. Utilgjengelege pakkar blir hugsa.

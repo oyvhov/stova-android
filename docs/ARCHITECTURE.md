@@ -17,7 +17,7 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 | Smarthus-layout | `ha/ui/SmartHomeContent.kt` | Kontrollerte kort, fokus og grupper |
 | Legg til Smarthus-kort | `ha/ui/AddCardFlow.kt` | Einingskatalog, filtrering og fokus mellom søk, kategoriar og einingar |
 | Innstillingar | `settings/SettingsScreen.kt`, `settings/SettingsLayout.kt`, `settings/SettingsNavigation.kt` | Datakopling, fokus mellom meny/innhald og fast overskrift |
-| Utsjånad | `settings/AppearanceSettings.kt`, `settings/AppearanceSettingsContent.kt` | Lagring/førehandsvising og rein vising kvar for seg |
+| Utsjånad | `settings/AppearanceSettings.kt`, `settings/AppearanceMenu.kt`, `settings/AppearanceSettingsContent.kt` | Lagring, kategorioversikt og kontrollerte val kvar for seg |
 | Fargar, mål og rørsle | `core/theme/` | Felles tokens; ingen fargelitteralar i skjermane |
 | Dialogar og fokus | `core/ui/` | Gjenbrukbare TV-komponentar, éin dialogovergang |
 | Radoverskrifter og radval | `home/RowOptions.kt`, `home/RowHeadingEditor.kt`, `home/RowLabels.kt` | Same redigering frå langt OK og Innstillingar; lagra i profilens `RowStyle` |
@@ -66,6 +66,9 @@ Fokus tilbake til topplinja rullar også lista til toppen, så heroen kan hentas
 oppstart direkte på ei medierad.
 
 `StovaMotion` eig varigheit og easing. Bruk berre laganimasjonar for alfa, skala og forskyving.
+Radflytting bruker `core/ui/SmoothScroll.kt`: 560 ms med mjuk start/stopp, utan eit innleiande
+hopp. Eitt rullejobb eig overgangen; nye piler kan snu eller velje neste logiske rad undervegs.
+`SoftEntrance` tonar inn berre den nye innstillingssida, utan eit utgåande fokustre.
 `LocalReduceMotion` gir null varigheit og slår av parallax. Dialogar går gjennom `StovaDialog`.
 Felles fokus er svakt løft, 2,5 % forstørring på kunst og 1,5 % på kontrollar, og lysare flate.
 Fokus teiknar ingen skugge eller glød; transparent kunst får inga ekstra flate.
@@ -86,6 +89,10 @@ ventande flytting. Radflytting i redigeringsmodus har framleis eigarskap til pil
 `SettingsLayout` eig innstikket frå sidekolonnen og viser berre den valde seksjonen i
 fokustreet. Opp/Ned held seg i sitt område. Venstre får først flytte mellom kontrollar
 eller i tekst; ved utgang frå innhaldet går fokus til den valde menyseksjonen.
+Lenkjer parkerer fokus på den stabile målseksjonen før den gamle sida blir fjerna.
+Utsjånad har åtte små kategorisider; oversikta bruker to kolonnar, éi ved stor skrift.
+Tilbake går til kategorien ein kom frå. Førehandsvisinga ligg etter vala og tek ikkje fast
+plass frå kontrollane. Langt-OK-menyane samlar dei detaljerte radvala under «Tilpass rada».
 
 Smarthus bruker `ha/cards/CardFocusNavigation.kt` for retningar mellom logiske kortrektangel
 frå same pakking som visinga. Venstre/Høgre held seg på same kortband; Opp/Ned vel næraste

@@ -20,6 +20,6 @@ Arbeid på emulator-5580 med ekte data; bevar eksisterande Smarthus-endringar.
 - [x] Køyr relevante testar grøne; commit og ledger.
 
 ## Task 4: Samla kontroll og overlevering
-- [ ] Køyr testDebugUnitTest lintDebug assembleDebug med skjermprøver og kontroller resultata.
-- [ ] Installer med -r på emulator-5580, prøv menyar og overgangar med ekte data og ta skjermbilete/klipp.
-- [ ] Oppdater arkitektur/spesifikasjon, verifikasjonsrapport og HANDOFF; commit. Ingen push.
+- [x] Køyr testDebugUnitTest lintDebug assembleDebug med skjermprøver og kontroller resultata.
+- [x] Installer med -r på emulator-5580, prøv menyar og overgangar med ekte data og ta skjermbilete/klipp.
+- [x] Oppdater arkitektur/spesifikasjon, verifikasjonsrapport og HANDOFF; commit. Ingen push.
