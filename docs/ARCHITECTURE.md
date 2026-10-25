@@ -10,6 +10,7 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 | Navigasjon og profilbyte | `navigation/StovaApp.kt` | Destinasjonar, tilbakeknapp og felles bakgrunn |
 | Kopling til data på Heim | `home/HomeScreen.kt` | Samlar straumar, livssyklus og opning av Spole |
 | Heim-layout og fokus | `home/HomeContent.kt` | Rulleflate, fokusretur, radflytting og menytilstand |
+| Synlege rader | `home/HomeDeckGeometry.kt` | Fast radfelt nedst, målte teksthøgder og lik kunstskalering |
 | Radene på Heim | `home/HomeRows.kt` | Media, appar og Watch Next med kontrollerte verdiar |
 | Hero og parallax | `home/HeroPanel.kt`, `home/ParallaxHero.kt` | Innhald og lagrørsle i den rullande overskrifta |
 | Smarthus på Heim | `home/HomeChips.kt` | Berre synlege brikketekstar; hendingar teiknar ikkje mediaradene på nytt |
@@ -58,7 +59,14 @@ må ugyldiggjere relevant tilstand. Ingen test skal ringje ekte tenester utan ei
 
 ## Rørsle og parallax
 
-Heroen er første element i same `LazyColumn` som radene. Første rad viser heroen; ved neste rad
+Standardvisinga er éi heil rad i eit avklipt radfelt nedst. `HomeRows` og `HomeRowInset` er
+profilval under Utsjånad → Heim og hero. `HomeDeckGeometry` måler overskrift/kjeldenamn/tekst
+med den faktiske skrifta, vel lik plass per rad og bevarer sideforholdet på kunsten. To rader
+tilpassar kunsten; ved stor skrift eller for trong plass blir éi heil rad vist. Heroen står
+roleg over feltet. Opp/Ned når alle ikkje-tomme rader. `HomeViewModel` hugsar siste radnøkkel,
+slik at like titlar i fleire rader får rett fokus ved retur. Byte av visingsmodus bevarer aktiv rad.
+
+I det valfrie «Rullande oversikt»-moduset er heroen første element i same `LazyColumn` som radene. Første rad viser heroen; ved neste rad
 rullar han ut og radene får heile høgda under topplinja. Tilbake til første rad viser heroen att.
 Parallax les rullestillinga i `graphicsLayer`, utan ny komposisjon eller storleiksanimasjon per ramme.
 Logoar som lastar eller feilar har tittel som reserve. Spotlight-byte endrar ikkje høgda på overskrifta.
@@ -91,12 +99,19 @@ fokustreet. Opp/Ned held seg i sitt område. Venstre får først flytte mellom k
 eller i tekst; ved utgang frå innhaldet går fokus til den valde menyseksjonen.
 Lenkjer parkerer fokus på den stabile målseksjonen før den gamle sida blir fjerna.
 Utsjånad har åtte små kategorisider; oversikta bruker to kolonnar, éi ved stor skrift.
+`SettingsVisuals` bind kvart mål til same symbol i meny, kategori og `PageHeader`.
+`SectionHeading` gir same tekstkant og teljarplass i Appar og Smarthus. Opne innstillingsrader
+har små konkrete prøver av format, plassering, avstand og fokus. Berre Høgre/OK endrar eit val;
+Venstre går tilbake til seksjonsmenyen. Kompakte verktøyknappar er 36 dp og veks med teksten.
 Tilbake går til kategorien ein kom frå. Førehandsvisinga ligg etter vala og tek ikkje fast
 plass frå kontrollane. Langt-OK-menyane samlar dei detaljerte radvala under «Tilpass rada».
 
 Smarthus bruker `ha/cards/CardFocusNavigation.kt` for retningar mellom logiske kortrektangel
 frå same pakking som visinga. Venstre/Høgre held seg på same kortband; Opp/Ned vel næraste
 neste rad og tek omsyn til breie/høge kort. Fokus utanfor skjermen blir rulla inn før flytting.
+Første kortband blir rulla inn saman med gruppeoverskrifta. Dersom eit høgt kort ikkje får
+plass med overskrifta, har heile det fokuserte kortet prioritet. Små kort gir namnet eiga
+tekstbreidd under ikon-/statusrada; breie kort kan ha namn ved ikonet.
 
 ## Verifisering
 

@@ -24,8 +24,8 @@ Ingen push eller styring av verkelege HA-einingar. Profil-/konto-/hushaldshashar
 - [x] Køyr tastetestane og sjå native skjermprøver; commit og ledger.
 
 ## Task 4: Endeleg emulatorrunde
-- [ ] TestDebugUnitTest, lintDebug, assembleDebug med skjermprøver; kontroller XML og bilete.
-- [ ] Installer med -r på emulator-5580, prøv alle radval og navigasjonsflytar; ta bilete/klipp.
-- [ ] Kontroller bevarte profilar/kontoar, oppdater spesifikasjon/arkitektur/rapport/HANDOFF, commit.
+- [x] TestDebugUnitTest, lintDebug, assembleDebug med skjermprøver; kontroller XML og bilete.
+- [x] Installer med -r på emulator-5580, prøv alle radval og navigasjonsflytar; ta bilete/klipp. Same pakke og navigasjon er prøvd på Shield etter eigaren si invitasjon.
+- [x] Kontroller bevarte profilar/kontoar, oppdater spesifikasjon/arkitektur/rapport/HANDOFF, commit.
 
 Berre hovudagenten skriv i arbeidsmappa og køyrer bygg. To underagentar har lese kjeldekode og gitt design-/kanttilfellevurderingar utan å endre filer.

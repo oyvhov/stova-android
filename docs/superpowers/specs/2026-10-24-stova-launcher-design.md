@@ -135,16 +135,23 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
 │  [Ny sesong] [★ 7,8] [2024] [12] [🍅 91 %]                       │
 │  Film · Drama · Eventyr                                        │
 │                                                                 │
-│  Favorittappar   [banner][banner][banner][banner]               │
-│  Hald fram  Jellyfin   [16:9][16:9][16:9] ▬▬▬ framdrift          │
-│  Hald fram  Emby       [16:9][16:9]                             │
-│  Nyleg lagt til · Filmar  Jellyfin  [plakat][plakat]…           │
-│  Nyleg lagt til · Seriar  Emby      [16:9]…                     │
-│  Hald fram i andre appar (Watch Next) [16:9]…                   │
+│                                                                 │
+│                                                                 │
+│  Hald fram  Jellyfin                                            │
+│  [16:9][16:9][16:9] ▬▬▬ framdrift                              │
+│                                                  2 / 5 · Opp/ned│
 └────────────────────────────────────────────────────────────────┘
           ▲ heile bakgrunnen = backdrop for spotlight-tittelen + flat scrim
 ```
 
+- **Radvising (26.10.2026, eigaren sitt val):** Éi heil rad er synleg nedst som standard,
+  med uendra bakgrunn og hero over. Opp/Ned byter mellom alle ikkje-tomme rader. Ingen neste
+  rad stikk inn i kvile. Utsjånad → Heim og hero tilbyr Éi rad, To rader og Rullande oversikt,
+  og plassering Nedst/Litt opp/Heva. Innstillingane er profillagra, òg eldre profilar får éi rad.
+  To rader får lik høgd og proporsjonalt tilpassa kunst. Stor skrift (≥ 1,5) eller for trong plass
+  får éi heil rad utan å skrive om valet. Header/kort/caption blir målte før kunstskalering.
+  Startfokus er framleis eit eige val. Aktiv rad og kort blir bevarte ved modusbyte og retur,
+  også når same film ligg i fleire rader. Tomme rader blir hoppa over i radfeltet.
 - **Hero = spotlight frå biblioteket** (endra 25.10.2026 etter ønske frå brukaren). Heroen
   følgjer ikkje fokus. Han roterer roleg gjennom vakre filmar og seriar frå heile biblioteket:
   tilfeldige titlar med backdrop (dei med clearlogo først), opptil 30, og eitt nytt utval kvar
@@ -152,8 +159,9 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   merka «Ny sesong». Medan ein sesong gjeld, kjem sesongtitlar med backdrop først, deretter
   det vanlege utvalet; kvar tittel blir vist éin gong per konto. Aldri episodekunst, episodenummer
   eller tenestemerke i heroen.
-  - Hero kan vere Av, Kompakt (standard) eller Stor. Av fjernar heroen heilt, lar radene starte
-    rett under toppfeltet og stoppar spotlight-rotasjon og bakgrunnszoom. Spotlight-kjelda kan vere
+  - Hero kan vere Av, Kompakt (standard) eller Stor. Av fjernar heroen heilt og stoppar
+    spotlight-rotasjon og bakgrunnszoom. Radfeltet held fram nedst; i Rullande oversikt startar
+    radene rett under toppfeltet. Spotlight-kjelda kan vere
     heile biblioteket, berre filmar, berre seriar eller favorittar (`UserData.IsFavorite`). Eigne
     bibliotekspørjingar gir eit nytt utval, med sesongprioritering og «Ny sesong» innanfor valet.
   - Innhald (Utsjånad v2): teksten står øvst til venstre rett under toppfeltet. Clearlogo er
@@ -171,7 +179,7 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
     Logoen får plassen som faktisk er att etter metadata, sjangrar og eventuell omtale. Ingen
     fast tekstreserve skal presse han til 24 dp når det finst meir plass. Heile logoen blir vist
     med bevart sideforhold. Herohøgda og radplasseringa blir ikkje endra av logoproporsjonane.
-  - Heroen er ei **rullande parallax-overskrift i same liste som radene** (brukarønske 25.10.2026).
+  - I **Rullande oversikt** er heroen ei rullande parallax-overskrift i same liste som radene.
     Når fokus går ned til neste rad, rullar heroen heilt ut av syne og mediaradene får heile høgda
     under topplinja. Opp til første rad viser heroen att. Teksten blir forskyvd 35 % av rullestillinga
     i `graphicsLayer` og tonar ut; redusert rørsle bruker vanleg rulling. Siste rad har nok botnrom
@@ -410,6 +418,10 @@ Lenkjer mellom sider sikrar fokus på målseksjonen før den gamle kontrollen bl
   opp/ned flyttar mellom vala. Endringane blir viste straks og lagra per profil.
   Temagruppa bevarer fargeprøver og kalenderoverlegg; Ikon bevarer ikonpakke, Original/Aksent
   og Sentrert/Fyll flata. Eit direkte temaval slår av kalenderen. Utilgjengelege pakkar blir hugsa.
+  Kvart mål har same streksymbol i sidekolonnen, kategorioversikta og detaljoverskrifta.
+  Kategorisida viser éin tittel, opne rader og små konkrete prøver av det valde formatet,
+  radvisinga, plasseringa, avstanden og fokuset. Fargane på kategorisymbola er dempa; lime er
+  framleis for handlingar. Verktøyknappar er kompakte og veks med skriftstorleiken.
   Profil gir Tilbakestill utsjånad (stadfesting, Avbryt har første fokus) og Kopier frå profil.
   Begge omfattar utsjånad og heimerader; identitet, PIN, appar, kontoar og HA-oppsett blir bevarte.
   Kopiering omset radnøklar til mottakaren sine kontoar på same server. Fast bakgrunn blir vald
@@ -425,7 +437,9 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Tema | Aksentfarge | **Lime** / Hav / Iris / Korall / Gull / Mint / Rose / Perle / Kristtorn / Gresskar; ≥ 7:1 mot alle temabakgrunnar |
 | Tema | Sesong | Ingen / **Etter kalenderen** / Jul / Halloween; kalenderoverlegg blir ikkje lagra |
 | Tema | Sesongpynt | Av / Roleg / **Mykje**; rørsle stoppar automatisk ved redusert rørsle og utanfor synleg Heim |
-| Heim og hero | Herostorleik | Av / **Kompakt** / Stor; Av løftar radene og stoppar spotlight-rotasjonen |
+| Heim og hero | Synlege rader | **Éi rad** / To rader / Rullande oversikt; éi heil rad ved stor skrift eller trong plass |
+| Heim og hero | Plassering av radene | **Nedst (32)** / Litt opp (48) / Heva (72 dp); gjeld radfeltet |
+| Heim og hero | Herostorleik | Av / **Kompakt** / Stor; Av stoppar spotlight-rotasjonen; radfeltet held botnplasseringa |
 | Heim og hero | Logo eller tittel | **Logo når han finst** / Alltid tittel |
 | Heim og hero | Omtale / sjangrar | Omtale **Av**, sjangrar **På**; to omtale-linjer ved vanleg skrift |
 | Heim og hero | Spotlight-tid | 8 / **12** / 20 s |
@@ -434,7 +448,7 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Kort og rader | Appstil / filmrad | **Banner** / Ikon; filmrada **Plakat** / Brei |
 | Kort og rader | Hjørne | Skarp 4 / Mjuk 12 / **Rund 20** / Ekstra rund 28 dp |
 | Kort og rader | Kortavstand | Tett 8 / **Normal 16** / Luftig 24 dp vassrett |
-| Kort og rader | Radavstand | Tett 12 / **Normal 22** / Luftig 34 dp loddrett |
+| Kort og rader | Radavstand | Tett 12 / **Normal 22** / Luftig 34 dp loddrett; skjult når berre éi rad blir vist |
 | Kort og rader | Framdriftsstrek | Tynn 2 / **Tjukk 4** dp / Skjult |
 | Kvar rad | Format | Plakat / Brei / Stor brei / Liten brei / Ikon; **arv eksisterande format** |
 | Kvar rad | Storleik / tittel | Liten / Middels / Stor (**arv global**); radtittel **På** / Av |
@@ -442,7 +456,7 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Bakgrunn | Spotlight-kjelde | **Heile biblioteket** / Berre filmar / Berre seriar / Favorittar |
 | Bakgrunn | Demping | Lys / **Middels** / Mørk |
 | Bakgrunn | Roleg rørsle | **Av** / På; 1,00→1,04; alltid av ved redusert rørsle, hero Av og utanfor Heim |
-| Fokus | Effekt | **Ring** / Forstørring / Ring + forstørring / Lys opp |
+| Fokus | Effekt | **Svakt løft** / Forstørring / Lys opp / Ramme / Ramme + forstørring |
 | Fokus | Ringbreidd | Tynn 2 / **Normal 3** / Tjukk 4 dp |
 | Fokus | Reduser rørsle | **Av** / På; ingen skalering, krysstoning eller kontinuerleg rørsle |
 | Toppfelt | Klokke | **24 t** / 12 t / Skjult; **Normal** / Stor |

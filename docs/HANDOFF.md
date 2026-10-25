@@ -1,3 +1,10 @@
+# Éi rad og visuelt system – fullført på emulator og Shield
+2026-10-26: Plan `2026-10-25-cinematic-visual-system.md` er fullført. Éi heil rad nedst er standard; éi/to/rullande og høgdeplassering er profillagra. Innstillingar har felles ikon og konkrete prøver; Smarthus/Appar/profil-/menyflater deler formspråk. Kode sist eb5d1e3.
+645/645 testar med native skjermprøver, 0 skip; lint 0 feil (46 åtvaringar, 1 hint). APK aa9acb9140387cf4baabd4cfa3533ee82e35d4bc6dfc9784d41f739b4aab2627 er installert med -r og hashverifisert på emulator-5580 og Shield. Rapport: `docs/verification/cinematic-visual-system.md`.
+Faktiske radval/plasseringar, piler, meny-/kategoriretur og Heim → Utsjånad er prøvde; radretur og gruppeoverskrift er retta med raude/grøne prøver. Opptak frå begge einingar ligg i `.superpowers/cinematic/`, om lag 12 s kvar. Begge står på Heim.
+Shield sine profil-/konto-/hushaldsfiler er byteidentiske. Emulatoren har berre serialisert nye standardfelt homeRows=ONE/homeRowInset=LOW etter prøvinga; alle eldre profilfelt og konto-/hushaldsfiler er uendra. Ingen HA-styring, mediaavspeling, datatømming eller push.
+Ingen påbyrja steg står att. Brukarvedlegg er urørde. Ingen spørsmål til brukaren; eldre utsette release-/signeringsoppgåver er framleis ikkje ny bestilling.
+
 # Menysystem og mjuke overgangar – fullført på emulator
 2026-10-25: Plan `2026-10-25-menu-motion.md` er fullført. Innstillingar er grupperte, Utsjånad har åtte små sider, og langt-OK-menyane samlar radval under «Tilpass rada». Lenke-/profilfokus er retta. Kodecommit bd6bc49.
 626/626 testar med skjermprøver, 0 skip; lint 0 feil (46 åtvaringar, 1 hint), debug-bygg OK. APK 99aca2d90fc95d8931a38234c465247e1e1f49832470f1d16c3407bec78650b0 er installert/verifisert med -r på emulator-5580. Rapport: `docs/verification/menu-motion.md`.
