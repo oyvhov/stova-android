@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import app.stova.profiles.*
 import app.stova.R
 import app.stova.core.theme.LocalReduceMotion
 import app.stova.core.theme.StovaLayout
@@ -29,7 +30,15 @@ import coil3.request.transformations
   AnimatedContent(entry,contentKey={ it?.item?.id },contentAlignment=Alignment.TopStart,label="spotlight",
    transitionSpec={ (fadeIn(tween(if(calm) 0 else 700,delayMillis=if(calm) 0 else 250)) togetherWith fadeOut(tween(if(calm) 0 else 350))).using(SizeTransform(clip=false)) }) { current ->
    Column(Modifier.widthIn(max=400.dp).fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-    if(current==null) Text(stringResource(when(java.time.LocalTime.now().hour) { in 5..9 -> R.string.greeting_morning;in 10..16 -> R.string.greeting_day;in 17..21 -> R.string.greeting_evening;else -> R.string.greeting_night }),style=MaterialTheme.typography.displaySmall,color=MaterialTheme.colorScheme.onSurface)
+    if(current==null) {
+     val season = if(prefs.seasonalDecor == SeasonalDecor.OFF) Season.NONE else prefs.season()
+     Text(stringResource(when(season) {
+      Season.HALLOWEEN -> R.string.theme_greeting_halloween
+      Season.CHRISTMAS -> R.string.theme_greeting_christmas
+      Season.NONE -> when(java.time.LocalTime.now().hour) { in 5..9 -> R.string.greeting_morning;in 10..16 -> R.string.greeting_day;in 17..21 -> R.string.greeting_evening;else -> R.string.greeting_night }
+     }),style=MaterialTheme.typography.displaySmall,color=MaterialTheme.colorScheme.onSurface)
+     SeasonalCountdown(season)
+    }
     else {
      val item=current.item;val logo=item.art.logo
      if(logo!=null) AsyncImage(ImageRequest.Builder(LocalContext.current).data(logo).size(800,240).transformations(TrimTransparent()).build(),item.title,Modifier.widthIn(max=320.dp).height(logoHeight),contentScale=ContentScale.Fit,alignment=Alignment.CenterStart)

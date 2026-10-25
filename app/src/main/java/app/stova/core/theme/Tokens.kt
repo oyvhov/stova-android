@@ -23,6 +23,9 @@ object StovaColors {
     val Caution = Color(0xFFD8B97E)
     val Warning = Color(0xFFD48E8E)
     val Outline = Color(0xFF646E63)
+    val Ember = Color(0xFFFFA74F)
+    val Snow = Color(0xFFE8F2FF)
+    val Spider = Color(0xFFD8D1E9)
     val Divider = Color(0xFF3D443C)
 }
 
