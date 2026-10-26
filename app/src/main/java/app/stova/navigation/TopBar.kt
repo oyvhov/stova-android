@@ -47,14 +47,14 @@ import app.stova.profiles.Profile
 import app.stova.profiles.season
 
 /**
- * The only chrome on the home screen: clock, Apps, Settings and the profile, top right. The icons
+ * The only chrome on the home screen: clock, Settings and the profile, top right; Apps opens from
+ * Settings. The icons
  * name themselves only while focused, so the resting screen is content and nothing else.
  * [leading] is where the smart-home status chips go (Plan 4).
  */
 @Composable
 fun TopBar(
     profile: Profile,
-    onApps: () -> Unit,
     onSettings: () -> Unit,
     onProfile: () -> Unit,
     modifier: Modifier = Modifier,
@@ -68,15 +68,13 @@ fun TopBar(
     ) {
         val appearance = app.stova.core.theme.LocalAppearance.current
         val rowScope = this
+        val decorated = appearance.seasonalDecor != app.stova.profiles.SeasonalDecor.OFF
+        if (decorated) app.stova.home.SeasonalMark(appearance.season())
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { if (appearance.showHaChips) leading(rowScope) }
-        if (appearance.seasonalDecor != app.stova.profiles.SeasonalDecor.OFF) {
-            if (appearance.showCountdown && androidx.compose.ui.platform.LocalDensity.current.fontScale < 1.5f)
-                app.stova.home.SeasonalCountdown(appearance.season())
-            app.stova.home.SeasonalMark(appearance.season())
-        }
+        if (decorated && appearance.showCountdown && androidx.compose.ui.platform.LocalDensity.current.fontScale < 1.5f)
+            app.stova.home.SeasonalCountdown(appearance.season())
         Clock(Modifier.padding(end = 16.dp))
         if(onSmartHome!=null && appearance.showSmartHomeButton) TopBarButton(StovaIcons.Home,stringResource(R.string.nav_smart_home),onSmartHome)
-        if (appearance.showAppsButton) TopBarButton(StovaIcons.Apps, stringResource(R.string.nav_apps), onApps)
         TopBarButton(StovaIcons.Settings, stringResource(R.string.nav_settings), onSettings)
         if (appearance.showProfile) ProfileButton(profile, onProfile)
     }

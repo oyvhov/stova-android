@@ -36,14 +36,14 @@ internal val settingsOrder = settingsGroups.flatMap { it.second }
 
 /** Sections on the left, the chosen one on the right, as in Spole's TV settings. */
 @Composable
-fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewModel, onSwitchProfile: () -> Unit) {
+fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewModel, onSwitchProfile: () -> Unit, onOpenApps: () -> Unit = {}) {
     if (profile.kid) {
         KidSettings(onSwitchProfile)
         return
     }
     var section by rememberSaveable { mutableStateOf(SettingsSection.OVERVIEW) }
     val context = androidx.compose.ui.platform.LocalContext.current
-    SettingsLayout(section, { section = it }, { app.stova.navigation.openSystemSettings(context) }) { shown, openSection ->
+    SettingsLayout(section, { section = it }, { app.stova.navigation.openSystemSettings(context) }, onOpenApps) { shown, openSection ->
         if (shown != SettingsSection.APPEARANCE) PageHeader(stringResource(shown.pageTitle), shown.icon,
             subtitle = stringResource(shown.hint), tint = shown.tone)
         when (shown) {

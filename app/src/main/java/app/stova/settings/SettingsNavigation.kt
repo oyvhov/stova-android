@@ -40,11 +40,14 @@ internal fun SettingsNavigation(
     sectionFocus: Map<SettingsSection, FocusRequester> = emptyMap(),
     onEnterContent: ((SettingsSection) -> Unit)? = null,
     onCancelEntry: () -> Unit = {},
+    onApps: (() -> Unit)? = null,
 ) {
     val fallbackFocus = remember { SettingsSection.entries.associateWith { FocusRequester() } }
     val tabs = sectionFocus.ifEmpty { fallbackFocus }
+    val apps = remember { FocusRequester() }
     val system = remember { FocusRequester() }
-    val requesters = settingsOrder.map { tabs.getValue(it) } + system
+    // Apps and Android open their own pages, so they follow the sections instead of selecting on focus.
+    val requesters = settingsOrder.map { tabs.getValue(it) } + listOfNotNull(apps.takeIf { onApps != null }, system)
     Column(Modifier.width(StovaLayout.SettingsNavigationWidth), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface)
@@ -75,6 +78,13 @@ internal fun SettingsNavigation(
                     if (onEnterContent != null) onEnterContent(entry) else onSelect(entry)
                 }
             }
+            if (onApps != null) SectionTab(stringResource(R.string.nav_apps), false,
+                modifier = Modifier.focusRequester(apps).focusProperties {
+                    up = requesters[settingsOrder.lastIndex]
+                    down = system
+                    left = FocusRequester.Cancel
+                    right = FocusRequester.Cancel
+                }, icon = StovaIcons.Apps, iconTag = "settings-icon-apps", onClick = onApps)
             SectionTab(stringResource(R.string.nav_system_settings), false,
                 modifier = Modifier.focusRequester(system).focusProperties {
                     up = requesters[requesters.lastIndex - 1]

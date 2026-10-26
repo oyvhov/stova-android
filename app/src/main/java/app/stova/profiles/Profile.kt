@@ -80,7 +80,6 @@ data class AppearancePrefs(
     val showDate: Boolean = false,
     val showHaChips: Boolean = true,
     val showCountdown: Boolean = true,
-    val showAppsButton: Boolean = true,
     val showSmartHomeButton: Boolean = true,
     val showProfile: Boolean = true,
     val showHeroYear: Boolean = true,

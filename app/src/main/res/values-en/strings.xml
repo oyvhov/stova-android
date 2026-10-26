@@ -534,7 +534,6 @@
     <string name="custom_show_date">Show date</string>
     <string name="custom_show_chips">Show HA chips</string>
     <string name="custom_show_countdown">Show Christmas countdown</string>
-    <string name="custom_show_apps">Show Apps button</string>
     <string name="custom_show_smart_home">Show Smart home button</string>
     <string name="custom_show_profile">Show profile picture</string>
     <string name="custom_back">Back</string>

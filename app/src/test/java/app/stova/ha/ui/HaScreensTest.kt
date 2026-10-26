@@ -79,7 +79,7 @@ class HaScreensTest {
     @Test fun doubleFontHomeHeader() {
         compose.setContent {StovaTheme {CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density,2f)) {
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-                app.stova.navigation.TopBar(Profile("a","A",AvatarColor.LIME),{},{},{},onSmartHome={},
+                app.stova.navigation.TopBar(Profile("a","A",AvatarColor.LIME),{},{},onSmartHome={},
                     leading={HomeStatusChips(List(3) {ChipContent(CardType.MEDIA_PLAYER,"Ein lang medietittel nr $it")})})
             }
         }}}

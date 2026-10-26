@@ -115,7 +115,6 @@ fun AppearanceSettingsContent(
         Toggle(R.string.custom_show_date, p.showDate) { onChange(p.copy(showDate = it)) }
         Toggle(R.string.custom_show_chips, p.showHaChips) { onChange(p.copy(showHaChips = it)) }
         Toggle(R.string.custom_show_countdown, p.showCountdown) { onChange(p.copy(showCountdown = it)) }
-        Toggle(R.string.custom_show_apps, p.showAppsButton) { onChange(p.copy(showAppsButton = it)) }
         Toggle(R.string.custom_show_smart_home, p.showSmartHomeButton) { onChange(p.copy(showSmartHomeButton = it)) }
         Toggle(R.string.custom_show_profile, p.showProfile) { onChange(p.copy(showProfile = it)) }
     }

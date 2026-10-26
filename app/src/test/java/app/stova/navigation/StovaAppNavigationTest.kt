@@ -47,8 +47,9 @@ class StovaAppNavigationTest {
         rule.onNodeWithTag("screen-HOME").assertWidthIsEqualTo(960.dp)
     }
 
-    @Test fun topBarOpensAppsAndBackGoesHome() {
-        rule.onAllNodesWithText("Appar")[0].performClick()
+    @Test fun homeOpensAppsAndBackGoesHome() {
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Opne Appar").performClick()
         rule.onNodeWithTag("screen-APPS").assertExists()
         rule.waitForIdle() // the Back handler is enabled by the recomposition the click causes
         rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
@@ -65,11 +66,26 @@ class StovaAppNavigationTest {
 
     // Review Important 2: Home pressed while a Stova page is open goes back to Home.
     @Test fun homeIntentReturnsToHome() {
-        rule.onAllNodesWithText("Appar")[0].performClick()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Opne Appar").performClick()
         rule.onNodeWithTag("screen-APPS").assertExists()
         rule.activityRule.scenario.onActivity {
             it.onNewIntent(android.content.Intent(android.content.Intent.ACTION_MAIN).addCategory(android.content.Intent.CATEGORY_HOME))
         }
+        rule.onNodeWithTag("screen-HOME").assertExists()
+    }
+
+    @Test fun settingsOpensAppsAndBackReturnsToSettingsThenHome() {
+        rule.onAllNodesWithText("Innstillingar")[0].performClick()
+        rule.onNodeWithTag("screen-SETTINGS").assertExists()
+        rule.onNodeWithText("Appar").performClick()
+        rule.onNodeWithTag("screen-APPS").assertExists()
+        rule.waitForIdle()
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        rule.waitForIdle()
+        rule.onNodeWithTag("screen-SETTINGS").assertExists()
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        rule.waitForIdle()
         rule.onNodeWithTag("screen-HOME").assertExists()
     }
 
@@ -92,7 +108,8 @@ class StovaAppNavigationTest {
     // Pages fade over each other. Once the fade has settled the old page is gone and focus is on the new one.
     @Test fun pageFadeSettlesWithTheOldPageGoneAndFocusOnTheNewOne() {
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
-        rule.onAllNodesWithText("Appar")[0].performClick()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Opne Appar").performClick()
         rule.waitForIdle()
         rule.onNodeWithTag("screen-APPS").assertExists()
         rule.onAllNodesWithText("Opne Appar").assertCountEquals(0)
@@ -101,15 +118,16 @@ class StovaAppNavigationTest {
         rule.onNodeWithTag("screen-HOME").assertExists()
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("Opne Appar").assertIsFocused()
-        // Only the top bar's button is left called "Appar": the Apps page title has gone with its page.
-        rule.onAllNodesWithText("Appar").assertCountEquals(1)
+        // Apps opens from Settings, not the top bar; the Apps page title has gone with its page.
+        rule.onAllNodesWithText("Appar").assertCountEquals(0)
     }
 
     // While the old page is still fading, a stray D-pad press must not land on it.
     @Test fun theLeavingPageCannotTakeFocusWhileItFades() {
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
         rule.mainClock.autoAdvance = false
-        rule.onAllNodesWithText("Appar")[0].performClick()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Opne Appar").performClick()
         rule.mainClock.advanceTimeByFrame()
         rule.mainClock.advanceTimeByFrame()
         rule.onNodeWithTag("screen-APPS").assertExists()

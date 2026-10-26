@@ -75,9 +75,13 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     var verifiedAdultId by remember { mutableStateOf<String?>(null) }
     var askAdultPin by remember { mutableStateOf(false) }
 
-    // Back walks home, and stops there: a launcher has nowhere further back to go.
-    BackHandler(enabled = current != Destination.HOME) { current = Destination.HOME }
-    LaunchedEffect(container) { container.homeRequests.collect { current = Destination.HOME } }
+    // Apps opened from Settings returns there; everything else walks home, and stops there.
+    var appsFromSettings by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = current != Destination.HOME) {
+        current = if (current == Destination.APPS && appsFromSettings) Destination.SETTINGS else Destination.HOME
+        appsFromSettings = false
+    }
+    LaunchedEffect(container) { container.homeRequests.collect { appsFromSettings = false; current = Destination.HOME } }
     val switchProfile = {
         val profiles = file
         if (leavingNeedsAdultPin(profiles, profile)) {
@@ -134,7 +138,6 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             topBar = { chips ->
                                 TopBar(
                                     profile = profile,
-                                    onApps = { current = Destination.APPS },
                                     onSettings = { current = Destination.SETTINGS },
                                     onProfile = switchProfile,
                                     onSmartHome = if(household?.haBaseUrl!=null) {{smartHomeCardId=null;current=Destination.SMART_HOME}} else null,
@@ -145,7 +148,8 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                     }
                     Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog)
                     Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId)
-                    Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile)
+                    Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile,
+                        onOpenApps = { appsFromSettings = true; current = Destination.APPS })
                 }
             }
         }

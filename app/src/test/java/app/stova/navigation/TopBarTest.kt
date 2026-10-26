@@ -27,36 +27,43 @@ class TopBarTest {
         }
         val mode = androidx.compose.runtime.mutableStateOf(app.stova.profiles.ClockMode.HIDDEN)
         compose.setContent { StovaTheme(appearance = app.stova.profiles.AppearancePrefs(clock = mode.value)) {
-            TopBar(Profile("a", "A", AvatarColor.LIME), {}, {}, {})
+            TopBar(Profile("a", "A", AvatarColor.LIME), {}, {})
         } }
         compose.onNode(clock).assertDoesNotExist()
-        compose.onNodeWithText("Appar").assertIsDisplayed()
+        compose.onNodeWithText("Innstillingar").assertIsDisplayed()
         compose.runOnIdle { mode.value = app.stova.profiles.ClockMode.H12 }
         compose.onNode(clock).assertIsDisplayed()
     }
 
     @Test fun adultHomeHasOneSettingsEntryAndNoSeparateAndroidIcon() {
         compose.setContent { StovaTheme {
-            TopBar(Profile("a", "A", AvatarColor.LIME), {}, {}, {})
+            TopBar(Profile("a", "A", AvatarColor.LIME), {}, {})
         } }
         compose.onNodeWithText("Android").assertDoesNotExist()
         compose.onNodeWithText("Innstillingar").assertIsDisplayed()
     }
 
+    @Test fun appsLiveInSettingsNotInTheTopBar() {
+        compose.setContent { StovaTheme { TopBar(Profile("a", "A", AvatarColor.LIME), {}, {}, onSmartHome = {}) } }
+        compose.onNodeWithText("Appar").assertDoesNotExist()
+        compose.onNodeWithText("Smarthus").assertExists()
+        compose.onNodeWithText("Innstillingar").assertIsDisplayed()
+    }
+
     @Test fun noAndroidSettingsButtonWithoutAnAction() {
-        compose.setContent { StovaTheme { TopBar(Profile("k", "K", AvatarColor.ROSE, kid = true), {}, {}, {}) } }
+        compose.setContent { StovaTheme { TopBar(Profile("k", "K", AvatarColor.ROSE, kid = true), {}, {}) } }
         compose.onNodeWithText("Android").assertDoesNotExist()
     }
 
     @Test fun focusingLabelsKeepsNeighbourButtonsInPlace() {
         compose.setContent { StovaTheme {
-            TopBar(Profile("a", "A", AvatarColor.LIME), {}, {}, {})
+            TopBar(Profile("a", "A", AvatarColor.LIME), {}, {}, onSmartHome = {})
         } }
-        val labels = listOf("Appar", "Innstillingar", "Byt profil")
+        val labels = listOf("Smarthus", "Innstillingar", "Byt profil")
         val before = labels.map { compose.onNodeWithText(it).fetchSemanticsNode().boundsInRoot }
-        compose.onNodeWithText("Appar").performSemanticsAction(SemanticsActions.RequestFocus) { it() }
-        compose.onNodeWithText("Appar").assertIsFocused()
-        compose.onNodeWithText("Appar").performKeyInput {
+        compose.onNodeWithText("Smarthus").performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+        compose.onNodeWithText("Smarthus").assertIsFocused()
+        compose.onNodeWithText("Smarthus").performKeyInput {
             keyDown(Key.DirectionRight); keyUp(Key.DirectionRight)
         }
         compose.onNodeWithText("Innstillingar").assertIsFocused()

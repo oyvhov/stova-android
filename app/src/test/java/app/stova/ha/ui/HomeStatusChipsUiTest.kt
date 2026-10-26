@@ -36,10 +36,9 @@ class HomeStatusChipsUiTest {
     }
     @Test fun longChipsLeaveTopBarButtonsVisibleAtDoubleFontScale() {
         compose.setContent {StovaTheme {CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density,2f)) {
-            app.stova.navigation.TopBar(app.stova.profiles.Profile("a","A",app.stova.core.theme.AvatarColor.LIME),{},{},{},
+            app.stova.navigation.TopBar(app.stova.profiles.Profile("a","A",app.stova.core.theme.AvatarColor.LIME),{},{},
                 onSmartHome={},leading={HomeStatusChips(List(3) {ChipContent(CardType.MEDIA_PLAYER,"Ein svært lang medietittel $it")})})
         }}}
-        compose.onNodeWithText("Appar").assertIsDisplayed()
         compose.onNodeWithText("Innstillingar").assertIsDisplayed()
         compose.onNodeWithText("Byt profil").assertIsDisplayed()
         repeat(3) {

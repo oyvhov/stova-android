@@ -534,7 +534,6 @@
     <string name="custom_show_date">Vis dato</string>
     <string name="custom_show_chips">Vis HA-brikker</string>
     <string name="custom_show_countdown">Vis julenedteljing</string>
-    <string name="custom_show_apps">Vis Appar-knapp</string>
     <string name="custom_show_smart_home">Vis Smarthus-knapp</string>
     <string name="custom_show_profile">Vis profilbilete</string>
     <string name="custom_back">Tilbake</string>

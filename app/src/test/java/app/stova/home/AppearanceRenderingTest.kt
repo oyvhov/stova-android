@@ -174,7 +174,7 @@ class AppearanceRenderingTest {
         compose.setContent { StovaTheme(reduceMotion = true, appearance = AppearancePrefs(homeRows = HomeRows.SCROLLING)) {
             val ctx = LocalContext.current
             HomeContent(listOf(row), null, row.key, AppArtCache(ctx), PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {},
-                topBar = { app.stova.navigation.TopBar(Profile("p", "Demo", AvatarColor.LIME), {}, {}, {}) },
+                topBar = { app.stova.navigation.TopBar(Profile("p", "Demo", AvatarColor.LIME), {}, {}) },
                 spotlight = SpotlightEntry(film, account, false),
                 homePrefs = HomePrefs(rowFormats = mapOf(row.key to RowStyle(RowFormat.POSTER, ArtworkSize.LARGE))))
         } }
@@ -191,7 +191,7 @@ class AppearanceRenderingTest {
         compose.setContent { StovaTheme(appearance = AppearancePrefs(cardSize = ArtworkSize.LARGE, showTitles = true, heroSize = HeroSize.LARGE, showOverview = true), reduceMotion = true) {
             val ctx = LocalContext.current
             HomeContent(listOf(row), null, row.key, AppArtCache(ctx), PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {},
-                topBar = { app.stova.navigation.TopBar(Profile("p", "Demo", AvatarColor.LIME), {}, {}, {}) },
+                topBar = { app.stova.navigation.TopBar(Profile("p", "Demo", AvatarColor.LIME), {}, {}) },
                 spotlight = SpotlightEntry(item, account, true))
         } }
         val overviewNode = compose.onNodeWithText(item.overview!!).assertIsDisplayed()

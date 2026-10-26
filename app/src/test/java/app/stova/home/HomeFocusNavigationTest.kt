@@ -32,13 +32,13 @@ class HomeFocusNavigationTest {
         compose.setContent { StovaTheme(reduceMotion=reduceMotion) {
             val context=LocalContext.current
             HomeContent(rows,null,if(startOnApps) HomeRowKey.APPS else media.key,AppArtCache(context),PackageManagerAppCatalog(context,emptySet()),{},{},{},{},
-                topBar={TopBar(Profile("p","A",AvatarColor.LIME),{},{},{},onSmartHome={})})
+                topBar={TopBar(Profile("p","A",AvatarColor.LIME),{},{},onSmartHome={})})
         } }
     }
 
     @Test fun downFromEveryTopIconReachesAppsAndUpReturnsToThatIcon() {
         render(apps=true)
-        for(label in listOf("Smarthus","Appar","Innstillingar","Byt profil")) {
+        for(label in listOf("Smarthus","Innstillingar","Byt profil")) {
             compose.onNodeWithText(label).performSemanticsAction(SemanticsActions.RequestFocus)
             compose.onNodeWithText(label).performKeyInput { pressKey(Key.DirectionDown) }
             compose.onNode(hasContentDescription("Min app") and hasClickAction()).assertIsFocused()
@@ -62,13 +62,13 @@ class HomeFocusNavigationTest {
         compose.onNodeWithText("Smarthus").performSemanticsAction(SemanticsActions.RequestFocus)
         compose.onRoot().performKeyInput { keyDown(Key.DirectionDown);keyUp(Key.DirectionDown);keyDown(Key.DirectionRight);keyUp(Key.DirectionRight) }
         compose.mainClock.advanceTimeBy(250)
-        compose.onNodeWithText("Appar").assertIsFocused()
+        compose.onNodeWithText("Innstillingar").assertIsFocused()
         compose.mainClock.autoAdvance=true
     }
 
     @Test fun downSkipsAnEmptyAppsRow() {
         render(apps=true,emptyApps=true)
-        compose.onNodeWithText("Appar").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithText("Innstillingar").performSemanticsAction(SemanticsActions.RequestFocus)
         compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
         compose.onNodeWithContentDescription("Film").assertIsFocused()
     }

@@ -31,6 +31,7 @@ internal fun SettingsLayout(
     selected: SettingsSection,
     onSelect: (SettingsSection) -> Unit,
     onSystemSettings: () -> Unit,
+    onApps: (() -> Unit)? = null,
     content: @Composable ColumnScope.(SettingsSection, (SettingsSection) -> Unit) -> Unit,
 ) {
     val tabs = remember { SettingsSection.entries.associateWith { FocusRequester() } }
@@ -84,7 +85,7 @@ internal fun SettingsLayout(
 
     Row(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
         SettingsNavigation(selected, ::select, onSystemSettings, tabs, ::enter,
-            onCancelEntry = { enterSection = null })
+            onCancelEntry = { enterSection = null }, onApps = onApps)
         // Keep only the selected pane in the focus tree. An outgoing animated pane must not
         // compete for Up/Down while the user is already selecting the next section.
         key(selected) {

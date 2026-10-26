@@ -131,7 +131,7 @@ class AppearanceSettingsTest {
             "Vis årstal i heroen", "Vis aldersgrense i heroen", "Vis vurderingar i heroen", "Vis ny sesong i heroen",
             "Kortstorleik", "Titlar under kort", "Appstil", "Nyleg lagt til · Filmar",
             "Aksentfarge", "Fokuseffekt", "Klokkeformat", "Framdriftsstrek", "Bakgrunnskjelde",
-            "Titlar til bakgrunnen", "Roleg bakgrunnsrørsle", "Vis dato", "Vis HA-brikker", "Vis julenedteljing", "Vis Appar-knapp",
+            "Titlar til bakgrunnen", "Roleg bakgrunnsrørsle", "Vis dato", "Vis HA-brikker", "Vis julenedteljing",
             "Vis Smarthus-knapp", "Vis profilbilete", "Klokkestorleik")
         choices.forEach { label ->
             val row = compose.onNodeWithText(label).performScrollTo()

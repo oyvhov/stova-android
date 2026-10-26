@@ -23,15 +23,13 @@ class TopBarChoicesTest {
     @Test fun switchesHideOptionalChromeButKeepSettingsReachable() {
         var p by mutableStateOf(AppearancePrefs())
         compose.setContent { StovaTheme(appearance=p) {
-            TopBar(Profile("p","Demo",AvatarColor.LIME),{},{},{},onSmartHome={},leading={ Text("HA-test") })
+            TopBar(Profile("p","Demo",AvatarColor.LIME),{},{},onSmartHome={},leading={ Text("HA-test") })
         } }
         compose.onNodeWithText("HA-test").assertExists()
-        compose.onNodeWithText("Appar").assertExists()
         compose.onNodeWithText("Smarthus").assertExists()
         compose.onNodeWithText("Byt profil").assertExists()
-        compose.runOnIdle { p=p.copy(showHaChips=false,showAppsButton=false,showSmartHomeButton=false,showProfile=false,clock=ClockMode.HIDDEN) }
+        compose.runOnIdle { p=p.copy(showHaChips=false,showSmartHomeButton=false,showProfile=false,clock=ClockMode.HIDDEN) }
         compose.onNodeWithText("HA-test").assertDoesNotExist()
-        compose.onNodeWithText("Appar").assertDoesNotExist()
         compose.onNodeWithText("Smarthus").assertDoesNotExist()
         compose.onNodeWithText("Byt profil").assertDoesNotExist()
         compose.onNodeWithText("Innstillingar").assertExists()

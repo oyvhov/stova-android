@@ -146,6 +146,7 @@ class AppScreensTest {
             container.session.enter(id)
         }
         rule.waitForIdle()
+        rule.onAllNodesWithText("Innstillingar")[0].performClick()
         rule.onNodeWithText("Appar").performClick()
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Alle appar").fetchSemanticsNodes().isNotEmpty() }
         rule.saveScreen("06-apps")
@@ -227,7 +228,7 @@ class AppScreensTest {
                                 remember { HomeViewModel(container.session,emptyList()) }, {}) else
                             HomeContent(rows, if (showApps) FocusedTarget.App(apps.first().label) else FocusedTarget.Media(item, account), if (showApps) HomeRowKey.APPS else seasonalRow.firstOrNull()?.key ?: key, packArt ?: container.appArt, container.appCatalog,
                                 {}, {}, {}, {}, topBar = {
-                                    TopBar(Profile("demo-profile", "Demo", AvatarColor.LIME), {}, {}, {},
+                                    TopBar(Profile("demo-profile", "Demo", AvatarColor.LIME), {}, {},
                                         onSmartHome = if (chips.isNotEmpty()) ({}) else null,
                                         leading = { HomeStatusChips(chips) })
                                 }, spotlight = app.stova.media.SpotlightEntry(item, account, newSeason = true),homePrefs=homePrefs,canEditRows=true)
@@ -301,7 +302,7 @@ class AppScreensTest {
     }
     @Test fun customizationMinimalTheme() {
         renderMediaHome(waitForBackdrop=true,appearance=AppearancePrefs(heroSize=HeroSize.OFF,backgroundSource=BackgroundSource.THEME,
-            showAppsButton=false,showSmartHomeButton=false,showProfile=false,clock=ClockMode.HIDDEN,cornerRadius=CornerRadius.SHARP,seasonChoice=SeasonChoice.NONE))
+            showSmartHomeButton=false,showProfile=false,clock=ClockMode.HIDDEN,cornerRadius=CornerRadius.SHARP,seasonChoice=SeasonChoice.NONE))
         rule.saveScreen("tilpassing-einsfarga-minimal")
     }
     @Test fun customizationRingZoomSmallWide() {
