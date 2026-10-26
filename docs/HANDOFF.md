@@ -1,4 +1,5 @@
-# Neste: plan `2026-10-26-fast-settings-sheet.md` (ikkje påbyrja)
+# Plan `2026-10-26-fast-settings-sheet.md`: steg 1 (fart) ferdig; neste er fem seksjonar og sidepanel
+93c7dec: alle overgangar kortare (sider 200 ms, små 150, rader 380, fokus 120/180); lys scrim-knekk tilbake til .46 (skjermkontrasttest). 738/738, lint 0 feil. APK `74bad614…` installert og hashverifisert på Shield. Steg 2 (fem seksjonar) og 3 (panel frå høgre) står att.
 2026-10-26 kveld: Brukaren bad om raskare menyar, færre hovudkategoriar i Innstillingar og nytt langt-OK-panel. Valde fem seksjonar (Heim og utsjånad · Smarthus og kontoar · Profilar · Appar · System) og panel frå høgre. Plan-fila har detaljane. Julefilter for heroen: brukaren sa «Nei» no.
 
 # Mjuk hero-gradering ferdig; julefilmer utanfor jul er neste

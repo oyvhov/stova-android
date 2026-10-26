@@ -5,7 +5,7 @@ saman nokon av hovudkategoriane på settings? Lag det meir smooth og fint å sj�
 longpress-menyane. Dei er heilt forferdeleg stygge og lite brukarvennlege.»
 Brukaren valde: fem hovudseksjonar, og panel frå høgre for langt OK.
 
-- [ ] 1. Fart: mål kva som gjer inngang til Innstillingar/menyar treg (sideovergang, `SoftEntrance`,
+- [x] 1. Fart (93c7dec: tokens 150/200/300, rader 380, fokus 120/180; kontrasttest held): mål kva som gjer inngang til Innstillingar/menyar treg (sideovergang, `SoftEntrance`,
   fokusoverføring med `repeat(8) withFrameNanos`, dialoginngang). Kort ned til ≤ 150 ms inngang,
   fokus på første ramme, ingen ventande fokusløkker der ein FocusRequester kan be direkte.
   Mål før/etter på Shield (`scripts/Measure-Stova.ps1` eller `dumpsys gfxinfo`).
