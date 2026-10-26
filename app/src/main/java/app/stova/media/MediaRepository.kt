@@ -68,8 +68,17 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   finally { refresh.cancel() }
  }.distinctUntilChanged()
  /** The hero's titles; served from the snapshot at once, refreshed alongside the rows. */
+ /** A narrow source that leaves fewer than [SPOTLIGHT_MINIMUM] titles is filled from the library under the same filter. */
+ @OptIn(ExperimentalCoroutinesApi::class)
  fun spotlight(profileId:String, season: Season = Season.NONE, source: SpotlightSource = SpotlightSource.LIBRARY,
-  filter:BackgroundFilter=BackgroundFilter(maxAge=null)): Flow<List<SpotlightEntry>> = flow {
+  filter:BackgroundFilter=BackgroundFilter(maxAge=null)): Flow<List<SpotlightEntry>> =
+  spotlightOf(profileId,season,source,filter).flatMapLatest { own ->
+   if(source==SpotlightSource.LIBRARY || own.size>=SPOTLIGHT_MINIMUM) flowOf(own)
+   else spotlightOf(profileId,season,SpotlightSource.LIBRARY,filter).map { fillSpotlight(own,it) }
+  }.distinctUntilChanged()
+
+ private fun spotlightOf(profileId:String, season: Season, source: SpotlightSource,
+  filter:BackgroundFilter): Flow<List<SpotlightEntry>> = flow {
   val slot=loaded(profileId)
   val pool: Flow<List<SpotlightEntry>> = if(filter.libraries!=null) restrictedSpotlight(profileId,slot,source,filter)
   else if(source==SpotlightSource.LIBRARY) slot.spotlight else flow {

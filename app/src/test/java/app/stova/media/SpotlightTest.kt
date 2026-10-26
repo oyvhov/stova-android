@@ -13,6 +13,16 @@ class SpotlightTest {
     private fun season(series: String, n: Int, premiered: String) = MediaItem("se-$series-$n", "a1", ItemType.SEASON, "Sesong $n",
         seriesName = "Serie $series", seriesId = series, season = n, premiered = premiered, art = ItemArt(backdrop = "b-$series", logo = "l-$series"))
 
+    @Test fun aNarrowChoiceWithTooFewTitlesIsFilledFromTheLibraryOwnTitlesFirst() {
+        fun entry(id: String) = SpotlightEntry(movie(id), acc, false)
+        val own = listOf(entry("fav"))
+        val library = listOf(entry("fav"), entry("x"), entry("y"))
+        assertEquals(listOf("fav", "x", "y"), fillSpotlight(own, library).map { it.item.id })
+        val enough = listOf(entry("a"), entry("b"), entry("c"))
+        assertEquals(enough, fillSpotlight(enough, library))
+        assertEquals(own, fillSpotlight(own, emptyList()))
+    }
+
     @Test fun newSeasonsLeadAndShowTheSeriesNotTheSeason() {
         val entries = spotlightEntries(acc, listOf(movie("m1")), listOf(season("s1", 3, "2026-10-10")), today)
         assertEquals(listOf("s1", "m1"), entries.map { it.item.id })

@@ -8,6 +8,14 @@ data class SpotlightEntry(val item: MediaItem, val account: MediaAccount, val ne
 @Serializable data class SnapshotSpotlight(val accountId: String, val item: MediaItem, val newSeason: Boolean)
 
 const val SPOTLIGHT_LIMIT = 30
+
+/** Fewer than this and the hero would stand still; a narrow choice is filled up from the library. */
+const val SPOTLIGHT_MINIMUM = 3
+
+/** Own titles first, then library titles under the same filter, without repeats. */
+fun fillSpotlight(own: List<SpotlightEntry>, library: List<SpotlightEntry>, minimum: Int = SPOTLIGHT_MINIMUM): List<SpotlightEntry> =
+    if (own.size >= minimum) own
+    else own + library.filterNot { extra -> own.any { it.account.id == extra.account.id && it.item.id == extra.item.id } }
 /** A season counts as new for this long after it premiered. */
 const val NEW_SEASON_DAYS = 45L
 

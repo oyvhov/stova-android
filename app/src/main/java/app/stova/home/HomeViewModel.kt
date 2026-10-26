@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
@@ -65,6 +66,7 @@ class HomeViewModel(
     fun focus(target: FocusedTarget) { focusedState.value = target }
     fun focusRow(key: HomeRowKey) { focusedRow.value = key }
 
+    private var lastPool: List<SpotlightEntry> = emptyList()
     private val hour = MutableStateFlow(java.time.LocalTime.now().hour)
     /** The shell feeds the hour only while kids time is on and the app is started. */
     fun setHour(value: Int) { hour.value = value }
@@ -77,9 +79,16 @@ class HomeViewModel(
         .flatMapLatest { profile ->
             val key = profile?.let { it.id to it.appearance.season() }
             if (key != spotlightProfileSeason) { spotlightIndex = 0; spotlightProfileSeason = key }
-            if (profile == null) flowOf(emptyList()) else flow { emit(emptyList());emitAll(spotlightSource(profile)) }
+            // While a new choice loads, keep only titles that the new choice also allows; others go at once.
+            if (profile == null) flowOf(emptyList()) else flow {
+                val a = profile.appearance
+                emit(lastPool.filter { it.account.profileId == profile.id &&
+                    app.stova.media.acceptsSpotlight(it.item, a.spotlightSource) && app.stova.media.acceptsBackground(it.item, a.backgroundFilter) })
+                emitAll(spotlightSource(profile))
+            }
         }
         .distinctUntilChanged()
+        .onEach { lastPool = it }
 
     /**
      * The title the hero shows, stepping through the library pool. It only ticks while Home is on
