@@ -28,6 +28,7 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
     val previewApps by appFlow.collectAsStateWithLifecycle(initialValue = app.stova.apps.ArrangedApps())
     var picking by remember(profile.id) { mutableStateOf(false) }
     var pickingLibraries by remember(profile.id) { mutableStateOf(false) }
+    var pickingKidsLibraries by remember(profile.id) { mutableStateOf(false) }
     var restoreLibraries by remember(profile.id) { mutableStateOf(false) }
     val libraryFocus=remember(profile.id) {FocusRequester()}
     val edits = remember(container, profile.id) { container.appearanceEdits.open(profile) }
@@ -57,7 +58,7 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
         else app.stova.media.acceptsSpotlight(it.item,draft.spotlightSource)}
     val contents: @Composable (AppearanceCategory, Modifier) -> Unit = { category, firstControl ->
         AppearanceSettingsContent(draft, packs, onPickBackground = { picking = true },
-            onPickLibraries={restoreLibraries=true;pickingLibraries=true},libraryControl=Modifier.focusRequester(libraryFocus), onEditRows = onEditRows?.let { edit -> {
+            onPickLibraries={restoreLibraries=true;pickingLibraries=true},onPickKidsLibraries={pickingKidsLibraries=true},libraryControl=Modifier.focusRequester(libraryFocus), onEditRows = onEditRows?.let { edit -> {
             // This may replace the entire menu when editing another profile.
             sectionFocus?.requestFocus()
             edit()
@@ -91,6 +92,10 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
     if(pickingLibraries) BackgroundLibraryPicker(draft.backgroundFilter.libraries,{container.media.backgroundLibraries(profile.id)},
         {selected->save(draft.copy(backgroundFilter=draft.backgroundFilter.copy(libraries=selected)));pickingLibraries=false},
         {pickingLibraries=false})
+    // "All" means no kids libraries chosen: every library cannot be the kids one.
+    if(pickingKidsLibraries) BackgroundLibraryPicker(draft.kidsHours.libraries,{container.media.backgroundLibraries(profile.id)},
+        {selected->save(draft.copy(kidsHours=draft.kidsHours.copy(libraries=selected.orEmpty())));pickingKidsLibraries=false},
+        {pickingKidsLibraries=false})
     if (picking) BackgroundPicker({ container.media.searchBackgrounds(profile.id, it,draft.backgroundFilter) }, { entry ->
         picking = false
         container.appScope.launch {

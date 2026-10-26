@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.stova.AppContainer
 import app.stova.R
@@ -96,6 +97,18 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season(), it.appearance.spotlightSource,it.appearance.backgroundFilter) } }
     val date = app.stova.core.theme.LocalSeasonDate.current
     LaunchedEffect(home, date) { home.setCalendarDate(date) }
+    // Kids time switches the hero on the hour; nothing ticks when it is off or the app is stopped.
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(home, profile.appearance.kidsHours.enabled, lifecycle) {
+        if (!profile.appearance.kidsHours.enabled) return@LaunchedEffect
+        lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+            while (true) {
+                val now = java.time.LocalTime.now()
+                home.setHour(now.hour)
+                kotlinx.coroutines.delay(((60 - now.minute) * 60_000L - now.second * 1_000L).coerceAtLeast(1_000L))
+            }
+        }
+    }
     // Kept here, not in the layer: a return to Home shows the same picture at once, not a fade from ink.
     val backdrop = app.stova.background.rememberProfileBackdropState(profile.id,profile.appearance)
     val motion = stovaMotion

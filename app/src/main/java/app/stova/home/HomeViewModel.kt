@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import app.stova.media.SpotlightEntry
 import app.stova.profiles.Profile
 import app.stova.profiles.season
+import app.stova.profiles.atHour
 import app.stova.profiles.seasonal
 import app.stova.profiles.ProfileSession
 import app.stova.profiles.StartFocus
@@ -64,8 +65,14 @@ class HomeViewModel(
     fun focus(target: FocusedTarget) { focusedState.value = target }
     fun focusRow(key: HomeRowKey) { focusedRow.value = key }
 
-    private val spotlightPool: Flow<List<SpotlightEntry>> = combine(session.active,calendarDate) { profile,date ->
-            profile?.copy(appearance=profile.appearance.seasonal(date))
+    private val hour = MutableStateFlow(java.time.LocalTime.now().hour)
+    /** The shell feeds the hour only while kids time is on and the app is started. */
+    fun setHour(value: Int) { hour.value = value }
+
+    private val spotlightPool: Flow<List<SpotlightEntry>> = combine(session.active,calendarDate,hour) { profile,date,now ->
+            profile?.copy(appearance=profile.appearance.seasonal(date).let {
+                it.copy(backgroundFilter = it.backgroundFilter.atHour(it.kidsHours, now))
+            })
         }.distinctUntilChangedBy { listOf(it?.id,it?.appearance?.season(),it?.appearance?.spotlightSource,it?.appearance?.backgroundFilter) }
         .flatMapLatest { profile ->
             val key = profile?.let { it.id to it.appearance.season() }

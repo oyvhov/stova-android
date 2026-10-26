@@ -14,6 +14,17 @@ Brukaren sine val:
   løfter «Hald fram» og Watch Next; kveld (17–05) løfter nye filmar og seriar rett etter «Hald fram».
   Lagra rekkjefølgje blir ikkje endra; berre visinga.
 
+Tillegg (seinare same kveld): «1, 2 og 4» frå high-end-lista (rørsle, fokus, skrift og farge frå
+kunsten), og «Hero skal vere frå barnefilmer og barne-TV mellom 06:00 og 20:00 alle dagar».
+Rekkjefølgje no: A Barnetid, så steg 1 (fokus), B rørsle, C skrift og farge, deretter resten.
+- [ ] A. Barnetid: `AppearancePrefs.kidsHours` (av som standard; 06–20 når på). I vindauget brukar
+  heroen same bibliotekval med maks 7 år (kjend aldersgrense påkravd). Heim byter ved timegrensa berre
+  medan Heim er synleg. Val under Utsjånad → Bakgrunn.
+- [ ] B. Rørsle: fjør utan sprett for fokus og rulling, korte, forskuvde inngangar av rader, sidebyte som
+  veks frå ikonet, krysstoning via kunsten sin hovudfarge i staden for blekk.
+- [ ] C. Open skrift med karakter til titlar/klokke (OFL, inkludert i appen) og ein svak tone frå
+  kunsten i scrim, fokus og appfliser. Fargar framleis berre i `core/theme`.
+
 Reglar som før: modulært (ingen arbeid når noko er av eller ikkje sett opp), test først,
 `DesignRulesTest` grøn, nynorsk/engelsk tekst, Shield berre når brukaren seier ja.
 

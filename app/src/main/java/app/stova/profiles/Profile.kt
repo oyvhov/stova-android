@@ -75,6 +75,7 @@ data class AppearancePrefs(
     val fixedBackground: BackgroundTitle? = null,
     val spotlightSource: SpotlightSource = SpotlightSource.LIBRARY,
     val backgroundFilter: BackgroundFilter = BackgroundFilter(),
+    val kidsHours: KidsHours = KidsHours(),
     val heroTitle: HeroTitle = HeroTitle.LOGO,
     val backgroundMotion: Boolean = false,
     val showDate: Boolean = false,

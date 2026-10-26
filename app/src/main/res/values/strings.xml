@@ -635,6 +635,12 @@
     <string name="background_age_years">Til og med %1$d år</string>
     <string name="background_age_unlimited">Utan grense</string>
     <string name="background_age_hint">Gjeld bakgrunn og hero, også faste bilete. Titlar utan kjend aldersgrense blir skjulte. Utan treff blir temabakgrunnen brukt.</string>
+    <string name="kids_hours">Barnetid</string>
+    <string name="kids_hours_libraries">Barnebibliotek</string>
+    <string name="kids_hours_from">Barnetid frå</string>
+    <string name="kids_hours_to">Barnetid til</string>
+    <string name="kids_hours_hint">I barnetida, kvar dag, viser heroen berre barnebiblioteka. Resten av døgnet blir dei haldne utanfor.</string>
+    <string name="kids_hours_need_libraries">Vel bakgrunnsbibliotek over, så kan kvelden halde barnebiblioteka utanfor.</string>
     <string name="slider_start_hint">OK for å justere</string>
     <string name="slider_adjust_hint">← → Juster · OK eller Tilbake for å avslutte</string>
     <string name="slider_percent">%1$d %%</string>

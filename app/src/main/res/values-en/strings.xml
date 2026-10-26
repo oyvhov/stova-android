@@ -635,6 +635,12 @@
     <string name="background_age_years">Up to %1$d years</string>
     <string name="background_age_unlimited">No limit</string>
     <string name="background_age_hint">Applies to backgrounds and the hero, including fixed images. Titles without a known age rating are hidden. If nothing matches, the theme background is used.</string>
+    <string name="kids_hours">Kids time</string>
+    <string name="kids_hours_libraries">Kids libraries</string>
+    <string name="kids_hours_from">Kids time from</string>
+    <string name="kids_hours_to">Kids time until</string>
+    <string name="kids_hours_hint">During kids time, every day, the hero shows only the kids libraries. The rest of the day they are left out.</string>
+    <string name="kids_hours_need_libraries">Choose background libraries above so evenings can leave the kids libraries out.</string>
     <string name="slider_start_hint">OK to adjust</string>
     <string name="slider_adjust_hint">← → Adjust · OK or Back to finish</string>
     <string name="slider_percent">%1$d%%</string>

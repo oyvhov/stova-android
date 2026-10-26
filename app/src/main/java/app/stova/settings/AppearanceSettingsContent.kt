@@ -23,6 +23,7 @@ fun AppearanceSettingsContent(
     packs: List<app.stova.apps.IconPack> = emptyList(),
     onPickBackground: () -> Unit = {},
     onPickLibraries: () -> Unit = {},
+    onPickKidsLibraries: () -> Unit = {},
     libraryControl: Modifier = Modifier,
     onEditRows: (() -> Unit)? = null,
     includePreview: Boolean = true,
@@ -91,6 +92,20 @@ fun AppearanceSettingsContent(
             value=librarySelectionLabel(p.backgroundFilter.libraries),onClick=onPickLibraries)
         BackgroundAgeSetting(p.backgroundFilter.maxAge) {onChange(p.copy(backgroundFilter=p.backgroundFilter.copy(maxAge=it)))}
         if(p.backgroundFilter.maxAge!=null) GroupHint(R.string.background_age_hint)
+        Toggle(R.string.kids_hours, p.kidsHours.enabled) { onChange(p.copy(kidsHours = p.kidsHours.copy(enabled = it))) }
+        if (p.kidsHours.enabled) {
+            app.stova.core.ui.SettingsNavRow(stringResource(R.string.kids_hours_libraries),
+                value = librarySelectionLabel(p.kidsHours.libraries), onClick = onPickKidsLibraries)
+            fun hourLabel(h: Int) = "%02d:00".format(h)
+            app.stova.core.ui.SettingsChoiceRow(stringResource(R.string.kids_hours_from), hourLabel(p.kidsHours.startHour)) { step ->
+                onChange(p.copy(kidsHours = p.kidsHours.copy(startHour = Math.floorMod(p.kidsHours.startHour + step, 24))))
+            }
+            app.stova.core.ui.SettingsChoiceRow(stringResource(R.string.kids_hours_to), hourLabel(p.kidsHours.endHour)) { step ->
+                onChange(p.copy(kidsHours = p.kidsHours.copy(endHour = Math.floorMod(p.kidsHours.endHour + step, 24))))
+            }
+            GroupHint(R.string.kids_hours_hint)
+            if (p.backgroundFilter.libraries == null) GroupHint(R.string.kids_hours_need_libraries)
+        }
         if (p.backgroundSource == BackgroundSource.FIXED) app.stova.core.ui.SettingsNavRow(
             stringResource(R.string.custom_pick_background), value = p.fixedBackground?.title, onClick = onPickBackground)
         Choice(R.string.custom_spotlight_source, p.spotlightSource, SpotlightSource.entries,
