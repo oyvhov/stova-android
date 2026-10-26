@@ -1,3 +1,10 @@
+# Smarthus-vising og skjermbilete – ferdig på Shield
+2026-10-26: Brukaren bad om ei fin Smarthus-vising og eit bilete. Sett opp faktisk Shield-profil gjennom Stova-menyane: samla/Balansert rutenett, M-kort for Ute, Straumpris, Stova og Varmepumpa på første skjerm; Sonos i neste rad.
+Vêr og Tibber-straumpris er lagde til som lesekort. Dei tre opphavlege kort-ID-ane/einingane er bevarte, med breiare storleik; korte lokale namn på vêr/pris/varme. Ingen HA-tenester eller avspeling er utløyste.
+Ny opning av sida er kontrollert. Reint, faktisk 3840×2160-skjermbilete med alle tekstar og heile første rutenettet: `.superpowers/smart-home-view/smarthus-shield.png`. Rapport: `docs/verification/smart-home-view.md`.
+Før/etter-samanlikning består: berre aktivt dashboard er endra, alle andre profilfelt er like og konto-/hushaldsfiler er byteidentiske. Ingen kjeldekodeendring, bygg eller ny installasjon; Shield står på den ferdige Smarthus-sida.
+Ingen påbyrja kodearbeid er uferdig. Eldre fysisk Heim-knapp-oppfølging er framleis ikkje stadfesta. Emulator, brukarvedlegg og andre launcher-/tilgjengeval er urørde; ingen push.
+
 # Skyveknappar for utsjånad – fullført på begge einingar
 2026-10-26: Plan `2026-10-26-appearance-sliders.md` er fullført, kodecommit 41557f4. Fem skyveknappar: appkortbakgrunn 0–100 %, demping 0–100 %, hjørne 0–32, kortavstand 0–40 og spotlight 5–60 s. OK/piler/Back, direkte mus/berøring og straks-preview; eldre bool/preset bevarer utsjånaden.
 705/705 native/unit-prøver, 0 skip; lint 0 feil (62 åtvaringar, 1 hint), bygg OK. APK 141aa05fe8993a4708d0b6237593e99d6c5553a5d4599584e22ab77ffc4e32b3 er installert med -r og hashverifisert på emulator-5580 og Shield. Rapport: `docs/verification/appearance-sliders.md`.
