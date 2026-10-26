@@ -39,6 +39,8 @@ Alle kjeldestiane i tabellen er relative til `app/src/main/java/app/stova/`.
 standard. Gamle SMALL/MEDIUM/LARGE bevarer dimensjonane. `ArtworkSizeLabels` gir dei same
 namna i globale val og radval; overskriftsstorleik har ei eiga liste. `artworkDimensions` eig
 formatproporsjonane, også i Appar-rutenettet. Watch Next avgrensar undertittelen til kunstbreidda.
+`RowStyle.cardTitles` lèt ei rad ha eigne namn under korta (null følgjer profilen); `showsCardTitles`
+blir lese av kort, Watch Next og radgeometrien. Appar-sida følgjer alltid profilvalet. Heim har ingen radteljar.
 Toppfeltet på Heim har berre Stova-innstillingar; Android-innstillingar ligg i menyen.
 Sesongnedteljing gjeld berre jul, og av/på-valet blir respektert både i hero og toppfelt.
 
@@ -145,7 +147,9 @@ kurvene mellom Heim og preview, med nøyaktige anker for gamle dempingsval.
 ventande sliderskrivingar blir samla i 180 ms (knappar/innhaldsgrenser blir lagra straks), utan å kansellere pågåande atomisk skriving. Utgang
 flushar siste verdi i app-scopet, rask ny opning ser same utkast, og nullstilling/kopi ventar
 på eldre skrivingar. Lagra prosent på appkort påverkar berre flata, aldri alfa på ikon/tekst.
-Tilbake går til kategorien ein kom frå. Førehandsvisinga ligg etter vala og tek ikkje fast
+Tilbake går til kategorien ein kom frå. I `SettingsLayout` går Tilbake elles eitt steg: ein seksjon opna
+frå Oversikt eller ei lenkje går tilbake dit (Oversikt fokuserer kortet via `LocalSettingsReturnedFrom`),
+innhald går til seksjonsmenyen, og berre menyen går ut av Innstillingar. Førehandsvisinga ligg etter vala og tek ikkje fast
 plass frå kontrollane. Ikon-sida har i staden ei kompakt, ikkje-fokuserbar appprøve før vala,
 med same `AppTile`, ikonpakke og bakgrunnsval som Heim. Langt-OK-menyane samlar dei detaljerte radvala under «Tilpass rada».
 

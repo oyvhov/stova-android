@@ -1,3 +1,7 @@
+# Appnamn per rad, Tilbake i Innstillingar, Smarthus-toppen – emulator, ikkje Shield
+2026-10-26: Plan `2026-10-26-row-names-back-header.md` steg 1–3 er ferdige (commits 1184f08, 23e1913, 3708844). Radteljaren er fjerna. 718/718, 0 skip, lint 0 feil (62 åtvaringar, 1 hint), bygg OK. APK `5a4d4fa58754971f9657d6c424e752a9e71a444c3e9016a6abda31c6b88161c6` er installert og hashverifisert berre på emulator-5580; profilen der er byteidentisk etter prøvinga.
+Ikkje gjort: Shield (ventar på løyve). Ny bestilling frå brukaren står i kø: finare klokke, flytte Appar-ikonet (uklart kvar, spør), graskaret til venstre side, meir sesongpynt på heile skjermen (t.d. lett snø til jul), og ein hero som rullar ut med fin parallax («ingen av modusane gjer det eg vil»).
+
 # Favorittar med fjernkontroll – stadfesta på Shield
 2026-10-26: Brukaren sa «Gjer det». Før installasjonen hadde Shield sin `profiles.json` (skriven 15:50, då brukaren prøvde) NRK TV som favoritt, medan Stova berre viste Spole og Emby. Det stadfestar at skrivinga nådde fila, men ikkje minnet. APK `cbccb731…f571` er installert med -r og hashverifisert. Etter omstart viser Heim Spole, Emby og NRK TV.
 Shield: ein virtuell Bluetooth-fjernkontroll (`hid`, OK halde 1 s) opna menyen. Eit kort OK la AetherSX2 til, på disk og på skjermen, og «Fjern frå favorittar» tok han bort att. `profiles.json`, `household.json` og `media-accounts.json` er byteidentiske med det dei var før prøva (berre NRK TV-favoritten frå brukaren sjølv). Shield står på Heim.
