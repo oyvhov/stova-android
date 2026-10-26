@@ -132,7 +132,8 @@ class AddCardV2Test {
     @Test fun waitsForConnectionAndReloadsAfterReconnect() {
         val socket=FakeHaConnection().apply {status.value=HaStatus.CONNECTING;allStates=listOf(light("light.Lampe"))}
         compose.setContent {StovaTheme {AddCardFlow(socket,{_,_->},{})}}
-        compose.onNodeWithText("Koplar til …").assertExists();assertEquals(0,socket.stateRequests)
+        compose.onNodeWithContentDescription("Koplar til …").assertExists()
+        compose.onNodeWithText("Koplar til …").assertDoesNotExist();assertEquals(0,socket.stateRequests)
         // The picker needs live states, so it holds the connection while shown.
         assertEquals(1,socket.holders)
         compose.runOnIdle {socket.status.value=HaStatus.CONNECTED}

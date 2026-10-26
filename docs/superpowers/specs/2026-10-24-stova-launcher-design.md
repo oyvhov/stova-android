@@ -269,6 +269,10 @@ statusar har nøytrale tekstfargar.
 
 - Overskrift med tilkoplingsstatus og roleg oppsummering av lys på, innetemperatur og
   straumpris frå korta på dashbordet. «Legg til kort» og «Rediger» ligg til høgre.
+  Status er ein statisk nøytral 6 dp prikk når tilkopla, og ein liten ring medan
+  tilkopling pågår. Tilstanden er tilgjengeleg for skjermlesarar. Berre fråkopling,
+  manglande oppsett eller utlogging får kort synleg tekst (`labelSmall`). Same uttrykk
+  gjeld i kortveljaren og inline ved overskrifta i HA-innstillingane.
 - Oppdatert 26.10.2026: eitt samla rutenett i lagra rekkjefølgje er standard. «Oppsett»
   gir profillagra romgruppering og tettleik. Romgruppering viser favorittar først, så HA-rom
   og «Andre einingar». Flytting er Tidlegare/Seinare i rekkjefølgja (innan seksjonen ved romgruppering).

@@ -2,6 +2,7 @@ package app.stova
 
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.test.onNodeWithContentDescription
 
 import coil3.request.transformations
 import android.content.ComponentName
@@ -502,7 +503,8 @@ class AppScreensTest {
             SmartHomeContent(Profile("demo", "Demo", AvatarColor.LIME), cards, entities, HaStatus.CONNECTED)
         } } }
         rule.onNodeWithText("Smarthus").assertIsDisplayed()
-        rule.onNodeWithText("Tilkopla").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Tilkopla").assertIsDisplayed()
+        rule.onNodeWithText("Tilkopla").assertDoesNotExist()
         rule.saveScreen("14-smarthome-heading-aligned")
     }
 

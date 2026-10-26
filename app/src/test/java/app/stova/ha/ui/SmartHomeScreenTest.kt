@@ -6,6 +6,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.AppContainer
@@ -44,7 +45,11 @@ class SmartHomeScreenTest {
             }
         } }
         val heading = compose.onNodeWithText("Smarthus").fetchSemanticsNode().boundsInRoot
-        val status = compose.onNodeWithText("Tilkopla").fetchSemanticsNode().boundsInRoot
+        compose.onNodeWithText("Tilkopla").assertDoesNotExist()
+        val indicator=compose.onNodeWithContentDescription("Tilkopla").assertIsDisplayed()
+        val bounds=indicator.getUnclippedBoundsInRoot()
+        assertTrue("Status must stay visually small",bounds.right-bounds.left<=16.dp && bounds.bottom-bounds.top<=16.dp)
+        val status = indicator.fetchSemanticsNode().boundsInRoot
         assertEquals("Status must share the heading's vertical centre", heading.center.y, status.center.y, 1f)
     }
     @Test fun statusIsCenteredWithHeading() = assertStatusCentered(1f)

@@ -43,7 +43,8 @@ class HaSetupFlowTest {
             container.haSocket.start()
             compose.setContent { StovaTheme { HaSettings(container) } }
             compose.waitUntil(5_000) { container.haSocket.status.value == HaStatus.CONNECTED }
-            compose.onNodeWithText("Tilkopla").assertExists()
+            compose.onNodeWithContentDescription("Tilkopla").assertIsDisplayed()
+            compose.onNodeWithText("Tilkopla").assertDoesNotExist()
             compose.onNodeWithText("Fråkopla").assertDoesNotExist()
             assertFalse(messages.any { it.contains("subscribe_entities") || it.contains("call_service") })
         } finally {

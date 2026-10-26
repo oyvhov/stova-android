@@ -1,3 +1,10 @@
+# Diskret tilkoplingsstatus – ferdig på Shield og emulator
+2026-10-26: Plan `2026-10-26-quiet-connection-status.md` er fullført. Felles HA-status viser tilkopla som ein nøytral 6 dp prikk og tilkopling som ein 8 dp ring, med semantisk omtale. Feil/oppsett får labelSmall; status står inline ved tittelen i HA-innstillingane.
+709/709 native/unit-prøver, 0 skip; lint 0 feil (62 åtvaringar, 1 hint), bygg OK. APK `08c252f1fc8471b706d5b8036ad2e3c7116772370a8c139e0b3fffdd38794ff9` er installert med -r og hashverifisert på begge. Rapport: `docs/verification/quiet-connection-status.md`.
+Smarthus og HA-innstillingar er visuelt kontrollerte på begge, kortveljaren på Shield. Fem ferske UI-uttrekk stadfestar små markørar utan synleg Tilkopla/Connected-tekst. Faktisk reint Shield-bilete: `.superpowers/quiet-connection-status/smarthus-shield.png`.
+Profil-, konto- og hushaldsfiler på begge er byteidentiske før/etter. Ingen HA-styring, avspeling, datatømming, transport-/launcher-/tilgjengeendringar eller push; brukarvedlegg er urørde. Begge står på Smarthus med tidlegare kortoppsett bevart.
+Ingen påbyrja kodearbeid er uferdig. Eldre fysisk Heim-knapp-oppfølging er framleis ikkje stadfesta; denne oppgåva endrar ikkje Heim-tenesta.
+
 # Blanda Smarthus-kort – ferdig på Shield og emulator
 2026-10-26: Plan `2026-10-26-mixed-smarthome-cards.md` er fullført etter «Ikkje berre breidde kort?». S har tettare luft/ikonflate utan mindre tekst eller tap av detaljar; L-vêr har større temperatur, vêrikon og fullbrei prognose under. M og dynamisk vekst ved stor skrift er bevarte.
 709/709 native/unit-prøver, 0 skip; lint 0 feil (62 åtvaringar, 1 hint), bygg OK. APK `9bd09278c1abbb8b3f29cee4701760493696cb2e5bacd2f294531508cad66e4b` er installert med -r og hashverifisert på begge. Rapport: `docs/verification/mixed-smarthome-cards.md`.

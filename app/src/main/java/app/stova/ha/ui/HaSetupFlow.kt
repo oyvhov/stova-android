@@ -110,8 +110,11 @@ internal fun HaSettingsContent(status: HaStatus, address: String?, kids: List<ap
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 CategoryIcon(StovaIcons.Link)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(stringResource(R.string.ha_settings_connection), style = MaterialTheme.typography.titleMedium)
-                    HaStatusLabel(status)
+                    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp),
+                        verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
+                        Text(stringResource(R.string.ha_settings_connection),Modifier.weight(1f,fill=false),style=MaterialTheme.typography.titleMedium)
+                        HaStatusLabel(status)
+                    }
                     address?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
             }
