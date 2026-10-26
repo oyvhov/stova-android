@@ -17,7 +17,7 @@ Brukaren sine val:
 Tillegg (seinare same kveld): «1, 2 og 4» frå high-end-lista (rørsle, fokus, skrift og farge frå
 kunsten), og «Hero skal vere frå barnefilmer og barne-TV mellom 06:00 og 20:00 alle dagar».
 Rekkjefølgje no: A Barnetid, så steg 1 (fokus), B rørsle, C skrift og farge, deretter resten.
-- [ ] A. Barnetid: `AppearancePrefs.kidsHours` (av som standard; 06–20 når på). I vindauget brukar
+- [x] A. Barnetid (bibliotekbasert etter brukaren: «eg vil ikkje sjå barnefilmer og serier på kvelden»): `AppearancePrefs.kidsHours` (av som standard; 06–20 når på). Dagtid berre barnebiblioteka, elles blir dei trekte frå dei valde. Var: I vindauget brukar
   heroen same bibliotekval med maks 7 år (kjend aldersgrense påkravd). Heim byter ved timegrensa berre
   medan Heim er synleg. Val under Utsjånad → Bakgrunn.
 - [ ] B. Rørsle: fjør utan sprett for fokus og rulling, korte, forskuvde inngangar av rader, sidebyte som
