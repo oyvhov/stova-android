@@ -9,7 +9,7 @@ Brukaren valde: fem hovudseksjonar, og panel frå høgre for langt OK.
   fokusoverføring med `repeat(8) withFrameNanos`, dialoginngang). Kort ned til ≤ 150 ms inngang,
   fokus på første ramme, ingen ventande fokusløkker der ein FocusRequester kan be direkte.
   Mål før/etter på Shield (`scripts/Measure-Stova.ps1` eller `dumpsys gfxinfo`).
-- [ ] 2. Fem seksjonar: «Heim og utsjånad» (Heim + Utsjånad), «Smarthus og kontoar» (Smarthus +
+- [x] 2. Fem seksjonar (Rader på Heim er ein kategori i «Heim og utsjånad»; Android er ei rad under System): «Heim og utsjånad» (Heim + Utsjånad), «Smarthus og kontoar» (Smarthus +
   Kontoar), «Profilar», «Appar», «System» (Heim-knappen, Om, Android). Oversikt-sida går ut; første
   seksjon opnar direkte. Ingen gruppeoverskrifter i menyen. Tilbake eitt steg (som i dag). Same
   undersider/innhald, berre samla under nye overskrifter. Gamle lagra `SettingsSection` må lesast.

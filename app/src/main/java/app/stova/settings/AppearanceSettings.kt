@@ -19,8 +19,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 
 @Composable
-fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Boolean = false, onEditRows: (() -> Unit)? = null) {
-    val sectionFocus = LocalSettingsSectionFocus.current
+fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Boolean = false, home: app.stova.home.HomeViewModel? = null) {
     val packs by container.iconPacks.packs.collectAsStateWithLifecycle()
     LaunchedEffect(container.iconPacks) { container.iconPacks.installed() }
     val profiles by container.profiles.file.collectAsStateWithLifecycle(initialValue = ProfilesFile())
@@ -57,12 +56,9 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
         if(draft.backgroundSource==BackgroundSource.FIXED) it.item.id==draft.fixedBackground?.itemId && it.account.id==draft.fixedBackground?.accountId
         else app.stova.media.acceptsSpotlight(it.item,draft.spotlightSource)}
     val contents: @Composable (AppearanceCategory, Modifier) -> Unit = { category, firstControl ->
+        if (category == AppearanceCategory.ROWS) HomeRowSettings(container, profile, home, firstControl = firstControl) else
         AppearanceSettingsContent(draft, packs, onPickBackground = { picking = true },
-            onPickLibraries={restoreLibraries=true;pickingLibraries=true},onPickKidsLibraries={pickingKidsLibraries=true},libraryControl=Modifier.focusRequester(libraryFocus), onEditRows = onEditRows?.let { edit -> {
-            // This may replace the entire menu when editing another profile.
-            sectionFocus?.requestFocus()
-            edit()
-        } },
+            onPickLibraries={restoreLibraries=true;pickingLibraries=true},onPickKidsLibraries={pickingKidsLibraries=true},libraryControl=Modifier.focusRequester(libraryFocus),
             includePreview = false, category = category, firstControl = firstControl, previewEntry = preview, homePrefs = profile.home,
             others = profiles.profiles.filter { it.id != profile.id },
             onReset = { container.appScope.launch { edits.awaitSaved(); container.profiles.resetAppearance(profile.id) } },

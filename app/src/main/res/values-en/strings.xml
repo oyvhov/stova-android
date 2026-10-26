@@ -526,7 +526,6 @@
     <string name="custom_extra_round">Extra round</string>
     <string name="custom_card_spacing">Card spacing</string>
     <string name="custom_progress">Progress line</string>
-    <string name="custom_edit_rows">Customize each row</string>
     <string name="custom_ring_zoom">Ring + zoom</string>
     <string name="custom_light_up">Light up</string>
     <string name="custom_ring_width">Ring width</string>
@@ -557,11 +556,13 @@
     <string name="custom_hero_ratings">Show ratings in hero</string>
     <string name="custom_hero_new_season">Show new season in hero</string>
     <string name="icon_tile_background">App card background</string>
-    <string name="settings_all_appearance">All appearance settings</string>
-    <string name="settings_appearance_intro">Choose what to customise. Changes are saved for this profile.</string>
-    <string name="settings_group_home">Home screen</string>
-    <string name="settings_group_services">Services</string>
-    <string name="settings_group_system">Profile and system</string>
+    <string name="settings_appearance_intro">Rows, background and the look of Home. Changes are saved for this profile.</string>
+    <string name="settings_section_look">Home and appearance</string>
+    <string name="settings_section_connections">Smart home and accounts</string>
+    <string name="settings_section_profiles">Profiles</string>
+    <string name="settings_section_system">System</string>
+    <string name="settings_home_rows">Rows on Home</string>
+    <string name="settings_android_hint">Network, sound, display and apps in Android</string>
     <string name="settings_summary_theme">Colours and seasons</string>
     <string name="settings_summary_hero">Logo, details and rotation</string>
     <string name="settings_summary_cards">Size, format and spacing</string>
@@ -590,8 +591,8 @@
     <string name="settings_hint_home">Choose where to start and what belongs here.</string>
     <string name="settings_hint_profile">Personal choices, identity and security for each person.</string>
     <string name="settings_hint_accounts">Your films and series from Jellyfin and Emby.</string>
-    <string name="settings_hint_smart_home">Home Assistant and the cards you want nearby.</string>
-    <string name="settings_hint_home_button">One press brings you back to Stova.</string>
+    <string name="settings_hint_smart_home">Home Assistant, the cards you want nearby and your media accounts.</string>
+    <string name="settings_hint_home_button">The Home button, about Stova and the Android settings.</string>
     <string name="settings_hint_about">Version, licences and information about the app.</string>
     <string name="settings_overview">Overview</string>
     <string name="settings_title_overview">Make Stova yours</string>

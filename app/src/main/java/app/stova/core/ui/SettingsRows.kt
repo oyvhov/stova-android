@@ -49,11 +49,11 @@ fun SettingsGroup(title: String, showHeading: Boolean = true, content: @Composab
 
 /** The whole row toggles. Lime sits in the thumb; the track is the dim olive, as in Spole. */
 @Composable
-fun SettingsSwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit, subtitle: String? = null) {
+fun SettingsSwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit, subtitle: String? = null, modifier: Modifier = Modifier) {
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.medium
     Row(
-        Modifier.fillMaxWidth()
+        modifier.fillMaxWidth()
             .heightIn(min = StovaLayout.SettingsControlMinHeight)
             .focusOutline(source, shape)
             .clip(shape)

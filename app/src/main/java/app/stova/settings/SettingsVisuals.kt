@@ -14,7 +14,7 @@ internal val SettingsSection.icon: ImageVector get() = when (this) {
     SettingsSection.ACCOUNTS -> StovaIcons.Link
     SettingsSection.SMART_HOME -> StovaIcons.Home
     SettingsSection.PROFILE -> StovaIcons.User
-    SettingsSection.HOME_BUTTON -> StovaIcons.Toggle
+    SettingsSection.HOME_BUTTON -> StovaIcons.Gear
     SettingsSection.ABOUT -> StovaIcons.Info
 }
 internal val SettingsSection.tone: Color get() = when (this) {
@@ -28,10 +28,10 @@ internal val SettingsSection.tone: Color get() = when (this) {
 internal val SettingsSection.pageTitle: Int get() = when (this) {
     SettingsSection.OVERVIEW -> R.string.settings_title_overview
     SettingsSection.HOME -> R.string.settings_title_home
-    SettingsSection.PROFILE -> R.string.settings_title_profile
+    SettingsSection.PROFILE -> R.string.settings_section_profiles
     SettingsSection.ACCOUNTS -> R.string.settings_title_accounts
-    SettingsSection.SMART_HOME -> R.string.settings_title_smart_home
-    SettingsSection.HOME_BUTTON -> R.string.settings_title_home_button
+    SettingsSection.SMART_HOME -> R.string.settings_section_connections
+    SettingsSection.HOME_BUTTON -> R.string.settings_section_system
     SettingsSection.ABOUT -> R.string.settings_title_about
     SettingsSection.APPEARANCE -> R.string.settings_appearance
 }
@@ -54,6 +54,7 @@ internal val AppearanceCategory.icon: ImageVector get() = when (this) {
     AppearanceCategory.TOP_BAR -> StovaIcons.Clock
     AppearanceCategory.ICONS -> StovaIcons.Apps
     AppearanceCategory.PROFILE -> StovaIcons.User
+    AppearanceCategory.ROWS -> StovaIcons.Rows
 }
 internal val AppearanceCategory.tone: Color get() = when (this) {
     AppearanceCategory.THEME -> AvatarColor.IRIS.color

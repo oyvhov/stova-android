@@ -36,7 +36,6 @@ import app.stova.core.ui.StovaIcons
 internal fun SettingsNavigation(
     selected: SettingsSection,
     onSelect: (SettingsSection) -> Unit,
-    onSystemSettings: () -> Unit,
     sectionFocus: Map<SettingsSection, FocusRequester> = emptyMap(),
     onEnterContent: ((SettingsSection) -> Unit)? = null,
     onCancelEntry: () -> Unit = {},
@@ -45,9 +44,11 @@ internal fun SettingsNavigation(
     val fallbackFocus = remember { SettingsSection.entries.associateWith { FocusRequester() } }
     val tabs = sectionFocus.ifEmpty { fallbackFocus }
     val apps = remember { FocusRequester() }
-    val system = remember { FocusRequester() }
-    // Apps and Android open their own pages, so they follow the sections instead of selecting on focus.
-    val requesters = settingsOrder.map { tabs.getValue(it) } + listOfNotNull(apps.takeIf { onApps != null }, system)
+    // Apps opens its own page, so it does not select on focus. It sits just above System; null marks it.
+    val entries: List<SettingsSection?> = settingsOrder.toMutableList<SettingsSection?>().apply {
+        if (onApps != null) add(indexOf(SettingsSection.HOME_BUTTON), null)
+    }
+    val requesters = entries.map { entry -> entry?.let { tabs.getValue(it) } ?: apps }
     Column(Modifier.width(StovaLayout.SettingsNavigationWidth), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface)
@@ -59,17 +60,17 @@ internal fun SettingsNavigation(
         }.focusProperties {
             onExit = { if (requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down) cancelFocusChange() }
         }.focusGroup().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            settingsOrder.forEachIndexed { index, entry ->
-                settingsGroups.firstOrNull { it.second.first() == entry }?.let { group ->
-                    Text(stringResource(group.first), Modifier.padding(start = 12.dp, top = if (index == 0) 0.dp else 8.dp, bottom = 2.dp),
-                        style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            entries.forEachIndexed { index, entry ->
+                val order = Modifier.focusRequester(requesters[index]).focusProperties {
+                    up = requesters.getOrNull(index - 1) ?: FocusRequester.Cancel
+                    down = requesters.getOrNull(index + 1) ?: FocusRequester.Cancel
+                    left = FocusRequester.Cancel
+                    if (entry == null) right = FocusRequester.Cancel
                 }
-                SectionTab(stringResource(entry.label), entry == selected, { onSelect(entry) },
-                    modifier = Modifier.focusRequester(requesters[index]).focusProperties {
-                        up = requesters.getOrNull(index - 1) ?: FocusRequester.Cancel
-                        down = requesters[index + 1]
-                        left = FocusRequester.Cancel
-                    }.onPreviewKeyEvent { event ->
+                if (entry == null) SectionTab(stringResource(R.string.nav_apps), false, modifier = order,
+                    icon = StovaIcons.Apps, iconTag = "settings-icon-apps", onClick = onApps ?: {})
+                else SectionTab(stringResource(entry.label), entry == selected, { onSelect(entry) },
+                    modifier = order.onPreviewKeyEvent { event ->
                         if (event.key != Key.DirectionRight) false else {
                             if (event.type == KeyEventType.KeyDown) onEnterContent?.invoke(entry)
                             true
@@ -78,20 +79,6 @@ internal fun SettingsNavigation(
                     if (onEnterContent != null) onEnterContent(entry) else onSelect(entry)
                 }
             }
-            if (onApps != null) SectionTab(stringResource(R.string.nav_apps), false,
-                modifier = Modifier.focusRequester(apps).focusProperties {
-                    up = requesters[settingsOrder.lastIndex]
-                    down = system
-                    left = FocusRequester.Cancel
-                    right = FocusRequester.Cancel
-                }, icon = StovaIcons.Apps, iconTag = "settings-icon-apps", onClick = onApps)
-            SectionTab(stringResource(R.string.nav_system_settings), false,
-                modifier = Modifier.focusRequester(system).focusProperties {
-                    up = requesters[requesters.lastIndex - 1]
-                    down = FocusRequester.Cancel
-                    left = FocusRequester.Cancel
-                    right = FocusRequester.Cancel
-                }, onClick = onSystemSettings)
         }
     }
 }

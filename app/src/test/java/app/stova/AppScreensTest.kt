@@ -109,9 +109,9 @@ class AppScreensTest {
         }
         rule.waitForIdle()
         rule.onAllNodesWithText("Innstillingar")[0].performClick()
-        rule.waitUntil(5_000) { rule.onAllNodesWithText("Gjer Stova til di").fetchSemanticsNodes().isNotEmpty() }
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Rader på Heim").fetchSemanticsNodes().isNotEmpty() }
         rule.saveScreen("07-settings")
-        rule.onNodeWithText("Home-knappen").performClick()
+        rule.onNodeWithText("System").performClick()
         rule.waitForIdle()
         rule.saveScreen("08-home-button")
     }
@@ -252,7 +252,7 @@ class AppScreensTest {
         }
         rule.waitForIdle()
         if (previewSettings) {
-            rule.onNodeWithText("Utsjånad").performClick()
+            rule.onAllNodesWithText("Heim og utsjånad")[0].performClick()
             rule.onNode(hasText("Tema") and hasClickAction()).performClick()
             rule.waitUntil(5_000) { rule.onAllNodesWithTag("preview-backdrop",useUnmergedTree=true).fetchSemanticsNodes().isNotEmpty() }
             rule.onNode(hasText("Tema") and hasClickAction()).performSemanticsAction(SemanticsActions.RequestFocus) { it() }
@@ -549,7 +549,7 @@ class AppScreensTest {
         }
         rule.waitForIdle()
         rule.onAllNodesWithText("Innstillingar")[0].performClick()
-        rule.onNodeWithText("Utsjånad").performClick()
+        rule.onAllNodesWithText("Heim og utsjånad")[0].performClick()
         rule.onNode(hasText("Tema") and hasClickAction()).performClick()
         rule.onNodeWithText("Sesongpynt").performScrollTo().assertIsDisplayed()
         rule.saveScreen("tema-innstillingar")

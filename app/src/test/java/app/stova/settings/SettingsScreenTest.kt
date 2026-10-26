@@ -51,18 +51,33 @@ class SettingsScreenTest {
         rule.waitForIdle()
     }
 
-    @Test fun enteringSettingsStartsOnTheOverviewInsteadOfProfile() {
+    private fun tab(label: String) = rule.onNode(hasText(label) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab))
+    /** The way back from an Appearance category: it carries the section name, like the tab. */
+    private fun breadcrumb() = rule.onNode(hasText("Heim og utsjånad") and hasClickAction() and
+        !SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab))
+
+    @Test fun enteringSettingsOpensHomeAndAppearanceDirectly() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        rule.onNode(hasText("Oversikt") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).assertIsFocused()
+        tab("Heim og utsjånad").assertIsFocused()
+        rule.onNode(hasText("Tema") and hasClickAction()).assertExists()
+        rule.onNodeWithText("Oversikt").assertDoesNotExist()
         rule.onNodeWithText("Set PIN").assertDoesNotExist()
-        rule.onNodeWithText("Android").assertExists()
+    }
+
+    @Test fun rowsOnHomeLiveInsideHomeAndAppearance() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNode(hasText("Rader på Heim") and hasClickAction()).performScrollTo().performClick()
+        rule.onNodeWithText("Bakgrunnsrotasjon").assertIsFocused()
+        back()
+        rule.onNode(hasText("Rader på Heim") and hasClickAction()).assertIsFocused()
     }
 
     @Test fun libraryDialogReturnsToItsControlAndSavesExplicitEmptySelection() {
         runBlocking {container.session.enter(container.profiles.create("A",AvatarColor.LIME,false).id)}
         openSettings()
-        rule.onNode(hasText("Utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role,Role.Tab)).performClick()
+        rule.onNode(hasText("Heim og utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role,Role.Tab)).performClick()
         rule.onNode(hasText("Bakgrunn") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Bibliotek til bakgrunnen").performScrollTo().performClick()
         rule.onNodeWithText("Avbryt").performClick()
@@ -77,7 +92,7 @@ class SettingsScreenTest {
     @Test fun leftFromAScrolledSettingReturnsToItsOwnSection() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        val appearance=hasText("Utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role,Role.Tab)
+        val appearance=hasText("Heim og utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role,Role.Tab)
         rule.onNode(appearance).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
         rule.onNode(hasText("Ikon") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Ikonpakke").performScrollTo().performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
@@ -89,7 +104,7 @@ class SettingsScreenTest {
     @Test fun rightFromTheSectionEntersItsFirstControl() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        val appearance=hasText("Utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role,Role.Tab)
+        val appearance=hasText("Heim og utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role,Role.Tab)
         rule.onNode(appearance).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
         rule.onNode(appearance).performKeyInput { keyDown(Key.DirectionRight);keyUp(Key.DirectionRight) }
         rule.onNode(hasText("Tema") and hasClickAction()).assertIsFocused()
@@ -98,7 +113,7 @@ class SettingsScreenTest {
     @Test fun reduceMotionPersists() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        rule.onNodeWithText("Utsjånad").performClick()
+        tab("Heim og utsjånad").performClick()
         rule.onNode(hasText("Fokus") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Reduser rørsle").performScrollTo().performClick()
         rule.waitUntil(5_000) { profile("A").appearance.reduceMotion }
@@ -107,7 +122,7 @@ class SettingsScreenTest {
     @Test fun sliderLastValuePersistsWhenLeavingImmediately() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        rule.onNodeWithText("Utsjånad").performClick()
+        tab("Heim og utsjånad").performClick()
         rule.onNode(hasText("Ikon") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Bakgrunn på appkort").performScrollTo()
             .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(43f) }
@@ -120,7 +135,7 @@ class SettingsScreenTest {
         rule.onNodeWithTag("screen-HOME").assertExists()
         rule.waitUntil(5_000) { profile("A").appearance.appTileBackgroundOpacity == 43 }
         openSettings()
-        rule.onNodeWithText("Utsjånad").performClick()
+        tab("Heim og utsjånad").performClick()
         rule.onNode(hasText("Ikon") and hasClickAction()).performScrollTo().performClick()
         rule.onNode(hasText("Bakgrunn på appkort") and hasText("43 %")).performScrollTo().assertIsDisplayed()
     }
@@ -130,21 +145,11 @@ class SettingsScreenTest {
         rule.waitForIdle()
     }
 
-    @Test fun backFromASectionOpenedOnTheOverviewReturnsToItsCard() {
-        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
-        openSettings()
-        rule.onNode(hasText("Fargar og uttrykk") and hasClickAction()).performClick()
-        rule.onNode(hasText("Tema") and hasClickAction()).assertIsFocused()
-        back()
-        rule.onNode(hasText("Fargar og uttrykk") and hasClickAction()).assertIsFocused()
-        rule.onNodeWithTag("screen-SETTINGS").assertExists()
-    }
-
     @Test fun backFromContentGoesToTheSectionMenuBeforeLeavingSettings() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        rule.onNodeWithText("Heim").performClick()
-        val homeTab = rule.onNode(hasText("Heim") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab))
+        tab("Profilar").performClick()
+        val homeTab = tab("Profilar")
         homeTab.assertIsNotFocused()
         back()
         homeTab.assertIsFocused()
@@ -156,31 +161,28 @@ class SettingsScreenTest {
     @Test fun sectionsDoNotJumpToEachOther() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        rule.onNodeWithText("Heim").performClick()
+        rule.onNode(hasText("Rader på Heim") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Utsjånad på framsida").assertDoesNotExist()
-        rule.onNodeWithText("Utsjånad").performClick()
-        rule.onNode(hasText("Kort og rader") and hasClickAction()).performScrollTo().performClick()
-        rule.onNodeWithText("Tilpass kvar rad").assertDoesNotExist()
     }
 
     @Test fun appearanceStartsWithCategoriesAndOpensOnlyTheChosenControls() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        rule.onNodeWithText("Utsjånad").performClick()
+        tab("Heim og utsjånad").performClick()
         rule.onNode(hasText("Tema") and hasClickAction()).assertIsFocused()
         rule.onNodeWithText("Kortstorleik").assertDoesNotExist()
         rule.onNode(hasText("Fokus") and hasClickAction()).performClick()
         rule.onNodeWithText("Fokuseffekt").assertIsFocused()
         rule.onNodeWithText("Klokkeformat").assertDoesNotExist()
         rule.onNodeWithText("Kortstorleik").assertDoesNotExist()
-        rule.onNodeWithText("Alle utsjånadval").performClick()
+        breadcrumb().performClick()
         rule.onNode(hasText("Fokus") and hasClickAction()).assertIsFocused()
     }
 
     @Test fun appearanceCategoryCanBeOpenedAndBackedOutWithTheRemote() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        rule.onNodeWithText("Utsjånad").performClick()
+        tab("Heim og utsjånad").performClick()
         rule.onNode(hasText("Tema") and hasClickAction()).performKeyInput { pressKey(Key.DirectionCenter) }
         rule.onNode(hasText("Tema") and hasClickAction()).assertIsFocused()
         rule.onRoot().performKeyInput { pressKey(Key.Back) }
@@ -195,7 +197,7 @@ class SettingsScreenTest {
             container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id)
         }
         openSettings()
-        rule.onNodeWithText("Utsjånad").performClick()
+        tab("Heim og utsjånad").performClick()
         rule.onNode(hasText("Kort og rader") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Kortstorleik").performScrollTo().performClick()
         rule.waitUntil(5_000) { profile("A").appearance.cardSize == app.stova.profiles.ArtworkSize.MEDIUM }
@@ -205,6 +207,7 @@ class SettingsScreenTest {
     @Test fun adultReachesAndroidSettingsFromStovaSettings() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
+        tab("System").performClick()
         rule.onNodeWithText("Android").performScrollTo().performClick()
         val started = org.robolectric.Shadows.shadowOf(rule.activity).nextStartedActivity
         assertEquals(android.provider.Settings.ACTION_SETTINGS, started?.action)
@@ -214,31 +217,32 @@ class SettingsScreenTest {
     @Test fun sectionFollowsFocus() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        rule.onNodeWithText("Bakgrunnsrotasjon").assertDoesNotExist()
-        rule.onNodeWithText("Heim").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        rule.onNodeWithText("Set PIN").assertDoesNotExist()
+        tab("Profilar").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
         rule.waitForIdle()
-        rule.onNodeWithText("Bakgrunnsrotasjon").assertExists()
+        rule.onNodeWithText("Set PIN").assertExists()
     }
 
     // Switching a section leaves a single pane in the focus tree and keeps focus on its tab.
     @Test fun sectionSwitchKeepsFocusOnTheTabWithoutLeavingOldControls() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        rule.onNode(hasText("Profil") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()
+        tab("Profilar").performClick()
         rule.onNodeWithText("Set PIN").assertExists()
-        rule.onNodeWithText("Bakgrunnsrotasjon").assertDoesNotExist()
-        val tab = hasText("Heim") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)
+        val themeCard = hasText("Tema") and hasClickAction()
+        rule.onNode(themeCard).assertDoesNotExist()
+        val tab = hasText("Heim og utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)
         rule.mainClock.autoAdvance = false
         rule.onNode(tab).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
         rule.mainClock.advanceTimeByFrame()
         rule.mainClock.advanceTimeByFrame()
         rule.onNodeWithText("Set PIN").assertDoesNotExist()
-        rule.onNodeWithText("Bakgrunnsrotasjon").assertExists()
+        rule.onNode(themeCard).assertExists()
         rule.onNode(tab).assertIsFocused()
         rule.mainClock.autoAdvance = true
         rule.waitForIdle()
         rule.onNodeWithText("Set PIN").assertDoesNotExist()
-        rule.onNodeWithText("Bakgrunnsrotasjon").assertExists()
+        rule.onNode(themeCard).assertExists()
         rule.onNode(tab).assertIsFocused()
     }
 
@@ -248,15 +252,16 @@ class SettingsScreenTest {
             container.profiles.create("K", AvatarColor.ROSE, true)
         }
         openSettings()
-        rule.onNode(hasText("Profil") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()
+        tab("Profilar").performClick()
         rule.waitUntil(5_000) { rule.onAllNodesWithText("K").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("K").performScrollTo().performClick()
-        rule.onAllNodesWithText("Utsjånad")[1].performScrollTo().performClick()
+        rule.onNodeWithText("Utsjånad").performScrollTo().performClick()
         rule.onNode(hasText("Kort og rader") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Kortstorleik").performScrollTo().performClick()
         rule.waitUntil(5_000) { profile("K").appearance.cardSize == app.stova.profiles.ArtworkSize.MEDIUM }
         assertEquals(app.stova.profiles.ArtworkSize.COMPACT, profile("A").appearance.cardSize)
-        rule.onNodeWithText("Tilpass kvar rad").performScrollTo().performClick()
+        breadcrumb().performClick()
+        rule.onNode(hasText("Rader på Heim") and hasClickAction()).performScrollTo().performClick()
         rule.onAllNodesWithText("Kortformat for rada")[0].performScrollTo().performClick()
         rule.waitForIdle()
         rule.waitUntil(5_000) { profile("K").home.rowFormats[app.stova.home.HomeRowKey.APPS]?.format == app.stova.profiles.RowFormat.LARGE_WIDE }
@@ -269,7 +274,7 @@ class SettingsScreenTest {
             container.session.enter(container.profiles.create("K", AvatarColor.ROSE, true).id)
         }
         openSettings()
-        rule.onNodeWithText("Utsjånad").assertDoesNotExist()
+        rule.onNodeWithText("Heim og utsjånad").assertDoesNotExist()
         assertEquals(1, rule.onAllNodesWithText("Byt profil").fetchSemanticsNodes().size) // the one button
     }
 
@@ -283,7 +288,7 @@ class SettingsScreenTest {
             container.profiles.create("K", AvatarColor.ROSE, true)
         }
         openSettings()
-        rule.onNode(hasText("Profil") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()
+        tab("Profilar").performClick()
         rule.waitUntil(5_000) { rule.onAllNodesWithText("K").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("K").performScrollTo().performClick()
         rule.onNodeWithText("Tillatne appar").performClick()
@@ -296,7 +301,7 @@ class SettingsScreenTest {
     @Test fun newPinNeedsConfirmation() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        rule.onNode(hasText("Profil") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()
+        tab("Profilar").performClick()
         rule.onNodeWithText("Set PIN").performClick()
         "2468".forEach { rule.onNodeWithText(it.toString()).performClick() }
         rule.onNodeWithText("OK").performClick()
@@ -314,7 +319,7 @@ class SettingsScreenTest {
             container.session.enter(a.id)
         }
         openSettings()
-        rule.onNode(hasText("Profil") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()
+        tab("Profilar").performClick()
         rule.onNodeWithText("Endre PIN").performClick()
         rule.onNodeWithText("Skriv PIN for A").assertExists()
     }

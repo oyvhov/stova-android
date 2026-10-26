@@ -39,21 +39,23 @@ class AppearanceMenuTest {
                 StovaTheme(reduceMotion = true) {
                     var section by remember { mutableStateOf(SettingsSection.APPEARANCE) }
                     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-                        SettingsLayout(section, { section = it }, {}) { shown, _ ->
+                        SettingsLayout(section, { section = it }) { shown, _ ->
                             if (shown == SettingsSection.APPEARANCE) AppearanceMenu { category, firstControl ->
-                                AppearanceSettingsContent(AppearancePrefs(), category = category, firstControl = firstControl, includePreview = false, onChange = {})
+                                // The real screen puts HomeRowSettings here; it needs a container.
+                                if (category == AppearanceCategory.ROWS) app.stova.core.ui.StovaButton("Rows control", {}, firstControl)
+                                else AppearanceSettingsContent(AppearancePrefs(), category = category, firstControl = firstControl, includePreview = false, onChange = {})
                             } else app.stova.core.ui.StovaButton("Other section", {})
                         }
                     }
                 }
             }
         }
-        compose.onNode(hasText("Utsjånad") and SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.Role,
+        compose.onNode(hasText("Heim og utsjånad") and SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.Role,
             androidx.compose.ui.semantics.Role.Tab)).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
     }
-    @Test fun overviewFitsAllEightCategories() {
+    @Test fun overviewFitsAllNineCategories() {
         render()
-        listOf("Tema", "Heim og hero", "Kort og rader", "Bakgrunn", "Fokus", "Toppfelt", "Ikon", "Profil").forEach {
+        listOf("Tema", "Heim og hero", "Kort og rader", "Bakgrunn", "Fokus", "Toppfelt", "Ikon", "Profil", "Rader på Heim").forEach {
             compose.onNode(hasText(it) and SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.Role,
                 androidx.compose.ui.semantics.Role.Button)).assertIsDisplayed()
         }
@@ -89,7 +91,7 @@ class AppearanceMenuTest {
 
     @Test fun allCategoriesEnterTheirOwnFirstControlAndBackReturnsToTheirTile() {
         render()
-        val first = listOf("Tema", "Synlege rader", "Kortstorleik", "Bakgrunnskjelde", "Fokuseffekt", "Klokkeformat", "Ikonpakke", "Tilbakestill utsjånad")
+        val first = listOf("Tema", "Synlege rader", "Kortstorleik", "Bakgrunnskjelde", "Fokuseffekt", "Klokkeformat", "Ikonpakke", "Tilbakestill utsjånad", "Rows control")
         AppearanceCategory.entries.forEachIndexed { index, category ->
             compose.onNodeWithTag("appearance-icon-${category.name}", useUnmergedTree = true)
                 .onParent().performClick()

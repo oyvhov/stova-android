@@ -30,8 +30,8 @@ class SettingsLayoutFocusTest {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
                 StovaTheme(reduceMotion = true) {
-                    SettingsLayout(selected, { selected = it }, {}) { section, _ ->
-                        if (section == SettingsSection.ABOUT) Text("Version")
+                    SettingsLayout(selected, { selected = it }) { section, _ ->
+                        if (section == SettingsSection.HOME_BUTTON) Text("Version")
                         else repeat(12) { index -> StovaButton("${section.name} $index", {}) }
                     }
                 }
@@ -43,10 +43,10 @@ class SettingsLayoutFocusTest {
 
     @Test fun largeFontSidebarMovesInOrderAndStopsAtBothEnds() {
         render(fontScale = 2f)
-        tab("Oversikt").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
-        tab("Oversikt").performKeyInput { pressKey(Key.DirectionUp) }
-        tab("Oversikt").assertIsFocused()
-        val labels = listOf("Oversikt", "Heim", "Utsjånad", "Kontoar", "Smarthus", "Profil", "Home-knappen", "Om", "Android")
+        tab("Heim og utsjånad").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        tab("Heim og utsjånad").performKeyInput { pressKey(Key.DirectionUp) }
+        tab("Heim og utsjånad").assertIsFocused()
+        val labels = listOf("Heim og utsjånad", "Smarthus og kontoar", "Profilar", "System")
         labels.zipWithNext().forEach { (from, to) ->
             tab(from).performKeyInput { pressKey(Key.DirectionDown) }
             tab(to).assertIsFocused()
@@ -61,37 +61,37 @@ class SettingsLayoutFocusTest {
 
     @Test fun fastSectionChangeThenRightEntersTheNewPane() {
         render()
-        tab("Heim").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
-        tab("Heim").performKeyInput {
-            repeat(3) { pressKey(Key.DirectionDown) }
+        tab("Heim og utsjånad").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        tab("Heim og utsjånad").performKeyInput {
+            repeat(2) { pressKey(Key.DirectionDown) }
             pressKey(Key.DirectionRight)
         }
-        compose.onNodeWithText("SMART_HOME 0").assertIsFocused()
+        compose.onNodeWithText("PROFILE 0").assertIsFocused()
         compose.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
-        tab("Smarthus").assertIsFocused()
+        tab("Profilar").assertIsFocused()
     }
 
     @Test fun confirmingASectionEntersItsFirstControl() {
         render()
-        tab("Heim").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
-        tab("Heim").performKeyInput { pressKey(Key.DirectionCenter) }
-        compose.onNodeWithText("HOME 0").assertIsFocused()
+        tab("Smarthus og kontoar").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        tab("Smarthus og kontoar").performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.onNodeWithText("SMART_HOME 0").assertIsFocused()
     }
 
     @Test fun linksBetweenPanesEnterTheDestinationWithoutFallingBackToProfile() {
         compose.setContent {
             var selected by remember { mutableStateOf(SettingsSection.PROFILE) }
             StovaTheme(reduceMotion = true) {
-                SettingsLayout(selected, { selected = it }, {}) { section, open ->
+                SettingsLayout(selected, { selected = it }) { section, open ->
                     when (section) {
-                        SettingsSection.HOME -> StovaButton("Home appearance", { open(SettingsSection.APPEARANCE) })
-                        SettingsSection.APPEARANCE -> StovaButton("Edit rows", { open(SettingsSection.HOME) })
+                        SettingsSection.SMART_HOME -> StovaButton("Home appearance", { open(SettingsSection.APPEARANCE) })
+                        SettingsSection.APPEARANCE -> StovaButton("Edit rows", { open(SettingsSection.SMART_HOME) })
                         else -> StovaButton("Profile control", {})
                     }
                 }
             }
         }
-        tab("Heim").performClick()
+        tab("Smarthus og kontoar").performClick()
         repeat(3) {
             compose.onNodeWithText("Home appearance").assertIsFocused()
                 .performKeyInput { pressKey(Key.DirectionCenter) }
@@ -103,22 +103,22 @@ class SettingsLayoutFocusTest {
 
     @Test fun clickingACrossLinkAlsoKeepsTheDestinationSelected() {
         compose.setContent {
-            var selected by remember { mutableStateOf(SettingsSection.HOME) }
+            var selected by remember { mutableStateOf(SettingsSection.SMART_HOME) }
             StovaTheme(reduceMotion = true) {
-                SettingsLayout(selected, { selected = it }, {}) { section, open ->
-                    if (section == SettingsSection.HOME) StovaButton("Home appearance", { open(SettingsSection.APPEARANCE) })
+                SettingsLayout(selected, { selected = it }) { section, open ->
+                    if (section == SettingsSection.SMART_HOME) StovaButton("Home appearance", { open(SettingsSection.APPEARANCE) })
                     else StovaButton("${section.name} control", {})
                 }
             }
         }
         compose.onNodeWithText("Home appearance").performClick()
-        tab("Utsjånad").assertIsSelected()
+        tab("Heim og utsjånad").assertIsSelected()
         compose.onNodeWithText("APPEARANCE control").assertIsFocused()
     }
 
     @Test fun scrolledContentReturnsToItsSelectedTabAndVerticalEdgesStayInside() {
         render()
-        tab("Profil").performKeyInput { pressKey(Key.DirectionRight) }
+        tab("Profilar").performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("PROFILE 0").assertIsFocused()
         compose.onRoot().performKeyInput { pressKey(Key.DirectionUp) }
         compose.onNodeWithText("PROFILE 0").assertIsFocused()
@@ -127,21 +127,21 @@ class SettingsLayoutFocusTest {
         compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
         compose.onNodeWithText("PROFILE 11").assertIsFocused()
         compose.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
-        tab("Profil").assertIsFocused()
+        tab("Profilar").assertIsFocused()
     }
 
     @Test fun rightIntoAnInformationalPaneKeepsFocusOnItsTab() {
         render()
-        tab("Om").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
-        tab("Om").performKeyInput { pressKey(Key.DirectionRight) }
-        tab("Om").assertIsFocused()
+        tab("System").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        tab("System").performKeyInput { pressKey(Key.DirectionRight) }
+        tab("System").assertIsFocused()
     }
 
     @Test fun leftUsesThePreviousInlineControlBeforeReturningToTheSidebar() {
         compose.setContent {
             var selected by remember { mutableStateOf(SettingsSection.PROFILE) }
             StovaTheme(reduceMotion = true) {
-                SettingsLayout(selected, { selected = it }, {}) { _, _ ->
+                SettingsLayout(selected, { selected = it }) { _, _ ->
                     Row {
                         StovaButton("Earlier", {})
                         StovaButton("Later", {})
@@ -149,16 +149,16 @@ class SettingsLayoutFocusTest {
                 }
             }
         }
-        tab("Profil").performKeyInput { pressKey(Key.DirectionRight) }
+        tab("Profilar").performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("Earlier").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("Later").assertIsFocused().performKeyInput { pressKey(Key.DirectionLeft) }
         compose.onNodeWithText("Earlier").assertIsFocused().performKeyInput { pressKey(Key.DirectionLeft) }
-        tab("Profil").assertIsFocused()
+        tab("Profilar").assertIsFocused()
     }
 
     private fun assertPendingEntryIsCancelledBy(cancel: Key) {
         render()
-        val label = if (cancel == Key.DirectionUp) "Oversikt" else "Profil"
+        val label = if (cancel == Key.DirectionUp) "Heim og utsjånad" else "Profilar"
         tab(label).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
         compose.mainClock.autoAdvance = false
         tab(label).performKeyInput {

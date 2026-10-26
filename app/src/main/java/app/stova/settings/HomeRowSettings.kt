@@ -37,7 +37,8 @@ import app.stova.home.*
 import kotlinx.coroutines.launch
 
 @Composable
-fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewModel? = null, onEditAppearance: (() -> Unit)? = null) {
+fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewModel? = null, onEditAppearance: (() -> Unit)? = null,
+    firstControl: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
     val accountFlow = remember(profile.id) { container.mediaAccounts.forProfile(profile.id) }
     val accounts by accountFlow.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -63,8 +64,9 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
 
     SettingsGroup(stringResource(R.string.settings_home)) {
         // Only a subpage may link onwards; sections never jump to each other.
-        if (onEditAppearance != null) app.stova.core.ui.SettingsNavRow(stringResource(R.string.custom_home_appearance), value = stringResource(R.string.custom_home_appearance_hint), onClick = onEditAppearance)
-        SettingsSwitchRow(stringResource(R.string.home_backdrop_rotation), prefs.backdropRotation, { enabled -> save { it.copy(backdropRotation = enabled) } })
+        if (onEditAppearance != null) app.stova.core.ui.SettingsNavRow(stringResource(R.string.custom_home_appearance), firstControl, value = stringResource(R.string.custom_home_appearance_hint), onClick = onEditAppearance)
+        SettingsSwitchRow(stringResource(R.string.home_backdrop_rotation), prefs.backdropRotation, { enabled -> save { it.copy(backdropRotation = enabled) } },
+            modifier = if (onEditAppearance == null) firstControl else Modifier)
         SettingsSwitchRow(
             stringResource(R.string.home_start_on_apps),
             prefs.startFocus == StartFocus.FAVORITE_APPS,

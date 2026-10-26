@@ -526,7 +526,6 @@
     <string name="custom_extra_round">Ekstra rund</string>
     <string name="custom_card_spacing">Kortavstand</string>
     <string name="custom_progress">Framdriftsstrek</string>
-    <string name="custom_edit_rows">Tilpass kvar rad</string>
     <string name="custom_ring_zoom">Ring + forstørring</string>
     <string name="custom_light_up">Lys opp</string>
     <string name="custom_ring_width">Ringbreidd</string>
@@ -557,11 +556,13 @@
     <string name="custom_hero_ratings">Vis vurderingar i heroen</string>
     <string name="custom_hero_new_season">Vis ny sesong i heroen</string>
     <string name="icon_tile_background">Bakgrunn på appkort</string>
-    <string name="settings_all_appearance">Alle utsjånadval</string>
-    <string name="settings_appearance_intro">Vel kva du vil tilpasse. Vala blir lagra for denne profilen.</string>
-    <string name="settings_group_home">Heimeskjerm</string>
-    <string name="settings_group_services">Tenester</string>
-    <string name="settings_group_system">Profil og system</string>
+    <string name="settings_appearance_intro">Rader, bakgrunn og utsjånad på Heim. Vala blir lagra for denne profilen.</string>
+    <string name="settings_section_look">Heim og utsjånad</string>
+    <string name="settings_section_connections">Smarthus og kontoar</string>
+    <string name="settings_section_profiles">Profilar</string>
+    <string name="settings_section_system">System</string>
+    <string name="settings_home_rows">Rader på Heim</string>
+    <string name="settings_android_hint">Nettverk, lyd, skjerm og appar i Android</string>
     <string name="settings_summary_theme">Fargar og sesong</string>
     <string name="settings_summary_hero">Logo, fakta og rotasjon</string>
     <string name="settings_summary_cards">Storleik, format og avstand</string>
@@ -590,8 +591,8 @@
     <string name="settings_hint_home">Vel startpunkt, rekkjefølgje og innhald.</string>
     <string name="settings_hint_profile">Personlege val, namn og tryggleik for kvar person.</string>
     <string name="settings_hint_accounts">Filmane og seriane frå Jellyfin og Emby.</string>
-    <string name="settings_hint_smart_home">Home Assistant og korta du vil ha nær deg.</string>
-    <string name="settings_hint_home_button">La eit trykk ta deg tilbake til Stova.</string>
+    <string name="settings_hint_smart_home">Home Assistant, korta du vil ha nær deg og mediekontoane.</string>
+    <string name="settings_hint_home_button">Heim-knappen, om Stova og Android-innstillingane.</string>
     <string name="settings_hint_about">Utgåve, lisensar og informasjon om appen.</string>
     <string name="settings_overview">Oversikt</string>
     <string name="settings_title_overview">Gjer Stova til di</string>

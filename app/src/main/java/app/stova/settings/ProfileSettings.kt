@@ -137,13 +137,12 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
     var confirm by remember { mutableStateOf(false) }
     var refused by remember { mutableStateOf(false) }
     var appearance by remember(other.id) { mutableStateOf(false) }
-    var rows by remember(other.id) { mutableStateOf(false) }
-    val closeAppearance = { enterPane(); if (rows) rows = false else appearance = false }
+    val closeAppearance = { enterPane(); appearance = false }
     BackHandler(enabled = appearance, onBack = closeAppearance)
     if (appearance) {
         Text(other.name, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
         StovaButton(stringResource(R.string.custom_back), closeAppearance)
-        if (rows) HomeRowSettings(container, other) else AppearanceSettings(container, other, onEditRows = { enterPane(); rows = true })
+        AppearanceSettings(container, other)
         return
     }
     Text(other.name, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)

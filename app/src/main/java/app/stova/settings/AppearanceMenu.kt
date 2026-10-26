@@ -42,6 +42,8 @@ enum class AppearanceCategory(@StringRes val title: Int, @StringRes val hint: In
     TOP_BAR(R.string.custom_top_bar, R.string.settings_summary_top),
     ICONS(R.string.custom_icons, R.string.settings_summary_icons),
     PROFILE(R.string.settings_profile, R.string.settings_summary_profile),
+    /** The Home row list, folded in here so Home and its look share one section. */
+    ROWS(R.string.settings_home_rows, R.string.settings_hint_home),
 }
 
 /** One small page at a time. The persistent breadcrumb protects focus while a page is replaced. */
@@ -88,7 +90,7 @@ internal fun AppearanceMenu(scrollable: Boolean = true, content: @Composable (Ap
         }
     }.focusGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (selected != null) {
-            StovaButton(stringResource(R.string.settings_all_appearance), { show(null) },
+            StovaButton(stringResource(R.string.settings_section_look), { show(null) },
                 Modifier.focusRequester(breadcrumb), icon = StovaIcons.ChevronLeft, compact = true, quiet = true)
         }
         key(selected) {
@@ -98,7 +100,7 @@ internal fun AppearanceMenu(scrollable: Boolean = true, content: @Composable (Ap
             }.focusGroup().then(if (scrollable) Modifier.verticalScroll(scroll) else Modifier), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 val category = selected
                 if (category == null) {
-                    PageHeader(stringResource(R.string.settings_appearance), StovaIcons.Palette,
+                    PageHeader(stringResource(R.string.settings_section_look), StovaIcons.Palette,
                         subtitle = stringResource(R.string.settings_appearance_intro), tint = AppearanceCategory.THEME.tone)
                     // Large text gets one column; no fixed heights squeeze labels or descriptions.
                     val columns = if (LocalDensity.current.fontScale >= 1.5f) 1 else 2

@@ -25,7 +25,6 @@ fun AppearanceSettingsContent(
     onPickLibraries: () -> Unit = {},
     onPickKidsLibraries: () -> Unit = {},
     libraryControl: Modifier = Modifier,
-    onEditRows: (() -> Unit)? = null,
     includePreview: Boolean = true,
     previewEntry: app.stova.media.SpotlightEntry? = null,
     homePrefs: HomePrefs = HomePrefs(),
@@ -82,7 +81,6 @@ fun AppearanceSettingsContent(
             stringResource(R.string.slider_units, p.spacingDp)) { onChange(p.copy(cardSpacingDp = it)) }
         if (category == null || p.homeRows != HomeRows.ONE) Choice(R.string.appearance_row_spacing, p.rowSpacing, RowSpacing.entries, listOf(R.string.appearance_tight, R.string.appearance_normal, R.string.appearance_airy)) { onChange(p.copy(rowSpacing = it)) }
         Choice(R.string.custom_progress, p.progressStyle, ProgressStyle.entries, listOf(R.string.custom_thin, R.string.custom_thick, R.string.appearance_hidden)) { onChange(p.copy(progressStyle = it)) }
-        if (onEditRows != null) app.stova.core.ui.SettingsNavRow(stringResource(R.string.custom_edit_rows), onClick = onEditRows)
     }
     if (category == null || category == AppearanceCategory.BACKGROUND) SettingsGroup(stringResource(R.string.appearance_background), showHeading = category == null) {
         if (category == null) GroupHint(R.string.custom_background_hint)

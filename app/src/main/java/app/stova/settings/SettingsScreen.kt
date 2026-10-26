@@ -16,23 +16,26 @@ import app.stova.homebutton.HomeButtonSettings
 import app.stova.profiles.Profile
 
 enum class SettingsSection(@StringRes val label: Int) {
-    PROFILE(R.string.settings_profile),
+    PROFILE(R.string.settings_section_profiles),
     ACCOUNTS(R.string.settings_accounts),
     HOME(R.string.settings_home),
-    SMART_HOME(R.string.nav_smart_home),
-    HOME_BUTTON(R.string.settings_home_button),
-    APPEARANCE(R.string.settings_appearance),
+    SMART_HOME(R.string.settings_section_connections),
+    HOME_BUTTON(R.string.settings_section_system),
+    APPEARANCE(R.string.settings_section_look),
     ABOUT(R.string.settings_about),
     OVERVIEW(R.string.settings_overview),
 }
 
-/** Visual groups and D-pad order share this list. Enum order is kept for saved destinations. */
-internal val settingsGroups = listOf(
-    R.string.settings_group_home to listOf(SettingsSection.OVERVIEW, SettingsSection.HOME, SettingsSection.APPEARANCE),
-    R.string.settings_group_services to listOf(SettingsSection.ACCOUNTS, SettingsSection.SMART_HOME),
-    R.string.settings_group_system to listOf(SettingsSection.PROFILE, SettingsSection.HOME_BUTTON, SettingsSection.ABOUT),
-)
-internal val settingsOrder = settingsGroups.flatMap { it.second }
+/** D-pad order of the four sections; Apps sits between Profiles and System. Enum order is kept for saved destinations. */
+internal val settingsOrder = listOf(SettingsSection.APPEARANCE, SettingsSection.SMART_HOME, SettingsSection.PROFILE, SettingsSection.HOME_BUTTON)
+
+/** Where a section that was folded into another now lives, so a restored destination still opens. */
+internal val SettingsSection.merged: SettingsSection get() = when (this) {
+    SettingsSection.OVERVIEW, SettingsSection.HOME -> SettingsSection.APPEARANCE
+    SettingsSection.ACCOUNTS -> SettingsSection.SMART_HOME
+    SettingsSection.ABOUT -> SettingsSection.HOME_BUTTON
+    else -> this
+}
 
 /** Sections on the left, the chosen one on the right, as in Spole's TV settings. */
 @Composable
@@ -41,20 +44,22 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
         KidSettings(onSwitchProfile)
         return
     }
-    var section by rememberSaveable { mutableStateOf(SettingsSection.OVERVIEW) }
+    var section by rememberSaveable { mutableStateOf(SettingsSection.APPEARANCE) }
     val context = androidx.compose.ui.platform.LocalContext.current
-    SettingsLayout(section, { section = it }, { app.stova.navigation.openSystemSettings(context) }, onOpenApps) { shown, openSection ->
+    SettingsLayout(section.merged, { section = it }, onOpenApps) { shown, _ ->
         if (shown != SettingsSection.APPEARANCE) PageHeader(stringResource(shown.pageTitle), shown.icon,
             subtitle = stringResource(shown.hint), tint = shown.tone)
         when (shown) {
-            SettingsSection.OVERVIEW -> SettingsOverview(openSection)
             SettingsSection.PROFILE -> ProfileSettings(container, profile)
-            SettingsSection.ACCOUNTS -> AccountsSettings(profile, container)
-            SettingsSection.HOME -> HomeRowSettings(container, profile, home)
-            SettingsSection.SMART_HOME -> app.stova.ha.ui.HaSettings(container)
-            SettingsSection.HOME_BUTTON -> HomeButtonSettings(container)
-            SettingsSection.APPEARANCE -> AppearanceSettings(container, profile, scrollable = true)
-            SettingsSection.ABOUT -> AboutSettings()
+            SettingsSection.SMART_HOME -> { app.stova.ha.ui.HaSettings(container); AccountsSettings(profile, container) }
+            SettingsSection.HOME_BUTTON -> {
+                HomeButtonSettings(container)
+                AboutSettings()
+                app.stova.core.ui.SettingsNavRow(stringResource(R.string.nav_system_settings), value = stringResource(R.string.settings_android_hint),
+                    onClick = { app.stova.navigation.openSystemSettings(context) })
+            }
+            SettingsSection.APPEARANCE -> AppearanceSettings(container, profile, scrollable = true, home = home)
+            SettingsSection.OVERVIEW, SettingsSection.HOME, SettingsSection.ACCOUNTS, SettingsSection.ABOUT -> Unit // see merged
         }
     }
 }
