@@ -56,6 +56,7 @@ fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean
         motion.settle(), label = "focus-lift")
     val color = MaterialTheme.colorScheme.primary
     val light = MaterialTheme.colorScheme.onSurface
+    val tone = app.stova.core.theme.LocalArtTone.current
     val ink = MaterialTheme.colorScheme.background
     val width = if (LocalStrongFocus.current) 4.dp else LocalAppearance.current.ringWidth.dp.dp
     return zIndex(if (focused) 1f else 0f).graphicsLayer {
@@ -75,7 +76,7 @@ fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean
         onDrawWithContent {
             drawContent()
             // Artwork and icon-pack colours stay exact; only control surfaces receive the light wash.
-            if (!zoom && emphasis.value > 0.001f) drawOutline(artOutline, SolidColor(light.copy(alpha = StovaFocus.SurfaceAlpha * emphasis.value)))
+            if (!zoom && emphasis.value > 0.001f) drawOutline(artOutline, SolidColor((tone?.light(light) ?: light).copy(alpha = StovaFocus.SurfaceAlpha * emphasis.value)))
             // Dim the art itself, keeping it opaque over the wallpaper.
             if (brightness.value < 0.999f) drawOutline(artOutline, SolidColor(ink.copy(alpha = (1f - brightness.value) * dimSurfaceAlpha)))
             val a = alpha.value

@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ColorFilter
@@ -48,6 +49,7 @@ import app.stova.core.theme.LocalAppearance
 import app.stova.profiles.AppStyle
 import app.stova.profiles.appBackgroundPercent
 import app.stova.profiles.RowFormat
+import app.stova.core.theme.LocalArtTone
 import app.stova.core.theme.cardTitleAlpha
 import app.stova.core.theme.stovaMotion
 import app.stova.home.LocalRowStyle
@@ -85,6 +87,8 @@ fun AppTile(
     val height = (dimensions.height * fit).dp
     val width = (dimensions.width * fit).dp
     val packs by art.iconPacks.packs.collectAsStateWithLifecycle()
+    val surface = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = prefs.appBackgroundPercent / 100f)
+    val tone = LocalArtTone.current
     val artwork by produceState<AppArtwork?>(null, app, art, prefs.iconPack, iconStyle, iconOverride, packs) {
         value = null
         value = art.artwork(app, prefs, iconOverride)
@@ -94,7 +98,7 @@ fun AppTile(
             if (event.type == KeyEventType.KeyUp && event.key == Key.Menu) { onLongClick(); true } else false
         }.combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick, onClick = onClick)) {
         Box(Modifier.size(width, height).focusOutline(source, shape, zoom = true, dimSurfaceAlpha = prefs.appBackgroundPercent / 100f).clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = prefs.appBackgroundPercent / 100f)), contentAlignment = Alignment.Center) {
+            .drawBehind { drawRect(tone?.surface(surface) ?: surface) }, contentAlignment = Alignment.Center) {
             val image = artwork
             if (image != null) {
                 val centered = if (image.packIcon) prefs.iconFill == IconFill.CENTER else iconStyle

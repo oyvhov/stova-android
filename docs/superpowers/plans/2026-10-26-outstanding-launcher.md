@@ -25,6 +25,8 @@ Rekkjefølgje no: A Barnetid, så steg 1 (fokus), B rørsle, C skrift og farge, 
   løyser seg opp i neste bilete i staden for å gå via blekk (betre enn ein mellomfarge).
 - [ ] C. Open skrift med karakter til titlar/klokke (OFL, inkludert i appen) og ein svak tone frå
   kunsten i scrim, fokus og appfliser. Fargar framleis berre i `core/theme`.
+  Tonen er ferdig (`ArtTone`, berre Heim og Smarthus, same lysheit så kontrasten held). Skrifta står att:
+  krev nedlasting av ei OFL-fil, så brukaren må seie ja til fil og kjelde først.
 
 Reglar som før: modulært (ingen arbeid når noko er av eller ikkje sett opp), test først,
 `DesignRulesTest` grøn, nynorsk/engelsk tekst, Shield berre når brukaren seier ja.

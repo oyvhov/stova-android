@@ -116,7 +116,16 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     }
     // Kept here, not in the layer: a return to Home shows the same picture at once, not a fade from ink.
     val backdrop = app.stova.background.rememberProfileBackdropState(profile.id,profile.appearance)
+    val motion0 = stovaMotion
     val arrival = remember(profile.id) { app.stova.home.HomeArrival() }
+    // The backdrop's tone, eased like the picture itself; drawn by the scrim, focus and app tiles.
+    val toneTarget = backdrop.tone
+    var lastTone by remember { mutableStateOf(androidx.compose.ui.graphics.Color.Gray) }
+    if (toneTarget != null) lastTone = toneTarget
+    val toneColor = androidx.compose.animation.animateColorAsState(lastTone, motion0.fade(motion0.ambient), label = "art-tone")
+    val toneStrength = androidx.compose.animation.core.animateFloatAsState(if (toneTarget != null) 1f else 0f,
+        motion0.fade(motion0.ambient), label = "art-tone-strength")
+    val artTone = remember { app.stova.core.theme.ArtToneState(toneColor, toneStrength) }
     // Where the next page grows from: the top bar icon that opened it, or the middle of the screen.
     var origin by remember { mutableStateOf(TransformOrigin.Center) }
     val motion = stovaMotion
@@ -143,6 +152,9 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         ) { destination ->
             val leaving = transition.targetState != EnterExitState.Visible
             Box(Modifier.fillMaxSize().then(if (leaving) Modifier.focusProperties { canFocus = false } else Modifier)) {
+                // Only the pages that show the backdrop take its tone.
+                val toned = destination == Destination.HOME || destination == Destination.SMART_HOME
+                androidx.compose.runtime.CompositionLocalProvider(app.stova.core.theme.LocalArtTone provides artTone.takeIf { toned }) {
                 when (destination) {
                     Destination.HOME -> {
                         // Collected only on Home: the spotlight's rotation ticks while Home is on screen, nowhere else.
@@ -196,6 +208,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                     Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId,backdrop=backdrop.shown)
                     Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile,
                         onOpenApps = { appsFromSettings = true; origin = TransformOrigin.Center; current = Destination.APPS })
+                }
                 }
             }
         }

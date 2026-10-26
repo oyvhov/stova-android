@@ -54,8 +54,10 @@ private fun eased(t: Float) = t * t * (3 - 2 * t)
 /** Shared by Home and its settings preview. Top-bar protection stays stable. */
 @Composable
 fun BackdropScrim(percent: Int, modifier: Modifier = Modifier) {
-    val ink = MaterialTheme.colorScheme.background
+    val base = MaterialTheme.colorScheme.background
+    val tone = LocalArtTone.current
     Canvas(modifier) {
+        val ink = tone?.ink(base) ?: base
         // Many stops sampled from the smooth curve, so the GPU's straight segments stay invisible.
         drawRect(Brush.horizontalGradient(*(0..SCRIM_STOPS).map { val x = it / SCRIM_STOPS.toFloat()
             x to ink.copy(alpha = backdropScrimAlpha(percent, x)) }.toTypedArray()))

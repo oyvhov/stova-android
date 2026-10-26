@@ -29,13 +29,31 @@ import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
+import coil3.request.allowHardware
+import coil3.toBitmap
 import android.content.Context
 import androidx.compose.runtime.*
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 private fun backdropRequest(context:Context,url:String)=ImageRequest.Builder(context).data(url).size(1920,1080).build()
+/** A thumbnail of the picture just shown, from the disk cache, read on a worker thread. */
+private suspend fun sampleTone(context:Context,loader:ImageLoader,url:String):androidx.compose.ui.graphics.Color? = runCatching {
+ val request=ImageRequest.Builder(context).data(url).size(TONE_WIDTH,TONE_HEIGHT).allowHardware(false).build()
+ val bitmap=(loader.execute(request) as? SuccessResult)?.image?.toBitmap() ?: return@runCatching null
+ kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+  val pixels=IntArray(bitmap.width*bitmap.height)
+  bitmap.getPixels(pixels,0,bitmap.width,0,0,bitmap.width,bitmap.height)
+  app.stova.core.theme.artTone(pixels)
+ }
+}.getOrNull()
+private const val TONE_WIDTH=48
+private const val TONE_HEIGHT=27
 /** What the backdrop shows, kept by the app shell so a return to Home never fades in from ink. */
-class BackdropState { var shown by mutableStateOf<String?>(null) }
+class BackdropState {
+ var shown by mutableStateOf<String?>(null)
+ /** The colour the shown picture leans towards, or null for a grey picture or none. */
+ var tone by mutableStateOf<androidx.compose.ui.graphics.Color?>(null)
+}
 @Composable fun rememberBackdropState() = remember { BackdropState() }
 @Composable fun BackdropLayer(url:String?,modifier:Modifier=Modifier,imageLoader:ImageLoader=SingletonImageLoader.get(LocalContext.current),visible:Boolean=true,state:BackdropState=rememberBackdropState()) {
  val ink=MaterialTheme.colorScheme.background
@@ -48,8 +66,11 @@ class BackdropState { var shown by mutableStateOf<String?>(null) }
  val moving=backgroundCanMove(prefs,visible && lifecycle.isAtLeast(Lifecycle.State.STARTED)) && !LocalReduceMotion.current
  val scale=remember { Animatable(1f) }
  LaunchedEffect(url,imageLoader) {
-  if(url==null) state.shown=null
-  else if(url!=state.shown && imageLoader.execute(backdropRequest(context,url)) is SuccessResult) state.shown=url
+  if(url==null) { state.shown=null; state.tone=null }
+  else if(url!=state.shown && imageLoader.execute(backdropRequest(context,url)) is SuccessResult) {
+   state.shown=url
+   state.tone=sampleTone(context,imageLoader,url)
+  }
  }
  val shown=state.shown
  LaunchedEffect(moving,shown,prefs.spotlightMillis) {
