@@ -271,6 +271,8 @@
     <string name="ha_v2_paused">Paused</string>
     <string name="ha_v2_next">Next track</string>
     <string name="ha_v2_volume">Volume %1$d %%</string>
+    <string name="ha_volume_level">%1$d%%</string>
+    <string name="ha_weather_today">%1$s · %2$s° / %3$s°</string>
     <string name="ha_v2_open_cover">Open</string>
     <string name="ha_v2_close_cover">Close</string>
     <string name="ha_v2_stop_cover">Stop</string>

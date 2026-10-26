@@ -271,6 +271,8 @@
     <string name="ha_v2_paused">Pause</string>
     <string name="ha_v2_next">Neste spor</string>
     <string name="ha_v2_volume">Volum %1$d %%</string>
+    <string name="ha_volume_level">%1$d %%</string>
+    <string name="ha_weather_today">%1$s · %2$s° / %3$s°</string>
     <string name="ha_v2_open_cover">Opne</string>
     <string name="ha_v2_close_cover">Lukk</string>
     <string name="ha_v2_stop_cover">Stopp</string>

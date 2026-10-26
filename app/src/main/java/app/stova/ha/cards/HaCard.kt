@@ -67,6 +67,8 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
     CardFrame(config,cardIcon(config.type,shown,config.icon),config.name ?: entity?.let(::friendlyName) ?: config.entityId,
         badge,locked,::click,onLongClick=::panel,onMenu=onMenu,
         modifier=modifier.alpha(if(unavailable) 0.55f else 1f),glow=if(config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,leading=leading,
+        wash=if(config.type==CardType.WEATHER && shown!=null) app.stova.core.theme.HaTokens.sky(shown.state).let {sky ->
+            androidx.compose.ui.graphics.Brush.verticalGradient(listOf(sky.copy(alpha=.26f),sky.copy(alpha=.05f)))} else null,
         onMove=onMove,editing=editing,inputSuspended=inputSuspended,onMediaKey={key ->
             val service=when(key) {
                 Key.MediaPlayPause->"media_play_pause";Key.MediaPlay->"media_play";Key.MediaPause->"media_pause"

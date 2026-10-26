@@ -15,7 +15,7 @@ fun cardIcon(type:CardType,entity:HaEntity?=null,override:String?=null) = when(o
             "door","window","garage_door","opening" -> StovaIcons.Home
             "lock" -> StovaIcons.Lock; else -> StovaIcons.Sensor
         }
-        CardType.WEATHER -> weatherIcon(entity?.state.orEmpty()); CardType.MEDIA_PLAYER -> StovaIcons.Play
+        CardType.WEATHER -> weatherIcon(entity?.state.orEmpty()); CardType.MEDIA_PLAYER -> StovaIcons.Speaker
         CardType.SCENE -> StovaIcons.Sun; CardType.CAMERA -> StovaIcons.Camera
         CardType.COVER -> StovaIcons.Home; CardType.LOCK -> StovaIcons.Lock
     }

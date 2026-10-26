@@ -132,6 +132,11 @@ object StovaIcons {
     val Lightning by lazy { icon("lightning") { moveTo(14f, 2f); lineTo(4f, 14f); lineTo(11f, 14f); lineTo(10f, 22f); lineTo(21f, 9f); lineTo(14f, 9f); close() } }
     val Fog by lazy { icon("fog") { moveTo(3f, 6f); lineTo(21f, 6f); moveTo(5f, 12f); lineTo(19f, 12f); moveTo(3f, 18f); lineTo(21f, 18f) } }
     val Play by lazy { icon("play") { moveTo(8f, 4f); lineTo(20f, 12f); lineTo(8f, 20f); close() } }
+    val Speaker by lazy { icon("speaker") {
+        moveTo(3f, 9f); lineTo(7f, 9f); lineTo(12f, 5f); lineTo(12f, 19f); lineTo(7f, 15f); lineTo(3f, 15f); close()
+        moveTo(15.5f, 9f); curveTo(17f, 10.5f, 17f, 13.5f, 15.5f, 15f)
+        moveTo(18.5f, 6f); curveTo(22f, 9.5f, 22f, 14.5f, 18.5f, 18f)
+    } }
     val Pause by lazy { icon("pause") { moveTo(8f, 4f); lineTo(8f, 20f); moveTo(16f, 4f); lineTo(16f, 20f) } }
     val Camera by lazy { icon("camera") { moveTo(3f, 7f); lineTo(16f, 7f); lineTo(16f, 17f); lineTo(3f, 17f); close(); moveTo(16f, 10f); lineTo(22f, 6f); lineTo(22f, 18f); lineTo(16f, 14f) } }
     val Home: ImageVector by lazy {

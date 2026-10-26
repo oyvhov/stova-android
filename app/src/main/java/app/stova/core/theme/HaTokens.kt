@@ -6,6 +6,18 @@ import androidx.compose.ui.graphics.Color
 object HaTokens {
     val WarmGlow = Color(0xFFD4B58C)
 
+    /** The sky the weather card is washed in: warm for sun, blue for rain, silver for cloud, deep for night. */
+    fun sky(condition: String): Color = when (condition) {
+        "sunny" -> Color(0xFFE2B56E)
+        "clear-night" -> Color(0xFF5E6FA3)
+        "rainy", "pouring" -> Color(0xFF5C87B5)
+        "lightning", "lightning-rainy", "exceptional" -> Color(0xFF8B7CBF)
+        "snowy", "snowy-rainy", "hail" -> Color(0xFFC9D6E4)
+        "fog" -> Color(0xFFA7AFB6)
+        "windy", "windy-variant" -> Color(0xFF8EB2AE)
+        else -> Color(0xFF98A7BA)
+    }
+
     fun lightColor(hue:Float,saturation:Float):Color =
         Color.hsv(((hue % 360f)+360f)%360f,saturation.coerceIn(0f,100f)/100f*.35f,.8f)
 

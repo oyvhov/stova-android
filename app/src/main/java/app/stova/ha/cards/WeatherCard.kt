@@ -25,25 +25,31 @@ fun weatherIcon(state:String) = when(state) {
     else -> StovaIcons.Cloud
 }
 @Composable fun WeatherCard(entity:HaEntity,forecast:List<ForecastDay> = emptyList(),size:CardSize=CardSize.S,zone:ZoneId=ZoneId.systemDefault()) {
+    val today=forecast.firstOrNull()
     if(size==CardSize.S) {
-        CurrentWeather(entity)
+        CurrentWeather(entity,today)
         ForecastStrip(forecast,size,zone)
     } else if(size==CardSize.L) Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(28.dp)) {
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
-            Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {CurrentWeather(entity,prominent=true)}
-            Icon(weatherIcon(entity.state),null,Modifier.size(56.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {CurrentWeather(entity,today,prominent=true)}
+            // The sky's own colour lights the large symbol, matching the card's wash.
+            Icon(weatherIcon(entity.state),null,Modifier.size(64.dp),tint=app.stova.core.theme.HaTokens.sky(entity.state))
         }
         ForecastStrip(forecast,size,zone)
     } else Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(24.dp),verticalAlignment=Alignment.CenterVertically) {
-        Column(Modifier.weight(1.3f),verticalArrangement=Arrangement.spacedBy(4.dp)) {CurrentWeather(entity)}
+        Column(Modifier.weight(1.3f),verticalArrangement=Arrangement.spacedBy(4.dp)) {CurrentWeather(entity,today)}
         Box(Modifier.weight(3f)) {ForecastStrip(forecast,size,zone)}
     }
 }
 
-@Composable private fun CurrentWeather(entity:HaEntity,prominent:Boolean=false) {
-    CardValue(entity.attributes.number("temperature")?.let { formatNumber(it,LocalConfiguration.current.locales[0]) } ?: stringResource(R.string.ha_dash), entity.attributes["temperature_unit"]?.jsonPrimitive?.contentOrNull,
-        style=if(prominent) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium)
-    CardDetail(entityStateLabel(entity))
+@Composable private fun CurrentWeather(entity:HaEntity,today:ForecastDay?,prominent:Boolean=false) {
+    val locale=LocalConfiguration.current.locales[0]
+    CardValue(entity.attributes.number("temperature")?.let { formatNumber(it,locale) } ?: stringResource(R.string.ha_dash), entity.attributes["temperature_unit"]?.jsonPrimitive?.contentOrNull,
+        style=(if(prominent) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium)
+            .copy(fontWeight=androidx.compose.ui.text.font.FontWeight.Light))
+    val low=today?.low
+    CardDetail(if(today!=null && low!=null) stringResource(R.string.ha_weather_today,entityStateLabel(entity),formatNumber(today.high,locale),formatNumber(low,locale))
+        else entityStateLabel(entity))
 }
 
 @Composable private fun ForecastStrip(forecast:List<ForecastDay>,size:CardSize,zone:ZoneId) {

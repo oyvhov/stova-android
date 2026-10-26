@@ -33,7 +33,7 @@ internal val LocalCardFocused = staticCompositionLocalOf { false }
 fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: String?, locked: Boolean, onClick: () -> Unit, onLongClick: () -> Unit,
     modifier:Modifier=Modifier,glow:LightGlow?=null,pending:Boolean=false,onMenu:(()->Unit)?=null,
     onMediaKey:((Key)->Boolean)?=null,onMove:((Int)->Unit)?=null,editing:Boolean=false,inputSuspended:Boolean=false,
-    leading:(@Composable (Modifier)->Unit)?=null,content: @Composable () -> Unit) {
+    leading:(@Composable (Modifier)->Unit)?=null,wash:androidx.compose.ui.graphics.Brush?=null,content: @Composable () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusedAsState()
     val scope=rememberCoroutineScope()
@@ -53,6 +53,7 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
     val small=config.size==CardSize.S
     Row(modifier.fillMaxWidth().height(IntrinsicSize.Min).heightIn(min=if(config.size==CardSize.L) 320.dp else 152.dp)
         .focusOutline(source,shape).then(if(editing) Modifier.border(1.dp,MaterialTheme.colorScheme.outline,shape) else Modifier).clip(shape).background(fill)
+        .then(if(wash!=null) Modifier.background(wash) else Modifier)
         .onPreviewKeyEvent {event -> when {
             event.key==Key.Menu -> {if(event.type==KeyEventType.KeyDown && event.nativeKeyEvent.repeatCount==0) onMenu?.invoke();true}
             focused && event.key in listOf(Key.DirectionCenter,Key.Enter,Key.NumPadEnter) -> {

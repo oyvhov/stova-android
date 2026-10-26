@@ -54,6 +54,22 @@ class HaPolishUiTest {
         compose.onNodeWithText("Vêret").assertHeightIsEqualTo(152.dp)
         assertEquals(5,compose.onAllNodesWithText("15°",useUnmergedTree=true).fetchSemanticsNodes().size)
     }
+    @Test fun mediaCardShowsASpeakerAndGivesTheTitleRoomAboveTheControls() {
+        assertEquals(app.stova.core.ui.StovaIcons.Speaker, cardIcon(CardType.MEDIA_PLAYER))
+        val sonos=HaEntity("media_player.sonos","playing",StovaJson.parseToJsonElement("""{"friendly_name":"Sonos","media_title":"TV","volume_level":0.26}""").jsonObject,0,0)
+        compose.setContent {StovaTheme {HaCard(CardConfig("m",CardType.MEDIA_PLAYER,sonos.id,size=CardSize.M),sonos,false,{},{},modifier=Modifier.width(544.dp))}}
+        val title=compose.onNodeWithText("TV",useUnmergedTree=true).getUnclippedBoundsInRoot()
+        val pause=compose.onNodeWithContentDescription("Pause",useUnmergedTree=true).getUnclippedBoundsInRoot()
+        assertTrue("title needs room above the controls: $title / $pause",(pause.top-title.bottom).value>=10f)
+        assertTrue("controls are easy to see", (pause.right-pause.left).value>=20f)
+    }
+    @Test fun weatherShowsTodaysHighAndLowOnASkyForItsCondition() {
+        val weather=HaEntity("weather.home","sunny",StovaJson.parseToJsonElement("""{"temperature":12,"temperature_unit":"°C"}""").jsonObject,0,0)
+        val forecast=List(5) {ForecastDay(it*86_400_000L,"sunny",15.0,5.0)}
+        compose.setContent {StovaTheme {WeatherCard(weather,forecast,CardSize.L)}}
+        compose.onNodeWithText("15° / 5°",substring=true,useUnmergedTree=true).assertExists()
+        assertNotEquals(app.stova.core.theme.HaTokens.sky("sunny"),app.stova.core.theme.HaTokens.sky("rainy"))
+    }
     @Test fun focusedClimateShowsAdjustmentHintAndMode() {
         val climate=HaEntity("climate.home","heat",StovaJson.parseToJsonElement("""{"friendly_name":"Varmepumpe","temperature":23.5,"current_temperature":25}""").jsonObject,0,0)
         compose.setContent {StovaTheme {HaCard(CardConfig("c",CardType.CLIMATE,climate.id),climate,false,{},{},modifier=Modifier.width(264.dp))}}

@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,24 +28,36 @@ import app.stova.ha.text
     val position=entity.attributes.number("media_position")
     val updated=entity.attributes.text("media_position_updated_at")?.let {runCatching {app.stova.ha.haMillis(it)}.getOrNull()}
     fun elapsed()=if(entity.state=="playing" && updated!=null) ((now.value-updated)/1000.0).coerceAtLeast(0.0) else 0.0
-    Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
-        Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(2.dp)) {
-            Text(entity.attributes.text("media_title") ?: entityStateLabel(entity),style=MaterialTheme.typography.titleMedium,maxLines=if(size==CardSize.L) 3 else 1,overflow=TextOverflow.Ellipsis)
+    // What is playing leads with room of its own; round controls and a slim volume line sit below it.
+    Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+        Column(verticalArrangement=Arrangement.spacedBy(2.dp)) {
+            Text(entity.attributes.text("media_title") ?: entityStateLabel(entity),
+                style=if(size==CardSize.L) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleLarge,
+                maxLines=if(size==CardSize.L) 3 else 1,overflow=TextOverflow.Ellipsis)
             entity.attributes.text("media_artist")?.let {CardDetail(it)}
-            if(position!=null && duration!=null && duration>0) LinearProgressIndicator(
-                progress={((position+elapsed())/duration).toFloat().coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().height(3.dp),
-                color=MaterialTheme.colorScheme.primary,trackColor=MaterialTheme.colorScheme.surfaceVariant,drawStopIndicator={})
-            Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
-                listOf("media_play_pause","media_next_track").forEach {service ->
-                    val source=remember {MutableInteractionSource()}
-                    val playing=entity.state=="playing"
-                    val label=stringResource(if(service=="media_next_track") R.string.ha_v2_next else if(playing) R.string.ha_pause else R.string.ha_play)
-                    Box(Modifier.size(32.dp).focusOutline(source,MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.surfaceVariant,MaterialTheme.shapes.small)
-                        .clickable(source,indication=null,enabled=!locked,onClick={perform(ServiceCall("media_player",service))}),contentAlignment=Alignment.Center) {
-                        Icon(if(service=="media_next_track") HaIcons.Next else if(playing) StovaIcons.Pause else StovaIcons.Play,label,Modifier.size(18.dp),tint=MaterialTheme.colorScheme.onSurface)
-                    }
+        }
+        if(position!=null && duration!=null && duration>0) LinearProgressIndicator(
+            progress={((position+elapsed())/duration).toFloat().coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().height(3.dp),
+            color=MaterialTheme.colorScheme.primary,trackColor=MaterialTheme.colorScheme.surfaceVariant,drawStopIndicator={})
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
+            listOf("media_play_pause","media_next_track").forEach {service ->
+                val source=remember {MutableInteractionSource()}
+                val playing=entity.state=="playing"
+                val label=stringResource(if(service=="media_next_track") R.string.ha_v2_next else if(playing) R.string.ha_pause else R.string.ha_play)
+                Box(Modifier.size(36.dp).focusOutline(source,CircleShape).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable(source,indication=null,enabled=!locked,onClick={perform(ServiceCall("media_player",service))}),contentAlignment=Alignment.Center) {
+                    Icon(if(service=="media_next_track") HaIcons.Next else if(playing) StovaIcons.Pause else StovaIcons.Play,label,Modifier.size(20.dp),tint=MaterialTheme.colorScheme.onSurface)
                 }
-                entity.attributes.number("volume_level")?.let {CardDetail(stringResource(R.string.ha_v2_volume,(it*100).toInt()))}
+            }
+            Spacer(Modifier.weight(1f))
+            entity.attributes.number("volume_level")?.let {level ->
+                val volume=stringResource(R.string.ha_v2_volume,(level*100).toInt())
+                Icon(StovaIcons.Speaker,null,Modifier.size(16.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
+                Box(Modifier.width(56.dp).height(4.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant)
+                    .semantics {contentDescription=volume}) {
+                    Box(Modifier.fillMaxHeight().fillMaxWidth(level.toFloat().coerceIn(0f,1f)).background(MaterialTheme.colorScheme.onSurfaceVariant))
+                }
+                CardDetail(stringResource(R.string.ha_volume_level,(level*100).toInt()))
             }
         }
     }
