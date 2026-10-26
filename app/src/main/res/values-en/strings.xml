@@ -327,6 +327,8 @@
     <string name="appearance_focus_effect">Focus effect</string>
     <string name="appearance_clock_format">Clock format</string>
     <string name="appearance_compact">Compact</string>
+    <string name="appearance_extra_small">Extra small</string>
+    <string name="appearance_extra_large">Extra large</string>
     <string name="appearance_large">Large</string>
     <string name="appearance_small">Small</string>
     <string name="appearance_medium">Medium</string>
@@ -530,7 +532,7 @@
     <string name="custom_clock_size">Clock size</string>
     <string name="custom_show_date">Show date</string>
     <string name="custom_show_chips">Show HA chips</string>
-    <string name="custom_show_countdown">Show seasonal countdown</string>
+    <string name="custom_show_countdown">Show Christmas countdown</string>
     <string name="custom_show_apps">Show Apps button</string>
     <string name="custom_show_smart_home">Show Smart home button</string>
     <string name="custom_show_profile">Show profile picture</string>

@@ -37,6 +37,8 @@ import coil3.request.ImageRequest
  val height=(dimensions.height*fit).dp
  val usePoster=format==RowFormat.POSTER
  val density=LocalDensity.current;val context=LocalContext.current
+ val fallbackLineHeight=with(density) { MaterialTheme.typography.titleSmall.lineHeight.toDp() }
+ val fallbackPadding=((height - fallbackLineHeight)/2).coerceIn(0.dp, 8.dp)
  val artUrl=if(usePoster) item.art.poster ?: item.art.wide else item.art.wide ?: item.art.poster
  var artFailed by remember(artUrl) { mutableStateOf(false) }
  val request=remember(artUrl,density,width,height) { ImageRequest.Builder(context).data(artUrl).size(with(density){width.roundToPx()},with(density){height.roundToPx()}).build() }
@@ -45,7 +47,7 @@ import coil3.request.ImageRequest
   .onKeyEvent { if(it.key==Key.Menu && it.type==KeyEventType.KeyUp) { onLongClick();true } else false }
   .combinedClickable(source,indication=null,role=Role.Button,onClick=onClick,onLongClick=onLongClick)) {
   Box(Modifier.size(width,height).focusOutline(source,shape,zoom=true).clip(shape).background(MaterialTheme.colorScheme.surfaceVariant)) {
-   if(artUrl.isNullOrBlank() || artFailed) Text(title,Modifier.align(Alignment.Center).padding(12.dp),style=MaterialTheme.typography.titleSmall,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)
+   if(artUrl.isNullOrBlank() || artFailed) Text(title,Modifier.align(Alignment.Center).padding(horizontal=8.dp,vertical=fallbackPadding),style=MaterialTheme.typography.titleSmall,color=MaterialTheme.colorScheme.onSurface,maxLines=if(height >= fallbackLineHeight*2 + fallbackPadding*2) 2 else 1,overflow=TextOverflow.Ellipsis)
    else AsyncImage(request,contentDescription=null,contentScale=ContentScale.Crop,modifier=Modifier.fillMaxSize(),onError={ artFailed=true })
    if(prefs.progressStyle.dp > 0) item.progress?.let { progress -> Box(Modifier.testTag("card-progress").align(Alignment.BottomStart).fillMaxWidth(progress.coerceIn(0f,1f)).height(prefs.progressStyle.dp.dp).background(MaterialTheme.colorScheme.primary)) }
   }

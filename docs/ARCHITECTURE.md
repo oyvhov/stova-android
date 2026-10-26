@@ -29,6 +29,13 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 
 Alle kjeldestiane i tabellen er relative til `app/src/main/java/app/stova/`.
 
+`ArtworkSize` har seks profillagra storleikar, med Kompakt (224 dp brei) og korttitlar på som
+standard. Gamle SMALL/MEDIUM/LARGE bevarer dimensjonane. `ArtworkSizeLabels` gir dei same
+namna i globale val og radval; overskriftsstorleik har ei eiga liste. `artworkDimensions` eig
+formatproporsjonane, også i Appar-rutenettet. Watch Next avgrensar undertittelen til kunstbreidda.
+Toppfeltet på Heim har berre Stova-innstillingar; Android-innstillingar ligg i menyen.
+Sesongnedteljing gjeld berre jul, og av/på-valet blir respektert både i hero og toppfelt.
+
 ## Skil skjerm frå data
 
 Ein `*Screen` koplar ein funksjon til repository, livssyklus og navigasjon. Ein `*Content`

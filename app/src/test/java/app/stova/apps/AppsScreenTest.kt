@@ -18,6 +18,13 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.assertWidthIsEqualTo
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.unit.dp
+import app.stova.profiles.ArtworkSize
+import app.stova.profiles.AppStyle
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -50,6 +57,24 @@ class AppsScreenTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val banan = InstalledApp("banan/.Main", "banan", ".Main", "Banan", true)
     private val eple = InstalledApp("eple/.Main", "eple", ".Main", "Eple", true)
+
+    @Test fun gridUsesTheSelectedArtworkSizeAndKeepsItsNeighbourGap() {
+        val profiles = profiles()
+        val adult = runBlocking { profiles.create("A", AvatarColor.LIME, false) }
+        show(profiles, adult, FakeAppCatalog(listOf(banan, eple)))
+        for (style in listOf(AppStyle.BANNER, AppStyle.ICON)) for (size in ArtworkSize.entries) {
+            runBlocking { profiles.update(adult.id) { it.copy(appearance = it.appearance.copy(cardSize = size, appStyle = style)) } }
+            compose.waitForIdle()
+            val first = compose.onNode(hasContentDescription("Banan") and hasClickAction())
+            val second = compose.onNode(hasContentDescription("Eple") and hasClickAction())
+            val width = if (style == AppStyle.ICON) size.width * 139.5f / 248f else size.width.toFloat()
+            first.assertWidthIsEqualTo(width.dp)
+            val a = first.getUnclippedBoundsInRoot()
+            val b = second.getUnclippedBoundsInRoot()
+            assertEquals(a.top, b.top)
+            assertEquals(16f, (b.left - a.right).value, 1f)
+        }
+    }
 
     private fun profiles() = ProfileRepository(
         JsonFileStore(tmp.root.resolve("p.json"), ProfilesFile.serializer(), ProfilesFile(), Dispatchers.Unconfined),

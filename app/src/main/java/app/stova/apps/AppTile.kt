@@ -39,6 +39,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalDensity
 import app.stova.core.theme.LocalAppearance
 import app.stova.profiles.AppStyle
 import app.stova.profiles.RowFormat
@@ -93,7 +95,7 @@ fun AppTile(
                         Modifier.fillMaxSize().padding(12.dp)
                     else if (centered) Modifier.size(height * if (image.packIcon) 0.82f else 0.65f) else Modifier.fillMaxSize())
             } else {
-                IconAndName(app, art, iconStyle)
+                IconAndName(app, art, iconStyle, height, prefs.showTitles)
             }
         }
         if (prefs.showTitles) Text(app.label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleSmall,
@@ -102,12 +104,16 @@ fun AppTile(
 }
 
 @Composable
-private fun IconAndName(app: InstalledApp, art: AppArtCache, iconStyle: Boolean) {
+private fun IconAndName(app: InstalledApp, art: AppArtCache, iconStyle: Boolean, height: Dp, caption: Boolean) {
     val icon by produceState<ImageBitmap?>(null, app.key, app.lastUpdateTime) { value = art.icon(app) }
-    Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        icon?.let { Image(it, contentDescription = null, modifier = Modifier.size(56.dp)) }
-        if (icon == null || !iconStyle) Text(app.label, style = MaterialTheme.typography.titleSmall,
+    val showName = icon == null || (!iconStyle && !caption)
+    val lineHeight = with(LocalDensity.current) { MaterialTheme.typography.titleSmall.lineHeight.toDp() }
+    val verticalPadding = if (showName) ((height - lineHeight) / 2).coerceIn(0.dp, 8.dp) else 8.dp
+    val iconSize = (height - verticalPadding * 2 - if (showName) lineHeight + 6.dp else 0.dp).coerceIn(0.dp, 56.dp)
+    Column(Modifier.padding(horizontal = 8.dp, vertical = verticalPadding), horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        icon?.let { if (iconSize > 0.dp) Image(it, contentDescription = null, modifier = Modifier.size(iconSize)) }
+        if (showName) Text(app.label, style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface, maxLines = 1,
             overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
     }

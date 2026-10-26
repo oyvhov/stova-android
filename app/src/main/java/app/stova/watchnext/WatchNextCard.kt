@@ -14,11 +14,15 @@ import app.stova.media.ui.MediaCard
 
 @Composable
 fun WatchNextCard(entry: WatchNextEntry, onClick: () -> Unit, onFocused: () -> Unit, modifier: Modifier = Modifier, onLongClick: () -> Unit = {}) {
-    Column {
+    val prefs = app.stova.core.theme.LocalAppearance.current
+    val style = app.stova.home.LocalRowStyle.current
+    val dimensions = app.stova.home.artworkDimensions(style.format ?: app.stova.profiles.RowFormat.WIDE, style.size ?: prefs.cardSize)
+    val width = (dimensions.width * app.stova.home.LocalArtworkScale.current).dp
+    Column(Modifier.width(width)) {
         MediaCard(MediaItem(entry.id.toString(), entry.packageName, ItemType.OTHER, entry.title,
             progress = entry.progress, art = ItemArt(wide = entry.posterUri)),
             poster = false, onClick = onClick, onLongClick = onLongClick, onFocused = onFocused, modifier = modifier)
-        if(app.stova.core.theme.LocalAppearance.current.showTitles) entry.subtitle?.let {
+        if(prefs.showTitles) entry.subtitle?.let {
             Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }

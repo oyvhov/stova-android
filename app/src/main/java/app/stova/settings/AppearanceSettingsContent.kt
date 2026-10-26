@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import app.stova.R
 import app.stova.core.theme.*
 import app.stova.core.ui.SettingsGroup
+import app.stova.core.ui.labelRes
 import app.stova.profiles.*
 import app.stova.profiles.Profile
 
@@ -66,7 +67,7 @@ fun AppearanceSettingsContent(
     }
     if (category == null || category == AppearanceCategory.CARDS) SettingsGroup(stringResource(R.string.custom_cards_rows), showHeading = category == null) {
         if (category == null) GroupHint(R.string.custom_cards_hint)
-        Choice(R.string.appearance_card_size, p.cardSize, ArtworkSize.entries, listOf(R.string.appearance_small, R.string.appearance_medium, R.string.appearance_large), modifier = firstControl) { onChange(p.copy(cardSize = it)) }
+        Choice(R.string.appearance_card_size, p.cardSize, ArtworkSize.entries, ArtworkSize.entries.map { it.labelRes }, modifier = firstControl) { onChange(p.copy(cardSize = it)) }
         Toggle(R.string.appearance_titles, p.showTitles) { onChange(p.copy(showTitles = it)) }
         Choice(R.string.appearance_app_style, p.appStyle, AppStyle.entries, listOf(R.string.appearance_banner, R.string.appearance_icon)) { onChange(p.copy(appStyle = it)) }
         Choice(R.string.row_latest_movies, p.movieStyle, MovieStyle.entries, listOf(R.string.appearance_poster, R.string.appearance_wide)) { onChange(p.copy(movieStyle = it)) }

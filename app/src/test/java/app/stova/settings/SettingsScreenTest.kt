@@ -115,8 +115,8 @@ class SettingsScreenTest {
         rule.onNodeWithText("Utsjånad").performClick()
         rule.onNode(hasText("Kort og rader") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Kortstorleik").performScrollTo().performClick()
-        rule.waitUntil(5_000) { profile("A").appearance.cardSize == app.stova.profiles.ArtworkSize.LARGE }
-        assertEquals(app.stova.profiles.ArtworkSize.MEDIUM, profile("B").appearance.cardSize)
+        rule.waitUntil(5_000) { profile("A").appearance.cardSize == app.stova.profiles.ArtworkSize.MEDIUM }
+        assertEquals(app.stova.profiles.ArtworkSize.COMPACT, profile("B").appearance.cardSize)
     }
 
     @Test fun adultReachesAndroidSettingsFromStovaSettings() {
@@ -169,8 +169,8 @@ class SettingsScreenTest {
         rule.onAllNodesWithText("Utsjånad")[1].performScrollTo().performClick()
         rule.onNode(hasText("Kort og rader") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Kortstorleik").performScrollTo().performClick()
-        rule.waitUntil(5_000) { profile("K").appearance.cardSize == app.stova.profiles.ArtworkSize.LARGE }
-        assertEquals(app.stova.profiles.ArtworkSize.MEDIUM, profile("A").appearance.cardSize)
+        rule.waitUntil(5_000) { profile("K").appearance.cardSize == app.stova.profiles.ArtworkSize.MEDIUM }
+        assertEquals(app.stova.profiles.ArtworkSize.COMPACT, profile("A").appearance.cardSize)
         rule.onNodeWithText("Tilpass kvar rad").performScrollTo().performClick()
         rule.onAllNodesWithText("Kortformat for rada")[0].performScrollTo().performClick()
         rule.waitForIdle()

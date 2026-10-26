@@ -158,7 +158,7 @@ class HomeViewModelTest {
         assertEquals(Season.NONE,rowSeasons.last())
         assertEquals(rowSeasons,spotSeasons)
         val count = rowSeasons.size
-        repo.update(id) { it.copy(appearance=it.appearance.copy(showTitles=true)) }; settle()
+        repo.update(id) { it.copy(appearance=it.appearance.copy(showTitles=!it.appearance.showTitles)) }; settle()
         assertEquals(count,rowSeasons.size)
         repo.update(id) { it.copy(appearance=SeasonChoice.CHRISTMAS.applyTo(it.appearance)) }; settle()
         assertEquals(Season.CHRISTMAS,rowSeasons.last())

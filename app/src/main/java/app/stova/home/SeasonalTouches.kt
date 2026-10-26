@@ -21,11 +21,11 @@ fun SeasonalMark(season: Season, modifier: Modifier = Modifier) {
 
 @Composable
 fun SeasonalCountdown(season: Season) {
+    if (season != Season.CHRISTMAS || !LocalAppearance.current.showCountdown) return
     val days = season.daysUntilPeak(LocalSeasonDate.current) ?: return
-    val christmas = season == Season.CHRISTMAS
     val label = when (days) {
-        0 -> stringResource(if (christmas) R.string.theme_peak_christmas else R.string.theme_peak_halloween)
-        else -> pluralStringResource(if (christmas) R.plurals.theme_countdown_christmas else R.plurals.theme_countdown_halloween, days, days)
+        0 -> stringResource(R.string.theme_peak_christmas)
+        else -> pluralStringResource(R.plurals.theme_countdown_christmas, days, days)
     }
     Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

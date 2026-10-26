@@ -24,6 +24,34 @@ import org.robolectric.annotation.Config
 class AppearanceSettingsTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun globalAndRowSizesOfferTheSameSixChoicesWhileHeadingsKeepThree() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        var style by mutableStateOf(RowStyle())
+        var rowMode by mutableStateOf(false)
+        compose.setContent { StovaTheme {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                if (rowMode) app.stova.home.RowStyleChoices(style, RowFormat.WIDE, prefs.cardSize) { style = it }
+                else AppearanceSettingsContent(prefs, category = AppearanceCategory.CARDS, includePreview = false) { prefs = it }
+            }
+        } }
+        val sizes = listOf("Kompakt" to 224, "Middels" to 248, "Stor" to 296,
+            "Ekstra stor" to 344, "Ekstra liten" to 152, "Liten" to 200)
+        for (row in listOf(false, true)) {
+            compose.runOnIdle { rowMode = row }
+            val label = if (row) "Storleik for rada" else "Kortstorleik"
+            sizes.forEach { (name, width) ->
+                compose.onNode(hasText(label) and hasText(name)).performScrollTo().assertIsDisplayed()
+                assertEquals(width, if (row) (style.size ?: prefs.cardSize).width else prefs.cardSize.width)
+                compose.onNodeWithText(label).performClick()
+            }
+        }
+        val heading = "Storleik på overskrifta"
+        for (name in listOf("Middels", "Stor", "Liten", "Middels")) {
+            compose.onNode(hasText(heading) and hasText(name)).performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(heading).performClick()
+        }
+    }
+
     @Test fun projectivyStartsTransparentAndCardBackgroundCanBeEnabledAgain() {
         var prefs by mutableStateOf(AppearancePrefs())
         compose.setContent { StovaTheme(appearance=prefs) {
@@ -47,7 +75,7 @@ class AppearanceSettingsTest {
         assertEquals(HomeRows.TWO, prefs.homeRows)
         compose.onNodeWithText("Plassering av radene").performScrollTo().performClick()
         assertEquals(HomeRowInset.BALANCED, prefs.homeRowInset)
-        assertEquals(ArtworkSize.MEDIUM, prefs.cardSize)
+        assertEquals(ArtworkSize.COMPACT, prefs.cardSize)
         assertEquals(HeroSize.COMPACT, prefs.heroSize)
     }
 
@@ -60,7 +88,7 @@ class AppearanceSettingsTest {
             "Vis årstal i heroen", "Vis aldersgrense i heroen", "Vis vurderingar i heroen", "Vis ny sesong i heroen",
             "Kortstorleik", "Titlar under kort", "Appstil", "Nyleg lagt til · Filmar", "Hjørne", "Bakgrunnsdemping",
             "Aksentfarge", "Fokuseffekt", "Klokkeformat", "Kortavstand", "Framdriftsstrek", "Bakgrunnskjelde",
-            "Spotlight-kjelde", "Roleg bakgrunnsrørsle", "Vis dato", "Vis HA-brikker", "Vis sesongnedteljing", "Vis Appar-knapp",
+            "Spotlight-kjelde", "Roleg bakgrunnsrørsle", "Vis dato", "Vis HA-brikker", "Vis julenedteljing", "Vis Appar-knapp",
             "Vis Smarthus-knapp", "Vis profilbilete", "Klokkestorleik")
         choices.forEach { label ->
             val row = compose.onNodeWithText(label).performScrollTo()
@@ -78,8 +106,8 @@ class AppearanceSettingsTest {
             row.performKeyInput { pressKey(Key.Enter) }
             assertEquals("OK steps $label like Right", stepped, prefs)
         }
-        assertEquals(ArtworkSize.LARGE, prefs.cardSize)
-        assertTrue(prefs.showTitles)
+        assertEquals(ArtworkSize.MEDIUM, prefs.cardSize)
+        assertFalse(prefs.showTitles)
         assertEquals(AppStyle.ICON, prefs.appStyle)
         assertEquals(MovieStyle.WIDE, prefs.movieStyle)
         assertEquals(HeroSize.LARGE, prefs.heroSize)

@@ -35,13 +35,12 @@ class TopBarTest {
         compose.onNode(clock).assertIsDisplayed()
     }
 
-    @Test fun androidSettingsButtonOpensTheSystemMenu() {
-        var opened = false
+    @Test fun adultHomeHasOneSettingsEntryAndNoSeparateAndroidIcon() {
         compose.setContent { StovaTheme {
-            TopBar(Profile("a", "A", AvatarColor.LIME), {}, {}, {}, onSystemSettings = { opened = true })
+            TopBar(Profile("a", "A", AvatarColor.LIME), {}, {}, {})
         } }
-        compose.onNodeWithText("Android-innstillingar").performClick()
-        assertEquals(true, opened)
+        compose.onNodeWithText("Android-innstillingar").assertDoesNotExist()
+        compose.onNodeWithText("Innstillingar").assertIsDisplayed()
     }
 
     @Test fun noAndroidSettingsButtonWithoutAnAction() {

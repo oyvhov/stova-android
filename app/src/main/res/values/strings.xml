@@ -327,6 +327,8 @@
     <string name="appearance_focus_effect">Fokuseffekt</string>
     <string name="appearance_clock_format">Klokkeformat</string>
     <string name="appearance_compact">Kompakt</string>
+    <string name="appearance_extra_small">Ekstra liten</string>
+    <string name="appearance_extra_large">Ekstra stor</string>
     <string name="appearance_large">Stor</string>
     <string name="appearance_small">Liten</string>
     <string name="appearance_medium">Middels</string>
@@ -530,7 +532,7 @@
     <string name="custom_clock_size">Klokkestorleik</string>
     <string name="custom_show_date">Vis dato</string>
     <string name="custom_show_chips">Vis HA-brikker</string>
-    <string name="custom_show_countdown">Vis sesongnedteljing</string>
+    <string name="custom_show_countdown">Vis julenedteljing</string>
     <string name="custom_show_apps">Vis Appar-knapp</string>
     <string name="custom_show_smart_home">Vis Smarthus-knapp</string>
     <string name="custom_show_profile">Vis profilbilete</string>

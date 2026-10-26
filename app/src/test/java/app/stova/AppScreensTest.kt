@@ -272,7 +272,7 @@ class AppScreensTest {
         rule.saveScreen("tilpassing-hero-av")
     }
     @Test fun customizationLargePosterRow() {
-        renderMediaHome(waitForBackdrop=true,poster=true,appearance=AppearancePrefs(seasonChoice=SeasonChoice.NONE),
+        renderMediaHome(waitForBackdrop=true,poster=true,appearance=AppearancePrefs(seasonChoice=SeasonChoice.NONE, showTitles=false),
             homePrefs=HomePrefs(rowFormats=mapOf(HomeRowKey.latestMovies("demo-account") to RowStyle(RowFormat.POSTER,ArtworkSize.LARGE))))
         rule.saveScreen("tilpassing-plakatrad-stor")
     }

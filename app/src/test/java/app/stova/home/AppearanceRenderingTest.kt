@@ -41,6 +41,31 @@ class AppearanceRenderingTest {
     private val film = MediaItem("f", "a", ItemType.MOVIE, "Fjordlys", overview = "Ei ferd langs kysten.",
         genres = listOf("Drama"), art = ItemArt(wide = artUrl, poster = artUrl))
 
+    @Test fun longWatchNextSubtitleStaysInsideItsScaledArtwork() {
+        val subtitle = "Episode 12 – Ei svært lang skildring som aldri skal skyve neste kort ut av rada"
+        var format by mutableStateOf(RowFormat.SMALL_WIDE)
+        compose.setContent {
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(density.density, 2f),
+                LocalRowStyle provides RowStyle(format, ArtworkSize.SMALL), LocalArtworkScale provides .7f) {
+                StovaTheme(appearance = AppearancePrefs(showTitles = true)) {
+                    androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        item { app.stova.watchnext.WatchNextCard(app.stova.watchnext.WatchNextEntry(1, "demo", "Serie", subtitle, artUrl, "", null, 0), {}, {}, Modifier.testTag("watch-art")) }
+                        item { Box(Modifier.size(20.dp).testTag("next-art")) }
+                    }
+                }
+            }
+        }
+        for (choice in listOf(RowFormat.SMALL_WIDE, RowFormat.ICON)) {
+            compose.runOnIdle { format = choice }
+            val artwork = compose.onNodeWithTag("watch-art").getUnclippedBoundsInRoot()
+            val caption = compose.onNodeWithText(subtitle, useUnmergedTree = true).getUnclippedBoundsInRoot()
+            val next = compose.onNodeWithTag("next-art").getUnclippedBoundsInRoot()
+            assertTrue("Subtitle must end at the artwork edge", caption.right <= artwork.right)
+            assertEquals(12f, (next.left - artwork.right).value, .5f)
+        }
+    }
+
     @Test fun headingsUseTheirOwnTextAndSourceCanBeHiddenWithoutHidingOfflineStatus() {
         val row=HomeRowUi.Media(HomeRowKey.latestMovies(account.id),account,MediaRowKind.LATEST_MOVIES,listOf(film),true)
         compose.setContent { StovaTheme { Column {
@@ -75,8 +100,8 @@ class AppearanceRenderingTest {
             MediaCard(film, false, {}, {}, {}, Modifier.testTag("wide"))
             MediaCard(film.copy(id = "p", title = "Plakat"), true, {}, {}, {}, Modifier.testTag("poster"))
         } } }
-        compose.onNodeWithTag("wide").assertWidthIsEqualTo(248.dp)
-        compose.onNodeWithText("Fjordlys").assertDoesNotExist()
+        compose.onNodeWithTag("wide").assertWidthIsEqualTo(224.dp)
+        compose.onNodeWithText("Fjordlys").assertIsDisplayed()
         compose.onNodeWithContentDescription("Fjordlys").assertExists()
         compose.runOnIdle { prefs = prefs.copy(cardSize = ArtworkSize.LARGE, showTitles = true) }
         compose.onNodeWithTag("wide").assertWidthIsEqualTo(296.dp)
@@ -87,7 +112,7 @@ class AppearanceRenderingTest {
     }
 
     @Test fun failedArtworkShowsTheTitleInsideThePlaceholder() {
-        compose.setContent { StovaTheme {
+        compose.setContent { StovaTheme(appearance = AppearancePrefs(showTitles = false)) {
             MediaCard(film.copy(art = ItemArt(wide = "file:///missing-stova-art.png")), false, {}, {}, {})
         } }
         compose.waitUntil(5_000) { compose.onAllNodesWithText("Fjordlys").fetchSemanticsNodes().isNotEmpty() }
@@ -95,7 +120,7 @@ class AppearanceRenderingTest {
     }
 
     @Test fun appStyleUsesSquareIconsAndProportionalSizes() {
-        var prefs by mutableStateOf(AppearancePrefs())
+        var prefs by mutableStateOf(AppearancePrefs(cardSize = ArtworkSize.MEDIUM, showTitles = false))
         compose.setContent { StovaTheme(appearance = prefs) {
             AppTile(InstalledApp("missing/.Main", "missing", ".Main", "App", true), AppArtCache(LocalContext.current), {}, {}, Modifier.testTag("app"))
         } }
@@ -116,7 +141,7 @@ class AppearanceRenderingTest {
     }
 
     @Test fun homeUsesMovieStyleHeroSizeAndRowSpacing() {
-        var prefs by mutableStateOf(AppearancePrefs(homeRows = HomeRows.SCROLLING))
+        var prefs by mutableStateOf(AppearancePrefs(homeRows = HomeRows.SCROLLING, cardSize = ArtworkSize.MEDIUM, showTitles = false))
         val row = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, listOf(film), false)
         compose.setContent { StovaTheme(appearance = prefs, reduceMotion = true) {
             val ctx = LocalContext.current

@@ -55,7 +55,7 @@ class CustomizationRenderingTest {
     }
 
     @Test fun rowFormatAndSizeOverrideOnlyTheSelectedRow() {
-        compose.setContent { StovaTheme {
+        compose.setContent { StovaTheme(appearance = AppearancePrefs(cardSize = ArtworkSize.MEDIUM, showTitles = false)) {
             Column {
                 CompositionLocalProvider(LocalRowStyle provides RowStyle(RowFormat.ICON, ArtworkSize.SMALL)) {
                     MediaCard(MediaItem("a","a",ItemType.MOVIE,"Icon"), true, {}, {}, {}, Modifier.testTag("custom"))

@@ -22,13 +22,42 @@ import org.robolectric.annotation.Config
 @Config(sdk=[30],qualifiers=TV_QUALIFIERS)
 class SeasonalDecorTest {
     @get:Rule val compose=createComposeRule()
-    @Test fun calmHasGreetingAndCountdownOffHidesBothAndReducedMotionKeepsCalm() {
+    @Test fun halloweenNeverShowsACountdownInEitherHeaderEvenOnTheDay() {
+        var choice by mutableStateOf(SeasonChoice.HALLOWEEN)
+        var date by mutableStateOf(LocalDate.of(2026, 10, 25))
+        compose.setContent { StovaTheme(appearance = choice.applyTo(AppearancePrefs(showCountdown = true)), date = date) {
+            Column {
+                app.stova.navigation.TopBar(Profile("a", "A", app.stova.core.theme.AvatarColor.LIME), {}, {}, {})
+                HeroPanel(null)
+            }
+        } }
+        for (mode in listOf(SeasonChoice.HALLOWEEN, SeasonChoice.CALENDAR)) for (day in listOf(25, 31)) {
+            compose.runOnIdle { choice = mode; date = LocalDate.of(2026, 10, day) }
+            compose.onAllNodesWithText("6 dagar til Halloween").assertCountEquals(0)
+            compose.onAllNodesWithText("Halloween i dag").assertCountEquals(0)
+            compose.onNodeWithText("God Halloween").assertExists()
+        }
+    }
+
+    @Test fun christmasCountdownRespectsThePreferenceInBothHeaders() {
+        var enabled by mutableStateOf(true)
+        compose.setContent { StovaTheme(appearance = SeasonChoice.CHRISTMAS.applyTo(AppearancePrefs(showCountdown = enabled)), date = LocalDate.of(2026, 12, 20)) {
+            Column {
+                app.stova.navigation.TopBar(Profile("a", "A", app.stova.core.theme.AvatarColor.LIME), {}, {}, {})
+                HeroPanel(null)
+            }
+        } }
+        compose.onAllNodesWithText("4 dagar til julaftan").assertCountEquals(2)
+        compose.runOnIdle { enabled = false }
+        compose.onAllNodesWithText("4 dagar til julaftan").assertCountEquals(0)
+    }
+    @Test fun halloweenKeepsItsGreetingWithoutAnyCountdown() {
         var decor by mutableStateOf(SeasonalDecor.CALM)
         compose.setContent { StovaTheme(appearance=SeasonChoice.HALLOWEEN.applyTo(AppearancePrefs(seasonalDecor=decor,reduceMotion=true)),date=LocalDate.of(2026,10,25)) {
             HeroPanel(null)
         } }
         compose.onNodeWithText("God Halloween").assertIsDisplayed()
-        compose.onNodeWithText("6 dagar til Halloween").assertIsDisplayed()
+        compose.onNodeWithText("6 dagar til Halloween").assertDoesNotExist()
         compose.runOnIdle { decor=SeasonalDecor.OFF }
         compose.onNodeWithText("God Halloween").assertDoesNotExist()
         compose.onNodeWithText("6 dagar til Halloween").assertDoesNotExist()

@@ -55,7 +55,7 @@ internal fun SettingsOptionPreview(value: Any?) {
                 repeat(4) { tile(5f + it * 14, 23f, 11f, 6f) }
             }
             is ArtworkSize -> {
-                val h = when (value) { ArtworkSize.SMALL -> 16f; ArtworkSize.MEDIUM -> 24f; ArtworkSize.LARGE -> 32f }
+                val h = value.width * 32f / ArtworkSize.EXTRA_LARGE.width
                 repeat(3) { tile(6f + it * 19, (34 - h) / 2, h * .5f, h) }
             }
             is CornerRadius -> tile(12f, 2f, 40f, 30f, value.dp * .3f)

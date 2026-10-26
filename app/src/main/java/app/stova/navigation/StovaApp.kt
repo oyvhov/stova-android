@@ -139,7 +139,6 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                                     onProfile = switchProfile,
                                     onSmartHome = if(household?.haBaseUrl!=null) {{smartHomeCardId=null;current=Destination.SMART_HOME}} else null,
                                     leading = { app.stova.ha.ui.HomeStatusChips(chips,onOpenCard={id->smartHomeCardId=id;current=Destination.SMART_HOME}) },
-                                    onSystemSettings = if (profile.kid) null else ({ openSystemSettings(context) }),
                                 )
                             },
                         )

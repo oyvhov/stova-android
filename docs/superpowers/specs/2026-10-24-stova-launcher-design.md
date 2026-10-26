@@ -45,8 +45,8 @@ Kjelder: `C:\JellyBin\reelstack-android\docs\DESIGN_SYSTEM.md`, `docs\LAYOUT.md`
   og overlaget blir aldri lagra. Eit anna profilval lagra under sesongen bevarer det underliggjande
   temaet. Datoen blir kontrollert kvart minutt medan appen er synleg, og straks ved retur.
 - **Sesongpynt:** Av / Roleg / **Mykje**. Av held berre fargane. Roleg viser eit nøytralt gresskar
-  eller snøfnugg ved klokka, ei helsing i tom spotlight og ei lågmeld nedteljing fram til
-  Halloween/julaftan (høgst 31 dagar). Mykje legg til 12 glør eller 18 snøfnugg over høgre del av
+  eller snøfnugg ved klokka, ei helsing i tom spotlight og valfri nedteljing fram til
+  julaftan (høgst 31 dagar). Halloween har inga nedteljing. Mykje legg til 12 glør eller 18 snøfnugg over høgre del av
   kunsten og ein Halloween-edderkopp etter 45 s utan brukaraktivitet. Fast frø, éin Canvas og
   høgst 20 oppdateringar/s; klokka blir berre lesen i teiknefasen. Alt som rører seg stoppar ved
   redusert rørsle, når Heim blir lukka, og når lifecycle går under STARTED. Pynt har ingen
@@ -241,10 +241,10 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
 - **Kunstformat:** filmar i «Nyleg lagt til» bruker plakat (2:3, 132 × 198 dp). Hald fram,
   episodar og seriar bruker brei thumbnail (16:9, 248 × 139,5 dp). Eit episodekort viser
   seriekunst (serie-thumb, elles seriebackdrop) og serienamnet, utan episodenummer. Apprada bruker banner
-  (16:9, 248 × 139,5 dp). Desse er middelsstorleikane; Liten og Stor skalerer alle kort
-  proporsjonalt ut frå breidd 200 og 296 dp. Ikonstil gir kvadratiske appflisar med side lik
+  (16:9, 248 × 139,5 dp). Desse er middelsstorleikane; standarden Kompakt bruker breidd 224 dp.
+  Dei seks storleikane skalerer kunsten proporsjonalt; gamle lagra mål er bevarte. Ikonstil gir kvadratiske appflisar med side lik
   bannerhøgda. Filmrada kan òg velje breie kort. Ingen kunstige botnkantar på plakatar.
-  Titlar under kunst er av som standard, men tittelen er alltid tilgjengeleg for skjermlesar.
+  Titlar under kunst er på som standard og kan slåast av; tittelen er alltid tilgjengeleg for skjermlesar.
   Manglande kunst viser tittelen inne i plasshaldaren. Fokuseffekten følgjer berre kunsten.
   Radformat kan overstyrast til Plakat (2:3), Brei (16:9), Stor brei (1,2×), Liten brei (0,8×)
   eller Ikon (kvadrat). Storleik S/M/L gjeld oppå formatet. Vassrett avstand er 8/16/24 dp.
@@ -443,15 +443,15 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Heim og hero | Logo eller tittel | **Logo når han finst** / Alltid tittel |
 | Heim og hero | Omtale / sjangrar | Omtale **Av**, sjangrar **På**; to omtale-linjer ved vanleg skrift |
 | Heim og hero | Spotlight-tid | 8 / **12** / 20 s |
-| Kort og rader | Kortstorleik | Liten (200) / **Middels (248)** / Stor (296 dp brei); proporsjonale plakatar/ikon |
-| Kort og rader | Titlar under kort | **Av** / På; alltid skjermlesarnamn |
+| Kort og rader | Kortstorleik | Ekstra liten (152) / Liten (200) / **Kompakt (224)** / Middels (248) / Stor (296) / Ekstra stor (344 dp brei); proporsjonale plakatar/ikon |
+| Kort og rader | Titlar under kort | Av / **På**; alltid skjermlesarnamn; undertitlar held same breidd som kunsten |
 | Kort og rader | Appstil / filmrad | **Banner** / Ikon; filmrada **Plakat** / Brei |
 | Kort og rader | Hjørne | Skarp 4 / Mjuk 12 / **Rund 20** / Ekstra rund 28 dp |
 | Kort og rader | Kortavstand | Tett 8 / **Normal 16** / Luftig 24 dp vassrett |
 | Kort og rader | Radavstand | Tett 12 / **Normal 22** / Luftig 34 dp loddrett; skjult når berre éi rad blir vist |
 | Kort og rader | Framdriftsstrek | Tynn 2 / **Tjukk 4** dp / Skjult |
 | Kvar rad | Format | Plakat / Brei / Stor brei / Liten brei / Ikon; **arv eksisterande format** |
-| Kvar rad | Storleik / tittel | Liten / Middels / Stor (**arv global**); radtittel **På** / Av |
+| Kvar rad | Storleik / tittel | Same seks kortstorleikar (**arv global**); radtittel **På** / Av; overskrifta har eigne tre storleikar |
 | Bakgrunn | Kjelde | **Spotlight** / Fast bilete / Einsfarga tema |
 | Bakgrunn | Spotlight-kjelde | **Heile biblioteket** / Berre filmar / Berre seriar / Favorittar |
 | Bakgrunn | Demping | Lys / **Middels** / Mørk |
@@ -461,7 +461,7 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Fokus | Reduser rørsle | **Av** / På; ingen skalering, krysstoning eller kontinuerleg rørsle |
 | Toppfelt | Klokke | **24 t** / 12 t / Skjult; **Normal** / Stor |
 | Toppfelt | Dato | **Av** / På; lokal vekedag, dag og månad, òg med skjult klokke |
-| Toppfelt | HA / nedteljing / Appar / Smarthus / profilbilete | Alle **På** / Av; Innstillingar kan alltid nåast |
+| Toppfelt | HA / julenedteljing / Appar / Smarthus / profilbilete | Alle **På** / Av; Innstillingar kan alltid nåast; Android-innstillingar ligg berre inne i Innstillingar |
 | Ikon | Pakke / farge / fyll | **Ingen** eller installert pakke; **Original** / Aksent; **Sentrert** / Fyll flata |
 | Profil | Tilbakestill / kopier | Stadfesta standard eller kopi frå annan profil, utan konto-/tryggleiksendringar |
 

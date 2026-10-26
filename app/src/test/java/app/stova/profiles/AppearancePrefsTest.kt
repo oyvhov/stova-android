@@ -8,8 +8,8 @@ class AppearancePrefsTest {
     @Test fun oldProfilesKeepTheNewDefaults() {
         val old = Json.decodeFromString<AppearancePrefs>("""{"reduceMotion":true,"strongFocus":true}""")
         assertEquals(AppearancePrefs(reduceMotion = true, strongFocus = true), old)
-        assertEquals(ArtworkSize.MEDIUM, old.cardSize)
-        assertFalse(old.showTitles)
+        assertEquals(224, old.cardSize.width)
+        assertTrue(old.showTitles)
         assertEquals(AppStyle.BANNER, old.appStyle)
         assertEquals(MovieStyle.POSTER, old.movieStyle)
         assertEquals(HeroSize.COMPACT, old.heroSize)
@@ -24,6 +24,19 @@ class AppearancePrefsTest {
         assertEquals(RowSpacing.NORMAL, old.rowSpacing)
         assertEquals(HomeRows.ONE, old.homeRows)
         assertEquals(HomeRowInset.LOW, old.homeRowInset)
+    }
+
+    @Test fun sixSizesRoundTripAndExistingExplicitChoicesArePreserved() {
+        assertEquals(listOf(152, 200, 224, 248, 296, 344), ArtworkSize.entries.map { it.width })
+        ArtworkSize.entries.forEach { size ->
+            val prefs = AppearancePrefs(cardSize = size)
+            assertEquals(prefs, Json.decodeFromString<AppearancePrefs>(Json.encodeToString(prefs)))
+        }
+        listOf("SMALL" to 200, "MEDIUM" to 248, "LARGE" to 296).forEach { (name, width) ->
+            val saved = Json.decodeFromString<AppearancePrefs>("""{"cardSize":"$name","showTitles":false}""")
+            assertEquals(width, saved.cardSize.width)
+            assertFalse(saved.showTitles)
+        }
     }
 
     @Test fun allChoicesSurviveJson() {

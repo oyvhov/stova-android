@@ -19,11 +19,12 @@ import app.stova.core.ui.StovaButton
 import app.stova.core.ui.StovaIcons
 import app.stova.core.ui.PageHeader
 import app.stova.core.ui.SectionHeading
+import app.stova.core.ui.labelRes
 import app.stova.profiles.*
 
 internal val rowFormatLabels = listOf(R.string.appearance_poster, R.string.appearance_wide,
     R.string.custom_large_wide, R.string.custom_small_wide, R.string.appearance_icon)
-internal val sizeLabels = listOf(R.string.appearance_small, R.string.appearance_medium, R.string.appearance_large)
+internal val headingSizeLabels = listOf(R.string.appearance_small, R.string.appearance_medium, R.string.appearance_large)
 
 @Composable
 fun RowStyleChoices(style: RowStyle, defaultFormat: RowFormat, globalSize: ArtworkSize, defaultTitle: String = "", hasSource: Boolean = true, onChange: (RowStyle) -> Unit) {
@@ -35,7 +36,7 @@ fun RowStyleChoices(style: RowStyle, defaultFormat: RowFormat, globalSize: Artwo
         onChange(style.withHeading(title)); editing = false
         runCatching { headingButton.requestFocus() }
     }, onDismiss = { editing = false; runCatching { headingButton.requestFocus() } })
-    SettingsChoiceRow(stringResource(R.string.custom_heading_size), stringResource(sizeLabels[style.headingSize.ordinal])) { step ->
+    SettingsChoiceRow(stringResource(R.string.custom_heading_size), stringResource(headingSizeLabels[style.headingSize.ordinal])) { step ->
         onChange(style.copy(headingSize = HeadingSize.entries[Math.floorMod(style.headingSize.ordinal + step, HeadingSize.entries.size)]))
     }
     val format = style.format ?: defaultFormat
@@ -44,7 +45,7 @@ fun RowStyleChoices(style: RowStyle, defaultFormat: RowFormat, globalSize: Artwo
         preview = { RowFormatPreview(format) }) { step ->
         onChange(style.copy(format = RowFormat.entries[Math.floorMod(format.ordinal + step, RowFormat.entries.size)]))
     }
-    SettingsChoiceRow(stringResource(R.string.custom_row_size), stringResource(sizeLabels[size.ordinal])) { step ->
+    SettingsChoiceRow(stringResource(R.string.custom_row_size), stringResource(size.labelRes)) { step ->
         onChange(style.copy(size = ArtworkSize.entries[Math.floorMod(size.ordinal + step, ArtworkSize.entries.size)]))
     }
     SettingsChoiceRow(stringResource(R.string.custom_row_title), stringResource(if (style.showTitle) R.string.appearance_on else R.string.appearance_off)) {

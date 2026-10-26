@@ -50,9 +50,13 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
 
     val onLong: (InstalledApp) -> Unit = { app -> if (!profile.kid) menuFor = app }
     val arranged = loaded ?: return
+    val appearance = app.stova.core.theme.LocalAppearance.current
+    val format = if (appearance.appStyle == app.stova.profiles.AppStyle.ICON)
+        app.stova.profiles.RowFormat.ICON else app.stova.profiles.RowFormat.WIDE
+    val cardWidth = app.stova.home.artworkDimensions(format, appearance.cardSize).width.dp
 
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(StovaLayout.WideWidth),
+        columns = GridCells.FixedSize(cardWidth),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(StovaLayout.TvSafeEdge),
         horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap),
