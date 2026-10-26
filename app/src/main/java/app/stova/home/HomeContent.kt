@@ -214,11 +214,18 @@ fun HomeContent(
             val baseHeroHeight = if (fontScale >= 1.5f) maxHeight * (appearance.heroSize.fraction + 0.16f)
                 else minOf(maxHeight * appearance.heroSize.fraction, (maxHeight - rowHeight).coerceAtLeast(0.dp))
             val deckHeroSpace = geometry?.let { (maxHeight - it.height - it.bottom).coerceAtLeast(0.dp) }
+            // The scrolling view opens like the deck, with only the first row at the bottom under a big
+            // hero; moving down then scrolls the hero away. Large text keeps the fixed fraction.
+            val scrollHeroSpace = if (!deck && fontScale < 1.5f && !availableRows.isNullOrEmpty()) {
+                val first = homeDeckGeometry(availableRows.take(1), homePrefs, appearance.copy(homeRows = HomeRows.ONE), maxWidth, maxHeight)
+                (maxHeight - first.height - first.bottom).coerceAtLeast(0.dp)
+            } else null
             val heroHeight = if (appearance.heroSize == HeroSize.OFF) 0.dp else if (deckHeroSpace != null) {
                 if (deckHeroSpace < if (fontScale >= 1.5f) 140.dp else 112.dp) 0.dp
                 else minOf(deckHeroSpace, maxOf(maxHeight * appearance.heroSize.fraction,
                     if (appearance.showOverview && fontScale < 1.5f) 208.dp else 0.dp))
-            } else if (appearance.showOverview && fontScale < 1.5f) maxOf(baseHeroHeight, 208.dp) else baseHeroHeight
+            } else if (scrollHeroSpace != null && scrollHeroSpace >= 112.dp) scrollHeroSpace
+            else if (appearance.showOverview && fontScale < 1.5f) maxOf(baseHeroHeight, 208.dp) else baseHeroHeight
             Column {
                 when {
                     availableRows == null -> if (appearance.heroSize != HeroSize.OFF) HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
@@ -228,6 +235,13 @@ fun HomeContent(
                     }
                     else -> {
                         val headerItems = if (deck || appearance.heroSize == HeroSize.OFF) 0 else 1
+                        // The backdrop follows the scrolling hero; the deck and a view without a hero leave it still.
+                        val shift = LocalHomeScrollShift.current
+                        if (shift != null && headerItems == 1) {
+                            val heroPx = with(androidx.compose.ui.platform.LocalDensity.current) { heroHeight.toPx().coerceAtLeast(1f) }
+                            DisposableEffect(shift, listState) { shift.list = listState; onDispose { shift.list = null } }
+                            SideEffect { shift.heroPx = heroPx }
+                        }
                         if (deck) {
                             if (heroHeight > 0.dp) HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
                             Spacer(Modifier.weight(1f))

@@ -22,7 +22,9 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -125,7 +127,22 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             else kotlinx.coroutines.flow.flowOf(null)
                         }
                         val fixed by fixedFlow.collectAsStateWithLifecycle(initialValue = null)
-                        app.stova.background.ProfileBackdrop(profile.id,profile.appearance,spotlight,fixed,state=backdrop)
+                        val shift = remember { app.stova.home.HomeScrollShift() }
+                        val still = app.stova.core.theme.LocalReduceMotion.current
+                        val ink = androidx.compose.material3.MaterialTheme.colorScheme.background
+                        // As the rows take the screen the picture drifts up a little slower than them, grows
+                        // slightly and darkens for the text. Layer and draw phases only; still under reduced motion.
+                        Box(Modifier.fillMaxSize().graphicsLayer {
+                            val p = if (still) 0f else shift.progress()
+                            scaleX = 1f + 0.1f * p; scaleY = scaleX
+                            translationY = -size.height * 0.04f * p
+                        }.drawWithContent {
+                            drawContent()
+                            drawRect(ink.copy(alpha = 0.35f * shift.progress()))
+                        }) {
+                            app.stova.background.ProfileBackdrop(profile.id,profile.appearance,spotlight,fixed,state=backdrop)
+                        }
+                        androidx.compose.runtime.CompositionLocalProvider(app.stova.home.LocalHomeScrollShift provides shift) {
                         HomeScreen(
                             home, container.appArt, container.appCatalog,
                             onOpenApps = { current = Destination.APPS },
@@ -145,6 +162,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                                 )
                             },
                         )
+                        }
                     }
                     Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog)
                     Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId)

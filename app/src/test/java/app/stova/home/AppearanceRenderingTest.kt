@@ -153,8 +153,11 @@ class AppearanceRenderingTest {
         compose.onNodeWithContentDescription("Fjordlys").assertWidthIsEqualTo(248.dp)
         val after = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot().top
         assertTrue(after > before)
+        val cardBottom = compose.onNodeWithContentDescription("Fjordlys").getUnclippedBoundsInRoot().bottom
         compose.runOnIdle { prefs = prefs.copy(rowSpacing = RowSpacing.TIGHT) }
-        assertTrue(compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot().top < after)
+        // The first row stays at the bottom under the big hero; the spacing it gives up goes to the hero.
+        assertEquals(cardBottom.value, compose.onNodeWithContentDescription("Fjordlys").getUnclippedBoundsInRoot().bottom.value, 1f)
+        assertEquals(after.value, compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot().top.value, 1f)
     }
 
     @Test fun largestPosterAndItsTitleFitBelowTheFixedHero() {

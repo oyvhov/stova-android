@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
 import app.stova.apps.AppArtCache
@@ -46,6 +47,15 @@ class HomeScrollTest {
         render()
         compose.waitForIdle()
         compose.onNode(isFocused()).assert(hasText("Fyrste", substring = true))
+    }
+
+    @Test fun scrollingViewOpensWithABigHeroAndOnlyTheFirstRowAtTheBottom() {
+        render()
+        compose.waitForIdle()
+        val root = compose.onRoot().getUnclippedBoundsInRoot()
+        val first = compose.onNodeWithContentDescription("Fyrste").getUnclippedBoundsInRoot()
+        org.junit.Assert.assertTrue("first row sits at the bottom: $first in $root", root.bottom - first.bottom <= 100.dp)
+        compose.onNodeWithContentDescription("Andre").assertIsNotDisplayed()
     }
 
     @Test fun movingDownReclaimsHeroSpaceAndMovingUpRestoresIt() {
