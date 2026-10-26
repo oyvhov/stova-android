@@ -24,6 +24,30 @@ import org.robolectric.annotation.Config
 class AppearanceSettingsTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun backgroundOffersLibraryAndAgeControls() {
+        compose.setContent { StovaTheme {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                AppearanceSettingsContent(AppearancePrefs(), category = AppearanceCategory.BACKGROUND, includePreview = false) {}
+            }
+        } }
+        compose.onNodeWithText("Bibliotek til bakgrunnen").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Høgaste aldersgrense").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test fun lowerAgeCanBeChosenWithoutTemporarilyAllowingAdultArt() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        val changes=mutableListOf<Int?>()
+        compose.setContent {StovaTheme {Column(Modifier.verticalScroll(rememberScrollState())) {
+            AppearanceSettingsContent(prefs,category=AppearanceCategory.BACKGROUND,includePreview=false) {
+                prefs=it;changes+=it.backgroundFilter.maxAge
+            }
+        }}}
+        compose.onNodeWithText("Høgaste aldersgrense").performScrollTo().performClick()
+        compose.onNodeWithText("Til og med 6 år").performScrollTo().performClick()
+        assertEquals(listOf(6),changes)
+        compose.onNodeWithText("Høgaste aldersgrense").assertIsFocused()
+    }
+
     @Test fun globalAndRowSizesOfferTheSameSixChoicesWhileHeadingsKeepThree() {
         var prefs by mutableStateOf(AppearancePrefs())
         var style by mutableStateOf(RowStyle())
@@ -88,7 +112,7 @@ class AppearanceSettingsTest {
             "Vis årstal i heroen", "Vis aldersgrense i heroen", "Vis vurderingar i heroen", "Vis ny sesong i heroen",
             "Kortstorleik", "Titlar under kort", "Appstil", "Nyleg lagt til · Filmar", "Hjørne", "Bakgrunnsdemping",
             "Aksentfarge", "Fokuseffekt", "Klokkeformat", "Kortavstand", "Framdriftsstrek", "Bakgrunnskjelde",
-            "Spotlight-kjelde", "Roleg bakgrunnsrørsle", "Vis dato", "Vis HA-brikker", "Vis julenedteljing", "Vis Appar-knapp",
+            "Titlar til bakgrunnen", "Roleg bakgrunnsrørsle", "Vis dato", "Vis HA-brikker", "Vis julenedteljing", "Vis Appar-knapp",
             "Vis Smarthus-knapp", "Vis profilbilete", "Klokkestorleik")
         choices.forEach { label ->
             val row = compose.onNodeWithText(label).performScrollTo()

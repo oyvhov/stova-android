@@ -21,6 +21,8 @@ fun AppearanceSettingsContent(
     p: AppearancePrefs,
     packs: List<app.stova.apps.IconPack> = emptyList(),
     onPickBackground: () -> Unit = {},
+    onPickLibraries: () -> Unit = {},
+    libraryControl: Modifier = Modifier,
     onEditRows: () -> Unit = {},
     includePreview: Boolean = true,
     previewEntry: app.stova.media.SpotlightEntry? = null,
@@ -81,6 +83,10 @@ fun AppearanceSettingsContent(
         if (category == null) GroupHint(R.string.custom_background_hint)
         Choice(R.string.custom_background_source, p.backgroundSource, BackgroundSource.entries,
             listOf(R.string.custom_spotlight, R.string.custom_fixed_image, R.string.custom_theme_surface), modifier = firstControl) { onChange(p.copy(backgroundSource = it)) }
+        app.stova.core.ui.SettingsNavRow(stringResource(R.string.background_libraries),libraryControl,
+            value=librarySelectionLabel(p.backgroundFilter.libraries),onClick=onPickLibraries)
+        BackgroundAgeSetting(p.backgroundFilter.maxAge) {onChange(p.copy(backgroundFilter=p.backgroundFilter.copy(maxAge=it)))}
+        if(p.backgroundFilter.maxAge!=null) GroupHint(R.string.background_age_hint)
         if (p.backgroundSource == BackgroundSource.FIXED) app.stova.core.ui.SettingsNavRow(
             stringResource(R.string.custom_pick_background), value = p.fixedBackground?.title, onClick = onPickBackground)
         Choice(R.string.custom_spotlight_source, p.spotlightSource, SpotlightSource.entries,

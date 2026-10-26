@@ -466,7 +466,9 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Kvar rad | Format | Plakat / Brei / Stor brei / Liten brei / Ikon; **arv eksisterande format** |
 | Kvar rad | Storleik / tittel | Same seks kortstorleikar (**arv global**); radtittel **På** / Av; overskrifta har eigne tre storleikar |
 | Bakgrunn | Kjelde | **Spotlight** / Fast bilete / Einsfarga tema |
-| Bakgrunn | Spotlight-kjelde | **Heile biblioteket** / Berre filmar / Berre seriar / Favorittar |
+| Bakgrunn | Bibliotek til bakgrunnen | **Alle bibliotek** / eitt eller fleire konkrete bibliotek per konto; tomt utval betyr ingen |
+| Bakgrunn | Høgaste aldersgrense | 0 / 6 / 9 / 12 / **15** / 16 / 18 år / Utan grense; direkte val i dialog |
+| Bakgrunn | Titlar til bakgrunnen | **Filmar og seriar** / Berre filmar / Berre seriar / Favorittar innan utvalet |
 | Bakgrunn | Demping | Lys / **Middels** / Mørk |
 | Bakgrunn | Roleg rørsle | **Av** / På; 1,00→1,04; alltid av ved redusert rørsle, hero Av og utanfor Heim |
 | Fokus | Effekt | **Svakt løft** / Forstørring / Lys opp / Ramme / Ramme + forstørring |
@@ -477,6 +479,21 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Toppfelt | HA / julenedteljing / Appar / Smarthus / profilbilete | Alle **På** / Av; Innstillingar kan alltid nåast; Android-innstillingar ligg berre inne i Innstillingar |
 | Ikon | Pakke / farge / fyll | **Ingen** eller installert pakke; **Original** / Aksent; **Sentrert** / Fyll flata |
 | Profil | Tilbakestill / kopier | Stadfesta standard eller kopi frå annan profil, utan konto-/tryggleiksendringar |
+
+Bakgrunnsfilteret (26.10.2026) er profillagra og gjeld hero, roterande bakgrunn, faste bilete,
+førehandsvising og fast-bilete-søk. Bibliotek blir henta frå den innlogga Jellyfin-/Emby-brukaren.
+Dialogen skil lasting, tom liste, manglande konto og tenarfeil; utilgjengelege lagra val blir hugsa.
+Bruk utvalet lagrar, Avbryt endrar ingenting; begge gir fokus tilbake til bibliotekrada.
+Høgaste alder blir vald direkte, så eit skifte frå 15 til 6 aldri mellombels tillèt 18-årstitlar.
+Ukjend eller tvitydig aldersmerking blir skjult når ei grense er aktiv. Kjende internasjonale
+merkingar blir tolka konservativt (PG/TV-PG som 10, R/TV-MA/NC-17 som 18). Utan grense tillèt
+også ukjend alder. Standard 15 gjeld òg eldre profilar som ikkje har feltet.
+
+Faste bilete og sesongtitlar kan ikkje omgå filteret. Bufferen inneheld verifisert
+bibliotektilhøyrsle og blir filtrert med dagens val, også utan nett. Ved nytt filter blir
+førre bilete og utgåande krysstoning fjerna straks; eit mislukka nytt bilete kan ikkje halde
+att forboden kunst. Ingen treff gir temabakgrunn. Vanlege medierader og tenarens tilgangsreglar
+blir ikkje endra. Kopiering av utsjånad bevarer mottakaren sitt bibliotek-/aldersfilter.
 
 ## 6. Media: Jellyfin og Emby
 

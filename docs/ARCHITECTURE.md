@@ -22,6 +22,8 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 | Innstillingsoversikt og ikonprøve | `settings/SettingsOverview.kt`, `settings/AppIconPreview.kt` | Ikonlenkjer og verkelege appar med utkastet til utsjånad |
 | Heim-knappen | `homebutton/HomeActivities.kt`, `homebutton/HomeKeyLogic.kt`, `homebutton/HomeButtonService.kt` | Oppdaga HOME-aktivitetar, tastefilter og avgrensa vindaugsreserveveg |
 | Utsjånad | `settings/AppearanceSettings.kt`, `settings/AppearanceMenu.kt`, `settings/AppearanceSettingsContent.kt` | Lagring, kategorioversikt og kontrollerte val kvar for seg |
+| Bakgrunnsutval | `profiles/BackgroundFilter.kt`, `media/BackgroundEligibility.kt`, `settings/BackgroundLibraryPicker.kt`, `settings/BackgroundAgeSetting.kt` | Konto-/bibliotekval, tolka aldersgrense, TV-dialogar og same sluttfilter på alle kunstvegar |
+| Bakgrunn ved filterbyte | `background/ProfileBackdrop.kt` | Ny bilet-/overgangstilstand ved endra utval, slik at gamal kunst ikkje blir halden att |
 | Fargar, mål og rørsle | `core/theme/` | Felles tokens; ingen fargelitteralar i skjermane |
 | Dialogar og fokus | `core/ui/` | Gjenbrukbare TV-komponentar, éin dialogovergang |
 | Radoverskrifter og radval | `home/RowOptions.kt`, `home/RowHeadingEditor.kt`, `home/RowLabels.kt` | Same redigering frå langt OK og Innstillingar; lagra i profilens `RowStyle` |
@@ -55,6 +57,7 @@ rad- og tittel-id-ar som nøklar.
   etter ei tittellenkje frå Heim til Spole blir framdrifta henta på nytt éin gong for den aktive profilen.
   Feila henting kan prøvast att ved neste retur etter 30 sekund, også utan bufra rader.
 - Smalare spotlight-utval blir brukte om att i to timar. Nye kontoar og sesongbyte kan oppdatere tidlegare.
+- Avgrensa bibliotekutval har nøkkel av kjelde, filter og kontoar, med to timars frist (fem minutt ved feil). `MediaSnapshot.backgroundPool` bevarer verifisert bibliotektilhøyrsle for bruk utan nett.
 - Applista deler pakkeskanning og pakkelyttar. Ikonpakkar blir oppdaga når dei blir etterspurde.
   Breie pakkeikon bevarer sideforholdet. Projectivy blir installert separat; `ProjectivyIcons`
   legg til eit eige transparent Spole-merke i Stova sin katalog utan å endre tredjepartspakken.
@@ -66,6 +69,22 @@ rad- og tittel-id-ar som nøklar.
 
 Buffer er alltid avgrensa til rett profil, konto eller HA-tilkopling. Utlogging og ny tilkopling
 må ugyldiggjere relevant tilstand. Ingen test skal ringje ekte tenester utan eit uttrykkeleg integrasjonssteg.
+
+Bakgrunn/hero har `AppearancePrefs.backgroundFilter`: alle bibliotek (`null`) og maks 15 år
+som standard. Eit tomt biblioteksett betyr ingen titlar. Referansar inneheld konto-ID og
+bibliotek-ID. Klienten spør `Users/{id}/Views` og bruker éin rekursiv `ParentId`-førespurnad
+per valt bibliotek. `MediaItem.backgroundLibraryIds` kjem berre frå slike førespurnader;
+`ParentId` på ein tittel blir ikkje tolka som toppbibliotek. Overlappande visingar slår saman
+medlemskap før deduplisering og lagring. Gamle snapshot har ukjend tilhøyrsle og blir avviste
+ved eit avgrensa utval til ny henting har stadfesta medlemskap.
+
+`acceptsBackground` tolkar berre kjende heile aldersmerkingar og avviser ukjend alder når
+ei grense er på. Serverens `MaxParentalRating` er ikkje år og blir ikkje brukt. Filteret gjeld
+etter sesonginnsetjing, i søk, faste bilete og førehandsvising. Tomt resultat gir temaflata,
+aldri eit vidare utval. Vanlege medierader er uendra. Kopiering av utsjånad bevarer mottakaren
+sitt filter. `HomeViewModel` startar utvalet på nytt og tømmer gamal hero ved filterbyte.
+Visingslaget kontrollerer gjeldande profil/filter på nytt før det viser ei eldre straumutgåve.
+`ProfileBackdrop` erstattar både den dekoda biletbufferen og Crossfade-greina ved endra utval.
 
 ## Rørsle og parallax
 

@@ -6,6 +6,7 @@ import app.stova.home.*
 import app.stova.profiles.Season
 import app.stova.profiles.SpotlightSource
 import app.stova.profiles.BackgroundTitle
+import app.stova.profiles.BackgroundFilter
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -27,6 +28,7 @@ const val REFRESH_MIN_AGE_MILLIS = 5 * 60 * 1000L
 const val FAILED_REFRESH_RETRY_MILLIS = 30_000L
 
 class MediaRepository(private val accounts: MediaAccountRepository,private val clientFor: suspend (MediaAccount) -> MediaServerClient?,private val snapshotDir: File,private val scope: CoroutineScope,private val io: CoroutineDispatcher=Dispatchers.IO,private val clock: () -> Long=System::currentTimeMillis) {
+ private data class BackgroundPoolKey(val source:SpotlightSource,val filter:BackgroundFilter,val accounts:List<String>)
  private class Slot(val store: JsonFileStore<MediaSnapshot>) {
   var season: Season = Season.NONE
   val mutex=Mutex();val rows=MutableStateFlow<List<HomeRowUi.Media>?>(null)
@@ -38,6 +40,8 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   val playbackRevision=AtomicLong();var refreshedPlaybackRevision=0L
   /** Narrower hero pools (films, series, favourites) and when each is next due; shared by every entry to Home. */
   val extra=MutableStateFlow<Map<SpotlightSource,List<SpotlightEntry>>>(emptyMap());val extraDue=mutableMapOf<SpotlightSource,Long>();val extraMutex=Mutex()
+  val restricted=mutableMapOf<BackgroundPoolKey,List<SpotlightEntry>>()
+  val restrictedDue=mutableMapOf<BackgroundPoolKey,Long>()
  }
  private class Fetched(val rows: List<HomeRowUi.Media>,val spotlight: List<SpotlightEntry>,val spotlightOk: Boolean,val seasonalOk: Boolean=true,val rowsOk:Boolean=true)
  private val slots=ConcurrentHashMap<String,Slot>()
@@ -64,9 +68,11 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   finally { refresh.cancel() }
  }.distinctUntilChanged()
  /** The hero's titles; served from the snapshot at once, refreshed alongside the rows. */
- fun spotlight(profileId:String, season: Season = Season.NONE, source: SpotlightSource = SpotlightSource.LIBRARY): Flow<List<SpotlightEntry>> = flow {
+ fun spotlight(profileId:String, season: Season = Season.NONE, source: SpotlightSource = SpotlightSource.LIBRARY,
+  filter:BackgroundFilter=BackgroundFilter(maxAge=null)): Flow<List<SpotlightEntry>> = flow {
   val slot=loaded(profileId)
-  val pool: Flow<List<SpotlightEntry>> = if(source==SpotlightSource.LIBRARY) slot.spotlight else flow {
+  val pool: Flow<List<SpotlightEntry>> = if(filter.libraries!=null) restrictedSpotlight(profileId,slot,source,filter)
+  else if(source==SpotlightSource.LIBRARY) slot.spotlight else flow {
    // Home restarts this flow on every entry; the whole-library query itself runs once per two hours.
    emit(slot.extra.value[source] ?: slot.spotlight.value.filter { acceptsSpotlight(it.item,source) })
    while(true) {
@@ -85,10 +91,56 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   }
   emitAll(combine(pool,slot.rows.filterNotNull(),accounts.forProfile(profileId)) { entries,rows,active ->
    val valid=active.filterNot { it.needsSignIn }.associateBy { it.id }
+   val membership=entries.associateBy { it.account.id to it.item.id }
    seasonalSpotlight(entries.mapNotNull { entry -> valid[entry.account.id]?.let { entry.copy(account=it) } },
-    visible(rows,active).map { it.copy(items=it.items.filter { item -> acceptsSpotlight(item,source) }) },season)
+    visible(rows,active).map { row->row.copy(items=row.items.map { item ->
+     item.copy(backgroundLibraryIds=item.backgroundLibraryIds+membership[row.account.id to item.id]?.item?.backgroundLibraryIds.orEmpty())
+    }.filter { acceptsSpotlight(it,source) }) },season)
+    .filter { acceptsSpotlight(it.item,source) && acceptsBackground(it.item,filter) }
   })
  }.distinctUntilChanged()
+
+ @OptIn(ExperimentalCoroutinesApi::class)
+ private fun restrictedSpotlight(profileId:String,slot:Slot,source:SpotlightSource,filter:BackgroundFilter):Flow<List<SpotlightEntry>> =
+  accounts.forProfile(profileId).map { all->all.filterNot { it.needsSignIn } }.distinctUntilChanged().flatMapLatest { active->flow {
+   val key=BackgroundPoolKey(source,filter,active.map { it.id }.sorted())
+   fun eligible(entries:List<SpotlightEntry>)=entries.filter { entry->active.any { it.id==entry.account.id } && acceptsSpotlight(entry.item,source) && acceptsBackground(entry.item,filter) }
+   val byId=active.associateBy { it.id }
+   val saved=slot.store.current().backgroundPool.mapNotNull { s->byId[s.accountId]?.let { SpotlightEntry(s.item,it,s.newSeason) } }
+   emit(eligible(slot.restricted[key] ?: saved))
+   if(filter.libraries.isNullOrEmpty()) return@flow
+   while(true) {
+    slot.extraMutex.withLock {
+     val now=clock()
+     if((slot.restrictedDue[key] ?: 0L)-now !in 1..SPOTLIGHT_REFRESH_MILLIS) {
+      val previous=slot.restricted[key] ?: saved
+      val fetched=supervisorScope { filter.libraries.map { ref->async {
+       val account=byId[ref.accountId] ?: return@async (emptyList<SpotlightEntry>() to false)
+       val items=withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(null) { clientFor(account)?.backgrounds(source,ref.libraryId) } }
+       if(items==null) previous.filter { it.account.id==ref.accountId && ref.libraryId in it.item.backgroundLibraryIds } to true
+       else items.map { SpotlightEntry(it,account,false) } to false
+      } }.awaitAll() }
+      val selected=eligible(mergeBackgroundMembership(fetched.flatMap { it.first })).take(120)
+      if(slot.restricted.size>=12 && key !in slot.restricted) {slot.restricted.clear();slot.restrictedDue.clear()}
+      slot.restricted[key]=selected
+      slot.restrictedDue[key]=now+if(fetched.any { it.second }) REFRESH_MIN_AGE_MILLIS else SPOTLIGHT_REFRESH_MILLIS
+      slot.store.update { old->old.copy(backgroundPool=selected.map { SnapshotSpotlight(it.account.id,it.item,it.newSeason) }) }
+     }
+    }
+    emit(eligible(slot.restricted[key].orEmpty()))
+    delay(((slot.restrictedDue[key] ?: 0L)-clock()).coerceIn(1_000L,SPOTLIGHT_REFRESH_MILLIS))
+   }
+  } }
+
+ suspend fun backgroundLibraries(profileId:String):BackgroundLibraryCatalog = supervisorScope {
+  val all=accounts.forProfile(profileId).first()
+  val active=all.filterNot { it.needsSignIn }
+  val results=active.map { account->async {
+   account to withTimeoutOrNull(10_000) { orElse(null) { clientFor(account)?.backgroundLibraries() } }
+  } }.awaitAll()
+  BackgroundLibraryCatalog(results.flatMap { it.second.orEmpty() }.distinctBy { it.ref },
+   results.filter { it.second==null }.map { it.first.serverName }+all.filter {it.needsSignIn}.map {it.serverName},all.isNotEmpty())
+ }
 
  /** One whole-library query per account for a narrower hero pool; null when no account answered. */
  private suspend fun fetchSpotlight(profileId:String,slot:Slot,source:SpotlightSource): List<SpotlightEntry>? {
@@ -104,22 +156,31 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
  }
 
  /** Search all connected libraries, with the snapshot available when a server is offline. */
- fun cachedPreview(profileId:String): Flow<SpotlightEntry?> = flow {
+ fun cachedPreview(profileId:String,filter:BackgroundFilter=BackgroundFilter(maxAge=null),source:SpotlightSource=SpotlightSource.LIBRARY): Flow<SpotlightEntry?> = flow {
   val slot=loaded(profileId)
-  emitAll(combine(slot.spotlight,accounts.forProfile(profileId)) { entries,active ->
-   entries.firstOrNull { entry -> active.any { it.id==entry.account.id && !it.needsSignIn } }
+  emitAll(combine(slot.spotlight,slot.store.data,accounts.forProfile(profileId)) { entries,saved,active ->
+   val byId=active.filterNot { it.needsSignIn }.associateBy { it.id }
+   (entries+saved.backgroundPool.mapNotNull { s->byId[s.accountId]?.let { SpotlightEntry(s.item,it,s.newSeason) } })
+    .firstOrNull { entry -> entry.account.id in byId && acceptsBackground(entry.item,filter) && acceptsSpotlight(entry.item,source) }
   })
  }
 
- suspend fun searchBackgrounds(profileId:String,query:String): List<SpotlightEntry> {
+ suspend fun searchBackgrounds(profileId:String,query:String,filter:BackgroundFilter=BackgroundFilter(maxAge=null)): List<SpotlightEntry> {
   val slot=loaded(profileId)
   val active=accounts.forProfile(profileId).first().filterNot { it.needsSignIn }
-  val cached=slot.spotlight.value+slot.rows.value.orEmpty().flatMap { row -> row.items.map { SpotlightEntry(it,row.account,false) } }
+  val byId=active.associateBy {it.id}
+  val saved=slot.store.current()
+  val cached=slot.spotlight.value+slot.rows.value.orEmpty().flatMap { row -> row.items.map { SpotlightEntry(it,row.account,false) } }+
+   (saved.backgroundPool+saved.backgrounds).mapNotNull { entry->byId[entry.accountId]?.let {SpotlightEntry(entry.item,it,entry.newSeason)} }
   val remote=supervisorScope { active.map { account -> async {
-   withTimeoutOrNull(10_000) { orElse(emptyList()) { clientFor(account)?.searchTitles(query).orEmpty().map { SpotlightEntry(it,account,false) } } }.orEmpty()
+   withTimeoutOrNull(10_000) { orElse(emptyList()) {
+    val server=clientFor(account)
+    val libraries=filter.libraries?.filter { it.accountId==account.id }?.map { it.libraryId } ?: listOf(null)
+    libraries.flatMap { server?.backgrounds(SpotlightSource.LIBRARY,it,query=query).orEmpty() }.map { SpotlightEntry(it,account,false) }
+   } }.orEmpty()
   } }.awaitAll().flatten() }
-  return (remote+cached).filter { it.account.id in active.map { a -> a.id } && it.item.art.backdrop!=null &&
-   (it.item.type==ItemType.MOVIE || it.item.type==ItemType.SERIES) && it.item.title.contains(query.trim(),ignoreCase=true) }
+  return mergeBackgroundMembership(remote+cached).filter { it.account.id in active.map { a -> a.id } && it.item.art.backdrop!=null &&
+   (it.item.type==ItemType.MOVIE || it.item.type==ItemType.SERIES) && it.item.title.contains(query.trim(),ignoreCase=true) && acceptsBackground(it.item,filter) }
    .distinctBy { it.account.id to it.item.id }.sortedBy { it.item.title.lowercase() }
  }
 
@@ -130,15 +191,18 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
  }
 
  @OptIn(ExperimentalCoroutinesApi::class)
- fun fixedBackground(profileId:String,title:BackgroundTitle?): Flow<SpotlightEntry?> = flow {
+ fun fixedBackground(profileId:String,title:BackgroundTitle?,filter:BackgroundFilter=BackgroundFilter(maxAge=null)): Flow<SpotlightEntry?> = flow {
   if(title==null) { emit(null);return@flow }
   val slot=loaded(profileId)
   emitAll(accounts.forProfile(profileId).mapLatest { active ->
    val account=active.firstOrNull { it.id==title.accountId && !it.needsSignIn } ?: return@mapLatest null
    val cached=slot.store.current().backgrounds.firstOrNull { it.accountId==account.id && it.item.id==title.itemId }?.item
     ?: slot.spotlight.value.firstOrNull { it.account.id==account.id && it.item.id==title.itemId }?.item
-   if(cached!=null) SpotlightEntry(cached,account,false) else withTimeoutOrNull(10_000) { orElse(null) {
-    clientFor(account)?.items(listOf(title.itemId))?.firstOrNull()?.let { SpotlightEntry(it,account,false) }
+   if(cached!=null && acceptsBackground(cached,filter)) SpotlightEntry(cached,account,false) else withTimeoutOrNull(10_000) { orElse(null) {
+    val server=clientFor(account)
+    val libraries=filter.libraries?.filter { it.accountId==account.id }?.map { it.libraryId } ?: listOf(null)
+    libraries.flatMap { server?.backgrounds(SpotlightSource.LIBRARY,it,ids=listOf(title.itemId)).orEmpty() }
+     .firstOrNull { it.id==title.itemId && acceptsBackground(it,filter) }?.let { SpotlightEntry(it,account,false) }
    } }
   })
  }

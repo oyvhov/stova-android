@@ -37,7 +37,7 @@ fun spotlightEntries(account: MediaAccount, pool: List<MediaItem>, seasons: List
     // The series' own story, ratings and logo when known; otherwise what the season inherits from it.
     val fresh = freshSeasons(seasons, today).map { season ->
         val item = known[season.seriesId] ?: MediaItem(season.seriesId!!, season.accountId, ItemType.SERIES, season.seriesName ?: season.title,
-            year = season.year, overview = season.overview, ratings = season.ratings, art = season.art)
+            year = season.year, overview = season.overview, ratings = season.ratings, art = season.art, backgroundLibraryIds = season.backgroundLibraryIds)
         SpotlightEntry(item, account, newSeason = true)
     }
     val taken = fresh.mapTo(mutableSetOf()) { it.item.id }

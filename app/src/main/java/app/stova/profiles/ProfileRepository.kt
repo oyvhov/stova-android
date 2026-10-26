@@ -139,7 +139,8 @@ class ProfileRepository(
             // A fixed image belongs to its account. The destination chooses its own permitted title.
             val appearance = source.appearance.withoutCalendarSeason().copy(fixedBackground = null,
                 backgroundSource = if (source.appearance.backgroundSource == BackgroundSource.FIXED) BackgroundSource.SPOTLIGHT else source.appearance.backgroundSource)
-            file.copy(profiles = file.profiles.map { if (it.id == targetId) it.copy(appearance = appearance, home = home) else it })
+            // Copying decoration must never widen the recipient's chosen content constraints.
+            file.copy(profiles = file.profiles.map { if (it.id == targetId) it.copy(appearance = appearance.copy(backgroundFilter=it.appearance.backgroundFilter), home = home) else it })
         }
     }
 

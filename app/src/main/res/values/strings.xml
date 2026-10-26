@@ -494,8 +494,8 @@
     <string name="custom_spotlight">Spotlight</string>
     <string name="custom_fixed_image">Fast bilete</string>
     <string name="custom_theme_surface">Einsfarga tema</string>
-    <string name="custom_spotlight_source">Spotlight-kjelde</string>
-    <string name="custom_whole_library">Heile biblioteket</string>
+    <string name="custom_spotlight_source">Titlar til bakgrunnen</string>
+    <string name="custom_whole_library">Filmar og seriar</string>
     <string name="custom_only_movies">Berre filmar</string>
     <string name="custom_only_series">Berre seriar</string>
     <string name="custom_favorites">Favorittar</string>
@@ -610,4 +610,24 @@
     <string name="ha_move">Flytt kort</string>
     <string name="ha_move_earlier">Tidlegare i rekkja</string>
     <string name="ha_move_later">Seinare i rekkja</string>
+    <string name="background_libraries">Bibliotek til bakgrunnen</string>
+    <string name="background_libraries_all">Alle bibliotek</string>
+    <string name="background_libraries_clear">Fjern alle val</string>
+    <string name="background_libraries_none">Ingen bibliotek valde</string>
+    <plurals name="background_libraries_count">
+        <item quantity="one">%1$d bibliotek valt</item>
+        <item quantity="other">%1$d bibliotek valde</item>
+    </plurals>
+    <string name="background_libraries_save">Bruk utvalet</string>
+    <string name="background_no_accounts">Legg til ein Jellyfin- eller Emby-konto under Kontoar først.</string>
+    <string name="background_no_libraries">Ingen film- eller seriebibliotek er tilgjengelege for denne kontoen.</string>
+    <string name="background_libraries_failed">Kunne ikkje hente bibliotek frå %1$s. Dei lagra vala er bevarte.</string>
+    <plurals name="background_libraries_unavailable">
+        <item quantity="one">%1$d valt bibliotek er ikkje tilgjengeleg no. Valet blir hugsa.</item>
+        <item quantity="other">%1$d valde bibliotek er ikkje tilgjengelege no. Vala blir hugsa.</item>
+    </plurals>
+    <string name="background_max_age">Høgaste aldersgrense</string>
+    <string name="background_age_years">Til og med %1$d år</string>
+    <string name="background_age_unlimited">Utan grense</string>
+    <string name="background_age_hint">Gjeld bakgrunn og hero, også faste bilete. Titlar utan kjend aldersgrense blir skjulte. Utan treff blir temabakgrunnen brukt.</string>
 </resources>

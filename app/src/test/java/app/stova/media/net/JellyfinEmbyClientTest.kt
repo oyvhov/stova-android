@@ -9,6 +9,20 @@ class JellyfinEmbyClientTest {
     @get:Rule val server = MockWebServer()
     private fun client(kind: ServerKind = ServerKind.JELLYFIN) = JellyfinEmbyClient(
         MediaAccount("a", "p", kind, "s", "S", server.url("/").toString().trimEnd('/'), "u", "n"), "tok", OkHttpClient(), ClientIdentity("d", "i", "v"))
+
+    @Test fun listsOnlyVideoLibrariesAndScopesCandidatesByOneParentWithoutAnAgeScore() = runTest {
+        server.enqueue(MockResponse().setBody("""{"Items":[{"Id":"family","Name":"Familie","CollectionType":"movies"},{"Id":"series","Name":"Seriar","CollectionType":"tvshows"},{"Id":"music","Name":"Musikk","CollectionType":"music"}]}"""))
+        assertEquals(listOf("family","series"),client().backgroundLibraries().map {it.ref.libraryId})
+        assertEquals("/Users/u/Views",server.takeRequest().path)
+        server.enqueue(MockResponse().setBody("""{"Items":[{"Id":"film","Name":"Film","Type":"Movie","OfficialRating":"NO-12"}]}"""))
+        val item=client().backgrounds(app.stova.profiles.SpotlightSource.FAVORITES,"family & kids").single()
+        assertEquals(setOf("family & kids"),item.backgroundLibraryIds)
+        val request=server.takeRequest().requestUrl!!
+        assertEquals("family & kids",request.queryParameter("ParentId"))
+        assertEquals("true",request.queryParameter("Recursive"))
+        assertEquals("IsFavorite",request.queryParameter("Filters"))
+        assertNull(request.queryParameter("MaxParentalRating"))
+    }
     @Test fun fallsBackOn404() = runTest {
         server.enqueue(MockResponse().setResponseCode(404)); server.enqueue(MockResponse().setBody("""{"Items":[]}"""))
         assertEquals(emptyList<MediaItem>(), client().resume())

@@ -57,6 +57,21 @@ class SettingsScreenTest {
         rule.onNodeWithText("Android").assertExists()
     }
 
+    @Test fun libraryDialogReturnsToItsControlAndSavesExplicitEmptySelection() {
+        runBlocking {container.session.enter(container.profiles.create("A",AvatarColor.LIME,false).id)}
+        openSettings()
+        rule.onNode(hasText("Utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role,Role.Tab)).performClick()
+        rule.onNode(hasText("Bakgrunn") and hasClickAction()).performScrollTo().performClick()
+        rule.onNodeWithText("Bibliotek til bakgrunnen").performScrollTo().performClick()
+        rule.onNodeWithText("Avbryt").performClick()
+        rule.onNodeWithText("Bibliotek til bakgrunnen").assertIsFocused()
+        rule.onNodeWithText("Bibliotek til bakgrunnen").performKeyInput {pressKey(Key.DirectionCenter)}
+        rule.onNodeWithText("Fjern alle val").performClick()
+        rule.onNodeWithText("Bruk utvalet").performClick()
+        rule.onNodeWithText("Bibliotek til bakgrunnen").assertIsFocused()
+        rule.waitUntil(5_000) {profile("A").appearance.backgroundFilter.libraries==emptySet<app.stova.profiles.BackgroundLibraryRef>()}
+    }
+
     @Test fun leftFromAScrolledSettingReturnsToItsOwnSection() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()

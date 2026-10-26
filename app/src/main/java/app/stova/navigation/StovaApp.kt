@@ -87,11 +87,11 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         }
     }
     val context = androidx.compose.ui.platform.LocalContext.current
-    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season(), it.appearance.spotlightSource) } }
+    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season(), it.appearance.spotlightSource,it.appearance.backgroundFilter) } }
     val date = app.stova.core.theme.LocalSeasonDate.current
     LaunchedEffect(home, date) { home.setCalendarDate(date) }
     // Kept here, not in the layer: a return to Home shows the same picture at once, not a fade from ink.
-    val backdrop = app.stova.background.rememberBackdropState()
+    val backdrop = app.stova.background.rememberProfileBackdropState(profile.id,profile.appearance)
     val motion = stovaMotion
     // No side rail: home is the whole screen, and Apps and Settings are pages that Back closes.
     Box(Modifier.fillMaxSize().testTag("screen-${current.name}")) {
@@ -115,13 +115,13 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                     Destination.HOME -> {
                         // Collected only on Home: the spotlight's rotation ticks while Home is on screen, nowhere else.
                         val spotlight by home.spotlight.collectAsStateWithLifecycle()
-                        val fixedFlow = remember(profile.id, profile.appearance.fixedBackground, profile.appearance.backgroundSource) {
+                        val fixedFlow = remember(profile.id, profile.appearance.fixedBackground, profile.appearance.backgroundSource,profile.appearance.backgroundFilter) {
                             if (profile.appearance.backgroundSource == app.stova.profiles.BackgroundSource.FIXED)
-                                container.media.fixedBackground(profile.id, profile.appearance.fixedBackground)
+                                container.media.fixedBackground(profile.id, profile.appearance.fixedBackground,profile.appearance.backgroundFilter)
                             else kotlinx.coroutines.flow.flowOf(null)
                         }
                         val fixed by fixedFlow.collectAsStateWithLifecycle(initialValue = null)
-                        app.stova.background.BackdropLayer(app.stova.background.backgroundUrl(profile.appearance, spotlight?.item?.art?.backdrop, fixed?.item?.art?.backdrop), state = backdrop)
+                        app.stova.background.ProfileBackdrop(profile.id,profile.appearance,spotlight,fixed,state=backdrop)
                         HomeScreen(
                             home, container.appArt, container.appCatalog,
                             onOpenApps = { current = Destination.APPS },

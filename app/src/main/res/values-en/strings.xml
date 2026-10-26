@@ -494,8 +494,8 @@
     <string name="custom_spotlight">Spotlight</string>
     <string name="custom_fixed_image">Fixed image</string>
     <string name="custom_theme_surface">Solid theme</string>
-    <string name="custom_spotlight_source">Spotlight source</string>
-    <string name="custom_whole_library">Whole library</string>
+    <string name="custom_spotlight_source">Background titles</string>
+    <string name="custom_whole_library">Movies and series</string>
     <string name="custom_only_movies">Movies only</string>
     <string name="custom_only_series">Series only</string>
     <string name="custom_favorites">Favorites</string>
@@ -610,4 +610,24 @@
     <string name="ha_move">Move card</string>
     <string name="ha_move_earlier">Earlier in order</string>
     <string name="ha_move_later">Later in order</string>
+    <string name="background_libraries">Background libraries</string>
+    <string name="background_libraries_all">All libraries</string>
+    <string name="background_libraries_clear">Clear selection</string>
+    <string name="background_libraries_none">No libraries selected</string>
+    <plurals name="background_libraries_count">
+        <item quantity="one">%1$d library selected</item>
+        <item quantity="other">%1$d libraries selected</item>
+    </plurals>
+    <string name="background_libraries_save">Use selection</string>
+    <string name="background_no_accounts">Add a Jellyfin or Emby account under Accounts first.</string>
+    <string name="background_no_libraries">No movie or series libraries are available to this account.</string>
+    <string name="background_libraries_failed">Could not load libraries from %1$s. Your saved choices are preserved.</string>
+    <plurals name="background_libraries_unavailable">
+        <item quantity="one">%1$d selected library is currently unavailable. Your choice is remembered.</item>
+        <item quantity="other">%1$d selected libraries are currently unavailable. Your choices are remembered.</item>
+    </plurals>
+    <string name="background_max_age">Maximum age rating</string>
+    <string name="background_age_years">Up to %1$d years</string>
+    <string name="background_age_unlimited">No limit</string>
+    <string name="background_age_hint">Applies to backgrounds and the hero, including fixed images. Titles without a known age rating are hidden. If nothing matches, the theme background is used.</string>
 </resources>

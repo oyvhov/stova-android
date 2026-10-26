@@ -16,6 +16,18 @@ fun spotlightCandidates(kind: ServerKind, userId: String, source: SpotlightSourc
 
 fun titleSearchCandidates(kind: ServerKind, userId: String, query: String): List<String> = libraryCandidates(kind,userId,
  "IncludeItemTypes=Movie,Series&Recursive=true&ImageTypes=Backdrop&SearchTerm=${URLEncoder.encode(query.trim(),"UTF-8")}&SortBy=SortName&$ITEM_FIELDS&Limit=60")
+
+fun libraryViewsPath(userId: String) = "Users/${URLEncoder.encode(userId,"UTF-8")}/Views"
+
+fun backgroundCandidates(kind: ServerKind, userId: String, source: SpotlightSource,
+    libraryId: String?, query: String? = null, ids: List<String>? = null): List<String> {
+ val types=when(source) { SpotlightSource.MOVIES->"Movie";SpotlightSource.SERIES->"Series";else->"Movie,Series" }
+ val parent=libraryId?.let { "&ParentId=${URLEncoder.encode(it,"UTF-8")}" }.orEmpty()
+ val favorites=if(source==SpotlightSource.FAVORITES) "&Filters=IsFavorite" else ""
+ val search=query?.let { "&SearchTerm=${URLEncoder.encode(it.trim(),"UTF-8")}" }.orEmpty()
+ val selected=ids?.let { "&Ids="+it.joinToString(",") { id->URLEncoder.encode(id,"UTF-8") } }.orEmpty()
+ return libraryCandidates(kind,userId,"IncludeItemTypes=$types&Recursive=true&ImageTypes=Backdrop$parent$favorites$search$selected&SortBy=${if(query==null) "Random" else "SortName"}&$ITEM_FIELDS&Limit=120")
+}
 enum class Endpoint { RESUME, NEXT_UP, LATEST_MOVIES, LATEST_SERIES, SPOTLIGHT, NEW_SEASONS, HALLOWEEN_TAG, HALLOWEEN_GENRE, CHRISTMAS_TAG }
 const val ITEM_FIELDS = "Fields=Overview,ProductionYear,RunTimeTicks,OfficialRating,CommunityRating,CriticRating,Genres,ParentId,SeriesId&EnableUserData=true&EnableImageTypes=Primary,Backdrop,Logo,Thumb&ImageTypeLimit=1"
 const val ITEM_QUERY = "$ITEM_FIELDS&Limit=20"

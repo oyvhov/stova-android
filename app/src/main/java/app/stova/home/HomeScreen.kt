@@ -70,7 +70,7 @@ fun HomeScreen(
     }
     HomeContent(rows, focused, initial, art, catalog, onOpenApps, vm::focus,
         onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { HomeChips(haRepository, topBar) },
-        spotlight = spotlight, appIconOverrides = profile?.apps?.iconOverrides.orEmpty(),
+        spotlight = if(profile==null) spotlight else backgroundForProfile(spotlight,profile.id,profile.appearance.backgroundFilter), appIconOverrides = profile?.apps?.iconOverrides.orEmpty(),
         onAppLongClick = { app -> if (profile?.kid == false) appMenu = app },
         homePrefs = profile?.home ?: HomePrefs(),
         onHomeChange = onHomeChange, canEditRows = profile?.kid == false, onRowFocus = vm::focusRow,

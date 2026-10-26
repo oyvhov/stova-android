@@ -15,6 +15,15 @@ class AppearanceTransferTest {
     @get:Rule val tmp = TemporaryFolder()
     private fun repo() = ProfileRepository(JsonFileStore(tmp.root.resolve("profiles.json"), ProfilesFile.serializer(), ProfilesFile(), UnconfinedTestDispatcher()))
 
+    @Test fun copyingAppearancePreservesTheRecipientsLibraryAndAgeLimits() = runTest {
+        val repo=repo();val adult=repo.create("Adult",AvatarColor.LIME,false);val kid=repo.create("Kid",AvatarColor.ROSE,true)
+        repo.update(adult.id) {it.copy(appearance=it.appearance.copy(backgroundFilter=BackgroundFilter(maxAge=null)))}
+        val filter=BackgroundFilter(setOf(BackgroundLibraryRef("kid-account","family")),6)
+        repo.update(kid.id) {it.copy(appearance=it.appearance.copy(backgroundFilter=filter))}
+        repo.copyAppearance(kid.id,adult.id)
+        assertEquals(filter,repo.current().profiles.first {it.id==kid.id}.appearance.backgroundFilter)
+    }
+
     @Test fun resetRestoresDefaultsWithoutChangingIdentitySecurityAppsOrDashboard() = runTest {
         val repo = repo()
         val a = repo.create("Demo",AvatarColor.OCEAN,false)

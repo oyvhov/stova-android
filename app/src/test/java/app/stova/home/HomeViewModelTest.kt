@@ -14,6 +14,7 @@ import app.stova.profiles.ProfileSession
 import app.stova.profiles.ProfilesFile
 import app.stova.profiles.SpotlightTime
 import app.stova.profiles.StartFocus
+import app.stova.profiles.BackgroundFilter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,6 +41,23 @@ class HomeViewModelTest {
 
     @Before fun main() = Dispatchers.setMain(UnconfinedTestDispatcher())
     @After fun reset() = Dispatchers.resetMain()
+
+    @Test fun backgroundFilterChangeClearsTheOldHeroWhileTheNewQueryIsWaiting() = runTest(UnconfinedTestDispatcher()) {
+        val repo=ProfileRepository(JsonFileStore(tmp.root.resolve("filter.json"),ProfilesFile.serializer(),ProfilesFile(),UnconfinedTestDispatcher(testScheduler)))
+        val id=repo.create("A",AvatarColor.LIME,false).id
+        val session=ProfileSession(repo,backgroundScope).also {it.enter(id)}
+        val requested=mutableListOf<BackgroundFilter>()
+        val vm=HomeViewModel(session,emptyList()) {profile->
+            requested+=profile.appearance.backgroundFilter
+            if(profile.appearance.backgroundFilter.maxAge==15) flowOf(listOf(entry("old")))
+            else kotlinx.coroutines.flow.flow {kotlinx.coroutines.awaitCancellation()}
+        }
+        backgroundScope.launch {vm.spotlight.collect {}}
+        assertEquals("old",vm.spotlight.value?.item?.id)
+        repo.update(id) {it.copy(appearance=it.appearance.copy(backgroundFilter=BackgroundFilter(maxAge=6)))}
+        assertEquals(6,requested.last().maxAge)
+        assertEquals(null,vm.spotlight.value)
+    }
 
     private suspend fun TestScope.session(scope: CoroutineScope, startFocus: StartFocus, rowOrder: List<HomeRowKey> = emptyList()): ProfileSession {
         val repo = ProfileRepository(

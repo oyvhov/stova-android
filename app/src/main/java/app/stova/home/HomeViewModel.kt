@@ -62,14 +62,13 @@ class HomeViewModel(
     fun focus(target: FocusedTarget) { focusedState.value = target }
     fun focusRow(key: HomeRowKey) { focusedRow.value = key }
 
-    private val spotlightPool: Flow<List<SpotlightEntry>> = combine(seasonalProfile,
-        session.active.map { it?.appearance?.spotlightSource }.distinctUntilChanged()) { profile, source ->
-            profile?.copy(appearance = profile.appearance.copy(spotlightSource = source ?: app.stova.profiles.SpotlightSource.LIBRARY))
-        }
+    private val spotlightPool: Flow<List<SpotlightEntry>> = combine(session.active,calendarDate) { profile,date ->
+            profile?.copy(appearance=profile.appearance.seasonal(date))
+        }.distinctUntilChangedBy { listOf(it?.id,it?.appearance?.season(),it?.appearance?.spotlightSource,it?.appearance?.backgroundFilter) }
         .flatMapLatest { profile ->
             val key = profile?.let { it.id to it.appearance.season() }
             if (key != spotlightProfileSeason) { spotlightIndex = 0; spotlightProfileSeason = key }
-            if (profile == null) flowOf(emptyList()) else spotlightSource(profile)
+            if (profile == null) flowOf(emptyList()) else flow { emit(emptyList());emitAll(spotlightSource(profile)) }
         }
         .distinctUntilChanged()
 
