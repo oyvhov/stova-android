@@ -132,7 +132,7 @@ class AppearanceSettingsTest {
             "Kortstorleik", "Titlar under kort", "Appstil", "Nyleg lagt til · Filmar",
             "Aksentfarge", "Fokuseffekt", "Klokkeformat", "Framdriftsstrek", "Bakgrunnskjelde",
             "Titlar til bakgrunnen", "Roleg bakgrunnsrørsle", "Vis dato", "Vis HA-brikker", "Vis julenedteljing",
-            "Vis Smarthus-knapp", "Vis profilbilete", "Klokkestorleik")
+            "Vis Smarthus-knapp", "Vis profilbilete", "Klokkestorleik", "Klokkestil")
         choices.forEach { label ->
             val row = compose.onNodeWithText(label).performScrollTo()
             row.performSemanticsAction(SemanticsActions.RequestFocus) { it() }

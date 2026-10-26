@@ -111,8 +111,12 @@ fun AppearanceSettingsContent(
     if (category == null || category == AppearanceCategory.TOP_BAR) SettingsGroup(stringResource(R.string.custom_top_bar), showHeading = category == null) {
         if (category == null) GroupHint(R.string.custom_top_hint)
         Choice(R.string.appearance_clock_format, p.clock, ClockMode.entries, listOf(R.string.appearance_24h, R.string.appearance_12h, R.string.appearance_hidden), modifier = firstControl) { onChange(p.copy(clock = it)) }
+        Choice(R.string.custom_clock_style, p.clockStyle, ClockStyle.entries,
+            listOf(R.string.clock_style_standard, R.string.clock_style_thin, R.string.clock_style_side),
+            preview = { ClockStylePreview(p.clockStyle) }) { onChange(p.copy(clockStyle = it)) }
         Choice(R.string.custom_clock_size, p.clockSize, ClockSize.entries, listOf(R.string.appearance_normal, R.string.appearance_large)) { onChange(p.copy(clockSize = it)) }
-        Toggle(R.string.custom_show_date, p.showDate) { onChange(p.copy(showDate = it)) }
+        // The thin and side clocks always carry the date.
+        if (p.clockStyle == ClockStyle.STANDARD) Toggle(R.string.custom_show_date, p.showDate) { onChange(p.copy(showDate = it)) }
         Toggle(R.string.custom_show_chips, p.showHaChips) { onChange(p.copy(showHaChips = it)) }
         Toggle(R.string.custom_show_countdown, p.showCountdown) { onChange(p.copy(showCountdown = it)) }
         Toggle(R.string.custom_show_smart_home, p.showSmartHomeButton) { onChange(p.copy(showSmartHomeButton = it)) }
@@ -133,6 +137,17 @@ private fun GroupHint(id: Int) {
 @Composable
 private fun Toggle(title: Int, value: Boolean, onChange: (Boolean) -> Unit) =
     Choice(title, value, listOf(false, true), listOf(R.string.appearance_off, R.string.appearance_on), onChange = onChange)
+
+/** The style's own weight on a sample time, so the choice can be seen before it is made. */
+@Composable
+private fun ClockStylePreview(style: ClockStyle) {
+    val weight = when (style) {
+        ClockStyle.THIN -> androidx.compose.ui.text.font.FontWeight.Thin
+        ClockStyle.SIDE -> androidx.compose.ui.text.font.FontWeight.Light
+        ClockStyle.STANDARD -> androidx.compose.ui.text.font.FontWeight.Medium
+    }
+    Text("18:45", style = MaterialTheme.typography.titleMedium.copy(fontWeight = weight), color = MaterialTheme.colorScheme.onSurface)
+}
 
 @Composable
 private fun <T> Choice(title: Int, value: T, entries: List<T>, labels: List<Int>, preview: (@Composable () -> Unit)? = null, modifier: Modifier = Modifier, onChange: (T) -> Unit) {

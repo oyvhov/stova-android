@@ -531,6 +531,10 @@
     <string name="custom_thin">Thin</string>
     <string name="custom_thick">Thick</string>
     <string name="custom_clock_size">Clock size</string>
+    <string name="custom_clock_style">Clock style</string>
+    <string name="clock_style_standard">Standard</string>
+    <string name="clock_style_thin">Thin with date</string>
+    <string name="clock_style_side">Date alongside</string>
     <string name="custom_show_date">Show date</string>
     <string name="custom_show_chips">Show HA chips</string>
     <string name="custom_show_countdown">Show Christmas countdown</string>

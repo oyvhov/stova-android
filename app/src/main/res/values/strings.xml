@@ -531,6 +531,10 @@
     <string name="custom_thin">Tynn</string>
     <string name="custom_thick">Tjukk</string>
     <string name="custom_clock_size">Klokkestorleik</string>
+    <string name="custom_clock_style">Klokkestil</string>
+    <string name="clock_style_standard">Standard</string>
+    <string name="clock_style_thin">Tynn med dato</string>
+    <string name="clock_style_side">Dato ved sida</string>
     <string name="custom_show_date">Vis dato</string>
     <string name="custom_show_chips">Vis HA-brikker</string>
     <string name="custom_show_countdown">Vis julenedteljing</string>

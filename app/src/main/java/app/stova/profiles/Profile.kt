@@ -87,6 +87,7 @@ data class AppearancePrefs(
     val showHeroRatings: Boolean = true,
     val showNewSeason: Boolean = true,
     val clockSize: ClockSize = ClockSize.NORMAL,
+    val clockStyle: ClockStyle = ClockStyle.STANDARD,
     val homeRows: HomeRows = HomeRows.ONE,
     val homeRowInset: HomeRowInset = HomeRowInset.LOW,
     // Null inherits the older preset, preserving existing profiles exactly.
@@ -127,6 +128,8 @@ fun FocusEffect.resolved(): FocusEffect = if (this == FocusEffect.RING) FocusEff
 @Serializable enum class SpotlightSource { LIBRARY, MOVIES, SERIES, FAVORITES }
 @Serializable enum class HeroTitle { LOGO, TITLE }
 @Serializable enum class ClockSize { NORMAL, LARGE }
+/** Standard is the clock as it always was; Thin and Side always carry the weekday and date. */
+@Serializable enum class ClockStyle { STANDARD, THIN, SIDE }
 @Serializable enum class HomeRows { ONE, TWO, SCROLLING }
 @Serializable enum class HomeRowInset(val dp: Int) { LOW(32), BALANCED(48), HIGH(72) }
 @Serializable enum class RowFormat { POSTER, WIDE, LARGE_WIDE, SMALL_WIDE, ICON }
