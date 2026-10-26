@@ -1,3 +1,8 @@
+# Designgjennomgang – berre gjennomgang, ingen kodeendring
+2026-10-26: Brukaren bad om ein heil designgjennomgang («visuelt slåande og vakkert», ikkje knappestorleiksreglar). 45 ekte skjermbilete frå Shield og emulator-5580 ligg i `.superpowers/design-review/` (annoterte i `web/`); rapport: https://claude.ai/artifact/8J7YwXCGrQgZWr8nYR1HCC.
+Viktigast: (1) fokus på kunst er berre 2,5 % skala og nesten usynleg, (2) heroen viser spotlight, ikkje fokuskortet (spesifikasjonen §6, brukaren må avgjere), (3) Innstillingar/Smarthus klipper innhald hardt 48 dp over botnen (`SettingsLayout.kt:56`, `SmartHomeContent.kt:183`), (4) profilval/Appar/Innstillingar manglar kunsten frå Heim, (8) førehandsvisingane i Tema/Kort viser plasshaldarar.
+Ingen kode er endra og ingen plan er påbyrja. Shield vart vekt frå skjermsparar; eitt feiltrykk opna Emby utan avspeling. «Slå av alle 3 lys?» på emulatoren vart lukka med Tilbake, ingen HA-styring. Begge står på Heim. Ventar på brukaren: kva funn som skal rettast først, og om heroen skal følgje fokus.
+
 # Diskret tilkoplingsstatus – ferdig på Shield og emulator
 2026-10-26: Plan `2026-10-26-quiet-connection-status.md` er fullført. Felles HA-status viser tilkopla som ein nøytral 6 dp prikk og tilkopling som ein 8 dp ring, med semantisk omtale. Feil/oppsett får labelSmall; status står inline ved tittelen i HA-innstillingane.
 709/709 native/unit-prøver, 0 skip; lint 0 feil (62 åtvaringar, 1 hint), bygg OK. APK `08c252f1fc8471b706d5b8036ad2e3c7116772370a8c139e0b3fffdd38794ff9` er installert med -r og hashverifisert på begge. Rapport: `docs/verification/quiet-connection-status.md`.
