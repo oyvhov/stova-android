@@ -3,6 +3,10 @@ package app.stova.core.theme
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
@@ -39,6 +43,10 @@ data class MotionTokens(
     /** A symmetric fade, for crossfades and values that go both ways. */
     fun <T> fade(millis: Int = quick): TweenSpec<T> = tween(millis, 0, FastOutSlowInEasing)
 
+    /** Focus scale and lift: a critically damped spring, so it answers at once and never bounces. */
+    fun <T> settle(): FiniteAnimationSpec<T> =
+        if (still) snap() else spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = StovaMotion.SettleStiffness)
+
     /** A row eases away from rest and settles without a spring or a jump. */
     fun <T> travel(): TweenSpec<T> = tween(rowTravel, 0, StovaMotion.Travel)
 }
@@ -51,6 +59,8 @@ object StovaMotion {
     const val FocusRingMillis = 120
     const val FocusZoomMillis = 180
     const val RowTravelMillis = 380
+    /** About 170 ms to rest from a standing start; quicker than any tween here, with no overshoot. */
+    const val SettleStiffness = 800f
 
     /** A gentle start, followed by a long soft landing. */
     val Enter: Easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)

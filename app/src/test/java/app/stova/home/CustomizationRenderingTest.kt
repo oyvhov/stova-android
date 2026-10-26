@@ -102,6 +102,33 @@ class CustomizationRenderingTest {
         assertNotEquals(normal, dim)
     }
 
+    @Test fun theDefaultFocusDimsTheRestOfTheActiveRowToAboutSeventyPercent() {
+        val source = MutableInteractionSource()
+        var rowFocused by mutableStateOf(true)
+        lateinit var root: android.view.View
+        compose.setContent { StovaTheme(appearance = AppearancePrefs(seasonChoice = SeasonChoice.NONE)) {
+            root = LocalView.current.rootView
+            CompositionLocalProvider(LocalRowHasFocus provides rowFocused) {
+                Box(Modifier.size(160.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    Box(Modifier.size(100.dp).focusOutline(source, MaterialTheme.shapes.medium, zoom = true)
+                        .background(MaterialTheme.colorScheme.onSurface).testTag("art"))
+                }
+            }
+        } }
+        fun luma(): Float {
+            compose.waitForIdle()
+            val center = compose.onNodeWithTag("art").fetchSemanticsNode().boundsInRoot.center
+            val bitmap = android.graphics.Bitmap.createBitmap(root.width, root.height, android.graphics.Bitmap.Config.ARGB_8888)
+            compose.runOnUiThread { root.draw(android.graphics.Canvas(bitmap)) }
+            val p = bitmap.getPixel(center.x.toInt(), center.y.toInt())
+            return (android.graphics.Color.red(p) + android.graphics.Color.green(p) + android.graphics.Color.blue(p)) / 3f
+        }
+        val beside = luma()
+        compose.runOnIdle { rowFocused = false }
+        val idle = luma()
+        assertTrue("the neighbour of the focused card is dimmed: $beside vs $idle", beside < idle * 0.8f && beside > idle * 0.6f)
+    }
+
     @Test fun progressCanBeThinThickOrHidden() {
         var prefs by mutableStateOf(AppearancePrefs())
         compose.setContent { StovaTheme(appearance = prefs) {

@@ -1,11 +1,14 @@
 package app.stova.media.ui
 import androidx.compose.foundation.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.layout.ContentScale
@@ -52,6 +55,11 @@ import coil3.request.ImageRequest
    else AsyncImage(request,contentDescription=null,contentScale=ContentScale.Crop,modifier=Modifier.fillMaxSize(),onError={ artFailed=true })
    if(prefs.progressStyle.dp > 0) item.progress?.let { progress -> Box(Modifier.testTag("card-progress").align(Alignment.BottomStart).fillMaxWidth(progress.coerceIn(0f,1f)).height(prefs.progressStyle.dp.dp).background(MaterialTheme.colorScheme.primary)) }
   }
-  if(rowStyle.showsCardTitles(prefs)) Text(title,Modifier.padding(top=8.dp),style=MaterialTheme.typography.titleSmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurface)
+  if(rowStyle.showsCardTitles(prefs)) {
+  val focused by source.collectIsFocusedAsState()
+  val motion=app.stova.core.theme.stovaMotion
+  val strength by animateFloatAsState(app.stova.core.theme.cardTitleAlpha(focused,app.stova.home.LocalRowHasFocus.current),motion.fade(motion.focusRing),label="card-title")
+  Text(title,Modifier.padding(top=8.dp).graphicsLayer { alpha=strength },style=MaterialTheme.typography.titleSmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurface)
+ }
  }
 }

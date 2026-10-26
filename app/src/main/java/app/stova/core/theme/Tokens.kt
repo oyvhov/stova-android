@@ -36,12 +36,20 @@ object RatingColors {
 }
 
 /** Shared calm focus, sized to stay within the TV gutters and menu spacing. */
+/** Focus must read from the sofa: the card grows clearly, its neighbours step back. No glow. */
 object StovaFocus {
-    const val ArtworkScale = 1.025f
-    const val ControlScale = 1.015f
-    const val SurfaceAlpha = 0.10f
+    const val ArtworkScale = 1.06f
+    const val ControlScale = 1.02f
+    const val SurfaceAlpha = 0.16f
+    /** The rest of the row with focus, and the titles under those cards. */
+    const val DimmedArtwork = 0.70f
+    const val DimmedTitle = 0.55f
     val Lift = 2.dp
 }
+
+/** A title under a card: full strength on the focused card or while its row is idle, dimmed beside focus. */
+fun cardTitleAlpha(focused: Boolean, rowHasFocus: Boolean): Float =
+    if (focused || !rowHasFocus) 1f else StovaFocus.DimmedTitle
 
 /** Five steps, and every corner in the app is one of them. */
 object StovaShapes {

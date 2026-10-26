@@ -1,5 +1,6 @@
 package app.stova.core.theme
 
+import androidx.compose.animation.core.VectorConverter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -23,6 +24,22 @@ class StovaMotionTest {
         assertEquals(0, still.enter<Float>(delayMillis = 250).durationMillis)
         assertEquals(0, still.exit<Float>().durationMillis)
         assertEquals(0, still.fade<Float>().durationMillis)
+        assertTrue(still.settle<Float>() is androidx.compose.animation.core.SnapSpec)
+    }
+
+    @Test fun focusSettlesOnASpringThatNeverBounces() {
+        val spring = StovaMotion.Full.settle<Float>() as androidx.compose.animation.core.SpringSpec
+        assertEquals(androidx.compose.animation.core.Spring.DampingRatioNoBouncy, spring.dampingRatio, 0f)
+        // At rest within a fifth of a second, from a standing start to a 6 % larger card.
+        val anim = androidx.compose.animation.core.TargetBasedAnimation(spring, Float.VectorConverter, 1f, 1.06f)
+        assertTrue(anim.durationNanos < 220_000_000L)
+        for (ms in 0..400 step 10) assertTrue(anim.getValueFromNanos(ms * 1_000_000L) <= 1.06f + 1e-4f)
+    }
+
+    @Test fun titlesBesideFocusStepBack() {
+        assertEquals(1f, app.stova.core.theme.cardTitleAlpha(focused = true, rowHasFocus = true), 0f)
+        assertEquals(1f, app.stova.core.theme.cardTitleAlpha(focused = false, rowHasFocus = false), 0f)
+        assertTrue(app.stova.core.theme.cardTitleAlpha(focused = false, rowHasFocus = true) < 0.6f)
     }
 
     @Test fun fullMotionIsQuickStandardEmphasized() {

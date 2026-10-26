@@ -28,7 +28,7 @@ Rekkjefølgje no: A Barnetid, så steg 1 (fokus), B rørsle, C skrift og farge, 
 Reglar som før: modulært (ingen arbeid når noko er av eller ikkje sett opp), test først,
 `DesignRulesTest` grøn, nynorsk/engelsk tekst, Shield berre når brukaren seier ja.
 
-- [ ] 1. (6) Synleg fokus (funn 1): kunst 6 % større ved fokus, resten av den aktive rada dempa til
+- [x] 1. (6) Synleg fokus (funn 1; fjør utan sprett på skala og løft): kunst 6 % større ved fokus, resten av den aktive rada dempa til
   ~70 %, tittel under fokuskortet lys og dei andre dempa; kontrollflater 16 % lys. Ingen glød.
 - [ ] 2. (6) Harde klipp nedst (funn 3): Innstillingar og Smarthus brukar `contentPadding` i
   staden for ytre botnmarg, med mjuk overgang.

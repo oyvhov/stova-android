@@ -35,8 +35,9 @@ fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean
     val reduceMotion = LocalReduceMotion.current
     val motion = stovaMotion
     val effect = LocalAppearance.current.focusEffect.resolved()
-    val dim = zoom && (effect == FocusEffect.LIGHT_UP || reduceMotion) && LocalRowHasFocus.current && !focused
-    val brightness = animateFloatAsState(if (dim) 0.72f else 1f, motion.fade(motion.focusRing), label = "focus-brightness")
+    // Every effect but the plain outline lets the rest of the active row step back.
+    val dim = zoom && (effect != FocusEffect.OUTLINE || reduceMotion) && LocalRowHasFocus.current && !focused
+    val brightness = animateFloatAsState(if (dim) StovaFocus.DimmedArtwork else 1f, motion.fade(motion.focusRing), label = "focus-brightness")
     val showRing = LocalStrongFocus.current || effect == FocusEffect.OUTLINE || effect == FocusEffect.RING_ZOOM
     val alpha = animateFloatAsState(
         targetValue = if (focused && showRing) 1f else 0f,
@@ -49,10 +50,10 @@ fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean
             FocusEffect.ZOOM, FocusEffect.RING_ZOOM -> if (zoom) 1.05f else 1.02f
             else -> 1f
         },
-        motion.fade(motion.focusZoom), label = "focus-scale")
+        motion.settle(), label = "focus-scale")
     val emphasis = animateFloatAsState(if (focused && !showRing) 1f else 0f, motion.fade(motion.focusRing), label = "focus-surface")
     val lift = animateFloatAsState(if (focused && !reduceMotion && effect == FocusEffect.LIFT) 1f else 0f,
-        motion.fade(motion.focusZoom), label = "focus-lift")
+        motion.settle(), label = "focus-lift")
     val color = MaterialTheme.colorScheme.primary
     val light = MaterialTheme.colorScheme.onSurface
     val ink = MaterialTheme.colorScheme.background

@@ -4,7 +4,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.profiles.IconColor
@@ -45,7 +48,10 @@ import app.stova.core.theme.LocalAppearance
 import app.stova.profiles.AppStyle
 import app.stova.profiles.appBackgroundPercent
 import app.stova.profiles.RowFormat
+import app.stova.core.theme.cardTitleAlpha
+import app.stova.core.theme.stovaMotion
 import app.stova.home.LocalRowStyle
+import app.stova.home.LocalRowHasFocus
 import app.stova.home.showsCardTitles
 import app.stova.home.LocalArtworkScale
 import app.stova.home.artworkDimensions
@@ -101,8 +107,14 @@ fun AppTile(
                 IconAndName(app, art, iconStyle, height, captions)
             }
         }
-        if (captions) Text(app.label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (captions) {
+            val focused by source.collectIsFocusedAsState()
+            val motion = stovaMotion
+            val strength by animateFloatAsState(cardTitleAlpha(focused, LocalRowHasFocus.current),
+                motion.fade(motion.focusRing), label = "card-title")
+            Text(app.label, Modifier.padding(top = 8.dp).graphicsLayer { alpha = strength }, style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
     }
 }
 
