@@ -1,3 +1,10 @@
+# Kompakte kort og synlege titlar – fullført på emulator og Shield
+2026-10-26: Plan `2026-10-26-card-sizes-and-captions.md` er fullført, kodecommit 33e4410. Seks storleikar med Kompakt (224) og titlar på som standard; same mål i Appar. Undertittelbreidd og småkorttekst er retta. Android-ikonet på Heim og Halloween-nedteljing er fjerna.
+652/652 native/unit-prøver, 0 skip; lint 0 feil (48 åtvaringar, 1 hint), bygg OK. APK c9888417c17b29b2911607a0d166af8bbb09deac49421f4d60b9ff9fec49ece3 er installert med -r og hashverifisert på emulator-5580 og Shield. Rapport: `docs/verification/card-sizes-and-captions.md`.
+Faktiske kortnamn, seks menyval, app-rutenett, piler, meny-/radretur er prøvde. Begge aktive profilar har no COMPACT/showTitles=true. Shield sine radvise overstyringar er bevarte; nye homeRows=ONE/homeRowInset=LOW er serialiserte. Alle andre profilfelt og konto-/hushaldsfiler er uendra.
+Begge står på Heim. Shield vart vekt frå dvale for prøvinga. Ingen avspeling, HA-styring, datatømming, systemlauncher-endring eller push. Bilete/APK og kontrollskript ligg i `.superpowers/card-sizes/`.
+Ingen påbyrja steg eller spørsmål står att. Brukarvedlegg er urørde. Eldre utsette release-/signeringsoppgåver er framleis ikkje ny bestilling.
+
 # Éi rad og visuelt system – fullført på emulator og Shield
 2026-10-26: Plan `2026-10-25-cinematic-visual-system.md` er fullført. Éi heil rad nedst er standard; éi/to/rullande og høgdeplassering er profillagra. Innstillingar har felles ikon og konkrete prøver; Smarthus/Appar/profil-/menyflater deler formspråk. Kode sist eb5d1e3.
 645/645 testar med native skjermprøver, 0 skip; lint 0 feil (46 åtvaringar, 1 hint). APK aa9acb9140387cf4baabd4cfa3533ee82e35d4bc6dfc9784d41f739b4aab2627 er installert med -r og hashverifisert på emulator-5580 og Shield. Rapport: `docs/verification/cinematic-visual-system.md`.
