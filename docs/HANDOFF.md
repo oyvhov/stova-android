@@ -1,3 +1,10 @@
+# Smarthus, innstillingar og gjentekne Heim-trykk – installert på begge einingar
+2026-10-26: Plan `2026-10-26-smarthome-settings.md` er gjennomført, kodecommit 8dc7fa5. Ny innstillingsoversikt/fokus, faktisk HA-status, ekte appikonprøve, samla dynamisk Smarthus-rutenett med tettleik og S/M/L; Android har kort namn.
+670/670 native/unit-prøver, 0 skip; lint 0 feil (52 åtvaringar, 1 hint), bygg OK. APK 0b617fcdd937e561efa7f424b9181136b7fff5934406f8d2a8d818e915801ae4 er installert med -r og hashverifisert på emulator-5580 og Shield. Rapport: `docs/verification/smarthome-settings.md`.
+Heim-låsen oppdagar faktiske HOME-aktivitetar. Eigaren si melding «først rett, så feil neste trykk» vart spora til global sperre som avviste Projectivy etter stock-launcher; retta med samanslåing per vindauge. Endeleg APK bestod 6/6 ADB HOME-trykk og Android-retur. Ny fysisk fjernkontrollprøve er etterspurd, enno ikkje stadfesta; dette er den einaste opne oppfølginga, ingen kodearbeid er påbyrja og uferdig.
+Projectivy med/utan kortbakgrunn, HA-status, oversikt og faktisk kortmeny/fokus er prøvde. Emulatoren har alle gamle profilfelt uendra; berre nye smartHome-standardar er serialiserte. Shield sine samtidige profilval og nye Sonos-kort er bevarte. Konto-/hushaldsfiler er byteidentiske før/etter på begge.
+Begge står på Heim. Ingen HA-styring, mediaavspeling, datatømming, andre launcher-/tilgjengeendringar eller push. Bilete, APK, før/etter-data og loggar ligg i `.superpowers/smarthome-settings/`; brukarvedlegg er urørde.
+
 # Kompakte kort og synlege titlar – fullført på emulator og Shield
 2026-10-26: Plan `2026-10-26-card-sizes-and-captions.md` er fullført, kodecommit 33e4410. Seks storleikar med Kompakt (224) og titlar på som standard; same mål i Appar. Undertittelbreidd og småkorttekst er retta. Android-ikonet på Heim og Halloween-nedteljing er fjerna.
 652/652 native/unit-prøver, 0 skip; lint 0 feil (48 åtvaringar, 1 hint), bygg OK. APK c9888417c17b29b2911607a0d166af8bbb09deac49421f4d60b9ff9fec49ece3 er installert med -r og hashverifisert på emulator-5580 og Shield. Rapport: `docs/verification/card-sizes-and-captions.md`.

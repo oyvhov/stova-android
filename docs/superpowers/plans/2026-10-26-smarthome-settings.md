@@ -13,7 +13,7 @@ kortbakgrunn. Heim-låsen skal verke på Shield med eksisterande oppsett.
   å slå av systemlauncheren eller andre tilgjengetenester.
 - [x] 5. Full native/unit/lint/byggkontroll, visuell vurdering og verifisering på
   emulator-5580 og Shield med bevarte data. Prøv Projectivy på/av og HOME frå andre sider.
-- [ ] 6. Oppdater arkitektur/spesifikasjon, rapport, ledger og HANDOFF; lokale commitar.
+- [x] 6. Oppdater arkitektur/spesifikasjon, rapport, ledger og HANDOFF; lokale commitar.
 
 Design: eksisterande S/M/L bevarer format. Eitt samla felt i lagra kortrekkjefølgje
 er standard; rom kan veljast. Tettleik og tilgjengeleg breidd avgjer kolonnar, og
