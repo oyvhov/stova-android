@@ -16,7 +16,7 @@ import app.stova.profiles.Profile
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@Composable fun SmartHomeScreen(container:AppContainer,profile:Profile,initialCardId:String?=null) {
+@Composable fun SmartHomeScreen(container:AppContainer,profile:Profile,initialCardId:String?=null,backdrop:String?=null) {
     androidx.lifecycle.compose.LifecycleResumeEffect(container.haRepository) {
         container.haRepository.showingDashboard(true)
         onPauseOrDispose { container.haRepository.showingDashboard(false) }
@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
     LaunchedEffect(feedback) {if(feedback!=null) {delay(if(feedback==HaFeedback.FAILED) 5_000 else 2_000);container.haRepository.dismissFeedback()}}
     val firstFocus=remember(profile.id,initialCardId) {initialCardId ?: container.haRepository.lastFocused(profile.id)}
     SmartHomeContent(profile,cards,entities,if(household?.haBaseUrl==null) HaStatus.NOT_CONFIGURED else status,
-        images=images,onAdd={adding=true},
+        images=images,onAdd={adding=true},backdrop=backdrop,
         onLayoutChange={prefs->scope.launch {container.profiles.update(profile.id) {it.copy(smartHome=prefs)}}},
         onPerform={call,id->scope.launch {container.haRepository.perform(call,id,profile)}},onDialog={dialog=it},
         onMove={card,delta->scope.launch {container.haRepository.move(card.id,delta)}},

@@ -52,8 +52,10 @@ import kotlin.math.ceil
     feedback:HaFeedback?=null,connection:HaConnection?=null,completed:Set<String> = emptySet(),
     initialFocusId:String?=null,onCardFocused:(String)->Unit={},overlayOpen:Boolean=false,
     onLayoutChange:(DashboardPrefs)->Unit={},
+    backdrop:String?=null,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
+    SmartHomeAtmosphere(backdrop,cards.firstOrNull {it.type==CardType.WEATHER}?.let {entities[it.entityId]?.state})
     val columns = dashboardColumns((maxWidth - StovaLayout.TvSafeEdge * 2 - 8.dp).value,
         profile.smartHome.density, LocalDensity.current.fontScale)
     val headings = profile.smartHome.grouping == DashboardGrouping.ROOM

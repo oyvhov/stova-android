@@ -45,6 +45,16 @@ class RemoteDashboardTest {
         assertEquals(middle(title),middle(lights),2f)
         assertEquals(middle(title),middle(layout),2f)
     }
+    @Test fun atmosphereShowsTheHomePictureAndASkyFromTheWeatherCard() {
+        val weather=CardConfig("w",CardType.WEATHER,"weather.home")
+        val withWeather=entities+("weather.home" to HaEntity("weather.home","rainy",buildJsonObject {},0,0))
+        var shown by mutableStateOf(cards+weather)
+        compose.setContent {StovaTheme {SmartHomeContent(adult,shown,withWeather,HaStatus.CONNECTED,backdrop="file:///home-art.jpg")}}
+        compose.onNodeWithTag("smarthome-backdrop:file:///home-art.jpg",useUnmergedTree=true).assertExists()
+        compose.onNodeWithTag("smarthome-sky:rainy",useUnmergedTree=true).assertExists()
+        compose.runOnIdle {shown=cards}
+        compose.onNodeWithTag("smarthome-sky:none",useUnmergedTree=true).assertExists()
+    }
     @Test fun allLightsNeedsConfirmationAndCancelDoesNothing() {
         val calls=mutableListOf<Pair<ServiceCall,String>>()
         compose.setContent {StovaTheme {SmartHomeContent(adult,cards,entities,HaStatus.CONNECTED,onPerform={c,id->calls+=c to id})}}
