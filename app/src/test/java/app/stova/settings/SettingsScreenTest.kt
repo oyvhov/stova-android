@@ -7,6 +7,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -143,19 +144,29 @@ class SettingsScreenTest {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
         rule.onNodeWithText("Heim").performClick()
-        rule.onNodeWithText("Utsjånad på framsida").assertIsFocused()
+        val homeTab = rule.onNode(hasText("Heim") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab))
+        homeTab.assertIsNotFocused()
         back()
-        rule.onNode(hasText("Heim") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).assertIsFocused()
+        homeTab.assertIsFocused()
         rule.onNodeWithTag("screen-SETTINGS").assertExists()
         back()
         rule.onNodeWithTag("screen-HOME").assertExists()
     }
 
-    @Test fun appearanceStartsWithCategoriesAndOpensOnlyTheChosenControls() {
+    @Test fun sectionsDoNotJumpToEachOther() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
         rule.onNodeWithText("Heim").performClick()
-        rule.onNodeWithText("Utsjånad på framsida").assertIsFocused().performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithText("Utsjånad på framsida").assertDoesNotExist()
+        rule.onNodeWithText("Utsjånad").performClick()
+        rule.onNode(hasText("Kort og rader") and hasClickAction()).performScrollTo().performClick()
+        rule.onNodeWithText("Tilpass kvar rad").assertDoesNotExist()
+    }
+
+    @Test fun appearanceStartsWithCategoriesAndOpensOnlyTheChosenControls() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNodeWithText("Utsjånad").performClick()
         rule.onNode(hasText("Tema") and hasClickAction()).assertIsFocused()
         rule.onNodeWithText("Kortstorleik").assertDoesNotExist()
         rule.onNode(hasText("Fokus") and hasClickAction()).performClick()

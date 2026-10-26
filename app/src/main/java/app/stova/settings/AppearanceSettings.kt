@@ -19,7 +19,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 
 @Composable
-fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Boolean = false, onEditRows: () -> Unit = {}) {
+fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Boolean = false, onEditRows: (() -> Unit)? = null) {
     val sectionFocus = LocalSettingsSectionFocus.current
     val packs by container.iconPacks.packs.collectAsStateWithLifecycle()
     LaunchedEffect(container.iconPacks) { container.iconPacks.installed() }
@@ -57,11 +57,11 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
         else app.stova.media.acceptsSpotlight(it.item,draft.spotlightSource)}
     val contents: @Composable (AppearanceCategory, Modifier) -> Unit = { category, firstControl ->
         AppearanceSettingsContent(draft, packs, onPickBackground = { picking = true },
-            onPickLibraries={restoreLibraries=true;pickingLibraries=true},libraryControl=Modifier.focusRequester(libraryFocus), onEditRows = {
+            onPickLibraries={restoreLibraries=true;pickingLibraries=true},libraryControl=Modifier.focusRequester(libraryFocus), onEditRows = onEditRows?.let { edit -> {
             // This may replace the entire menu when editing another profile.
             sectionFocus?.requestFocus()
-            onEditRows()
-        },
+            edit()
+        } },
             includePreview = false, category = category, firstControl = firstControl, previewEntry = preview, homePrefs = profile.home,
             others = profiles.profiles.filter { it.id != profile.id },
             onReset = { container.appScope.launch { edits.awaitSaved(); container.profiles.resetAppearance(profile.id) } },

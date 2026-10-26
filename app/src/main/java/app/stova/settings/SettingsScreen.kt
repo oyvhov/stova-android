@@ -50,10 +50,10 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
             SettingsSection.OVERVIEW -> SettingsOverview(openSection)
             SettingsSection.PROFILE -> ProfileSettings(container, profile)
             SettingsSection.ACCOUNTS -> AccountsSettings(profile, container)
-            SettingsSection.HOME -> HomeRowSettings(container, profile, home, onEditAppearance = { openSection(SettingsSection.APPEARANCE) })
+            SettingsSection.HOME -> HomeRowSettings(container, profile, home)
             SettingsSection.SMART_HOME -> app.stova.ha.ui.HaSettings(container)
             SettingsSection.HOME_BUTTON -> HomeButtonSettings(container)
-            SettingsSection.APPEARANCE -> AppearanceSettings(container, profile, scrollable = true, onEditRows = { openSection(SettingsSection.HOME) })
+            SettingsSection.APPEARANCE -> AppearanceSettings(container, profile, scrollable = true)
             SettingsSection.ABOUT -> AboutSettings()
         }
     }
