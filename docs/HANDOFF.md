@@ -1,3 +1,10 @@
+# Skyveknappar for utsjånad – fullført på begge einingar
+2026-10-26: Plan `2026-10-26-appearance-sliders.md` er fullført, kodecommit 41557f4. Fem skyveknappar: appkortbakgrunn 0–100 %, demping 0–100 %, hjørne 0–32, kortavstand 0–40 og spotlight 5–60 s. OK/piler/Back, direkte mus/berøring og straks-preview; eldre bool/preset bevarer utsjånaden.
+705/705 native/unit-prøver, 0 skip; lint 0 feil (62 åtvaringar, 1 hint), bygg OK. APK 141aa05fe8993a4708d0b6237593e99d6c5553a5d4599584e22ab77ffc4e32b3 er installert med -r og hashverifisert på emulator-5580 og Shield. Rapport: `docs/verification/appearance-sliders.md`.
+Prosessdelt editor per profil samlar ventande sliderskrivingar, bevarer siste verdi ved rask retur og ventar før kopi/nullstilling. Regresjonar for ny opning under skriving, fleire piler før ramme, vertikal sveip og Android-retur er grøne. Native 0/50/100 %-pikselprøve og dobbel skrift er visuelt kontrollerte.
+Alle fem sliderar er prøvde på emulatoren; Shield vart vekt og prøvd med 100→97 %, Back og Venstre-retur til Utsjånad. Prøvevala er sette tilbake (emulator 0/50/20/16/12, Shield 100 og eldre preset). Eldre profilfelt og konto-/hushaldsdata er bevarte; berre nye talfelt og Shield sin standard bakgrunnsfilter er serialiserte.
+Begge står på Heim. Ingen avspeling, HA-styring, datatømming, launcher-/tilgjengeendringar eller push. Evidens/APK ligg i `.superpowers/appearance-sliders/`. Ingen kodearbeid er uferdig; fysisk Heim-knapp-oppfølging frå eldre oppgåve er framleis ikkje stadfesta. Brukarvedlegg er urørde.
+
 # Bibliotek og aldersgrense for bakgrunn – fullført på begge einingar
 2026-10-26: Plan `2026-10-26-background-library-age.md` er fullført, kodecommit 7c52582. Utsjånad → Bakgrunn har faktiske Jellyfin/Emby-bibliotek og direkte aldersval; standard maks 15 år, ukjend alder skjult. Same filter på hero, sesong, faste bilete, søk, buffer og førehandsvising.
 689/689 native/unit-prøver, 0 skip; lint 0 feil (53 åtvaringar, 1 hint), bygg OK. APK 1214aaba87321574466b8aff1bb09916aafc2b55b6387cd4acba36eefea38b8a er installert med -r og hashverifisert på emulator-5580 og Shield. Rapport: `docs/verification/background-library-age.md`.

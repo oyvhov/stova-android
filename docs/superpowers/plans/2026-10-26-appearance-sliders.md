@@ -11,6 +11,6 @@ Bestilling: fleire sliderar, mellom anna prosent bakgrunn på appkort.
   Regresjonar for piler, eldre JSON, visuell alfa, redusert rørsle og store skrifter.
 - [x] 4. Full testar/lint/bygg, visuelt sjekka native bilete, installer med -r på
   emulator-5580 og Shield og prøv med bevarte profilar/kontoar. Ingen avspeling/HA-styring.
-- [ ] 5. Spesifikasjon, arkitektur, rapport, ledger, HANDOFF og lokale commitar.
+- [x] 5. Spesifikasjon, arkitektur, rapport, ledger, HANDOFF og lokale commitar.
 
 Root er einaste skrivar/byggjar/einingsoperatør. Underagentar gjer lesande review.

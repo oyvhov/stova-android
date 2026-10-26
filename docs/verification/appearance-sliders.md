@@ -1,6 +1,6 @@
 # Skyveknappar for utsjånad
 
-2026-10-26 · plan `2026-10-26-appearance-sliders.md`
+2026-10-26 · kodecommit `41557f4` · plan `2026-10-26-appearance-sliders.md`
 
 ## Resultat
 
