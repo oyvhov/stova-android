@@ -3,4 +3,10 @@
     <!-- Startup window and icons only. Compose reads its colours from core/theme. -->
     <color name="stova_ink">#FF101211</color>
     <color name="stova_lime">#FFBAC79C</color>
+    <!-- The mark's glowing screen and the banner's hearth light. -->
+    <color name="stova_glow_top">#FFFFC47A</color>
+    <color name="stova_glow_bottom">#FFE8873F</color>
+    <color name="stova_hearth">#29FFA74F</color>
+    <color name="stova_ink_clear">#00101211</color>
+    <color name="stova_wordmark">#FFE9E9E2</color>
 </resources>

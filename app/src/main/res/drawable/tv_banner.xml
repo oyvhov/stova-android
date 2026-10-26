@@ -1,17 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 320×180 TV banner: ink ground, a lime house mark and a lime underline. -->
+<!-- 320x180 TV banner: the mark on a faint hearth glow, and the stova wordmark. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="320dp"
     android:height="180dp"
     android:viewportWidth="320"
     android:viewportHeight="180">
     <path
         android:fillColor="@color/stova_ink"
-        android:pathData="M0,0h320v180h-320z" />
+        android:pathData="M0.01,0 L319.99,0 Q320,0,320,0.01 L320,179.99 Q320,180,319.99,180 L0.01,180 Q0,180,0,179.99 L0,0.01 Q0,0,0.01,0 Z" />
+    <path android:pathData="M0.01,0 L319.99,0 Q320,0,320,0.01 L320,179.99 Q320,180,319.99,180 L0.01,180 Q0,180,0,179.99 L0,0.01 Q0,0,0.01,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="55.88" android:centerY="105.8"
+                android:gradientRadius="120">
+                <item android:offset="0" android:color="@color/stova_hearth" />
+                <item android:offset="1" android:color="@color/stova_ink_clear" />
+            </gradient>
+        </aapt:attr>
+    </path>
     <path
         android:fillColor="@color/stova_lime"
-        android:pathData="M160,44 L208,84 L208,132 Q208,138 202,138 L118,138 Q112,138 112,132 L112,84 Z" />
+        android:pathData="M52.89,63.82 Q55.88,61.8,58.86,63.82 L81.02,80.16 Q85.88,82.1,85.88,87.5 L85.88,112.8 Q85.88,118.2,80.47,118.2 L31.27,118.2 Q25.88,118.2,25.88,112.8 L25.88,87.5 Q25.88,82.1,30.73,80.16 Z" />
+    <path android:pathData="M39.38,86.77 L72.38,86.77 Q76.88,86.77,76.88,91.27 L76.88,105.9 Q76.88,110.4,72.38,110.4 L39.38,110.4 Q34.88,110.4,34.88,105.9 L34.88,91.27 Q34.88,86.77,39.38,86.77 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="55.88" android:startY="86.77"
+                android:endX="55.88" android:endY="110.4">
+                <item android:offset="0" android:color="@color/stova_glow_top" />
+                <item android:offset="1" android:color="@color/stova_glow_bottom" />
+            </gradient>
+        </aapt:attr>
+    </path>
     <path
-        android:fillColor="@color/stova_ink"
-        android:pathData="M146,104 h28 v34 h-28z" />
+        android:strokeColor="@color/stova_wordmark"
+        android:strokeWidth="8.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M133.5,89.85 C128.36,84.76,111.29,84.35,110.59,92.05 C110.12,100.3,133.5,97.55,133.5,106.35 C133.03,114.05,114.8,113.64,110.12,108.55" />
+    <path
+        android:strokeColor="@color/stova_wordmark"
+        android:strokeWidth="8.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M150.94,70.33 L150.94,105.39 Q150.94,112.95,161.94,112.95" />
+    <path
+        android:strokeColor="@color/stova_wordmark"
+        android:strokeWidth="8.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M146.12,85.45 L164,85.45" />
+    <path
+        android:strokeColor="@color/stova_wordmark"
+        android:strokeWidth="8.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M205.5,99.2 C205.5,106.79,199.34,112.95,191.75,112.95 C184.16,112.95,178,106.79,178,99.2 C178,91.61,184.16,85.45,191.75,85.45 C199.34,85.45,205.5,91.61,205.5,99.2 Z" />
+    <path
+        android:strokeColor="@color/stova_wordmark"
+        android:strokeWidth="8.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M219.5,85.45 L233.94,112.95 L248.38,85.45" />
+    <path
+        android:strokeColor="@color/stova_wordmark"
+        android:strokeWidth="8.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M289.88,99.2 C289.88,106.79,283.72,112.95,276.12,112.95 C268.53,112.95,262.38,106.79,262.38,99.2 C262.38,91.61,268.53,85.45,276.12,85.45 C283.72,85.45,289.88,91.61,289.88,99.2 Z" />
+    <path
+        android:strokeColor="@color/stova_wordmark"
+        android:strokeWidth="8.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M289.88,85.45 L289.88,112.95" />
 </vector>

@@ -1,13 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Stova's mark: a soft house whose window is the room's warm screen. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
         android:fillColor="@color/stova_lime"
-        android:pathData="M54,30 L78,50 L78,74 Q78,78 74,78 L34,78 Q30,78 30,74 L30,50 Z" />
-    <path
-        android:fillColor="@color/stova_ink"
-        android:pathData="M47,60 h14 v18 h-14z" />
+        android:pathData="M51.42,30.75 Q54,29,56.58,30.75 L75.79,44.92 Q80,46.6,80,51.28 L80,73.2 Q80,77.88,75.32,77.88 L32.68,77.88 Q28,77.88,28,73.2 L28,51.28 Q28,46.6,32.21,44.92 Z" />
+    <path android:pathData="M39.7,50.64 L68.3,50.64 Q72.2,50.64,72.2,54.54 L72.2,67.22 Q72.2,71.12,68.3,71.12 L39.7,71.12 Q35.8,71.12,35.8,67.22 L35.8,54.54 Q35.8,50.64,39.7,50.64 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="54" android:startY="50.64"
+                android:endX="54" android:endY="71.12">
+                <item android:offset="0" android:color="@color/stova_glow_top" />
+                <item android:offset="1" android:color="@color/stova_glow_bottom" />
+            </gradient>
+        </aapt:attr>
+    </path>
 </vector>
