@@ -191,14 +191,11 @@ import kotlin.math.ceil
                     false
                 }
             }.focusGroup(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
-            Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                PageHeader(stringResource(R.string.nav_smart_home),StovaIcons.Home,
-                    tint=app.stova.core.theme.AvatarColor.GOLD.color,
-                    iconModifier=Modifier.testTag("page-icon-smart-home"),metadata={HaStatusLabel(status)})
-                Row(Modifier.fillMaxWidth().padding(start=54.dp),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
-                    DashboardSummary(cards,entities,canControl(profile),summaryFocus) {lightsToTurnOff=it}
-                }
-            }
+            // Title, summary and actions share one line and one centre; only the summary text yields to space.
+            PageHeader(stringResource(R.string.nav_smart_home),StovaIcons.Home,Modifier.width(IntrinsicSize.Max),
+                tint=app.stova.core.theme.AvatarColor.GOLD.color,
+                iconModifier=Modifier.testTag("page-icon-smart-home"),metadata={HaStatusLabel(status)})
+            DashboardSummary(cards,entities,canControl(profile),summaryFocus,Modifier.weight(1f)) {lightsToTurnOff=it}
             if(!profile.kid && status!=HaStatus.NOT_CONFIGURED) {
                 StovaButton(stringResource(R.string.ha_layout), { restoreId=focusedId; layoutOpen=true },
                     icon=StovaIcons.Rows,compact=true,quiet=true)
@@ -297,12 +294,12 @@ import kotlin.math.ceil
     }
 }
 
-@Composable private fun DashboardSummary(cards:List<CardConfig>,entities:Map<String,HaEntity>,canControl:Boolean,focus:FocusRequester,onLights:(List<String>)->Unit) {
+@Composable private fun DashboardSummary(cards:List<CardConfig>,entities:Map<String,HaEntity>,canControl:Boolean,focus:FocusRequester,modifier:Modifier=Modifier,onLights:(List<String>)->Unit) {
     val locale=LocalConfiguration.current.locales[0]
     val selected=cards.mapNotNull {entities[it.entityId]}.distinctBy {it.id}
     val parts=mutableListOf<String>()
     val lights=selected.filter {it.id.startsWith("light.") && it.state=="on"}.map {it.id}
-    Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
+    Row(modifier,horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
         if(selected.any {it.id.startsWith("light.")}) {
             val label=pluralStringResource(R.plurals.ha_v2_lights_on,lights.size,lights.size)
             if(canControl && lights.isNotEmpty()) StovaButton(label,{onLights(lights)},Modifier.focusRequester(focus),icon=StovaIcons.Light,compact=true,quiet=true)
@@ -312,7 +309,9 @@ import kotlin.math.ceil
         cards.firstOrNull {it.type==CardType.ENERGY_PRICE}?.let {entities[it.entityId]}?.let {e ->
             (stateText(e) as? StateText.Number)?.let {parts+=stringResource(R.string.ha_v2_price_now,formatNumber(it.value,locale),it.unit.orEmpty())}
         }
-        if(parts.isNotEmpty() || selected.isEmpty()) Text(if(parts.isEmpty()) stringResource(R.string.ha_v2_overview) else parts.joinToString(" · "),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        if(parts.isNotEmpty() || selected.isEmpty()) Text(if(parts.isEmpty()) stringResource(R.string.ha_v2_overview) else parts.joinToString(" · "),
+            Modifier.weight(1f,fill=false),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
 }
 

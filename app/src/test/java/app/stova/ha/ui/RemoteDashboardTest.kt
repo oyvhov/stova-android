@@ -34,6 +34,17 @@ class RemoteDashboardTest {
         compose.mainClock.advanceTimeBy(4300)
         compose.onNodeWithTag("remote-hint").assertDoesNotExist()
     }
+    @Test fun summarySitsBesideTheTitleOnOneLineWithTheActions() {
+        compose.setContent {StovaTheme {SmartHomeContent(adult,cards,entities,HaStatus.CONNECTED)}}
+        val title=compose.onNode(hasText("Smarthus") and isHeading()).getUnclippedBoundsInRoot()
+        val lights=compose.onNodeWithText("2 lys på").getUnclippedBoundsInRoot()
+        val layout=compose.onNodeWithText("Oppsett").getUnclippedBoundsInRoot()
+        fun middle(r:androidx.compose.ui.unit.DpRect)=(r.top+r.bottom).value/2
+        assertTrue("Summary must follow the title: $title / $lights",lights.left>=title.right)
+        assertTrue("Summary must end before the actions: $lights / $layout",lights.right<=layout.left)
+        assertEquals(middle(title),middle(lights),2f)
+        assertEquals(middle(title),middle(layout),2f)
+    }
     @Test fun allLightsNeedsConfirmationAndCancelDoesNothing() {
         val calls=mutableListOf<Pair<ServiceCall,String>>()
         compose.setContent {StovaTheme {SmartHomeContent(adult,cards,entities,HaStatus.CONNECTED,onPerform={c,id->calls+=c to id})}}
