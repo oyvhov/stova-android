@@ -1,3 +1,8 @@
+# Stor rullande hero, klokkestilar, Appar i Innstillingar, sesongpynt, finare HA-kort – emulator, ikkje Shield
+2026-10-26: Plan `2026-10-26-hero-clock-season.md` steg 1–5 og tillegg er ferdige (e2a07ad, a6fca57, 4406da4, af5e604, fa55b25, 100049e, c62ca93 og kantovergangen etter). Full kontroll ved c62ca93: 728/728, 0 skip, lint 0 feil (62 åtvaringar, 1 hint), bygg OK; Heim- og designprøver køyrde på nytt etter kantovergangen.
+Emulator-5580: alt prøvd med bilete (toppfelt utan Appar, graskar til venstre, Appar i Innstillingar → Tilbake, stor rullande hero med parallax, tre klokkestilar, pynt over heile skjermen). Emulatorprofilen er tilbakestilt; einaste skilnad er nytt `clockStyle`-felt og fjerna `showAppsButton`. Mediekortet er ikkje sett på eining (emulatoren har ikkje Sonos).
+Ikkje gjort: Shield. Brukaren bad kl. ca. 18:45 om at TV-en ikkje skal brukast den neste timen; spør før installasjon. «Rullande oversikt» må veljast i Utsjånad → Heim og hero for å få den nye heroen; Shield står på «Éi rad».
+
 # Appnamn per rad, Tilbake i Innstillingar, Smarthus-toppen – emulator, ikkje Shield
 2026-10-26: Plan `2026-10-26-row-names-back-header.md` steg 1–3 er ferdige (commits 1184f08, 23e1913, 3708844). Radteljaren er fjerna. 718/718, 0 skip, lint 0 feil (62 åtvaringar, 1 hint), bygg OK. APK `5a4d4fa58754971f9657d6c424e752a9e71a444c3e9016a6abda31c6b88161c6` er installert og hashverifisert berre på emulator-5580; profilen der er byteidentisk etter prøvinga.
 Ikkje gjort: Shield (ventar på løyve). Ny bestilling frå brukaren står i kø: finare klokke, flytte Appar-ikonet (uklart kvar, spør), graskaret til venstre side, meir sesongpynt på heile skjermen (t.d. lett snø til jul), og ein hero som rullar ut med fin parallax («ingen av modusane gjer det eg vil»).

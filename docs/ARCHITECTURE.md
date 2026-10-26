@@ -41,6 +41,11 @@ namna i globale val og radval; overskriftsstorleik har ei eiga liste. `artworkDi
 formatproporsjonane, også i Appar-rutenettet. Watch Next avgrensar undertittelen til kunstbreidda.
 `RowStyle.cardTitles` lèt ei rad ha eigne namn under korta (null følgjer profilen); `showsCardTitles`
 blir lese av kort, Watch Next og radgeometrien. Appar-sida følgjer alltid profilvalet. Heim har ingen radteljar.
+Toppfeltet har ingen Appar-knapp: Appar ligg i menyen i Innstillingar (ved Android), og `MainShell`
+sender Tilbake frå Appar dit når sida vart opna derifrå. Sesongmerket står ved venstre kant.
+«Rullande oversikt» opnar med heroen over første rad (same geometri som éi rad). `HomeScrollShift`
+gir bakgrunnen rulleframdrifta; berre `graphicsLayer`/teikning les ho. Innstillingsseksjonane lenkjer
+ikkje til kvarandre; berre undersider (t.d. ein annan profil sin utsjånad) kan lenkje vidare.
 Toppfeltet på Heim har berre Stova-innstillingar; Android-innstillingar ligg i menyen.
 Sesongnedteljing gjeld berre jul, og av/på-valet blir respektert både i hero og toppfelt.
 
