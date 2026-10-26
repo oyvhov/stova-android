@@ -1,32 +1,23 @@
 package app.stova.apps
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import app.stova.R
-import app.stova.core.theme.StovaShapes
+import app.stova.core.ui.SheetAction
+import app.stova.core.ui.SheetHeader
+import app.stova.core.ui.SheetPages
 import app.stova.core.ui.StovaButton
-import app.stova.core.ui.StovaDialog
-import app.stova.core.ui.PageHeader
 import app.stova.core.ui.StovaIcons
+import app.stova.core.ui.StovaSheet
 
-/** What an adult can do with one app. Every choice closes the menu. */
+/**
+ * What an adult can do with one app, in the panel from the right. Favourite is the first and
+ * largest choice; changing the icon is a page of its own. Every other choice closes the panel.
+ */
 @Composable
 fun AppActionsMenu(
     app: InstalledApp,
@@ -37,35 +28,38 @@ fun AppActionsMenu(
     onToggleHidden: () -> Unit,
     onAppInfo: () -> Unit,
     onDismiss: () -> Unit,
-    onChangeIcon: () -> Unit = {},
-    rowActions: @Composable () -> Unit = {},
+    onOpen: (() -> Unit)? = null,
+    onPickIcon: () -> Unit = {},
+    onResetIcon: () -> Unit = {},
+    art: (@Composable BoxScope.() -> Unit)? = null,
+    rowActions: @Composable (SheetPages) -> Unit = {},
 ) {
-    val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
-    StovaDialog(onDismiss) {
-        Column(
-            Modifier.width(360.dp)
-                .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.extraLarge)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            PageHeader(app.label, StovaIcons.Apps)
-            val full = Modifier.fillMaxWidth()
-            StovaButton(
-                stringResource(if (favorite) R.string.app_remove_favorite else R.string.app_add_favorite),
-                { onToggleFavorite(); onDismiss() },
-                full.focusRequester(first),
-                icon = StovaIcons.Star, compact = true, quiet = true,
-            )
-            if (favorite) {
-                StovaButton(stringResource(R.string.app_move_left), { onMove(-1); onDismiss() }, full, icon = StovaIcons.ChevronLeft, compact = true, quiet = true)
-                StovaButton(stringResource(R.string.app_move_right), { onMove(+1); onDismiss() }, full, icon = StovaIcons.ChevronRight, compact = true, quiet = true)
+    StovaSheet(onDismiss) { pages ->
+        when (pages.current) {
+            null -> {
+                SheetHeader(app.label, stringResource(if (favorite) R.string.sheet_app_favorite else R.string.sheet_app), StovaIcons.Apps, art = art)
+                val full = Modifier.fillMaxWidth()
+                StovaButton(stringResource(if (favorite) R.string.app_remove_favorite else R.string.app_add_favorite),
+                    { onToggleFavorite(); onDismiss() }, full, primary = true, icon = StovaIcons.Star)
+                if (onOpen != null) StovaButton(stringResource(R.string.sheet_open), { onOpen(); onDismiss() }, full, icon = StovaIcons.Play)
+                if (favorite) {
+                    SheetAction(stringResource(R.string.app_move_left), StovaIcons.ChevronLeft, { onMove(-1); onDismiss() })
+                    SheetAction(stringResource(R.string.app_move_right), StovaIcons.ChevronRight, { onMove(+1); onDismiss() })
+                }
+                SheetAction(stringResource(if (hidden) R.string.app_show else R.string.app_hide), if (hidden) StovaIcons.Show else StovaIcons.Hide,
+                    { onToggleHidden(); onDismiss() })
+                SheetAction(stringResource(R.string.icon_change), StovaIcons.Palette, { pages.open(ICON_PAGE) },
+                    Modifier.focusRequester(pages.opener(ICON_PAGE)), opensPage = true)
+                SheetAction(stringResource(R.string.app_info), StovaIcons.Info, { onAppInfo(); onDismiss() })
             }
-            StovaButton(stringResource(if (hidden) R.string.app_show else R.string.app_hide), { onToggleHidden(); onDismiss() }, full, icon = if (hidden) StovaIcons.Show else StovaIcons.Hide, compact = true, quiet = true)
-            StovaButton(stringResource(R.string.app_info), { onAppInfo(); onDismiss() }, full, icon = StovaIcons.Info, compact = true, quiet = true)
-            StovaButton(stringResource(R.string.icon_change), onChangeIcon, full, icon = StovaIcons.Palette, compact = true, quiet = true)
-            rowActions()
+            ICON_PAGE -> {
+                SheetHeader(stringResource(R.string.icon_change), app.label, StovaIcons.Palette)
+                SheetAction(stringResource(R.string.icon_from_pack), StovaIcons.Image, onPickIcon)
+                SheetAction(stringResource(R.string.icon_reset), StovaIcons.Apps, onResetIcon)
+            }
         }
+        rowActions(pages)
     }
 }
+
+private const val ICON_PAGE = "icon"

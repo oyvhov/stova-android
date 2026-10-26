@@ -13,7 +13,7 @@ Brukaren valde: fem hovudseksjonar, og panel frå høgre for langt OK.
   Kontoar), «Profilar», «Appar», «System» (Heim-knappen, Om, Android). Oversikt-sida går ut; første
   seksjon opnar direkte. Ingen gruppeoverskrifter i menyen. Tilbake eitt steg (som i dag). Same
   undersider/innhald, berre samla under nye overskrifter. Gamle lagra `SettingsSection` må lesast.
-- [ ] 3. Langt-OK-panel frå høgre for kort (media, appar, Watch Next): kunst/logo øvst, to store
+- [x] 3. Langt-OK-panel frå høgre (`StovaSheet`; media, appar, rader/Watch Next og Smarthus-kort): kunst/logo øvst, to store
   hovudhandlingar (Spel, Detaljar / Opne), resten som rolege rader med ikon; radval på eiga side i
   panelet. Glir inn frå høgre (≤ 200 ms, null ved redusert rørsle), Heim dempa bak. Erstattar
   dagens dialogar i `home/RowOptions.kt`, `apps/AppActionsMenu.kt`, media-meny og HA-kortmeny.

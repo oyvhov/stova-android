@@ -114,7 +114,10 @@ oppstart direkte på ei medierad.
 Radflytting bruker `core/ui/SmoothScroll.kt`: 380 ms med mjuk start/stopp (sider 200 ms, små ting 150 ms), utan eit innleiande
 hopp. Eitt rullejobb eig overgangen; nye piler kan snu eller velje neste logiske rad undervegs.
 `SoftEntrance` tonar inn berre den nye innstillingssida, utan eit utgåande fokustre.
-`LocalReduceMotion` gir null varigheit og slår av parallax. Dialogar går gjennom `StovaDialog`.
+`LocalReduceMotion` gir null varigheit og slår av parallax. Dialogar går gjennom `StovaDialog`; alle langt-OK-menyar
+(media, appar, rader, Smarthus-kort) går gjennom `StovaSheet`: eit panel frå høgre kant i full høgd med kunst, store
+hovudhandlingar og rolege `SheetAction`-rader. Undersider (`SheetPages`) byter innhald i same panel; Tilbake går ei side
+om gongen og fokuserer rada som opna sida. Begge deler same vindauge og same OK-vakt (`StovaOverlay`).
 Felles fokus er svakt løft, 2,5 % forstørring på kunst og 1,5 % på kontrollar, og lysare flate.
 Fokus teiknar ingen skugge eller glød; transparent kunst får inga ekstra flate.
 Gamalt standardval `RING` blir lese som `LIFT`; ei synleg ramme krev valet `OUTLINE` eller
@@ -152,11 +155,12 @@ kurvene mellom Heim og preview, med nøyaktige anker for gamle dempingsval.
 ventande sliderskrivingar blir samla i 180 ms (knappar/innhaldsgrenser blir lagra straks), utan å kansellere pågåande atomisk skriving. Utgang
 flushar siste verdi i app-scopet, rask ny opning ser same utkast, og nullstilling/kopi ventar
 på eldre skrivingar. Lagra prosent på appkort påverkar berre flata, aldri alfa på ikon/tekst.
-Tilbake går til kategorien ein kom frå. I `SettingsLayout` går Tilbake elles eitt steg: ein seksjon opna
-frå Oversikt eller ei lenkje går tilbake dit (Oversikt fokuserer kortet via `LocalSettingsReturnedFrom`),
-innhald går til seksjonsmenyen, og berre menyen går ut av Innstillingar. Førehandsvisinga ligg etter vala og tek ikkje fast
+Tilbake går til kategorien ein kom frå. Innstillingar har fire seksjonar pluss Appar (`settingsOrder`): Heim og
+utsjånad (med «Rader på Heim» som kategori), Smarthus og kontoar, Profilar, Appar og System (Heim-knappen, Om og
+Android). Gamle seksjonsverdiar blir lesne via `SettingsSection.merged`. I `SettingsLayout` går Tilbake elles eitt steg:
+ein seksjon opna frå ei lenkje går tilbake dit (via `LocalSettingsReturnedFrom`), innhald går til seksjonsmenyen, og berre menyen går ut av Innstillingar. Førehandsvisinga ligg etter vala og tek ikkje fast
 plass frå kontrollane. Ikon-sida har i staden ei kompakt, ikkje-fokuserbar appprøve før vala,
-med same `AppTile`, ikonpakke og bakgrunnsval som Heim. Langt-OK-menyane samlar dei detaljerte radvala under «Tilpass rada».
+med same `AppTile`, ikonpakke og bakgrunnsval som Heim. Langt-OK-panela samlar dei detaljerte radvala på sida «Tilpass rada».
 
 Smarthus bruker `ha/cards/CardFocusNavigation.kt` for retningar mellom logiske kortrektangel
 frå same pakking som visinga. Venstre/Høgre held seg på same kortband; Opp/Ned vel næraste

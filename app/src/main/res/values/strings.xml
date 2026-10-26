@@ -54,6 +54,9 @@
     <string name="app_hide">Skjul</string>
     <string name="app_show">Vis</string>
     <string name="app_info">Appinfo</string>
+    <string name="sheet_app">App</string>
+    <string name="sheet_app_favorite">App · i favorittane</string>
+    <string name="sheet_open">Opne</string>
 
     <string name="settings_profile">Profil</string>
     <string name="settings_home">Heim</string>
@@ -583,10 +586,7 @@
     <string name="home_row_balanced">Litt opp</string>
     <string name="home_row_high">Heva</string>
     <string name="settings_title_home">Framsida di</string>
-    <string name="settings_title_profile">Dine profilar</string>
     <string name="settings_title_accounts">Medietenestene dine</string>
-    <string name="settings_title_smart_home">Kopling til heimen</string>
-    <string name="settings_title_home_button">Heim på fjernkontrollen</string>
     <string name="settings_title_about">Om Stova</string>
     <string name="settings_hint_home">Vel startpunkt, rekkjefølgje og innhald.</string>
     <string name="settings_hint_profile">Personlege val, namn og tryggleik for kvar person.</string>
@@ -597,7 +597,6 @@
     <string name="settings_overview">Oversikt</string>
     <string name="settings_title_overview">Gjer Stova til di</string>
     <string name="settings_hint_overview">Framside, utsjånad og tenester — samla på éin stad.</string>
-    <string name="settings_overview_appearance">Fargar og uttrykk</string>
     <string name="ha_settings_connection">Home Assistant</string>
     <string name="ha_settings_connect_hint">Kople til heimen for å sjå og styre einingane dine.</string>
     <string name="ha_settings_layout_hint">Kort, storleik og gruppering vel du på Smarthus-sida.</string>

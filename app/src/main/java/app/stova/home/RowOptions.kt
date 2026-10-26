@@ -2,8 +2,6 @@ package app.stova.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -17,8 +15,6 @@ import app.stova.R
 import app.stova.core.ui.SettingsChoiceRow
 import app.stova.core.ui.StovaButton
 import app.stova.core.ui.StovaIcons
-import app.stova.core.ui.PageHeader
-import app.stova.core.ui.SectionHeading
 import app.stova.core.ui.labelRes
 import app.stova.profiles.*
 
@@ -74,30 +70,29 @@ internal fun RowFormatPreview(format: RowFormat) {
         .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small))
 }
 
+/** The row part of every long-press panel: move, hide, and its own page with the row's look. */
 @Composable
-internal fun RowMenuSection(key: HomeRowKey, prefs: HomePrefs, onChange: (HomePrefs) -> Unit, onMove: () -> Unit, onHide: () -> Unit) {
-    var customizing by remember { mutableStateOf(false) }
-    val customize = remember { FocusRequester() }
-    SectionHeading(stringResource(R.string.custom_row_section), StovaIcons.Rows)
-    StovaButton(stringResource(R.string.custom_move_row), onMove, Modifier.fillMaxWidth(), icon = StovaIcons.Rows, compact = true, quiet = true)
-    StovaButton(stringResource(R.string.custom_hide_row), onHide, Modifier.fillMaxWidth(), icon = StovaIcons.Hide, compact = true, quiet = true)
-    app.stova.core.ui.SettingsNavRow(stringResource(R.string.settings_customize_row), Modifier.focusRequester(customize),
-        value = stringResource(R.string.settings_customize_row_hint)) { customizing = true }
-    if (customizing) {
-        val p = app.stova.core.theme.LocalAppearance.current
-        val back = remember { FocusRequester() }
-        val close = { customizing = false; runCatching { customize.requestFocus() }; Unit }
-        app.stova.core.ui.StovaDialog(close) {
-            Column(Modifier.width(440.dp).background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large)
-                .verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                StovaButton(stringResource(R.string.custom_back), close, Modifier.focusRequester(back), icon = StovaIcons.ChevronLeft, compact = true, quiet = true)
-                PageHeader((prefs.rowFormats[key] ?: RowStyle()).heading(rowLabel(key)), StovaIcons.Rows)
-                RowStyleChoices(prefs.rowFormats[key] ?: RowStyle(), defaultRowFormat(key, p), p.cardSize, rowLabel(key),
-                    hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT, globalTitles = p.showTitles) { style ->
-                    onChange(prefs.copy(rowFormats = if (style == RowStyle()) prefs.rowFormats - key else prefs.rowFormats + (key to style)))
-                }
+internal fun RowSheetSection(key: HomeRowKey, prefs: HomePrefs, pages: app.stova.core.ui.SheetPages, onChange: (HomePrefs) -> Unit,
+    onMove: () -> Unit, onHide: () -> Unit, heading: Boolean = true) {
+    val style = prefs.rowFormats[key] ?: RowStyle()
+    val title = style.heading(rowLabel(key))
+    when (pages.current) {
+        null -> {
+            if (heading) app.stova.core.ui.SheetSection(stringResource(R.string.custom_row_section), title)
+            app.stova.core.ui.SheetAction(stringResource(R.string.custom_move_row), StovaIcons.Rows, onMove)
+            app.stova.core.ui.SheetAction(stringResource(R.string.custom_hide_row), StovaIcons.Hide, onHide)
+            app.stova.core.ui.SheetAction(stringResource(R.string.settings_customize_row), StovaIcons.Edit, { pages.open(ROW_STYLE_PAGE) },
+                Modifier.focusRequester(pages.opener(ROW_STYLE_PAGE)), opensPage = true)
+        }
+        ROW_STYLE_PAGE -> {
+            val p = app.stova.core.theme.LocalAppearance.current
+            app.stova.core.ui.SheetHeader(title, stringResource(R.string.settings_customize_row_hint), StovaIcons.Rows)
+            RowStyleChoices(style, defaultRowFormat(key, p), p.cardSize, rowLabel(key),
+                hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT, globalTitles = p.showTitles) { changed ->
+                onChange(prefs.copy(rowFormats = if (changed == RowStyle()) prefs.rowFormats - key else prefs.rowFormats + (key to changed)))
             }
-            LaunchedEffect(Unit) { back.requestFocus() }
         }
     }
 }
+
+private const val ROW_STYLE_PAGE = "row-style"

@@ -72,6 +72,13 @@ object StovaLayout {
     val RowGap = 16.dp
     val SectionTop = 22.dp
     val SectionBottom = 10.dp
+    /** The long-press panel from the right: about two fifths of a 960 dp wide screen. */
+    val SheetWidth = 400.dp
+    val SheetPadding = 28.dp
+    /** Less than the 48 dp side edge: overscan eats far less height, and the artwork needs it. */
+    val SheetTop = 32.dp
+    val SheetGap = 6.dp
+    val SheetRowMinHeight = 52.dp
 }
 
 /** Spole's eight accent hues, desaturated to sit with the muted palette, as profile avatar colours. */

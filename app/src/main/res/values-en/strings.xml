@@ -54,6 +54,9 @@
     <string name="app_hide">Hide</string>
     <string name="app_show">Show</string>
     <string name="app_info">App info</string>
+    <string name="sheet_app">App</string>
+    <string name="sheet_app_favorite">App · in your favourites</string>
+    <string name="sheet_open">Open</string>
 
     <string name="settings_profile">Profile</string>
     <string name="settings_home">Home</string>
@@ -583,10 +586,7 @@
     <string name="home_row_balanced">Slightly raised</string>
     <string name="home_row_high">Raised</string>
     <string name="settings_title_home">Your home screen</string>
-    <string name="settings_title_profile">Your profiles</string>
     <string name="settings_title_accounts">Your media services</string>
-    <string name="settings_title_smart_home">Connected home</string>
-    <string name="settings_title_home_button">Home on your remote</string>
     <string name="settings_title_about">About Stova</string>
     <string name="settings_hint_home">Choose where to start and what belongs here.</string>
     <string name="settings_hint_profile">Personal choices, identity and security for each person.</string>
@@ -597,7 +597,6 @@
     <string name="settings_overview">Overview</string>
     <string name="settings_title_overview">Make Stova yours</string>
     <string name="settings_hint_overview">Home, appearance and services — all in one place.</string>
-    <string name="settings_overview_appearance">Colours and style</string>
     <string name="ha_settings_connection">Home Assistant</string>
     <string name="ha_settings_connect_hint">Connect your home to see and control your devices.</string>
     <string name="ha_settings_layout_hint">Choose cards, sizes and grouping on the Smart home page.</string>

@@ -58,7 +58,7 @@ class SmartHomeV2UiTest {
         compose.onNodeWithText("Storleik").performClick()
         compose.onNodeWithText("L · 2 × 2").performKeyInput {pressKey(Key.Back)}
         compose.onNodeWithText("Flytt kort").assertExists()
-        compose.onNodeWithText("Lukk").assertExists()
+        compose.onNodeWithText("Storleik").assertIsFocused()
     }
     @Test fun downFromHeaderReturnsToCardsInsteadOfFollowingTheButtonsHorizontalPosition() {
         val cards=listOf(CardConfig("a",CardType.SENSOR,"sensor.a",name="Veranda",size=CardSize.L),

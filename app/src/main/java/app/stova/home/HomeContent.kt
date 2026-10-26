@@ -8,8 +8,6 @@ import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -73,7 +71,7 @@ fun HomeContent(
     onHomeChange: (HomePrefs) -> Unit = {},
     canEditRows: Boolean = false,
     onMediaPlay: (FocusedTarget.Media) -> Unit = onMediaClick,
-    appActions: (@Composable (InstalledApp, @Composable () -> Unit, () -> Unit) -> Unit)? = null,
+    appActions: (@Composable (InstalledApp, @Composable (app.stova.core.ui.SheetPages) -> Unit, () -> Unit) -> Unit)? = null,
     onRowFocus: (HomeRowKey) -> Unit = {},
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
@@ -363,8 +361,8 @@ fun HomeContent(
     }
     }
     menuRow?.let { row ->
-        val controls: @Composable () -> Unit = {
-            RowMenuSection(row.key, homePrefs, onHomeChange,
+        val controls: @Composable (app.stova.core.ui.SheetPages) -> Unit = { pages ->
+            RowSheetSection(row.key, homePrefs, pages, onHomeChange, heading = menuApp != null || menuMedia != null,
                 onMove = { movingRow = row.key; closeMenu() },
                 onHide = {
                     onHomeChange(homePrefs.copy(hiddenRows = homePrefs.hiddenRows + row.key,
@@ -378,10 +376,10 @@ fun HomeContent(
             menuMedia != null -> ItemActionsMenu(menuMedia!!.item,
                 { val target = menuMedia!!; closeMenu(); onMediaPlay(target) },
                 { val target = menuMedia!!; closeMenu(); onMediaClick(target) }, ::closeMenu, controls)
-            else -> app.stova.core.ui.StovaDialog(::closeMenu) {
-                androidx.compose.material3.Surface(shape = MaterialTheme.shapes.large) {
-                    Column(Modifier.width(440.dp).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { controls() }
-                }
+            else -> app.stova.core.ui.StovaSheet(::closeMenu) { pages ->
+                if (pages.current == null) app.stova.core.ui.SheetHeader((homePrefs.rowFormats[row.key] ?: RowStyle()).heading(rowLabel(row.key)),
+                    stringResource(R.string.custom_row_section), app.stova.core.ui.StovaIcons.Rows)
+                controls(pages)
             }
         }
     }

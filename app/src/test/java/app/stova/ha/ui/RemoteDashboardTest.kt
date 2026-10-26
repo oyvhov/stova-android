@@ -76,8 +76,7 @@ class RemoteDashboardTest {
         })}}
         compose.onNodeWithText("Rediger").performClick()
         compose.onNodeWithText("light.a").performKeyInput {pressKey(Key.DirectionCenter)}
-        compose.onNodeWithText("Storleik").assertExists()
-        compose.onNodeWithText("Lukk").performClick()
+        compose.onNodeWithText("Storleik").assertExists().performKeyInput {pressKey(Key.Back)}
         compose.onNodeWithText("light.a").assertIsFocused().performKeyInput {keyDown(Key.DirectionCenter);pressKey(Key.DirectionRight)}
         compose.waitForIdle()
         compose.onNodeWithText("light.a").assertIsFocused().performKeyInput {pressKey(Key.DirectionRight);keyUp(Key.DirectionCenter)}
