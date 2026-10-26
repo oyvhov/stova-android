@@ -15,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.input.key.KeyEventType
@@ -38,6 +40,17 @@ import app.stova.media.ui.*
 import app.stova.profiles.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+/** Rows below the screen's lower margin fade out within 8 dp instead of peeking in, cut through. */
+private fun Modifier.bottomFade(margin: androidx.compose.ui.unit.Dp) = graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        val top = size.height - margin.toPx()
+        val soft = 8.dp.toPx()
+        drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(
+            listOf(androidx.compose.ui.graphics.Color.Transparent, androidx.compose.ui.graphics.Color.Black), startY = top, endY = top + soft),
+            topLeft = androidx.compose.ui.geometry.Offset(0f, top), blendMode = androidx.compose.ui.graphics.BlendMode.DstOut)
+    }
 
 /** The rendered home with controlled data, shared by the launcher and visual tests. */
 @OptIn(ExperimentalFoundationApi::class) // LocalBringIntoViewSpec, the TV pivot hook
@@ -274,7 +287,7 @@ fun HomeContent(
                         // not start a second vertical bring-into-view scroll during a row transition.
                         CompositionLocalProvider(LocalBringIntoViewSpec provides StayPut) {
                             LazyColumn(Modifier.then(if (geometry != null) Modifier.fillMaxWidth().height(geometry.height).clipToBounds()
-                                else Modifier.fillMaxSize()).focusRestorer(), state = listState,
+                                else Modifier.fillMaxSize().bottomFade(appearance.homeRowInset.dp.dp)).focusRestorer(), state = listState,
                                 contentPadding = PaddingValues(bottom = if (deck) 0.dp else bottomSpace)) {
                                 if (headerItems != 0) item(key = "spotlight-header", contentType = "hero") {
                                     ParallaxHero(spotlight, heroHeight, listState)
