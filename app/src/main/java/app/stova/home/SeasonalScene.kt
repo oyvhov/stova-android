@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.lifecycle.Lifecycle
@@ -90,16 +91,26 @@ internal fun rememberSeasonalClock(): SeasonalClock {
 internal fun rememberSeasonalTime(): State<Float> = rememberSeasonalClock().time
 
 internal data class SeasonParticle(val x: Float, val start: Float, val radius: Float, val speed: Float, val phase: Float)
+/** Spread over the whole screen. Larger flakes fall faster, so the snow has depth without blur. */
 internal fun seasonParticles(season: Season): List<SeasonParticle> {
     val random = Random(season.ordinal * 7919)
-    return List(if (season == Season.CHRISTMAS) 18 else 12) {
-        SeasonParticle(.64f + random.nextFloat() * .34f, random.nextFloat(),
-            1.1f + random.nextFloat() * 2f, .025f + random.nextFloat() * .025f, random.nextFloat() * 2f * PI.toFloat())
+    return List(if (season == Season.CHRISTMAS) 56 else 34) {
+        val radius = .8f + random.nextFloat() * 2f
+        SeasonParticle(random.nextFloat(), random.nextFloat(), radius, .012f + radius * .009f, random.nextFloat() * 2f * PI.toFloat())
     }
+}
+
+/** A few bats crossing the upper screen on long, slow loops at Halloween. */
+internal data class SeasonBat(val start: Float, val y: Float, val size: Float, val speed: Float, val phase: Float)
+internal fun seasonBats(season: Season): List<SeasonBat> {
+    if (season != Season.HALLOWEEN) return emptyList()
+    val random = Random(31)
+    return List(3) { SeasonBat(random.nextFloat(), .1f + random.nextFloat() * .3f, 9f + random.nextFloat() * 6f,
+        .018f + random.nextFloat() * .01f, random.nextFloat() * 2f * PI.toFloat()) }
 }
 internal fun spiderDrop(idleSeconds: Float) = ((idleSeconds - 45f) / 5f).coerceIn(0f, 1f)
 
-/** One small Canvas, no input or accessibility nodes. Particles stay over the right-hand artwork. */
+/** One Canvas behind Home's content, no input or accessibility nodes; the decor covers the whole screen. */
 @Composable
 fun SeasonalScene(modifier: Modifier = Modifier) {
     val p = LocalAppearance.current
@@ -109,6 +120,7 @@ fun SeasonalScene(modifier: Modifier = Modifier) {
     // The idle origin resets on each key and on entering Home. No wall-clock jump after resume.
     val clock = rememberSeasonalClock()
     val particles = remember(season) { seasonParticles(season) }
+    val bats = remember(season) { seasonBats(season) }
     Canvas(modifier.clearAndSetSemantics { }) {
         val seconds = clock.time.floatValue
         val presence = clock.presence
@@ -116,17 +128,34 @@ fun SeasonalScene(modifier: Modifier = Modifier) {
         val tint = if (rising) StovaColors.Ember else StovaColors.Snow
         if (presence > 0f) particles.forEach { particle ->
             val travelled = (particle.start + seconds * particle.speed) % 1f
-            val y = .24f + (if (rising) 1f - travelled else travelled) * .34f
-            val x = particle.x + sin(seconds * .8f + particle.phase) * .006f
-            val fade = (1f - abs(travelled - .5f) * 2f).coerceIn(0f,1f) * presence
+            val y = -.04f + (if (rising) 1f - travelled else travelled) * 1.08f
+            val x = particle.x + sin(seconds * .5f + particle.phase) * .01f
+            // Only the screen edges fade; nearer (larger) flakes are a little brighter.
+            val fade = minOf(1f, travelled * 8f, (1f - travelled) * 8f) * presence * (.55f + particle.radius * .15f)
             val center = Offset(x * size.width, y * size.height)
             val radius = particle.radius * density
-            if (rising) drawLine(tint.copy(alpha = fade * .42f), center, center + Offset(radius, -radius * 2f), density, StrokeCap.Round)
+            if (rising) drawLine(tint.copy(alpha = fade * .5f), center, center + Offset(radius, -radius * 2f), density, StrokeCap.Round)
+            else if (particle.radius < 2.2f) drawCircle(tint.copy(alpha = fade * .5f), radius * .8f, center)
             else repeat(3) { arm ->
-                val angle = arm * PI.toFloat() / 3f
-                val offset = Offset(cos(angle), sin(angle)) * radius * 1.7f
-                drawLine(tint.copy(alpha = fade * .48f), center - offset, center + offset, density, StrokeCap.Round)
+                val angle = arm * PI.toFloat() / 3f + particle.phase
+                val offset = Offset(cos(angle), sin(angle)) * radius * 1.6f
+                drawLine(tint.copy(alpha = fade * .55f), center - offset, center + offset, density, StrokeCap.Round)
             }
+        }
+        if (presence > 0f) bats.forEach { bat ->
+            val x = ((bat.start + seconds * bat.speed) % 1.3f - .15f) * size.width
+            val y = (bat.y + sin(seconds * .7f + bat.phase) * .02f) * size.height
+            val span = bat.size * density
+            val flap = sin(seconds * 7f + bat.phase) * span * .45f
+            val wings = Path().apply {
+                moveTo(x - span, y - flap)
+                quadraticTo(x - span * .5f, y + span * .15f, x, y)
+                quadraticTo(x + span * .5f, y + span * .15f, x + span, y - flap)
+                quadraticTo(x + span * .45f, y + span * .45f, x, y + span * .3f)
+                quadraticTo(x - span * .45f, y + span * .45f, x - span, y - flap)
+                close()
+            }
+            drawPath(wings, StovaColors.Spider.copy(alpha = .45f * presence))
         }
         val drop = if (rising) clock.spider else 0f
         if (drop > 0f) {

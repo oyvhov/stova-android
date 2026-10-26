@@ -142,6 +142,13 @@ class SeasonalDecorTest {
         assertTrue(spiderDrop(47f) in 0f..1f)
         assertEquals(1f,spiderDrop(50f))
         assertEquals(seasonParticles(Season.HALLOWEEN),seasonParticles(Season.HALLOWEEN))
-        assertTrue(seasonParticles(Season.CHRISTMAS).size<=18)
+        // Light snow across the whole screen: enough to fill it, few enough to stay calm.
+        for (season in listOf(Season.CHRISTMAS, Season.HALLOWEEN)) {
+            val particles = seasonParticles(season)
+            assertTrue(particles.size in 30..64)
+            assertTrue(particles.minOf { it.x } < .15f && particles.maxOf { it.x } > .85f)
+        }
+        assertEquals(3, seasonBats(Season.HALLOWEEN).size)
+        assertTrue(seasonBats(Season.CHRISTMAS).isEmpty())
     }
 }
