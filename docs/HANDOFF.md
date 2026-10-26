@@ -1,3 +1,8 @@
+# Neste: plan `2026-10-26-outstanding-launcher.md` (ikkje påbyrja)
+2026-10-26: Logo (7fa1114): hus med glødande skjerm + geometrisk «stova»-ordmerke; TV-banner og ikon, generator i `scripts/logo/`. Sett i Android TV-applista på emulatoren; installert på begge (APK `2f33e08c…`), Shield stod i skjermsparar.
+HA: appnamn lagt til i begge Android TV-integrasjonane (Android TV Remote og Android Debug Bridge) via Chrome etter brukaren sitt ønske; stadfesta `app_name: Stova` på `media_player.shield`. Eksisterande namn er urørde.
+Brukaren bad om punkt 2, 3, 4, 6 med vala i planfila. Start med steg 1 (synleg fokus).
+
 # Smarthus med stemning og levande kort – installert på begge
 2026-10-26: Brukaren bad «Lag smarthus fin» og valde «Stemning bak korta» og «Korta med meir liv». Commits e9d7ce4 (dempa Heim-bilete og himmel frå vêrkortet bak korta; ingen nye førespurnader) og 5466db6 (kvitlys i eigen kelvin, liten boge på varmepumpa, billegaste time på straumprisen). 732/732, 0 skip, lint 0 feil (62 åtvaringar, 1 hint), bygg OK. APK `73e7543d48735d1b288d43ae162fd18269f188f356087c6685a8346983e31cbc` er installert og hashverifisert på emulator-5580 og Shield; Shield-filene er byteidentiske før/etter, og Shield står på Heim.
 Den førre builden (hero/klokke/pynt) er dermed òg på Shield. Brukaren spurde korleis appnamn kan setjast i HA sin Android TV-integrasjon: forklart (Konfigurer → Configure applications), med pakkeliste frå Shield; ingenting er endra i HA. Opne spørsmål til brukaren: kva skal til for ein eineståande launcher, og korleis integrere meir (svar i chat).
