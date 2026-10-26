@@ -21,7 +21,9 @@ fun lightGlow(entity:HaEntity?):LightGlow {
     fun numbers(key:String)= (attrs?.get(key) as? JsonArray)?.mapNotNull {(it as? JsonPrimitive)?.floatOrNull?.takeIf(Float::isFinite)}
     val rgb=if(colored) numbers("rgb_color")?.takeIf {it.size==3} else null
     val hs=if(colored) numbers("hs_color")?.takeIf {it.size==2} else null
-    val color=when {rgb!=null -> HaTokens.lightColor(rgb[0],rgb[1],rgb[2]);hs!=null -> HaTokens.lightColor(hs[0],hs[1]);else -> HaTokens.WarmGlow}
+    val kelvin=attrs?.number("color_temp_kelvin")?.toFloat()?.takeIf {it.isFinite() && it>0f}
+    val color=when {rgb!=null -> HaTokens.lightColor(rgb[0],rgb[1],rgb[2]);hs!=null -> HaTokens.lightColor(hs[0],hs[1])
+        kelvin!=null -> HaTokens.whiteColor(kelvin);else -> HaTokens.WarmGlow}
     val brightness=attrs?.number("brightness")?.coerceIn(0.0,255.0) ?: 255.0
     return LightGlow(color,if(entity?.state=="on") .08f+.14f*(brightness/255).toFloat() else 0f,rgb!=null || hs!=null)
 }

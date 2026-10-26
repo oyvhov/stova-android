@@ -26,6 +26,12 @@ class LightPresentationTest {
     @Test fun temperatureModeIgnoresStaleRgbAndUsesWarmToken() {
         assertEquals(HaTokens.WarmGlow,lightGlow(light(attrs="""{"color_mode":"color_temp","rgb_color":[255,0,0]}""")).color)
     }
+    @Test fun whiteLightsGlowWarmOrCoolByTheirKelvin() {
+        val warm=lightGlow(light(attrs="""{"color_mode":"color_temp","color_temp_kelvin":2200}""")).color
+        val cool=lightGlow(light(attrs="""{"color_mode":"color_temp","color_temp_kelvin":6500}""")).color
+        assertTrue("warm white leans amber: $warm",warm.red>warm.blue+.1f)
+        assertTrue("cool white leans blue: $cool",cool.blue>=cool.red)
+    }
     @Test fun rgbAndHsColorsAreMutedButKeepTheirHue() {
         val rgb=lightGlow(light(attrs="""{"color_mode":"rgb","rgb_color":[255,0,0]}""")).color
         val hs=lightGlow(light(attrs="""{"color_mode":"hs","hs_color":[0,100]}""")).color

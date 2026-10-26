@@ -21,6 +21,10 @@ import java.time.*
 @Composable fun EnergyPriceCard(entity:HaEntity,zone:ZoneId=ZoneId.systemDefault()) {
     StateValue(entity)
     PriceChart(entity,modifier=Modifier.height(34.dp),detailed=false,zone=zone)
+    // The one thing worth planning around: when today's power is cheapest.
+    val day=java.time.LocalDate.now(zone)
+    val cheapest=remember(entity,zone,day) {hourlyPrices(pricePoints(entity,false,day,zone),zone).minByOrNull {it.value}}
+    if(cheapest!=null) CardDetail(stringResource(R.string.ha_v2_cheapest,priceWindow(cheapest,zone)))
 }
 
 @Composable fun PriceChart(entity:HaEntity,tomorrow:Boolean=false,modifier:Modifier=Modifier,

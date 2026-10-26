@@ -18,6 +18,13 @@ object HaTokens {
         else -> Color(0xFF98A7BA)
     }
 
+    /** White light as it looks in the room: amber at candle warmth, cream at neutral, a cool blue by daylight. */
+    fun whiteColor(kelvin:Float):Color {
+        val t=((kelvin-2000f)/4500f).coerceIn(0f,1f)
+        return if(t<.45f) androidx.compose.ui.graphics.lerp(Color(0xFFD9A066),Color(0xFFDCCDB0),t/.45f)
+        else androidx.compose.ui.graphics.lerp(Color(0xFFDCCDB0),Color(0xFFA9C1DD),(t-.45f)/.55f)
+    }
+
     fun lightColor(hue:Float,saturation:Float):Color =
         Color.hsv(((hue % 360f)+360f)%360f,saturation.coerceIn(0f,100f)/100f*.35f,.8f)
 

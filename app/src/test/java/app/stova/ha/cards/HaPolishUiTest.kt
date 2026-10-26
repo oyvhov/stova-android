@@ -70,6 +70,19 @@ class HaPolishUiTest {
         compose.onNodeWithText("15° / 5°",substring=true,useUnmergedTree=true).assertExists()
         assertNotEquals(app.stova.core.theme.HaTokens.sky("sunny"),app.stova.core.theme.HaTokens.sky("rainy"))
     }
+    @Test fun climateDrawsAnArcAndStaysACompactCard() {
+        val climate=HaEntity("climate.home","heat",StovaJson.parseToJsonElement("""{"friendly_name":"Varmepumpe","temperature":23.5,"current_temperature":25}""").jsonObject,0,0)
+        compose.setContent {StovaTheme {HaCard(CardConfig("c",CardType.CLIMATE,climate.id),climate,false,{},{},modifier=Modifier.width(264.dp))}}
+        compose.onNodeWithTag("climate-arc",useUnmergedTree=true).assertExists()
+        compose.onNodeWithText("Mål: 23,5",useUnmergedTree=true).assertExists()
+        compose.onNodeWithText("Varmepumpe").assertHeightIsEqualTo(152.dp)
+    }
+    @Test fun compactPriceNamesTheCheapestHour() {
+        val prices=(0 until 24).map {if(it==3) 50 else 100+it}
+        val price=HaEntity("sensor.price","120",StovaJson.parseToJsonElement("""{"unit_of_measurement":"øre","today":$prices}""").jsonObject,0,0)
+        compose.setContent {StovaTheme {androidx.compose.foundation.layout.Column {EnergyPriceCard(price)}}}
+        compose.onNodeWithText("Billigast 03",substring=true,useUnmergedTree=true).assertExists()
+    }
     @Test fun focusedClimateShowsAdjustmentHintAndMode() {
         val climate=HaEntity("climate.home","heat",StovaJson.parseToJsonElement("""{"friendly_name":"Varmepumpe","temperature":23.5,"current_temperature":25}""").jsonObject,0,0)
         compose.setContent {StovaTheme {HaCard(CardConfig("c",CardType.CLIMATE,climate.id),climate,false,{},{},modifier=Modifier.width(264.dp))}}
