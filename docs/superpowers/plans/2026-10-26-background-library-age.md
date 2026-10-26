@@ -11,7 +11,7 @@ slik at 18-årsfilmar ikkje blir viste. Valet gjeld per profil, også Emby-konto
   bakgrunn blir fjerna straks filter eller profil endrar seg. Profilkopi bevarer mottakaren sitt filter.
 - [x] 4. Full testar/lint/bygg og visuell kontroll; installer med -r og prøv på
   emulator-5580 og Shield med bevarte data. Ingen avspeling eller HA-handlingar.
-- [ ] 5. Oppdater arkitektur/spesifikasjon, rapport, ledger og HANDOFF; lokale commitar.
+- [x] 5. Oppdater arkitektur/spesifikasjon, rapport, ledger og HANDOFF; lokale commitar.
 
 Berre root skriv/byggjer/prøver einingar. Underagentar gjer lesande review/research.
 Ingen endring av tilgang eller aldersreglar på medietenaren; dette gjeld Stova sin bakgrunn/hero.

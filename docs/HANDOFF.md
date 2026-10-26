@@ -1,3 +1,10 @@
+# Bibliotek og aldersgrense for bakgrunn – fullført på begge einingar
+2026-10-26: Plan `2026-10-26-background-library-age.md` er fullført, kodecommit 7c52582. Utsjånad → Bakgrunn har faktiske Jellyfin/Emby-bibliotek og direkte aldersval; standard maks 15 år, ukjend alder skjult. Same filter på hero, sesong, faste bilete, søk, buffer og førehandsvising.
+689/689 native/unit-prøver, 0 skip; lint 0 feil (53 åtvaringar, 1 hint), bygg OK. APK 1214aaba87321574466b8aff1bb09916aafc2b55b6387cd4acba36eefea38b8a er installert med -r og hashverifisert på emulator-5580 og Shield. Rapport: `docs/verification/background-library-age.md`.
+Faktiske biblioteklister og aldersdialog er prøvde på begge. Emulator: berre Filmar/maks 6 gav rett bakgrunn og sju verifiserte titlar i buffer; ingen valde bibliotek gav temabakgrunn. Shield: D-pad og fokusretur prøvd. Begge står no på Heim med alle bibliotek/maks 15.
+Alle eldre profilfelt er bevarte. Emulatoren har berre serialisert det nye filterfeltet; Shield-profilen og konto-/hushaldsfiler på begge er byteidentiske. Ingen avspeling, HA-styring, serverregel-/launcher-endring, datatømming eller push. Evidens/APK ligg i `.superpowers/background-filter/`.
+Ingen kodearbeid er påbyrja og uferdig. Fysisk Heim-knapp-oppfølging frå førre oppgåve er framleis ikkje stadfesta; denne endringa rører ikkje Heim-tenesta. Brukarvedlegg er urørde.
+
 # Smarthus, innstillingar og gjentekne Heim-trykk – installert på begge einingar
 2026-10-26: Plan `2026-10-26-smarthome-settings.md` er gjennomført, kodecommit 8dc7fa5. Ny innstillingsoversikt/fokus, faktisk HA-status, ekte appikonprøve, samla dynamisk Smarthus-rutenett med tettleik og S/M/L; Android har kort namn.
 670/670 native/unit-prøver, 0 skip; lint 0 feil (52 åtvaringar, 1 hint), bygg OK. APK 0b617fcdd937e561efa7f424b9181136b7fff5934406f8d2a8d818e915801ae4 er installert med -r og hashverifisert på emulator-5580 og Shield. Rapport: `docs/verification/smarthome-settings.md`.

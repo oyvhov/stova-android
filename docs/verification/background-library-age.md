@@ -1,6 +1,6 @@
 # Bibliotek og aldersgrense for bakgrunn
 
-2026-10-26 · plan `2026-10-26-background-library-age.md`
+2026-10-26 · kodecommit `7c52582` · plan `2026-10-26-background-library-age.md`
 
 ## Resultat
 
