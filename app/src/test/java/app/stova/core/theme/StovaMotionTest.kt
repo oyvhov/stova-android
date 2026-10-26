@@ -28,14 +28,14 @@ class StovaMotionTest {
     @Test fun fullMotionIsQuickStandardEmphasized() {
         val full = StovaMotion.tokens(reduceMotion = false)
         assertFalse(full.still)
-        assertEquals(220, full.quick)
-        assertEquals(340, full.standard)
-        assertEquals(420, full.emphasized)
+        assertEquals(150, full.quick)
+        assertEquals(200, full.standard)
+        assertEquals(300, full.emphasized)
         assertTrue(full.quick < full.standard && full.standard < full.emphasized && full.emphasized < full.ambient)
-        assertEquals(340, full.enter<Float>().durationMillis)
+        assertEquals(200, full.enter<Float>().durationMillis)
         assertEquals(250, full.enter<Float>(delayMillis = 250).delay)
-        assertEquals(220, full.exit<Float>().durationMillis)
-        assertEquals(560, full.travel<Float>().durationMillis)
+        assertEquals(150, full.exit<Float>().durationMillis)
+        assertEquals(380, full.travel<Float>().durationMillis)
     }
 
     @Test fun entriesDecelerateAndExitsAccelerate() {

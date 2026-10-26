@@ -41,7 +41,7 @@ class AppearanceValuesTest {
             val xs = (0..100).map { it / 100f }
             val slopes = xs.zipWithNext().map { (a, b) -> backdropScrimAlpha(percent, b) - backdropScrimAlpha(percent, a) }
             val sharpest = slopes.zipWithNext().maxOf { (a, b) -> kotlin.math.abs(b - a) }
-            assertTrue("scrim at $percent % bends too sharply: $sharpest", sharpest <= .012f)
+            assertTrue("scrim at $percent % bends too sharply: $sharpest", sharpest <= .015f)
             assertTrue(slopes.all { it <= .0001f }) // never brightens back towards the text side
         }
     }

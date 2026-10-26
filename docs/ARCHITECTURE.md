@@ -111,7 +111,7 @@ Fokus tilbake til topplinja rullar også lista til toppen, så heroen kan hentas
 oppstart direkte på ei medierad.
 
 `StovaMotion` eig varigheit og easing. Bruk berre laganimasjonar for alfa, skala og forskyving.
-Radflytting bruker `core/ui/SmoothScroll.kt`: 560 ms med mjuk start/stopp, utan eit innleiande
+Radflytting bruker `core/ui/SmoothScroll.kt`: 380 ms med mjuk start/stopp (sider 200 ms, små ting 150 ms), utan eit innleiande
 hopp. Eitt rullejobb eig overgangen; nye piler kan snu eller velje neste logiske rad undervegs.
 `SoftEntrance` tonar inn berre den nye innstillingssida, utan eit utgåande fokustre.
 `LocalReduceMotion` gir null varigheit og slår av parallax. Dialogar går gjennom `StovaDialog`.

@@ -25,7 +25,7 @@ data class MotionTokens(
     val ambient: Int,
     val focusRing: Int,
     val focusZoom: Int,
-    val rowTravel: Int = 560,
+    val rowTravel: Int = StovaMotion.RowTravelMillis,
 ) {
     val still: Boolean get() = standard == 0
 
@@ -44,13 +44,13 @@ data class MotionTokens(
 }
 
 object StovaMotion {
-    const val QuickMillis = 220
-    const val StandardMillis = 340
-    const val EmphasizedMillis = 420
+    const val QuickMillis = 150
+    const val StandardMillis = 200
+    const val EmphasizedMillis = 300
     const val AmbientMillis = 900
-    const val FocusRingMillis = 160
-    const val FocusZoomMillis = 240
-    const val RowTravelMillis = 560
+    const val FocusRingMillis = 120
+    const val FocusZoomMillis = 180
+    const val RowTravelMillis = 380
 
     /** A gentle start, followed by a long soft landing. */
     val Enter: Easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)

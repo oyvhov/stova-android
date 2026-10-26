@@ -10,10 +10,10 @@ import androidx.compose.ui.graphics.Brush
 
 // The original light/medium/dark curves at 25/50/75. Interpolation preserves every
 // original stop, while allowing continuous adjustment down to clear and up to ink.
-// The text side keeps its protection up to .44; the old mid stops at .52 made a hard edge and are gone.
-private val lightScrim = listOf(0f to .96f, .15f to .92f, .35f to .88f, .44f to .84f,
+// The text side keeps its protection up to .46; the old mid stops at .52 made a hard edge and are gone.
+private val lightScrim = listOf(0f to .96f, .15f to .92f, .35f to .88f, .46f to .84f,
     .62f to .05f, .76f to 0f, 1f to 0f)
-private val mediumScrim = listOf(0f to 1f, .15f to .94f, .35f to .9f, .46f to .84f,
+private val mediumScrim = listOf(0f to 1f, .15f to .94f, .35f to .9f, .47f to .85f,
     .62f to .18f, .82f to 0f, 1f to 0f)
 private val darkScrim = listOf(0f to 1f, .45f to .9f, .62f to .74f, .72f to .45f,
     .82f to .18f, .92f to .04f, 1f to 0f)
