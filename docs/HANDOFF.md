@@ -1,3 +1,6 @@
+# «Hero skiftar ikkje bilete» – årsak funnen, ingen kodeendring
+2026-10-26: Shield hadde Bakgrunnstitlar = Favorittar og maks 12 år (brukaren senka frå 15 mellom 17:07 og 18:35). Same Jellyfin-brukar på emulatoren: Favorittar utan grense rullar mellom The Housemaid (R), Affeksjonsverdi, One Battle After Another (15) og Roofman; med maks 12 slepp berre Affeksjonsverdi gjennom, så heroen står. Koden roterer rett. Kl. 20:50 bytte brukaren til Heile biblioteket med fire valde bibliotek, maks 12; då må kvart bibliotek hentast før heroen kjem att (tom hero nokre sekund). Forslag til brukaren: vis tal på titlar som passar i Bakgrunn, fyll opp frå biblioteket når færre enn tre passar, og behald førre hero medan nytt utval lastar dersom han òg passar det nye filteret. Emulatoren er sett tilbake til Heile biblioteket/maks 15.
+
 # Neste: plan `2026-10-26-outstanding-launcher.md` (ikkje påbyrja)
 2026-10-26: Logo (7fa1114): hus med glødande skjerm + geometrisk «stova»-ordmerke; TV-banner og ikon, generator i `scripts/logo/`. Sett i Android TV-applista på emulatoren; installert på begge (APK `2f33e08c…`), Shield stod i skjermsparar.
 HA: appnamn lagt til i begge Android TV-integrasjonane (Android TV Remote og Android Debug Bridge) via Chrome etter brukaren sitt ønske; stadfesta `app_name: Stova` på `media_player.shield`. Eksisterande namn er urørde.
