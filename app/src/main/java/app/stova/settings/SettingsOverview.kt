@@ -2,6 +2,7 @@ package app.stova.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -11,6 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -26,13 +30,17 @@ internal fun SettingsOverview(onOpen: (SettingsSection) -> Unit) {
     val sections = listOf(SettingsSection.HOME, SettingsSection.APPEARANCE, SettingsSection.SMART_HOME,
         SettingsSection.ACCOUNTS, SettingsSection.PROFILE, SettingsSection.HOME_BUTTON)
     val columns = if (LocalDensity.current.fontScale >= 1.5f) 1 else 2
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    val returnedFrom = LocalSettingsReturnedFrom.current
+    val cards = remember { sections.associateWith { FocusRequester() } }
+    // Back from a section lands on the card that opened it, not the first card.
+    Column(Modifier.focusProperties { onEnter = { returnedFrom?.let(cards::get)?.requestFocus() } }.focusGroup(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)) {
         sections.chunked(columns).forEach { band ->
             Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 band.forEach { section ->
                     val source = remember { MutableInteractionSource() }
                     val shape = MaterialTheme.shapes.medium
-                    Row(Modifier.weight(1f).fillMaxHeight().focusOutline(source, shape).clip(shape)
+                    Row(Modifier.weight(1f).fillMaxHeight().focusRequester(cards.getValue(section)).focusOutline(source, shape).clip(shape)
                         .background(MaterialTheme.colorScheme.surface)
                         .clickable(source, indication = null, role = Role.Button) { onOpen(section) }
                         .padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp),

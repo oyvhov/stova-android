@@ -111,15 +111,44 @@ class SettingsScreenTest {
         rule.onNodeWithText("Bakgrunn på appkort").performScrollTo()
             .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(43f) }
         // Android's back dispatcher owns page navigation; raw Compose keys only reach the category.
-        rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
-        rule.waitForIdle()
-        rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        // Category, then the section menu, then out of Settings: one step each.
+        repeat(3) {
+            rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
+            rule.waitForIdle()
+        }
         rule.onNodeWithTag("screen-HOME").assertExists()
         rule.waitUntil(5_000) { profile("A").appearance.appTileBackgroundOpacity == 43 }
         openSettings()
         rule.onNodeWithText("Utsjånad").performClick()
         rule.onNode(hasText("Ikon") and hasClickAction()).performScrollTo().performClick()
         rule.onNode(hasText("Bakgrunn på appkort") and hasText("43 %")).performScrollTo().assertIsDisplayed()
+    }
+
+    private fun back() {
+        rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.waitForIdle()
+    }
+
+    @Test fun backFromASectionOpenedOnTheOverviewReturnsToItsCard() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNode(hasText("Fargar og uttrykk") and hasClickAction()).performClick()
+        rule.onNode(hasText("Tema") and hasClickAction()).assertIsFocused()
+        back()
+        rule.onNode(hasText("Fargar og uttrykk") and hasClickAction()).assertIsFocused()
+        rule.onNodeWithTag("screen-SETTINGS").assertExists()
+    }
+
+    @Test fun backFromContentGoesToTheSectionMenuBeforeLeavingSettings() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNodeWithText("Heim").performClick()
+        rule.onNodeWithText("Utsjånad på framsida").assertIsFocused()
+        back()
+        rule.onNode(hasText("Heim") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).assertIsFocused()
+        rule.onNodeWithTag("screen-SETTINGS").assertExists()
+        back()
+        rule.onNodeWithTag("screen-HOME").assertExists()
     }
 
     @Test fun appearanceStartsWithCategoriesAndOpensOnlyTheChosenControls() {
