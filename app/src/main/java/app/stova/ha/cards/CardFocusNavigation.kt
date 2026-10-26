@@ -10,19 +10,21 @@ internal data class CardFocusCell(
     val columns: Int,
     val rows: Int,
     val listIndex: Int,
+    val revealIndex: Int = listIndex,
 )
 
 internal enum class CardFocusDirection { UP, DOWN, LEFT, RIGHT }
 
-internal fun cardFocusCells(sections: List<DashboardSection>): List<CardFocusCell> = buildList {
+internal fun cardFocusCells(sections: List<DashboardSection>, columns: Int = 3, headings: Boolean = true): List<CardFocusCell> = buildList {
     var row = 0
     var listIndex = 0
     sections.forEach { section ->
-        listIndex++ // The section heading is a lazy-list item, but never a focus target.
-        packCards(section.cards).forEach { band ->
+        if (headings) listIndex++ // A heading is a lazy-list item, never a focus target.
+        packCards(section.cards, columns).forEachIndexed { bandIndex, band ->
             band.forEach { placed ->
                 add(CardFocusCell(placed.card.id, placed.column, row + placed.row,
-                    placed.card.size.columns, placed.card.size.rows, listIndex))
+                    placed.card.size.columns, placed.card.size.rows, listIndex,
+                    if (headings && bandIndex == 0) listIndex - 1 else listIndex))
             }
             row += band.maxOf { it.row + it.card.size.rows }
             listIndex++

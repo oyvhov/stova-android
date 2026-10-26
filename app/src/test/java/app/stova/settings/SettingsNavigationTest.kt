@@ -24,7 +24,7 @@ class SettingsNavigationTest {
                 StovaTheme { SettingsNavigation(SettingsSection.PROFILE, {}, {}) }
             }
         }
-        compose.onNodeWithText("Android-innstillingar").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Android").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Innstillingar").assertIsDisplayed()
     }
 

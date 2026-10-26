@@ -144,9 +144,10 @@ class HaRepositoryTest {
             registryValue=HaRegistry(mapOf("light.a" to HaEntityInfo(room="Stove"),"light.b" to HaEntityInfo(room="Gang"),"light.c" to HaEntityInfo(room="Stove")))
         }
         val repo=HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) };s.enter(p.create("A",AvatarColor.LIME,false).id);runCurrent()
+        p.update(s.active.value!!.id) { it.copy(smartHome=DashboardPrefs(grouping=DashboardGrouping.ROOM)) };runCurrent()
         listOf("light.a","light.b","light.c").forEach {repo.add(HaEntity(it,"on",JsonObject(emptyMap()),0,0),CardType.LIGHT);runCurrent()}
         val last=repo.cards.value.last()
         repo.move(last.id,-1);runCurrent()
-        assertEquals(listOf("light.c","light.a"),dashboardSections(repo.cards.value,socket.registryValue!!).first {it.room=="Stove"}.cards.map {it.entityId})
+        assertEquals(listOf("light.c","light.a"),dashboardSections(repo.cards.value,socket.registryValue!!,DashboardGrouping.ROOM).first {it.room=="Stove"}.cards.map {it.entityId})
     }
 }

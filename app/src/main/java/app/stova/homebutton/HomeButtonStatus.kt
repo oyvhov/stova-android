@@ -4,7 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.provider.Settings
 
-/** Reads, and with an adb-granted permission repairs, the system list of enabled services. */
+/** Reports the user's configured accessibility access; does not change system settings. */
 object HomeButtonStatus {
     fun isEnabled(enabledServices: String?, component: ComponentName): Boolean =
         enabledServices.orEmpty().split(':').any { ComponentName.unflattenFromString(it) == component }
@@ -18,6 +18,7 @@ object HomeButtonStatus {
     fun component(context: Context) = ComponentName(context, HomeButtonService::class.java)
 
     fun serviceEnabled(context: Context): Boolean =
-        isEnabled(Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES), component(context))
+        Settings.Secure.getInt(context.contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, 0) == 1 &&
+            isEnabled(Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES), component(context))
 
 }

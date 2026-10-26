@@ -88,7 +88,7 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
             }
         }
         if(config.size==CardSize.S) Text(label,Modifier.fillMaxWidth(),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)
-        Column(Modifier.weight(1f),verticalArrangement=Arrangement.Bottom) {
+        Column(Modifier.weight(1f),verticalArrangement=if(config.size==CardSize.L) Arrangement.Center else Arrangement.Bottom) {
             Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {
                 CompositionLocalProvider(LocalCardFocused provides focused) {content()}
             }

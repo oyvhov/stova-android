@@ -39,6 +39,7 @@ private enum class PinStep { NONE, VERIFY_FOR_CHANGE, VERIFY_FOR_REMOVE, NEW, CO
 
 @Composable
 fun ProfileSettings(container: AppContainer, profile: Profile) {
+    val enterPane = LocalSettingsPaneEntry.current
     val repo = container.profiles
     val file by repo.file.collectAsStateWithLifecycle(initialValue = null)
     val scope = rememberCoroutineScope()
@@ -51,13 +52,13 @@ fun ProfileSettings(container: AppContainer, profile: Profile) {
     // The first entry of a new PIN, kept only until it is typed again; a hidden typo would lock the adult out.
     var pendingPin by remember { mutableStateOf<String?>(null) }
 
-    BackHandler(enabled = detailId != null) { if (showAccounts) showAccounts = false else if (showKidApps) showKidApps = false else detailId = null }
+    BackHandler(enabled = detailId != null) { enterPane(); if (showAccounts) showAccounts = false else if (showKidApps) showKidApps = false else detailId = null }
 
     val detail = detailId?.let { id -> file?.profiles?.firstOrNull { it.id == id } }
     if (detail != null) {
         if (showAccounts) AccountsSettings(detail, container)
         else if (showKidApps) KidAppsSettings(container, detail)
-        else ProfileDetail(container, detail, onKidApps = { showKidApps = true }, onAccounts = { showAccounts = true }, onDeleted = { detailId = null })
+        else ProfileDetail(container, detail, onKidApps = { enterPane(); showKidApps = true }, onAccounts = { enterPane(); showAccounts = true }, onDeleted = { enterPane(); detailId = null })
         return
     }
 
@@ -78,6 +79,7 @@ fun ProfileSettings(container: AppContainer, profile: Profile) {
     SettingsGroup(stringResource(R.string.settings_profiles)) {
         file?.profiles.orEmpty().filter { it.id != profile.id }.forEach { other ->
             SettingsNavRow(other.name, value = stringResource(if (other.kid) R.string.profile_kid else R.string.profile_adult)) {
+                enterPane()
                 detailId = other.id
             }
         }
@@ -130,17 +132,18 @@ fun ProfileSettings(container: AppContainer, profile: Profile) {
 
 @Composable
 private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: () -> Unit, onAccounts: () -> Unit, onDeleted: () -> Unit) {
+    val enterPane = LocalSettingsPaneEntry.current
     val scope = rememberCoroutineScope()
     var confirm by remember { mutableStateOf(false) }
     var refused by remember { mutableStateOf(false) }
     var appearance by remember(other.id) { mutableStateOf(false) }
     var rows by remember(other.id) { mutableStateOf(false) }
-    val closeAppearance = { if (rows) rows = false else appearance = false }
+    val closeAppearance = { enterPane(); if (rows) rows = false else appearance = false }
     BackHandler(enabled = appearance, onBack = closeAppearance)
     if (appearance) {
         Text(other.name, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
         StovaButton(stringResource(R.string.custom_back), closeAppearance)
-        if (rows) HomeRowSettings(container, other) else AppearanceSettings(container, other, onEditRows = { rows = true })
+        if (rows) HomeRowSettings(container, other) else AppearanceSettings(container, other, onEditRows = { enterPane(); rows = true })
         return
     }
     Text(other.name, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
@@ -151,7 +154,7 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
         }
     }
     SettingsGroup(stringResource(R.string.settings_profile)) {
-        SettingsNavRow(stringResource(R.string.settings_appearance)) { appearance = true }
+        SettingsNavRow(stringResource(R.string.settings_appearance)) { enterPane(); appearance = true }
         SettingsNavRow(stringResource(R.string.profile_delete)) { confirm = true }
     }
     if (refused) {

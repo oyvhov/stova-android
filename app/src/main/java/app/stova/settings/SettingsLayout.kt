@@ -15,6 +15,7 @@ import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.softEntrance
 
 internal val LocalSettingsSectionFocus = staticCompositionLocalOf<FocusRequester?> { null }
+internal val LocalSettingsPaneEntry = staticCompositionLocalOf<() -> Unit> { {} }
 
 /** Two explicit focus areas: arrows never choose a neighbouring section by screen geometry. */
 @Composable
@@ -74,7 +75,8 @@ internal fun SettingsLayout(
                     .then(if (selected == SettingsSection.APPEARANCE) Modifier else Modifier.verticalScroll(rememberScrollState())),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
             ) {
-                CompositionLocalProvider(LocalSettingsSectionFocus provides tabs.getValue(selected)) {
+                CompositionLocalProvider(LocalSettingsSectionFocus provides tabs.getValue(selected),
+                    LocalSettingsPaneEntry provides { enter(selected) }) {
                     content(selected, ::enter)
                 }
             }

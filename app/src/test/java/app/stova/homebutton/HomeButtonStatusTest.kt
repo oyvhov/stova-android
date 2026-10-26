@@ -14,6 +14,15 @@ import org.robolectric.annotation.Config
 @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
 class HomeButtonStatusTest {
     private val me = ComponentName("app.stova", "app.stova.homebutton.HomeButtonService")
+    @Test fun systemAccessibilityMustAlsoBeEnabled() {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        android.provider.Settings.Secure.putString(context.contentResolver,
+            android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, HomeButtonStatus.component(context).flattenToString())
+        android.provider.Settings.Secure.putInt(context.contentResolver, android.provider.Settings.Secure.ACCESSIBILITY_ENABLED, 0)
+        assertFalse(HomeButtonStatus.serviceEnabled(context))
+        android.provider.Settings.Secure.putInt(context.contentResolver, android.provider.Settings.Secure.ACCESSIBILITY_ENABLED, 1)
+        assertTrue(HomeButtonStatus.serviceEnabled(context))
+    }
 
     @Test fun startupRespectsUserDisabledAccessibilityService() {
         val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<app.stova.StovaApplication>()

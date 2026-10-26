@@ -19,7 +19,21 @@ import app.stova.ha.text
     val name: String? = null, val icon: String? = null, val favorite: Boolean = false,
 )
 data class DashboardSection(val room: String?, val favorites: Boolean, val cards: List<CardConfig>)
-fun dashboardSections(cards: List<CardConfig>, registry: HaRegistry): List<DashboardSection> = buildList {
+@Serializable enum class DashboardGrouping { NONE, ROOM }
+@Serializable enum class DashboardDensity(val minimumWidth: Int) { COMPACT(152), BALANCED(200), AIRY(252) }
+@Serializable data class DashboardPrefs(
+    val grouping: DashboardGrouping = DashboardGrouping.NONE,
+    val density: DashboardDensity = DashboardDensity.BALANCED,
+)
+
+fun dashboardColumns(width: Float, density: DashboardDensity, fontScale: Float = 1f): Int =
+    ((width + 16) / (density.minimumWidth * maxOf(1f, fontScale * 0.8f) + 16)).toInt().coerceIn(2, 6)
+
+fun dashboardSections(cards: List<CardConfig>, registry: HaRegistry, grouping: DashboardGrouping = DashboardGrouping.NONE): List<DashboardSection> = buildList {
+    if (grouping == DashboardGrouping.NONE) {
+        if (cards.isNotEmpty()) add(DashboardSection(null, false, cards))
+        return@buildList
+    }
     cards.filter { it.favorite }.takeIf { it.isNotEmpty() }?.let { add(DashboardSection(null,true,it)) }
     cards.filterNot { it.favorite }.groupBy { registry.entities[it.entityId]?.room }
         .forEach { (room, list) -> add(DashboardSection(room,false,list)) }

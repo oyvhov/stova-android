@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
     val firstFocus=remember(profile.id,initialCardId) {initialCardId ?: container.haRepository.lastFocused(profile.id)}
     SmartHomeContent(profile,cards,entities,if(household?.haBaseUrl==null) HaStatus.NOT_CONFIGURED else status,
         images=images,onAdd={adding=true},
+        onLayoutChange={prefs->scope.launch {container.profiles.update(profile.id) {it.copy(smartHome=prefs)}}},
         onPerform={call,id->scope.launch {container.haRepository.perform(call,id,profile)}},onDialog={dialog=it},
         onMove={card,delta->scope.launch {container.haRepository.move(card.id,delta)}},
         onHome={card->container.haRepository.setOnHome(card.id,!card.onHome)},

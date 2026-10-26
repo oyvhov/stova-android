@@ -144,7 +144,10 @@ class HaSocket(
         mutableStatus.value = HaStatus.CONNECTING
         val token = try { auth.accessToken() }
         catch (_: HaSignedOut) { mutableStatus.value = HaStatus.SIGNED_OUT; return }
-        catch (_: java.io.IOException) { retry(); return }
+        catch (failure: java.io.IOException) {
+            if (app.stova.BuildConfig.DEBUG) android.util.Log.w("StovaHa", "Authentication transport: ${failure.javaClass.simpleName}")
+            retry(); return
+        }
         val epoch = ++generation
         nextId = 1
         socket = http.newWebSocket(Request.Builder().url(target.websocket).build(), object : WebSocketListener() {
@@ -178,7 +181,13 @@ class HaSocket(
             }
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) { webSocket.close(code, reason) }
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) = post { if (epoch == generation) retry() }
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) = post { if (epoch == generation) retry() }
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) = post {
+                if (epoch == generation) {
+                    // No tokens, addresses or response bodies in diagnostics.
+                    if (app.stova.BuildConfig.DEBUG) android.util.Log.w("StovaHa", "WebSocket transport: ${t.javaClass.simpleName}, HTTP ${response?.code}")
+                    retry()
+                }
+            }
         })
     }
     private fun retry() {

@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import app.stova.AppContainer
 import app.stova.R
 import app.stova.core.ui.*
@@ -75,6 +76,14 @@ fun HaSettings(container: AppContainer) {
     val profiles by container.profiles.file.collectAsStateWithLifecycle(initialValue = null)
     val scope = rememberCoroutineScope()
     BackHandler(enabled = setup) { setup = false }
+    val enterPane = app.stova.settings.LocalSettingsPaneEntry.current
+    // Status is meaningful only while the configured connection is awake. Settings is a
+    // lifecycle-scoped observer, just like the dashboard; it subscribes to no entities.
+    val address = household?.haBaseUrl
+    LifecycleResumeEffect(address, container.haSocket) {
+        if (address != null) container.haSocket.hold()
+        onPauseOrDispose { if (address != null) container.haSocket.release() }
+    }
     if (setup) {
         StovaDialog({ setup = false }) {
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(48.dp)) {
@@ -82,19 +91,39 @@ fun HaSettings(container: AppContainer) {
             }
         }
     }
-    HaStatusLabel(when {
-        household?.haBaseUrl == null -> HaStatus.NOT_CONFIGURED
+    if (household == null) return
+    HaSettingsContent(when {
+        address == null -> HaStatus.NOT_CONFIGURED
         auth == HaAuthState.SIGNED_OUT -> HaStatus.SIGNED_OUT
         else -> connection
-    })
-    household?.haBaseUrl?.let { Text(it) }
-    StovaButton(stringResource(R.string.ha_connect), { setup = true })
-    if (household?.haBaseUrl != null) {
-        StovaButton(stringResource(R.string.ha_sign_out), { scope.launch { container.haAuth.signOut(); container.household.update { it.copy(haBaseUrl = null) }; container.haRepository.invalidateRegistry(); container.haSocket.reconfigure() } })
-    }
-    profiles?.profiles.orEmpty().filter { it.kid }.forEach { kid ->
-        SettingsSwitchRow(stringResource(R.string.ha_kid_control, kid.name), kid.kidSmartHomeControl, { allowed ->
-            scope.launch { container.profiles.update(kid.id) { it.copy(kidSmartHomeControl = allowed) } }
-        })
+    }, address, profiles?.profiles.orEmpty().filter { it.kid }, { setup = true },
+        onSignOut = { scope.launch { container.haAuth.signOut(); enterPane(); container.household.update { it.copy(haBaseUrl = null) }; container.haRepository.invalidateRegistry(); container.haSocket.reconfigure() } },
+        onKidControl = { kid, allowed -> scope.launch { container.profiles.update(kid.id) { it.copy(kidSmartHomeControl = allowed) } } })
+}
+
+@Composable
+internal fun HaSettingsContent(status: HaStatus, address: String?, kids: List<app.stova.profiles.Profile>,
+    onConfigure: () -> Unit, onSignOut: () -> Unit, onKidControl: (app.stova.profiles.Profile, Boolean) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large).padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                CategoryIcon(StovaIcons.Link)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(stringResource(R.string.ha_settings_connection), style = MaterialTheme.typography.titleMedium)
+                    HaStatusLabel(status)
+                    address?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                }
+            }
+            Text(stringResource(if (address == null) R.string.ha_settings_connect_hint else R.string.ha_settings_layout_hint),
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            StovaButton(stringResource(if (address == null) R.string.ha_connect else R.string.ha_settings_change), onConfigure,
+                icon = StovaIcons.Link, primary = address == null)
+        }
+        if (kids.isNotEmpty()) SettingsGroup(stringResource(R.string.ha_settings_permissions)) {
+            kids.forEach { kid -> SettingsSwitchRow(stringResource(R.string.ha_kid_control, kid.name), kid.kidSmartHomeControl,
+                { allowed -> onKidControl(kid, allowed) }) }
+        }
+        if (address != null) StovaButton(stringResource(R.string.ha_sign_out), onSignOut, quiet = true, compact = true)
     }
 }

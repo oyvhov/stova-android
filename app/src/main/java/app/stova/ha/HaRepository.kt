@@ -113,7 +113,8 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
         if (from < 0) list else {
             val card=list[from]
             val room=registry.value.entities[card.entityId]?.room
-            val section=list.indices.filter {i->list[i].favorite==card.favorite && (card.favorite || registry.value.entities[list[i].entityId]?.room==room)}
+            val section=list.indices.filter {i->session.active.value?.smartHome?.grouping != app.stova.ha.cards.DashboardGrouping.ROOM ||
+                (list[i].favorite==card.favorite && (card.favorite || registry.value.entities[list[i].entityId]?.room==room))}
             val target=section[(section.indexOf(from)+delta).coerceIn(0,section.lastIndex)]
             list.toMutableList().apply {add(target,removeAt(from))}
         }

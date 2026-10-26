@@ -23,6 +23,8 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
     val packs by container.iconPacks.packs.collectAsStateWithLifecycle()
     LaunchedEffect(container.iconPacks) { container.iconPacks.installed() }
     val profiles by container.profiles.file.collectAsStateWithLifecycle(initialValue = ProfilesFile())
+    val appFlow = remember(profile.id, profile.apps) { container.apps.arranged(kotlinx.coroutines.flow.flowOf(profile)) }
+    val previewApps by appFlow.collectAsStateWithLifecycle(initialValue = app.stova.apps.ArrangedApps())
     var picking by remember(profile.id) { mutableStateOf(false) }
     var draft by remember(profile.id) { mutableStateOf(profile.appearance) }
     var pending by remember(profile.id) { mutableIntStateOf(0) }
@@ -63,8 +65,10 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
             }
     }
     AppearanceMenu(scrollable = scrollable) { category, firstControl ->
+        if (category == AppearanceCategory.ICONS) AppIconPreview(draft,
+            (previewApps.favorites + previewApps.all).distinctBy { it.key }, container.appArt, profile.apps.iconOverrides)
         contents(category, firstControl)
-        if (category != AppearanceCategory.PROFILE) ThemePreview(draft, preview, profile.home)
+        if (category != AppearanceCategory.PROFILE && category != AppearanceCategory.ICONS) ThemePreview(draft, preview, profile.home)
     }
     if (picking) BackgroundPicker({ container.media.searchBackgrounds(profile.id, it) }, { entry ->
         picking = false

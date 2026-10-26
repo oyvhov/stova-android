@@ -21,7 +21,7 @@ class CardFocusNavigationTest {
 
     @Test fun nextVisibleBandWinsBeforeDistantCardsInTheSameColumn() {
         val positions=cells(listOf(card("a",CardSize.M),card("b"),card("c",CardSize.M),card("d",CardSize.L),card("e")))
-        assertEquals("c",cardFocusNeighbor(positions,"b",CardFocusDirection.DOWN))
+        assertEquals("e",cardFocusNeighbor(positions,"b",CardFocusDirection.DOWN))
     }
 
     @Test fun roomHeadingsAreSkippedButRetainTheCorrectLazyListItemIndex() {

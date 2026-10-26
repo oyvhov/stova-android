@@ -39,13 +39,13 @@ class TopBarTest {
         compose.setContent { StovaTheme {
             TopBar(Profile("a", "A", AvatarColor.LIME), {}, {}, {})
         } }
-        compose.onNodeWithText("Android-innstillingar").assertDoesNotExist()
+        compose.onNodeWithText("Android").assertDoesNotExist()
         compose.onNodeWithText("Innstillingar").assertIsDisplayed()
     }
 
     @Test fun noAndroidSettingsButtonWithoutAnAction() {
         compose.setContent { StovaTheme { TopBar(Profile("k", "K", AvatarColor.ROSE, kid = true), {}, {}, {}) } }
-        compose.onNodeWithText("Android-innstillingar").assertDoesNotExist()
+        compose.onNodeWithText("Android").assertDoesNotExist()
     }
 
     @Test fun focusingLabelsKeepsNeighbourButtonsInPlace() {

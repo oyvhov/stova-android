@@ -108,7 +108,7 @@ class AppScreensTest {
         }
         rule.waitForIdle()
         rule.onAllNodesWithText("Innstillingar")[0].performClick()
-        rule.waitUntil(5_000) { rule.onAllNodesWithText("Liten").fetchSemanticsNodes().isNotEmpty() }
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Gjer Stova til di").fetchSemanticsNodes().isNotEmpty() }
         rule.saveScreen("07-settings")
         rule.onNodeWithText("Home-knappen").performClick()
         rule.waitForIdle()

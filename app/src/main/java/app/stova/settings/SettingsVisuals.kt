@@ -8,6 +8,7 @@ import app.stova.core.theme.color
 import app.stova.core.ui.StovaIcons
 
 internal val SettingsSection.icon: ImageVector get() = when (this) {
+    SettingsSection.OVERVIEW -> StovaIcons.Apps
     SettingsSection.HOME -> StovaIcons.Rows
     SettingsSection.APPEARANCE -> StovaIcons.Palette
     SettingsSection.ACCOUNTS -> StovaIcons.Link
@@ -25,6 +26,7 @@ internal val SettingsSection.tone: Color get() = when (this) {
     else -> AvatarColor.PEARL.color
 }
 internal val SettingsSection.pageTitle: Int get() = when (this) {
+    SettingsSection.OVERVIEW -> R.string.settings_title_overview
     SettingsSection.HOME -> R.string.settings_title_home
     SettingsSection.PROFILE -> R.string.settings_title_profile
     SettingsSection.ACCOUNTS -> R.string.settings_title_accounts
@@ -34,6 +36,7 @@ internal val SettingsSection.pageTitle: Int get() = when (this) {
     SettingsSection.APPEARANCE -> R.string.settings_appearance
 }
 internal val SettingsSection.hint: Int get() = when (this) {
+    SettingsSection.OVERVIEW -> R.string.settings_hint_overview
     SettingsSection.HOME -> R.string.settings_hint_home
     SettingsSection.PROFILE -> R.string.settings_hint_profile
     SettingsSection.ACCOUNTS -> R.string.settings_hint_accounts

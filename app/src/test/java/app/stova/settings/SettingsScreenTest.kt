@@ -49,6 +49,14 @@ class SettingsScreenTest {
         rule.waitForIdle()
     }
 
+    @Test fun enteringSettingsStartsOnTheOverviewInsteadOfProfile() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNode(hasText("Oversikt") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).assertIsFocused()
+        rule.onNodeWithText("Set PIN").assertDoesNotExist()
+        rule.onNodeWithText("Android").assertExists()
+    }
+
     @Test fun leftFromAScrolledSettingReturnsToItsOwnSection() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
@@ -122,7 +130,7 @@ class SettingsScreenTest {
     @Test fun adultReachesAndroidSettingsFromStovaSettings() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
-        rule.onNodeWithText("Android-innstillingar").performScrollTo().performClick()
+        rule.onNodeWithText("Android").performScrollTo().performClick()
         val started = org.robolectric.Shadows.shadowOf(rule.activity).nextStartedActivity
         assertEquals(android.provider.Settings.ACTION_SETTINGS, started?.action)
     }
@@ -141,6 +149,7 @@ class SettingsScreenTest {
     @Test fun sectionSwitchKeepsFocusOnTheTabWithoutLeavingOldControls() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
+        rule.onNode(hasText("Profil") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()
         rule.onNodeWithText("Set PIN").assertExists()
         rule.onNodeWithText("Bakgrunnsrotasjon").assertDoesNotExist()
         val tab = hasText("Heim") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)
@@ -164,6 +173,7 @@ class SettingsScreenTest {
             container.profiles.create("K", AvatarColor.ROSE, true)
         }
         openSettings()
+        rule.onNode(hasText("Profil") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()
         rule.waitUntil(5_000) { rule.onAllNodesWithText("K").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("K").performScrollTo().performClick()
         rule.onAllNodesWithText("Utsjånad")[1].performScrollTo().performClick()
@@ -198,6 +208,7 @@ class SettingsScreenTest {
             container.profiles.create("K", AvatarColor.ROSE, true)
         }
         openSettings()
+        rule.onNode(hasText("Profil") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()
         rule.waitUntil(5_000) { rule.onAllNodesWithText("K").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("K").performScrollTo().performClick()
         rule.onNodeWithText("Tillatne appar").performClick()
@@ -210,6 +221,7 @@ class SettingsScreenTest {
     @Test fun newPinNeedsConfirmation() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
         openSettings()
+        rule.onNode(hasText("Profil") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()
         rule.onNodeWithText("Set PIN").performClick()
         "2468".forEach { rule.onNodeWithText(it.toString()).performClick() }
         rule.onNodeWithText("OK").performClick()
@@ -227,6 +239,7 @@ class SettingsScreenTest {
             container.session.enter(a.id)
         }
         openSettings()
+        rule.onNode(hasText("Profil") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()
         rule.onNodeWithText("Endre PIN").performClick()
         rule.onNodeWithText("Skriv PIN for A").assertExists()
     }

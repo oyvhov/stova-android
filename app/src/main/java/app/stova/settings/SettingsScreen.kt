@@ -23,11 +23,12 @@ enum class SettingsSection(@StringRes val label: Int) {
     HOME_BUTTON(R.string.settings_home_button),
     APPEARANCE(R.string.settings_appearance),
     ABOUT(R.string.settings_about),
+    OVERVIEW(R.string.settings_overview),
 }
 
 /** Visual groups and D-pad order share this list. Enum order is kept for saved destinations. */
 internal val settingsGroups = listOf(
-    R.string.settings_group_home to listOf(SettingsSection.HOME, SettingsSection.APPEARANCE),
+    R.string.settings_group_home to listOf(SettingsSection.OVERVIEW, SettingsSection.HOME, SettingsSection.APPEARANCE),
     R.string.settings_group_services to listOf(SettingsSection.ACCOUNTS, SettingsSection.SMART_HOME),
     R.string.settings_group_system to listOf(SettingsSection.PROFILE, SettingsSection.HOME_BUTTON, SettingsSection.ABOUT),
 )
@@ -40,12 +41,13 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
         KidSettings(onSwitchProfile)
         return
     }
-    var section by rememberSaveable { mutableStateOf(SettingsSection.PROFILE) }
+    var section by rememberSaveable { mutableStateOf(SettingsSection.OVERVIEW) }
     val context = androidx.compose.ui.platform.LocalContext.current
     SettingsLayout(section, { section = it }, { app.stova.navigation.openSystemSettings(context) }) { shown, openSection ->
         if (shown != SettingsSection.APPEARANCE) PageHeader(stringResource(shown.pageTitle), shown.icon,
             subtitle = stringResource(shown.hint), tint = shown.tone)
         when (shown) {
+            SettingsSection.OVERVIEW -> SettingsOverview(openSection)
             SettingsSection.PROFILE -> ProfileSettings(container, profile)
             SettingsSection.ACCOUNTS -> AccountsSettings(profile, container)
             SettingsSection.HOME -> HomeRowSettings(container, profile, home, onEditAppearance = { openSection(SettingsSection.APPEARANCE) })

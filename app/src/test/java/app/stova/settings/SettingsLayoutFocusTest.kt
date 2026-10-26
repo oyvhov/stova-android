@@ -43,10 +43,10 @@ class SettingsLayoutFocusTest {
 
     @Test fun largeFontSidebarMovesInOrderAndStopsAtBothEnds() {
         render(fontScale = 2f)
-        tab("Heim").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
-        tab("Heim").performKeyInput { pressKey(Key.DirectionUp) }
-        tab("Heim").assertIsFocused()
-        val labels = listOf("Heim", "Utsjånad", "Kontoar", "Smarthus", "Profil", "Home-knappen", "Om", "Android-innstillingar")
+        tab("Oversikt").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        tab("Oversikt").performKeyInput { pressKey(Key.DirectionUp) }
+        tab("Oversikt").assertIsFocused()
+        val labels = listOf("Oversikt", "Heim", "Utsjånad", "Kontoar", "Smarthus", "Profil", "Home-knappen", "Om", "Android")
         labels.zipWithNext().forEach { (from, to) ->
             tab(from).performKeyInput { pressKey(Key.DirectionDown) }
             tab(to).assertIsFocused()
@@ -158,7 +158,7 @@ class SettingsLayoutFocusTest {
 
     private fun assertPendingEntryIsCancelledBy(cancel: Key) {
         render()
-        val label = if (cancel == Key.DirectionUp) "Heim" else "Profil"
+        val label = if (cancel == Key.DirectionUp) "Oversikt" else "Profil"
         tab(label).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
         compose.mainClock.autoAdvance = false
         tab(label).performKeyInput {

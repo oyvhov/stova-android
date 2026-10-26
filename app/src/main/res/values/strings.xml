@@ -443,7 +443,7 @@
     <string name="ha_action_dry">Avfukting</string>
     <string name="ha_action_fan_mode">Vifte</string>
     <string name="ha_action_ran">Køyrt ✓</string>
-    <string name="ha_action_hint_edit">"OK: kortval · Hald OK + piler: flytt · Tilbake: ferdig"</string>
+    <string name="ha_action_hint_edit">"OK: kortval · Hald OK + ←/→: rekkjefølgje · Tilbake: ferdig"</string>
     <string name="ha_action_hint_read">"OK: vis · Hald OK: vis · Lesemodus"</string>
     <string name="ha_action_hint_unavailable">"OK: utilgjengeleg · Hald OK: vis"</string>
     <string name="ha_action_hint_light_off">"OK: slå av · Hald OK: lysstyrke og farge"</string>
@@ -464,7 +464,7 @@
     <string name="ha_action_all_lights">"Slå av alle %1$d lys?"</string>
     <string name="ha_action_yes_off">"Ja, slå av"</string>
     <!-- System -->
-    <string name="nav_system_settings">Android-innstillingar</string>
+    <string name="nav_system_settings">Android</string>
     <string name="row_apps">Appar</string>
     <string name="hb_accessibility_path">Finn ho under Enhetsinnstillingar → Tilgjengelegheit → Stova Home-knapp, og slå ho på.</string>
     <string name="spole_update_for_links">Opna Spole. Oppdater Spole for å gå rett til tittelen.</string>
@@ -588,4 +588,26 @@
     <string name="settings_hint_smart_home">Home Assistant og korta du vil ha nær deg.</string>
     <string name="settings_hint_home_button">La eit trykk ta deg tilbake til Stova.</string>
     <string name="settings_hint_about">Utgåve, lisensar og informasjon om appen.</string>
+    <string name="settings_overview">Oversikt</string>
+    <string name="settings_title_overview">Gjer Stova til di</string>
+    <string name="settings_hint_overview">Framside, utsjånad og tenester — samla på éin stad.</string>
+    <string name="settings_overview_appearance">Fargar og uttrykk</string>
+    <string name="ha_settings_connection">Home Assistant</string>
+    <string name="ha_settings_connect_hint">Kople til heimen for å sjå og styre einingane dine.</string>
+    <string name="ha_settings_layout_hint">Kort, storleik og gruppering vel du på Smarthus-sida.</string>
+    <string name="ha_settings_change">Endre tilkopling</string>
+    <string name="ha_settings_permissions">Tilgang for barneprofilar</string>
+    <string name="icon_preview">Appikona dine</string>
+    <string name="ha_layout">Oppsett</string>
+    <string name="ha_grouping">Gruppering</string>
+    <string name="ha_group_none">Samla rutenett</string>
+    <string name="ha_group_room">Etter rom</string>
+    <string name="ha_density">Plass til korta</string>
+    <string name="ha_density_compact">Kompakt · fleire kort</string>
+    <string name="ha_density_balanced">Balansert · standard</string>
+    <string name="ha_density_airy">Romleg · større kort</string>
+    <string name="ha_layout_hint">Korta tilpassar seg skjermen og skriftstorleiken. Trykk Meny på eit kort for å endre storleiken på akkurat det kortet.</string>
+    <string name="ha_move">Flytt kort</string>
+    <string name="ha_move_earlier">Tidlegare i rekkja</string>
+    <string name="ha_move_later">Seinare i rekkja</string>
 </resources>

@@ -269,15 +269,17 @@ statusar har nøytrale tekstfargar.
 
 - Overskrift med tilkoplingsstatus og roleg oppsummering av lys på, innetemperatur og
   straumpris frå korta på dashbordet. «Legg til kort» og «Rediger» ligg til høgre.
-- Favorittar kjem først, deretter seksjonar per HA-rom. Kort utan rom ligg under
-  «Andre einingar». Rekkefølgja er lagra per profil; flytting held seg innanfor seksjonen.
-- Storleikar: **S (1 × 1), M (2 × 1), L (2 × 2)**. Tre kolonnar og 16 dp mellomrom.
-  S er om lag 264 × 152 dp; M er to S i breidd med mellomrommet, og L to i begge retningar.
-  Ei to-raders pakking let to S-kort stå ved sida av eit L-kort. Radhøgd blir målt frå
+- Oppdatert 26.10.2026: eitt samla rutenett i lagra rekkjefølgje er standard. «Oppsett»
+  gir profillagra romgruppering og tettleik. Romgruppering viser favorittar først, så HA-rom
+  og «Andre einingar». Flytting er Tidlegare/Seinare i rekkjefølgja (innan seksjonen ved romgruppering).
+- Storleikar: **S (1 × 1), M (2 × 1), L (2 × 2)**, med 16 dp mellomrom.
+  Kompakt/Balansert/Romleg gir normalt 5/4/3 kolonnar; Balansert er standard.
+  Tilgjengeleg breidd og skriftstorleik avgjer talet (2–6), med meir plass ved stor skrift.
+  Ei tett to-raders pakking fyller ledige plassar med seinare småkort. Radhøgd blir målt frå
   tekstinnhaldet og kan vekse ved stor skrift; S/M har minst 152 dp, L minst 320 dp.
 - Alle kort har ikon og namn øvst (`titleMedium`, `onSurface`), med hovudverdi og detalj
-  nedst. Tilstandsbrikke kjem berre når ho tilfører informasjon; ingen duplisert På-brikke.
-  Rom-undertekst blir berre vist i Favorittar. Fokusert kort blir bede heilt inn i synsfeltet,
+  nedst i S/M og sentralt i den ledige høgda i L. Tilstandsbrikke kjem berre når ho tilfører informasjon; ingen duplisert På-brikke.
+  Rom-undertekst blir vist i samla rutenett og Favorittar. Fokusert kort blir bede heilt inn i synsfeltet,
   med plass til heile fokusringen. Hint er synleg med fokus i rutenettet og ligg i den trygge botnmargen utan å
   dekkje eller ta høgd frå korta.
 - `CardConfig` lagrar `size`, valfritt `name` og `icon`, `favorite` og `onHome`.
@@ -295,6 +297,11 @@ statusar har nøytrale tekstfargar.
 | Spel/pause | Spel/pause på fokusert mediaspelar. | Media |
 | Spol fram/tilbake | Neste/førre spor på fokusert mediaspelar. | Media |
 | Tilbake | Lukkar panel, val eller Rediger-modus; elles Heim. | Alle |
+
+Kortmenyen opnar med fokus på Storleik. Valet viser S/M/L med diagram; Tilbake går fyrst
+til hovudmenyen. I Rediger-modus flyttar halde OK + Venstre/Høgre kortet tidlegare/seint
+i lagra rekkjefølgje. Opp/Ned flyttar ikkje rekkjefølgja. Fokus blir halde på kort-ID når
+lagringa svarar og rutenettet blir pakka på nytt.
 
 | Korttype | OK | Kontrollpanel (hald OK) |
 |---|---|---|
@@ -398,9 +405,11 @@ avinstallerte appar blir rydda bort. Barneprofilar får ingen appmeny. Ingen aut
 
 ### 5.4 Innstillingar
 
-Sidekolonnen er gruppert som **Heimeskjerm** (Heim, Utsjånad), **Tenester** (Kontoar,
-Smarthus) og **Profil og system** (Profil, Home-knappen, Om, Android-innstillingar).
-Han er 200 dp brei, med 44 dp minimumshøgd som kan vekse med skriftstorleiken.
+Oppdatert 26.10.2026: Innstillingar opnar ei oversikt med seks ikonlenkjer, to kolonnar
+(éi ved skriftstorleik ≥ 1,5). Profil er ei vanleg underside.
+Sidekolonnen er gruppert som **Heimeskjerm** (Oversikt, Heim, Utsjånad), **Tenester** (Kontoar,
+Smarthus) og **Profil og system** (Profil, Home-knappen, Om, Android).
+Han er 200 dp brei, med 34 dp minimumshøgd som kan vekse med skriftstorleiken.
 Opp/Ned følgjer denne rekkjefølgja. OK/Høgre går inn; Venstre går tilbake frå innhaldet.
 Lenkjer mellom sider sikrar fokus på målseksjonen før den gamle kontrollen blir fjerna.
 
@@ -408,6 +417,8 @@ Lenkjer mellom sider sikrar fokus på målseksjonen før den gamle kontrollen bl
 - **Kontoar:** Jellyfin-/Emby-kontoar for profilen (legg til, logg ut).
 - **Heim:** rader av/på og rekkjefølgje, bakgrunnsrotasjon av/på.
 - **Smarthus:** HA-tilkopling (hushald), kortutval og rekkjefølgje for profilen.
+  Tilkoplingsfeltet viser faktisk socketstatus og adresse, med eige val for endring av
+  tilkopling, barnetilgang og utlogging. Synleg side held transporten open utan nye einingsabonnement.
 - **Home-knappen:** status for tilgjengetenesta og adb-oppskrifta (sjå 9).
 - **Utsjånad:** ei kompakt oversikt opnar åtte eigne sider: Tema, Heim og hero, Kort og rader,
   Bakgrunn, Fokus, Toppfelt, Ikon og Profil. Oversikta har to kolonnar, éi ved skriftstorleik ≥ 1,5.
@@ -418,6 +429,8 @@ Lenkjer mellom sider sikrar fokus på målseksjonen før den gamle kontrollen bl
   opp/ned flyttar mellom vala. Endringane blir viste straks og lagra per profil.
   Temagruppa bevarer fargeprøver og kalenderoverlegg; Ikon bevarer ikonpakke, Original/Aksent
   og Sentrert/Fyll flata. Eit direkte temaval slår av kalenderen. Utilgjengelege pakkar blir hugsa.
+  Ikon viser ekte installerte/favorittappar før vala, med produksjonskomponenten for appkort.
+  Projectivy kan prøvast med/utan kortbakgrunn og endringa blir vist straks. Prøva tek ikkje fokus.
   Kvart mål har same streksymbol i sidekolonnen, kategorioversikta og detaljoverskrifta.
   Kategorisida viser éin tittel, opne rader og små konkrete prøver av det valde formatet,
   radvisinga, plasseringa, avstanden og fokuset. Fargane på kategorisymbola er dempa; lime er
@@ -544,7 +557,8 @@ Endringa i Spole er Plan 3 og blir gjord i Spole-repoet etter Spole sine eigne r
   `call_service`. Grafar med `history/history_during_period` (`minimal_response`, `no_attributes`).
 - **Kamera:** `GET /api/camera_proxy/{entity_id}` med Bearer-token.
 - **Livssyklus:** socketen koplar berre til når appen er starta og det finst synlege Heim-brikker
-  eller Smarthus/legg-til-flyten er open. Han fråkoplar 30 s etter `onStop` eller bortfall av behov.
+  eller Smarthus/legg-til-flyten eller oppsett HA-innstillingsside er open. Innstillingssida held
+  berre transporten open, utan eigne einingsabonnement. Han fråkoplar 30 s etter `onStop` eller bortfall av behov.
   Heim abonnerer på høgst tre viste brikker; dashbordet på alle profilen sine kort. Ny tilkopling
   med backoff 1, 2, 4, 8, 16, 30, 60, 120 og 300 s (maks). Status blir vist i Smarthus-overskrifta.
 - **Delte data:** HA-registeret er bufra i seks timar; historikk i fem minutt og prognosar i 15 minutt,
@@ -586,20 +600,22 @@ Smarthus v2 utvidar protokollen utan å endre innlogginga:
 - **Tilgjengeteneste** (`HomeButtonService`), same mønster som Glassio:
   1. **Hovudveg, tastefilter:** `FLAG_REQUEST_FILTER_KEY_EVENTS` er sett både i XML og i
      `onServiceConnected()`, fordi nokre TV-bygg ignorerer XML-flagget. `onKeyEvent` slepp alle
-     andre tastar straks (`return false`). For `KEYCODE_HOME` når overstyringa er på, noterer
-     tenesta tidspunktet ved første `ACTION_DOWN`, startar Stova ved `ACTION_UP` og returnerer
+     andre tastar straks (`return false`). For `KEYCODE_HOME` når overstyringa er på, nullstiller
+     tenesta vindaugssamanslåinga ved nytt `ACTION_DOWN`, startar Stova ved `ACTION_UP` og returnerer
      `true` for både ned og opp. Då blinkar ikkje den innebygde launcheren.
   2. **Fallback, vindaugsendring:** Tenesta lyttar på `TYPE_WINDOW_STATE_CHANGED`, berre frå
-     `com.google.android.tvlauncher` (Android TV / Shield) og
-     `com.google.android.apps.tv.launcherx` (Google TV), filtrert i XML med
-     `android:packageNames`. Ho startar Stova om det ikkje kom ein Home-tast dei siste 1500 ms.
-     Dette fangar Home frå mobilfjernkontrollen.
-  3. **Debounce:** Stova blir ikkje starta meir enn éin gong per 1000 ms.
+     installerte MAIN/HOME-aktivitetar, oppdaga med PackageManager (inkludert Projectivy og alias).
+     Runtime-pakkefilteret blir oppdatert ved pakkeendringar. Klassen må vere ein HOME-aktivitet;
+     andre sider i same launcher får stå opne. Eigne Stova-vindauge stadfestar retur.
+  3. **Samanslåing:** berre like komponent-/vindaugshendingar blir samla i 1000 ms.
+     Eit anna HOME-vindauge, nytt HOME DOWN eller retur til Stova opnar for ny retur straks.
+     Ingen global tidssperre kan stoppe neste trykk eller ein konkurrerande launcher.
   4. **Intent:** `ACTION_MAIN` + `CATEGORY_HOME` mot `MainActivity` med
      `FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_REORDER_TO_FRONT | FLAG_ACTIVITY_SINGLE_TOP`.
 
   Tenesta les ikkje vindaugsinnhald (`canRetrieveWindowContent=false`). Ho lagrar eller loggar
-  aldri tastar.
+  aldri andre tastar. Debug-bygg kan logge HOME-avgjerder og filtrerte vindaugsklassar for feilsøking;
+  ingen vindaugsinnhald, token eller lagring av tastehistorikk.
 - **Kræsjvakt** (etter Marquise): Stova lagrar tidspunkt for ukontrollerte unntak. Ved tre kræsj
   på fem minutt blir Home-overstyringa slått av til brukaren slår henne på att. Innstillingar viser
   då «Home-knappen går til systemlauncheren fordi Stova kræsja. Slå på att?». Då kjem brukaren
@@ -650,7 +666,7 @@ app.stova
 ├─ core/security   SecretStore, KeystoreSecretStore, PinHasher, PinPolicy
 ├─ profiles        Profile, ProfileRepository, ProfileSession, profilval/-redigering
 ├─ apps            AppCatalog, AppArrangement, apprad og appside
-├─ homebutton      HomeButtonService, StockLaunchers
+├─ homebutton      HomeButtonService, HomeActivities, HomeKeyLogic
 ├─ media           MediaAccount, MediaItem, klient, pålogging, rader, øyeblikksbilete, SpoleHandoff
 ├─ background      BackdropController, BackdropLayer
 ├─ watchnext       WatchNextReader

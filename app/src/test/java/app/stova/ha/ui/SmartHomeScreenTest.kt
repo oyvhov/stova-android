@@ -51,7 +51,7 @@ class SmartHomeScreenTest {
     @Test fun statusIsCenteredWithHeadingAtDoubleFont() = assertStatusCentered(2f)
     @Test fun pageAndGroupsHaveConsistentVisualSymbols() {
         val cards = listOf(CardConfig("1", CardType.LIGHT, "light.x", favorite = true))
-        compose.setContent { StovaTheme { SmartHomeContent(adult,cards,emptyMap(),HaStatus.CONNECTED) } }
+        compose.setContent { StovaTheme { SmartHomeContent(adult.copy(smartHome=DashboardPrefs(grouping=DashboardGrouping.ROOM)),cards,emptyMap(),HaStatus.CONNECTED) } }
         compose.onNodeWithTag("page-icon-smart-home",useUnmergedTree=true).assertIsDisplayed()
         compose.onNodeWithTag("section-icon-favorites",useUnmergedTree=true).assertIsDisplayed()
     }
@@ -59,7 +59,7 @@ class SmartHomeScreenTest {
         compose.setContent { StovaTheme(reduceMotion=true) {
             val input = androidx.compose.ui.platform.LocalInputModeManager.current
             SideEffect { input.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
-            SmartHomeContent(adult,List(9) { CardConfig("$it",CardType.SENSOR,"sensor.$it",name=if(it==0) "Stova" else "Kort $it",favorite=true) },
+            SmartHomeContent(adult.copy(smartHome=DashboardPrefs(grouping=DashboardGrouping.ROOM)),List(9) { CardConfig("$it",CardType.SENSOR,"sensor.$it",name=if(it==0) "Stova" else "Kort $it",favorite=true) },
                 emptyMap(),HaStatus.CONNECTED,initialFocusId="0")
         } }
         compose.onNodeWithText("Stova").assertIsFocused()

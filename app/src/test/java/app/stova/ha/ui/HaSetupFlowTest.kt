@@ -21,6 +21,37 @@ import org.robolectric.annotation.Config
 @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
 class HaSetupFlowTest {
     @get:Rule val compose = createComposeRule()
+    @Test fun settingsWakesTheConfiguredConnectionWithoutWatchingAnyEntities() {
+        val messages = java.util.concurrent.CopyOnWriteArrayList<String>()
+        val server = okhttp3.mockwebserver.MockWebServer()
+        server.enqueue(okhttp3.mockwebserver.MockResponse().withWebSocketUpgrade(object : okhttp3.WebSocketListener() {
+            override fun onOpen(webSocket: okhttp3.WebSocket, response: okhttp3.Response) {
+                webSocket.send("""{"type":"auth_required"}""")
+            }
+            override fun onMessage(webSocket: okhttp3.WebSocket, text: String) {
+                messages += text
+                if (text.contains("\"type\":\"auth\"")) webSocket.send("""{"type":"auth_ok"}""")
+            }
+        }))
+        server.start()
+        val container = AppContainer(ApplicationProvider.getApplicationContext(), secrets = InMemorySecretStore())
+        try {
+            runBlocking {
+                container.haAuth.useLongLivedToken("test-only")
+                container.household.update { it.copy(haBaseUrl = server.url("/").newBuilder().host("127.0.0.1").build().toString().trimEnd('/')) }
+            }
+            container.haSocket.start()
+            compose.setContent { StovaTheme { HaSettings(container) } }
+            compose.waitUntil(5_000) { container.haSocket.status.value == HaStatus.CONNECTED }
+            compose.onNodeWithText("Tilkopla").assertExists()
+            compose.onNodeWithText("Fråkopla").assertDoesNotExist()
+            assertFalse(messages.any { it.contains("subscribe_entities") || it.contains("call_service") })
+        } finally {
+            container.haSocket.stop(0)
+            container.appScope.coroutineContext[kotlinx.coroutines.Job]?.cancel()
+            server.shutdown()
+        }
+    }
     @Test fun loginClientInterceptsOnlyMatchingCallback() {
         var code: String? = null
         val client = HaLoginClient("s1") { code = it }

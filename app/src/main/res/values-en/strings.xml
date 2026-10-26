@@ -443,7 +443,7 @@
     <string name="ha_action_dry">Dry</string>
     <string name="ha_action_fan_mode">Fan only</string>
     <string name="ha_action_ran">Run ✓</string>
-    <string name="ha_action_hint_edit">"OK: card options · Hold OK + arrows: move · Back: done"</string>
+    <string name="ha_action_hint_edit">"OK: card options · Hold OK + ←/→: reorder · Back: done"</string>
     <string name="ha_action_hint_read">"OK: inspect · Hold OK: inspect · Read only"</string>
     <string name="ha_action_hint_unavailable">"OK: unavailable · Hold OK: inspect"</string>
     <string name="ha_action_hint_light_off">"OK: turn off · Hold OK: brightness and colour"</string>
@@ -464,7 +464,7 @@
     <string name="ha_action_all_lights">"Turn off all %1$d lights?"</string>
     <string name="ha_action_yes_off">"Yes, turn off"</string>
     <!-- System -->
-    <string name="nav_system_settings">Android settings</string>
+    <string name="nav_system_settings">Android</string>
     <string name="row_apps">Apps</string>
     <string name="hb_accessibility_path">Find it under Device Preferences → Accessibility → Stova Home button, and switch it on.</string>
     <string name="spole_update_for_links">Opened Spole. Update Spole to go straight to the title.</string>
@@ -588,4 +588,26 @@
     <string name="settings_hint_smart_home">Home Assistant and the cards you want nearby.</string>
     <string name="settings_hint_home_button">One press brings you back to Stova.</string>
     <string name="settings_hint_about">Version, licences and information about the app.</string>
+    <string name="settings_overview">Overview</string>
+    <string name="settings_title_overview">Make Stova yours</string>
+    <string name="settings_hint_overview">Home, appearance and services — all in one place.</string>
+    <string name="settings_overview_appearance">Colours and style</string>
+    <string name="ha_settings_connection">Home Assistant</string>
+    <string name="ha_settings_connect_hint">Connect your home to see and control your devices.</string>
+    <string name="ha_settings_layout_hint">Choose cards, sizes and grouping on the Smart home page.</string>
+    <string name="ha_settings_change">Change connection</string>
+    <string name="ha_settings_permissions">Access for child profiles</string>
+    <string name="icon_preview">Your app icons</string>
+    <string name="ha_layout">Layout</string>
+    <string name="ha_grouping">Grouping</string>
+    <string name="ha_group_none">One grid</string>
+    <string name="ha_group_room">By room</string>
+    <string name="ha_density">Card spacing</string>
+    <string name="ha_density_compact">Compact · more cards</string>
+    <string name="ha_density_balanced">Balanced · default</string>
+    <string name="ha_density_airy">Spacious · larger cards</string>
+    <string name="ha_layout_hint">Cards adapt to the screen and text size. Press Menu on a card to change its individual size.</string>
+    <string name="ha_move">Move card</string>
+    <string name="ha_move_earlier">Earlier in order</string>
+    <string name="ha_move_later">Later in order</string>
 </resources>

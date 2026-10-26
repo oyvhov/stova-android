@@ -23,6 +23,43 @@ import org.robolectric.annotation.Config
 class SmartHomeV2UiTest {
     @get:Rule val compose=createComposeRule()
     private val adult=Profile("a","A",AvatarColor.LIME)
+    @Test fun menuOpensOnSizeSoTheFirstOkEntersTheSizeChoices() {
+        compose.setContent { StovaTheme(reduceMotion=true) { SmartHomeContent(adult,
+            listOf(CardConfig("a",CardType.SENSOR,"sensor.a")),emptyMap(),HaStatus.CONNECTED) } }
+        compose.onRoot().performKeyInput {pressKey(Key.Menu)}
+        compose.onNodeWithText("Storleik").assertIsFocused().performKeyInput {pressKey(Key.DirectionCenter)}
+        compose.onNodeWithText("S · 1 × 1").assertIsFocused()
+    }
+    @Test fun delayedSizeWriteRestoresTheSameCardAfterItMovesToAnotherBand() {
+        var cards by mutableStateOf(List(9) { CardConfig("$it",CardType.SENSOR,"sensor.$it") })
+        var delayed: CardConfig? = null
+        compose.setContent { StovaTheme(reduceMotion=true) { SmartHomeContent(adult,cards,emptyMap(),HaStatus.CONNECTED,
+            onConfigure={delayed=it}) } }
+        compose.onNodeWithText("sensor.3").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onRoot().performKeyInput { pressKey(Key.Menu) }
+        compose.onNodeWithText("Storleik").performClick()
+        compose.onNodeWithText("L · 2 × 2").performClick()
+        compose.onNodeWithText("sensor.3").assertIsFocused()
+        compose.runOnIdle { cards=cards.map { if(it.id==delayed?.id) delayed!! else it } }
+        compose.onNodeWithText("sensor.3").assertIsFocused().assertIsDisplayed()
+    }
+
+    @Test fun layoutChoicesAccumulateWhilePersistenceIsDelayed() {
+        val changes=mutableListOf<DashboardPrefs>()
+        compose.setContent { StovaTheme { DashboardLayoutDialog(DashboardPrefs(),{changes+=it},{}) } }
+        compose.onNodeWithText("Gruppering").performClick()
+        compose.onNodeWithText("Kompakt · fleire kort").performClick()
+        assertEquals(DashboardPrefs(DashboardGrouping.ROOM,DashboardDensity.COMPACT),changes.last())
+    }
+
+    @Test fun backFromSizeChoicesReturnsToCardOptions() {
+        compose.setContent { StovaTheme { SmartHomeContent(adult,listOf(CardConfig("a",CardType.SENSOR,"sensor.a")),emptyMap(),HaStatus.CONNECTED) } }
+        compose.onRoot().performKeyInput {pressKey(Key.Menu)}
+        compose.onNodeWithText("Storleik").performClick()
+        compose.onNodeWithText("L · 2 × 2").performKeyInput {pressKey(Key.Back)}
+        compose.onNodeWithText("Flytt kort").assertExists()
+        compose.onNodeWithText("Lukk").assertExists()
+    }
     @Test fun downFromHeaderReturnsToCardsInsteadOfFollowingTheButtonsHorizontalPosition() {
         val cards=listOf(CardConfig("a",CardType.SENSOR,"sensor.a",name="Veranda",size=CardSize.L),
             CardConfig("b",CardType.SENSOR,"sensor.b",name="Kontor",size=CardSize.S),
@@ -53,7 +90,7 @@ class SmartHomeV2UiTest {
         compose.onRoot().performKeyInput {pressKey(Key.DirectionRight)}
         compose.onNodeWithText("sensor.b").assertIsFocused()
         compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
-        compose.onNodeWithText("sensor.c").assertIsFocused()
+        compose.onNodeWithText("sensor.d").assertIsFocused()
         compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
         compose.onNodeWithText("sensor.f").assertIsFocused()
         compose.onRoot().performKeyInput {pressKey(Key.DirectionDown);pressKey(Key.DirectionRight)}
@@ -62,7 +99,7 @@ class SmartHomeV2UiTest {
     @Test fun mediaPreviewKeepsOneCardFocusStopAndDoesNotPerformActionsWhileNavigating() {
         val entity=HaEntity("media_player.a","playing",buildJsonObject {put("media_title","Musikk")},0,0)
         val cards=listOf(CardConfig("p",CardType.MEDIA_PLAYER,entity.id,name="Spelar",size=CardSize.M),
-            CardConfig("s",CardType.SENSOR,"sensor.side"),CardConfig("b",CardType.SENSOR,"sensor.below"))
+            CardConfig("s",CardType.SENSOR,"sensor.side"),CardConfig("r",CardType.SENSOR,"sensor.right"),CardConfig("b",CardType.SENSOR,"sensor.below"))
         var calls=0
         compose.setContent {StovaTheme(reduceMotion=true) {SmartHomeContent(adult,cards,mapOf(entity.id to entity),HaStatus.CONNECTED,onPerform={_,_->calls++})}}
         compose.onNodeWithContentDescription("Pause").assertIsNotEnabled()
@@ -90,7 +127,7 @@ class SmartHomeV2UiTest {
     }
     @Test fun roomSectionsAndFavoritesAreVisible() {
         val cards=listOf(CardConfig("a",CardType.SENSOR,"sensor.a",favorite=true),CardConfig("b",CardType.SENSOR,"sensor.b"))
-        compose.setContent {StovaTheme {SmartHomeContent(adult,cards,emptyMap(),HaStatus.CONNECTED,registry=HaRegistry(mapOf("sensor.b" to HaEntityInfo(room="Stove"))))}}
+        compose.setContent {StovaTheme {SmartHomeContent(adult.copy(smartHome=DashboardPrefs(grouping=DashboardGrouping.ROOM)),cards,emptyMap(),HaStatus.CONNECTED,registry=HaRegistry(mapOf("sensor.b" to HaEntityInfo(room="Stove"))))}}
         compose.onNodeWithText("Favorittar").assertExists()
         compose.onNodeWithText("Stove").performScrollTo().assertIsDisplayed()
     }
@@ -108,7 +145,7 @@ class SmartHomeV2UiTest {
         val bounds=focused.getUnclippedBoundsInRoot()
         assertTrue("Focused top $bounds must stay in $grid",bounds.top>=grid.top)
         assertTrue("Focused bottom $bounds must stay in $grid",bounds.bottom<=grid.bottom)
-        compose.onNodeWithText("sensor.9").assertIsFocused()
+        compose.onNodeWithText("sensor.12").assertIsFocused()
     }
     @Test fun remoteHintHidesWhenFocusLeavesGrid() {
         compose.setContent {StovaTheme {SmartHomeContent(adult,listOf(CardConfig("a",CardType.SENSOR,"sensor.a")),emptyMap(),HaStatus.CONNECTED)}}

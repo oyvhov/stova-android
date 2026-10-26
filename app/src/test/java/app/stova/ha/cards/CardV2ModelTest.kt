@@ -27,7 +27,7 @@ class CardV2ModelTest {
     @Test fun roomSectionsPutFavouritesFirstAndPreserveOrder() {
         val cards = listOf(CardConfig("1",CardType.LIGHT,"light.a"),CardConfig("2",CardType.LIGHT,"light.b",favorite=true),CardConfig("3",CardType.SENSOR,"sensor.c"))
         val registry = HaRegistry(mapOf("light.a" to HaEntityInfo(room="Stove"),"light.b" to HaEntityInfo(room="Gang")))
-        val sections = dashboardSections(cards,registry)
+        val sections = dashboardSections(cards,registry,DashboardGrouping.ROOM)
         assertTrue(sections[0].favorites); assertEquals("2",sections[0].cards.single().id)
         assertEquals("Stove",sections[1].room); assertNull(sections[2].room)
     }

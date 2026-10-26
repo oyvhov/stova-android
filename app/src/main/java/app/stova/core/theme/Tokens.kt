@@ -57,6 +57,7 @@ object StovaLayout {
     val TvSafeEdge = 48.dp
     val Gutter = 24.dp
     val SettingsNavigationWidth = 200.dp
+    val SettingsNavigationMinHeight = 34.dp
     val SettingsRowMinHeight = 44.dp
     val SettingsControlMinHeight = 48.dp
     val PageIconSize = 40.dp

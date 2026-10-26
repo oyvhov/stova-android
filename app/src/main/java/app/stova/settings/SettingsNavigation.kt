@@ -45,7 +45,7 @@ internal fun SettingsNavigation(
     val tabs = sectionFocus.ifEmpty { fallbackFocus }
     val system = remember { FocusRequester() }
     val requesters = settingsOrder.map { tabs.getValue(it) } + system
-    Column(Modifier.width(StovaLayout.SettingsNavigationWidth), verticalArrangement = Arrangement.spacedBy(StovaLayout.Gutter)) {
+    Column(Modifier.width(StovaLayout.SettingsNavigationWidth), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface)
         Column(Modifier.weight(1f).onPreviewKeyEvent { event ->
@@ -55,10 +55,10 @@ internal fun SettingsNavigation(
             false
         }.focusProperties {
             onExit = { if (requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down) cancelFocusChange() }
-        }.focusGroup().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        }.focusGroup().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             settingsOrder.forEachIndexed { index, entry ->
                 settingsGroups.firstOrNull { it.second.first() == entry }?.let { group ->
-                    Text(stringResource(group.first), Modifier.padding(start = 12.dp, top = if (index == 0) 0.dp else 16.dp, bottom = 4.dp),
+                    Text(stringResource(group.first), Modifier.padding(start = 12.dp, top = if (index == 0) 0.dp else 8.dp, bottom = 2.dp),
                         style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 SectionTab(stringResource(entry.label), entry == selected, { onSelect(entry) },
@@ -92,12 +92,12 @@ private fun SectionTab(label: String, selected: Boolean, onFocused: (() -> Unit)
     iconTag: String = "settings-icon-system", onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.large
-    Row(modifier.fillMaxWidth().heightIn(min = StovaLayout.SettingsRowMinHeight)
+    Row(modifier.fillMaxWidth().heightIn(min = StovaLayout.SettingsNavigationMinHeight)
         .onFocusChanged { if (it.isFocused) onFocused?.invoke() }
         .focusOutline(source, shape).clip(shape)
         .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
         .selectable(selected, source, indication = null, role = Role.Tab, onClick = onClick)
-        .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
+        .padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Icon(icon, null, Modifier.size(20.dp).testTag(iconTag), tint = iconTint)
         Text(label, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)

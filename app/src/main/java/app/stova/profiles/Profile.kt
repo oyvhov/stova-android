@@ -17,6 +17,7 @@ data class Profile(
     val apps: AppPrefs = AppPrefs(),
     val home: HomePrefs = HomePrefs(),
     val appearance: AppearancePrefs = AppearancePrefs(),
+    val smartHome: app.stova.ha.cards.DashboardPrefs = app.stova.ha.cards.DashboardPrefs(),
 )
 
 /** App keys are `"<package>/<activity>"`. */

@@ -15,6 +15,10 @@
 
     <!-- Package visibility for the app list, without QUERY_ALL_PACKAGES. -->
     <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
+        </intent>
         <intent><action android:name="org.adw.launcher.THEMES" /></intent>
         <intent><action android:name="com.novalauncher.THEME" /></intent>
         <intent><action android:name="org.adw.ActivityStarter.THEMES" /></intent>

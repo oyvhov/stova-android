@@ -16,8 +16,11 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 | Smarthus på Heim | `home/HomeChips.kt` | Berre synlege brikketekstar; hendingar teiknar ikkje mediaradene på nytt |
 | Smarthus-skjermen | `ha/ui/SmartHomeScreen.kt` | Livssyklus, datakopling og kontrollpanel |
 | Smarthus-layout | `ha/ui/SmartHomeContent.kt` | Kontrollerte kort, fokus og grupper |
+| Smarthus-geometri og val | `ha/cards/CardPacking.kt`, `ha/cards/CardFocusNavigation.kt`, `ha/ui/DashboardLayoutDialog.kt` | Same dynamiske pakking for teikning/piler, profillagra tettleik og gruppering |
 | Legg til Smarthus-kort | `ha/ui/AddCardFlow.kt` | Einingskatalog, filtrering og fokus mellom søk, kategoriar og einingar |
 | Innstillingar | `settings/SettingsScreen.kt`, `settings/SettingsLayout.kt`, `settings/SettingsNavigation.kt` | Datakopling, fokus mellom meny/innhald og fast overskrift |
+| Innstillingsoversikt og ikonprøve | `settings/SettingsOverview.kt`, `settings/AppIconPreview.kt` | Ikonlenkjer og verkelege appar med utkastet til utsjånad |
+| Heim-knappen | `homebutton/HomeActivities.kt`, `homebutton/HomeKeyLogic.kt`, `homebutton/HomeButtonService.kt` | Oppdaga HOME-aktivitetar, tastefilter og avgrensa vindaugsreserveveg |
 | Utsjånad | `settings/AppearanceSettings.kt`, `settings/AppearanceMenu.kt`, `settings/AppearanceSettingsContent.kt` | Lagring, kategorioversikt og kontrollerte val kvar for seg |
 | Fargar, mål og rørsle | `core/theme/` | Felles tokens; ingen fargelitteralar i skjermane |
 | Dialogar og fokus | `core/ui/` | Gjenbrukbare TV-komponentar, éin dialogovergang |
@@ -55,7 +58,7 @@ rad- og tittel-id-ar som nøklar.
 - Applista deler pakkeskanning og pakkelyttar. Ikonpakkar blir oppdaga når dei blir etterspurde.
   Breie pakkeikon bevarer sideforholdet. Projectivy blir installert separat; `ProjectivyIcons`
   legg til eit eige transparent Spole-merke i Stova sin katalog utan å endre tredjepartspakken.
-- HA-socketen treng synlege Heim-brikker eller ein open Smarthus-/legg-til-flyt. Bakgrunn og tapt behov har ein kort fråkoplingsfrist.
+- HA-socketen treng synlege Heim-brikker, ein open Smarthus-/legg-til-flyt eller synleg oppsett HA-innstillingsside. Innstillingane held transporten open for sann tilkoplingsstatus utan eigne einingsabonnement. Bakgrunn og tapt behov har ein kort fråkoplingsfrist.
 - Heim abonnerer på høgst tre synlege HA-brikker; Smarthus abonnerer på korta i dashbordet.
 - HA-registeret blir brukt om att i seks timar. Historikk og prognosar blir delte mellom kort og panel.
 - HA-snapshot blir skrive høgst kvart minutt og forsøkt flusha ved stopp. Berre tidsstempelendringar gir inga skriving.
@@ -105,13 +108,17 @@ ventande flytting. Radflytting i redigeringsmodus har framleis eigarskap til pil
 fokustreet. Opp/Ned held seg i sitt område. Venstre får først flytte mellom kontrollar
 eller i tekst; ved utgang frå innhaldet går fokus til den valde menyseksjonen.
 Lenkjer parkerer fokus på den stabile målseksjonen før den gamle sida blir fjerna.
+Innstillingar opnar `OVERVIEW`, med seks ikonlenkjer og to kolonnar (éi ved stor skrift).
+`LocalSettingsPaneEntry` gjer same fokusparkering ved utskifting av profil- og HA-undersider.
+Sidekolonnen bruker 34 dp minimumshøgd og veks/rullar med teksten; Android er siste mål.
 Utsjånad har åtte små kategorisider; oversikta bruker to kolonnar, éi ved stor skrift.
 `SettingsVisuals` bind kvart mål til same symbol i meny, kategori og `PageHeader`.
 `SectionHeading` gir same tekstkant og teljarplass i Appar og Smarthus. Opne innstillingsrader
 har små konkrete prøver av format, plassering, avstand og fokus. Berre Høgre/OK endrar eit val;
 Venstre går tilbake til seksjonsmenyen. Kompakte verktøyknappar er 36 dp og veks med teksten.
 Tilbake går til kategorien ein kom frå. Førehandsvisinga ligg etter vala og tek ikkje fast
-plass frå kontrollane. Langt-OK-menyane samlar dei detaljerte radvala under «Tilpass rada».
+plass frå kontrollane. Ikon-sida har i staden ei kompakt, ikkje-fokuserbar appprøve før vala,
+med same `AppTile`, ikonpakke og bakgrunnsval som Heim. Langt-OK-menyane samlar dei detaljerte radvala under «Tilpass rada».
 
 Smarthus bruker `ha/cards/CardFocusNavigation.kt` for retningar mellom logiske kortrektangel
 frå same pakking som visinga. Venstre/Høgre held seg på same kortband; Opp/Ned vel næraste
@@ -119,6 +126,22 @@ neste rad og tek omsyn til breie/høge kort. Fokus utanfor skjermen blir rulla i
 Første kortband blir rulla inn saman med gruppeoverskrifta. Dersom eit høgt kort ikkje får
 plass med overskrifta, har heile det fokuserte kortet prioritet. Små kort gir namnet eiga
 tekstbreidd under ikon-/statusrada; breie kort kan ha namn ved ikonet.
+
+`Profile.smartHome` har standardane `NONE`/`BALANCED`: eitt felt i lagra rekkjefølgje.
+Valfri romgruppering viser favorittar først. Kompakt/Balansert/Romleg gir normalt 5/4/3
+kolonnar; breidd og skrift avgjer det faktiske talet (2–6). S/M/L bevarer 1×1/2×1/2×2.
+Pakkinga fyller ledige plassar i to-raders band; radhøgda tek omsyn til tekst. Store kort
+har hovudinnhaldet sentrert i den ledige høgda. Menyen opnar på Storleik, og Tilbake
+frå undermeny gir hovudmenyen. Flytting endrar lagra rekkjefølgje med Tidlegare/Seinare;
+halde OK + Venstre/Høgre gjer det same. Fokus blir halde på kort-ID også når lagringa
+og ompakkinga kjem etter at dialogen er lukka.
+
+Heim-tenesta oppdagar installerte MAIN/HOME-aktivitetar, inkludert alias, og oppdaterer
+filteret ved pakkeendringar. Berre sjølve HOME-aktiviteten utløyser retur, ikkje innstillingane
+i den same pakken. Like hendingar frå same komponent/vindauge blir samla i eitt sekund;
+ein annan launcher blir handsama straks. Eit Stova-vindauge eller nytt HOME DOWN nullstiller
+samanslåinga. HOME UP startar Stova utan ei global tidssperre. Andre tilgjengetenester og
+systemlauncheren blir bevarte. Debug-loggen inneheld berre HOME-/vindaugsavgjerder, aldri vindaugsinnhald.
 
 ## Verifisering
 

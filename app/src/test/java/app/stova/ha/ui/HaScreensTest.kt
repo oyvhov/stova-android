@@ -32,6 +32,22 @@ class HaScreensTest {
     @get:Rule val compose=createAndroidComposeRule<ComponentActivity>()
     @Before fun enabled()=assumeScreensEnabled()
     private fun entity(id:String,state:String,attrs:String)=HaEntity(id,state,StovaJson.parseToJsonElement(attrs).jsonObject,0,0)
+    @Test fun mixedFootprints() {
+        val entities=listOf(entity("weather.home","rainy","""{"friendly_name":"Vêret ved huset","temperature":8.2,"temperature_unit":"°C"}"""),
+            entity("media_player.home","playing","""{"friendly_name":"Musikk i stova","media_title":"Ein roleg kveld","media_artist":"Speleliste"}"""),
+            entity("sensor.temperature","21.7","""{"friendly_name":"Temperaturen i vinterhagen","unit_of_measurement":"°C"}"""),
+            entity("light.reading","on","""{"friendly_name":"Leselampe","brightness":120}"""))
+        val cards=entities.mapIndexed {i,e->CardConfig("$i",cardTypesFor(e).first(),e.id,size=listOf(CardSize.L,CardSize.M,CardSize.S,CardSize.S)[i])}
+        compose.setContent {StovaTheme {Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+            SmartHomeContent(Profile("a","A",AvatarColor.LIME),cards,entities.associateBy {it.id},HaStatus.CONNECTED)
+        }}}
+        compose.saveScreen("ha-mixed-footprints")
+    }
+    @Test fun visualLayoutChoices() {
+        compose.setContent {StovaTheme {DashboardLayoutDialog(DashboardPrefs(),{},{})}}
+        compose.waitForIdle()
+        compose.saveScreen("ha-layout-choices",org.robolectric.shadows.ShadowDialog.getLatestDialog().window!!.decorView)
+    }
     @Test fun dashboard() {
         val entities=listOf(
             entity("light.stove","on","""{"friendly_name":"Stovelys"}"""),
