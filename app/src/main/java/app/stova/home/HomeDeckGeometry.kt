@@ -36,7 +36,7 @@ internal fun homeDeckGeometry(rows: List<HomeRowUi>, home: HomePrefs, p: Appeara
             measurer.measure(style.heading(rowLabel(row.key)), textStyle, maxLines = 2, constraints = Constraints(maxWidth = titleWidth)).size.height.toDp()
         }
         val heading = p.rowSpacing.top.dp + if (style.showTitle) titleHeight + StovaLayout.SectionBottom else 0.dp
-        val captions = if (p.showTitles) (8 + 18 * density.fontScale).dp +
+        val captions = if (style.showsCardTitles(p)) (8 + 18 * density.fontScale).dp +
             (if (row is HomeRowUi.WatchNext && row.entries.any { !it.subtitle.isNullOrEmpty() }) (17 * density.fontScale).dp else 0.dp) else 0.dp
         val art = artworkDimensions(style.format ?: defaultRowFormat(row.key, p), style.size ?: p.cardSize).height.dp
         (heading + captions + 8.dp) to art

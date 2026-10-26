@@ -115,7 +115,7 @@ internal fun HomeRowOrderSettings(
                     StovaButton(stringResource(R.string.row_move_down), { onMove(key, +1) })
                 }
                 RowStyleChoices(rowFormats[key] ?: RowStyle(), defaultRowFormat(key, appearance), appearance.cardSize, rowLabel(key),
-                    hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT) { onStyle(key, it) }
+                    hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT, globalTitles = appearance.showTitles) { onStyle(key, it) }
                 }
             }
         }

@@ -46,6 +46,7 @@ import app.stova.profiles.AppStyle
 import app.stova.profiles.appBackgroundPercent
 import app.stova.profiles.RowFormat
 import app.stova.home.LocalRowStyle
+import app.stova.home.showsCardTitles
 import app.stova.home.LocalArtworkScale
 import app.stova.home.artworkDimensions
 import app.stova.core.theme.StovaLayout
@@ -70,6 +71,7 @@ fun AppTile(
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.medium
     val style = LocalRowStyle.current
+    val captions = style.showsCardTitles(prefs)
     val format = style.format ?: if (prefs.appStyle == AppStyle.ICON) RowFormat.ICON else RowFormat.WIDE
     val iconStyle = format == RowFormat.ICON
     val dimensions = artworkDimensions(format, style.size ?: prefs.cardSize)
@@ -96,10 +98,10 @@ fun AppTile(
                         Modifier.fillMaxSize().padding(12.dp)
                     else if (centered) Modifier.size(height * if (image.packIcon) 0.82f else 0.65f) else Modifier.fillMaxSize())
             } else {
-                IconAndName(app, art, iconStyle, height, prefs.showTitles)
+                IconAndName(app, art, iconStyle, height, captions)
             }
         }
-        if (prefs.showTitles) Text(app.label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleSmall,
+        if (captions) Text(app.label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

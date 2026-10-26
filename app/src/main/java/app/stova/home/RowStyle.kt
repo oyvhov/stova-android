@@ -8,6 +8,9 @@ val LocalRowHasFocus = staticCompositionLocalOf { false }
 /** Layout-only fitting for a two-row deck; saved artwork choices remain unchanged. */
 val LocalArtworkScale = staticCompositionLocalOf { 1f }
 
+/** The row's own choice for names below its cards, or the profile's when the row has none. */
+fun RowStyle.showsCardTitles(p: AppearancePrefs): Boolean = cardTitles ?: p.showTitles
+
 fun defaultRowFormat(key: HomeRowKey, p: AppearancePrefs): RowFormat = when {
     key == HomeRowKey.APPS && p.appStyle == AppStyle.ICON -> RowFormat.ICON
     key.value.startsWith("latest_movies:") && p.movieStyle == MovieStyle.POSTER -> RowFormat.POSTER

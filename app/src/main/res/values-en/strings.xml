@@ -475,6 +475,7 @@
     <string name="custom_row_format">Row card format</string>
     <string name="custom_row_size">Row card size</string>
     <string name="custom_row_title">Show row title</string>
+    <string name="custom_card_titles">Names below cards</string>
     <string name="custom_large_wide">Large wide</string>
     <string name="custom_small_wide">Small wide</string>
     <string name="custom_row_inherit">Use row defaults</string>
@@ -566,7 +567,6 @@
     <string name="settings_summary_profile">Copy or reset</string>
     <string name="settings_customize_row">Customise row</string>
     <string name="settings_customize_row_hint">Heading, artwork format and size</string>
-    <string name="home_row_counter">%1$d / %2$d · Up/down</string>
     <string name="home_visible_rows">Visible rows</string>
     <string name="home_rows_one">One row</string>
     <string name="home_rows_two">Two rows</string>

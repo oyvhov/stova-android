@@ -140,6 +140,8 @@ fun FocusEffect.resolved(): FocusEffect = if (this == FocusEffect.RING) FocusEff
     val title: String? = null,
     val headingSize: HeadingSize = HeadingSize.NORMAL,
     val showSource: Boolean = true,
+    /** Names below this row's cards; null follows the profile's choice. */
+    val cardTitles: Boolean? = null,
 ) {
     fun heading(default: String): String = title?.trim()?.takeIf { it.isNotEmpty() } ?: default
     fun withHeading(value: String): RowStyle = copy(title = value.replace(Regex("\\s+"), " ").trim().take(80).takeIf { it.isNotEmpty() })

@@ -27,7 +27,8 @@ internal val rowFormatLabels = listOf(R.string.appearance_poster, R.string.appea
 internal val headingSizeLabels = listOf(R.string.appearance_small, R.string.appearance_medium, R.string.appearance_large)
 
 @Composable
-fun RowStyleChoices(style: RowStyle, defaultFormat: RowFormat, globalSize: ArtworkSize, defaultTitle: String = "", hasSource: Boolean = true, onChange: (RowStyle) -> Unit) {
+fun RowStyleChoices(style: RowStyle, defaultFormat: RowFormat, globalSize: ArtworkSize, defaultTitle: String = "", hasSource: Boolean = true,
+    globalTitles: Boolean, onChange: (RowStyle) -> Unit) {
     var editing by remember { mutableStateOf(false) }
     val headingButton = remember { FocusRequester() }
     app.stova.core.ui.SettingsNavRow(stringResource(R.string.custom_edit_heading), value = style.heading(defaultTitle),
@@ -50,6 +51,11 @@ fun RowStyleChoices(style: RowStyle, defaultFormat: RowFormat, globalSize: Artwo
     }
     SettingsChoiceRow(stringResource(R.string.custom_row_title), stringResource(if (style.showTitle) R.string.appearance_on else R.string.appearance_off)) {
         onChange(style.copy(showTitle = !style.showTitle))
+    }
+    val names = style.cardTitles ?: globalTitles
+    SettingsChoiceRow(stringResource(R.string.custom_card_titles), stringResource(if (names) R.string.appearance_on else R.string.appearance_off)) {
+        // Choosing the profile's own value again inherits it, so later global changes still reach the row.
+        onChange(style.copy(cardTitles = (!names).takeUnless { it == globalTitles }))
     }
     if (hasSource) SettingsChoiceRow(stringResource(R.string.custom_row_source),
         stringResource(if (style.showSource) R.string.appearance_on else R.string.appearance_off)) {
@@ -87,7 +93,7 @@ internal fun RowMenuSection(key: HomeRowKey, prefs: HomePrefs, onChange: (HomePr
                 StovaButton(stringResource(R.string.custom_back), close, Modifier.focusRequester(back), icon = StovaIcons.ChevronLeft, compact = true, quiet = true)
                 PageHeader((prefs.rowFormats[key] ?: RowStyle()).heading(rowLabel(key)), StovaIcons.Rows)
                 RowStyleChoices(prefs.rowFormats[key] ?: RowStyle(), defaultRowFormat(key, p), p.cardSize, rowLabel(key),
-                    hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT) { style ->
+                    hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT, globalTitles = p.showTitles) { style ->
                     onChange(prefs.copy(rowFormats = if (style == RowStyle()) prefs.rowFormats - key else prefs.rowFormats + (key to style)))
                 }
             }

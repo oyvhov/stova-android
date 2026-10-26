@@ -22,6 +22,7 @@ import app.stova.core.ui.focusOutline
 import app.stova.media.model.*
 import app.stova.home.LocalRowStyle
 import app.stova.home.artworkDimensions
+import app.stova.home.showsCardTitles
 import app.stova.profiles.RowFormat
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
@@ -51,6 +52,6 @@ import coil3.request.ImageRequest
    else AsyncImage(request,contentDescription=null,contentScale=ContentScale.Crop,modifier=Modifier.fillMaxSize(),onError={ artFailed=true })
    if(prefs.progressStyle.dp > 0) item.progress?.let { progress -> Box(Modifier.testTag("card-progress").align(Alignment.BottomStart).fillMaxWidth(progress.coerceIn(0f,1f)).height(prefs.progressStyle.dp.dp).background(MaterialTheme.colorScheme.primary)) }
   }
-  if(prefs.showTitles) Text(title,Modifier.padding(top=8.dp),style=MaterialTheme.typography.titleSmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurface)
+  if(rowStyle.showsCardTitles(prefs)) Text(title,Modifier.padding(top=8.dp),style=MaterialTheme.typography.titleSmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurface)
  }
 }

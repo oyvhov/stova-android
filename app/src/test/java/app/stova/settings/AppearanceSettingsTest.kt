@@ -61,7 +61,7 @@ class AppearanceSettingsTest {
         var rowMode by mutableStateOf(false)
         compose.setContent { StovaTheme {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                if (rowMode) app.stova.home.RowStyleChoices(style, RowFormat.WIDE, prefs.cardSize) { style = it }
+                if (rowMode) app.stova.home.RowStyleChoices(style, RowFormat.WIDE, prefs.cardSize, globalTitles = prefs.showTitles) { style = it }
                 else AppearanceSettingsContent(prefs, category = AppearanceCategory.CARDS, includePreview = false) { prefs = it }
             }
         } }

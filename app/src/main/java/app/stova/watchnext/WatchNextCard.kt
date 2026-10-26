@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextOverflow
 import app.stova.core.theme.StovaLayout
+import app.stova.home.showsCardTitles
 import app.stova.media.model.*
 import app.stova.media.ui.MediaCard
 
@@ -22,7 +23,7 @@ fun WatchNextCard(entry: WatchNextEntry, onClick: () -> Unit, onFocused: () -> U
         MediaCard(MediaItem(entry.id.toString(), entry.packageName, ItemType.OTHER, entry.title,
             progress = entry.progress, art = ItemArt(wide = entry.posterUri)),
             poster = false, onClick = onClick, onLongClick = onLongClick, onFocused = onFocused, modifier = modifier)
-        if(prefs.showTitles) entry.subtitle?.let {
+        if(style.showsCardTitles(prefs)) entry.subtitle?.let {
             Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }

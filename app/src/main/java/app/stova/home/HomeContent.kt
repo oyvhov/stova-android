@@ -206,8 +206,9 @@ fun HomeContent(
                 val style = homePrefs.rowFormats[row.key] ?: RowStyle()
                 artworkDimensions(style.format ?: defaultRowFormat(row.key, appearance), style.size ?: appearance.cardSize).height
             }?.dp ?: StovaLayout.WideHeight
+            val anyCaptions = availableRows.orEmpty().any { row -> (homePrefs.rowFormats[row.key] ?: RowStyle()).showsCardTitles(appearance) }
             val rowHeight = appearance.rowSpacing.top.dp + 25.dp * fontScale + StovaLayout.SectionBottom + artworkHeight +
-                (if (appearance.showTitles) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp + StovaLayout.TvSafeEdge
+                (if (anyCaptions) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp + StovaLayout.TvSafeEdge
             // Fixed for these profile/font choices, independent of each spotlight title. Reserve
             // room for a whole row; even a large poster's optional caption must remain reachable.
             val baseHeroHeight = if (fontScale >= 1.5f) maxHeight * (appearance.heroSize.fraction + 0.16f)
@@ -252,7 +253,7 @@ fun HomeContent(
                         val lastStyle = homePrefs.rowFormats[availableRows.last().key] ?: RowStyle()
                         val lastArt = artworkDimensions(lastStyle.format ?: defaultRowFormat(availableRows.last().key, appearance), lastStyle.size ?: appearance.cardSize).height.dp
                         val lastRowHeight = appearance.rowSpacing.top.dp + (if (lastStyle.showTitle) 25.dp * fontScale + StovaLayout.SectionBottom else 0.dp) + lastArt +
-                            (if (appearance.showTitles) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp
+                            (if (lastStyle.showsCardTitles(appearance)) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp
                         // Even the last row can reach the top after the hero has scrolled away.
                         val bottomSpace = (viewportHeight - lastRowHeight).coerceAtLeast(StovaLayout.TvSafeEdge)
                         // One animation owns the column, including the hero. Individual cards must
@@ -317,12 +318,7 @@ fun HomeContent(
                                     }
                                 }
                             }
-                        if (geometry != null) Box(Modifier.fillMaxWidth().height(geometry.bottom)
-                            .padding(horizontal = StovaLayout.TvSafeEdge), contentAlignment = Alignment.CenterEnd) {
-                            if (availableRows.size > 1) Text(stringResource(R.string.home_row_counter,
-                                availableRows.indexOfFirst { it.key == (pendingRow ?: activeRow) }.coerceAtLeast(0) + 1, availableRows.size),
-                                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+                        if (geometry != null) Spacer(Modifier.fillMaxWidth().height(geometry.bottom))
                         }
                     }
                 }

@@ -72,6 +72,12 @@ class HomeDeckTest {
         assertTrue(bounds.bottom <= compose.onRoot().getUnclippedBoundsInRoot().bottom)
         compose.onNodeWithContentDescription("Film").assertIsNotDisplayed()
     }
+    @Test fun deckShowsNoRowCounterOrKeyHint() {
+        render(third = true)
+        compose.onNodeWithText("Opp/ned", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("1 / 3", substring = true).assertDoesNotExist()
+    }
+
     @Test fun defaultShowsOneRowAtTheBottomWithoutTheNextRowPeekingIn() {
         render()
         val app = compose.onNode(hasContentDescription("Min app") and hasClickAction())

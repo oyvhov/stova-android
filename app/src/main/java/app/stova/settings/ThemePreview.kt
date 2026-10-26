@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.theme.*
 import app.stova.home.SeasonalMark
+import app.stova.home.showsCardTitles
 import app.stova.profiles.*
 
 internal val themeLabels = listOf(R.string.theme_forest,R.string.theme_midnight,R.string.theme_cinema,
@@ -109,7 +110,7 @@ internal fun ThemePreview(stored: AppearancePrefs, entry: app.stova.media.Spotli
                                     if(art!=null) AsyncImage(art,null,Modifier.fillMaxSize(),contentScale=ContentScale.Crop)
                                     if(p.progressStyle.dp>0) Box(Modifier.align(Alignment.BottomStart).fillMaxWidth(.4f).height(p.progressStyle.dp.dp).background(MaterialTheme.colorScheme.primary))
                                 }
-                                if(p.showTitles) Text(title,style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurface,maxLines=1)
+                                if(row.showsCardTitles(p)) Text(title,style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurface,maxLines=1)
                             }
                         }
                     }

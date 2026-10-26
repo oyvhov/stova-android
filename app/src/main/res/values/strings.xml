@@ -475,6 +475,7 @@
     <string name="custom_row_format">Kortformat for rada</string>
     <string name="custom_row_size">Storleik for rada</string>
     <string name="custom_row_title">Vis radtittel</string>
+    <string name="custom_card_titles">Namn under korta</string>
     <string name="custom_large_wide">Stor brei</string>
     <string name="custom_small_wide">Liten brei</string>
     <string name="custom_row_inherit">Bruk standard for rada</string>
@@ -566,7 +567,6 @@
     <string name="settings_summary_profile">Kopier eller nullstill</string>
     <string name="settings_customize_row">Tilpass rada</string>
     <string name="settings_customize_row_hint">Overskrift, kortformat og storleik</string>
-    <string name="home_row_counter">%1$d / %2$d · Opp/ned</string>
     <string name="home_visible_rows">Synlege rader</string>
     <string name="home_rows_one">Éi rad</string>
     <string name="home_rows_two">To rader</string>
