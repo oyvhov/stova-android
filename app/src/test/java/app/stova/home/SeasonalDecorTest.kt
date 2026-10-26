@@ -27,7 +27,7 @@ class SeasonalDecorTest {
         var date by mutableStateOf(LocalDate.of(2026, 10, 25))
         compose.setContent { StovaTheme(appearance = choice.applyTo(AppearancePrefs(showCountdown = true)), date = date) {
             Column {
-                app.stova.navigation.TopBar(Profile("a", "A", app.stova.core.theme.AvatarColor.LIME), {}, {}, {})
+                app.stova.navigation.TopBar(Profile("a", "A", app.stova.core.theme.AvatarColor.LIME), {}, {})
                 HeroPanel(null)
             }
         } }
@@ -39,11 +39,19 @@ class SeasonalDecorTest {
         }
     }
 
+    @Test fun seasonMarkSitsAtTheLeftEdgeOfTheTopBar() {
+        compose.setContent { StovaTheme(appearance = SeasonChoice.HALLOWEEN.applyTo(AppearancePrefs()), date = LocalDate.of(2026, 10, 25)) {
+            app.stova.navigation.TopBar(Profile("a", "A", app.stova.core.theme.AvatarColor.LIME), {}, {})
+        } }
+        val mark = compose.onNodeWithTag("season-mark", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        org.junit.Assert.assertTrue("Mark at the left safe edge: $mark", mark.left.value in 40f..60f)
+    }
+
     @Test fun christmasCountdownRespectsThePreferenceInBothHeaders() {
         var enabled by mutableStateOf(true)
         compose.setContent { StovaTheme(appearance = SeasonChoice.CHRISTMAS.applyTo(AppearancePrefs(showCountdown = enabled)), date = LocalDate.of(2026, 12, 20)) {
             Column {
-                app.stova.navigation.TopBar(Profile("a", "A", app.stova.core.theme.AvatarColor.LIME), {}, {}, {})
+                app.stova.navigation.TopBar(Profile("a", "A", app.stova.core.theme.AvatarColor.LIME), {}, {})
                 HeroPanel(null)
             }
         } }
