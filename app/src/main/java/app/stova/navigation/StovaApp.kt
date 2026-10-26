@@ -2,6 +2,9 @@ package app.stova.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.ExitTransition
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.fadeIn
@@ -46,6 +49,8 @@ import app.stova.settings.SettingsScreen
 
 /** A page arrives from this scale: just enough to feel like it settles, never like it grows. */
 private const val PAGE_FROM = 0.98f
+private const val PAGE_GROW_FROM = 0.9f
+private const val PAGE_SHRINK_TO = 0.94f
 
 /** The root: the profile gate when nobody is signed in, otherwise the full-screen destination. */
 @Composable
@@ -111,6 +116,9 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     }
     // Kept here, not in the layer: a return to Home shows the same picture at once, not a fade from ink.
     val backdrop = app.stova.background.rememberProfileBackdropState(profile.id,profile.appearance)
+    val arrival = remember(profile.id) { app.stova.home.HomeArrival() }
+    // Where the next page grows from: the top bar icon that opened it, or the middle of the screen.
+    var origin by remember { mutableStateOf(TransformOrigin.Center) }
     val motion = stovaMotion
     // No side rail: home is the whole screen, and Apps and Settings are pages that Back closes.
     Box(Modifier.fillMaxSize().testTag("screen-${current.name}")) {
@@ -120,9 +128,14 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         AnimatedContent(
             current,
             transitionSpec = {
+                // A page opened from an icon grows out of it and shrinks back into it on Back;
+                // Home itself only fades, so the picture behind never jumps.
+                val home = targetState == Destination.HOME
                 ContentTransform(
-                    fadeIn(motion.enter()) + scaleIn(motion.enter(), initialScale = PAGE_FROM),
-                    fadeOut(motion.exit()),
+                    fadeIn(motion.enter()) + if (home) scaleIn(motion.enter(), initialScale = PAGE_FROM)
+                        else scaleIn(motion.enter(), initialScale = PAGE_GROW_FROM, transformOrigin = origin),
+                    fadeOut(motion.exit()) + if (home) scaleOut(motion.exit(), targetScale = PAGE_SHRINK_TO, transformOrigin = origin)
+                        else ExitTransition.None,
                     sizeTransform = null,
                 )
             },
@@ -155,7 +168,8 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         }) {
                             app.stova.background.ProfileBackdrop(profile.id,profile.appearance,spotlight,fixed,state=backdrop)
                         }
-                        androidx.compose.runtime.CompositionLocalProvider(app.stova.home.LocalHomeScrollShift provides shift) {
+                        androidx.compose.runtime.CompositionLocalProvider(app.stova.home.LocalHomeScrollShift provides shift,
+                            app.stova.home.LocalHomeArrival provides arrival) {
                         HomeScreen(
                             home, container.appArt, container.appCatalog,
                             onOpenApps = { current = Destination.APPS },
@@ -169,9 +183,10 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                                 TopBar(
                                     profile = profile,
                                     onSettings = { current = Destination.SETTINGS },
+                                    onPageOrigin = { origin = it },
                                     onProfile = switchProfile,
                                     onSmartHome = if(household?.haBaseUrl!=null) {{smartHomeCardId=null;current=Destination.SMART_HOME}} else null,
-                                    leading = { app.stova.ha.ui.HomeStatusChips(chips,onOpenCard={id->smartHomeCardId=id;current=Destination.SMART_HOME}) },
+                                    leading = { app.stova.ha.ui.HomeStatusChips(chips,onOpenCard={id->smartHomeCardId=id;origin=TransformOrigin.Center;current=Destination.SMART_HOME}) },
                                 )
                             },
                         )
@@ -180,7 +195,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                     Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog)
                     Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId,backdrop=backdrop.shown)
                     Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile,
-                        onOpenApps = { appsFromSettings = true; current = Destination.APPS })
+                        onOpenApps = { appsFromSettings = true; origin = TransformOrigin.Center; current = Destination.APPS })
                 }
             }
         }

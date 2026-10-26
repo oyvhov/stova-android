@@ -22,6 +22,7 @@ import app.stova.home.LocalRowHasFocus
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Rule
+import app.stova.profiles.FocusEffect
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
@@ -40,7 +41,9 @@ class ProjectivyIconScreensTest {
         val fake=FakeIconPackSource().apply { packs=listOf(IconPack(ProjectivyIcons.PACKAGE,"Projectivy Icon Pack",119));filter="" }
         val art=AppArtCache(compose.activity,iconPacks=IconPackRepository(fake,tmp.root))
         val app=InstalledApp("app.reelstack/app.reelstack.MainActivity","app.reelstack","app.reelstack.MainActivity","Spole",true)
-        var prefs by mutableStateOf(AppearancePrefs(iconPack=ProjectivyIcons.PACKAGE,appTileBackground=false))
+        // The plain outline is the one effect that leaves the rest of a focused row undimmed, so the
+        // surface colours below are exact; reduced motion at the end dims again, as it always did.
+        var prefs by mutableStateOf(AppearancePrefs(iconPack=ProjectivyIcons.PACKAGE,appTileBackground=false,focusEffect=FocusEffect.OUTLINE))
         runBlocking { assertNotNull(art.artwork(app,prefs)) }
         var wallpaper=0;var surface=0
         compose.setContent { StovaTheme(appearance=prefs) {

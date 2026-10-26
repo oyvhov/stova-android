@@ -31,6 +31,7 @@ import app.stova.apps.*
 import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.StovaButton
 import app.stova.core.ui.smoothScrollToItem
+import app.stova.core.ui.staggeredEntrance
 import app.stova.core.theme.stovaMotion
 import app.stova.media.*
 import app.stova.media.model.*
@@ -91,6 +92,14 @@ fun HomeContent(
     val currentRows by rememberUpdatedState(availableRows)
     val requesters = remember { mutableMapOf<HomeRowKey, FocusRequester>() }
     fun restore(key: HomeRowKey?) { returnRow = key; focusReturn++ }
+    // The first Home of a profile lets its rows arrive one after another; later returns are instant.
+    val arrival = LocalHomeArrival.current
+    var arriving by remember { mutableStateOf(arrival != null && !arrival.played) }
+    LaunchedEffect(Unit) {
+        arrival?.played = true
+        kotlinx.coroutines.delay(ARRIVAL_WINDOW_MILLIS)
+        arriving = false
+    }
     fun closeMenu() { val key = menuRow?.key; menuRow = null; menuMedia = null; menuApp = null; restore(key) }
     BackHandler(enabled = movingRow != null) { val key = movingRow; movingRow = null; restore(key) }
     LaunchedEffect(hiddenRow) {
@@ -318,7 +327,8 @@ fun HomeContent(
                                             if (gainedFocus && pendingRow == null) scope.launch {
                                                 listState.smoothScrollToItem(scrollIndex(index), motion)
                                             }
-                                        }.focusGroup().then(if (geometry != null) Modifier.fillMaxWidth().height(geometry.slotHeight).padding(vertical = 4.dp) else Modifier)
+                                        }.focusGroup().staggeredEntrance(index, arriving)
+                                            .then(if (geometry != null) Modifier.fillMaxWidth().height(geometry.slotHeight).padding(vertical = 4.dp) else Modifier)
                                             .then(if (movingRow == row.key) Modifier.padding(horizontal = 32.dp)
                                             .border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large) else Modifier),
                                             contentAlignment = if (deck) Alignment.BottomStart else Alignment.TopStart) {
@@ -384,6 +394,9 @@ fun HomeContent(
         }
     }
 }
+
+/** Rows composed this soon after Home appears arrive in turn; rows that come later are simply there. */
+private const val ARRIVAL_WINDOW_MILLIS = 400L
 
 private val StayPut = object : BringIntoViewSpec {
     override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float) = 0f

@@ -47,8 +47,9 @@ data class MotionTokens(
     fun <T> settle(): FiniteAnimationSpec<T> =
         if (still) snap() else spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = StovaMotion.SettleStiffness)
 
-    /** A row eases away from rest and settles without a spring or a jump. */
-    fun <T> travel(): TweenSpec<T> = tween(rowTravel, 0, StovaMotion.Travel)
+    /** Rows travel on a softer no-bounce spring: they move at once and land gently, about [rowTravel] ms. */
+    fun <T> travel(): FiniteAnimationSpec<T> =
+        if (still) snap() else spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = StovaMotion.TravelStiffness)
 }
 
 object StovaMotion {
@@ -61,12 +62,16 @@ object StovaMotion {
     const val RowTravelMillis = 380
     /** About 170 ms to rest from a standing start; quicker than any tween here, with no overshoot. */
     const val SettleStiffness = 800f
+    /** Within 1 % of the distance after about 380 ms, matching [RowTravelMillis]. */
+    const val TravelStiffness = 280f
+    /** Rows arriving on Home follow each other by this much, for at most [StaggerRows] rows. */
+    const val StaggerMillis = 35
+    const val StaggerRows = 5
 
     /** A gentle start, followed by a long soft landing. */
     val Enter: Easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
     /** Material's emphasized accelerate: a quiet start, then gone. */
     val Exit: Easing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)
-    val Travel: Easing = CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
 
     val Full = MotionTokens(QuickMillis, StandardMillis, EmphasizedMillis, AmbientMillis, FocusRingMillis, FocusZoomMillis, RowTravelMillis)
     val Still = MotionTokens(0, 0, 0, 0, 0, 0, 0)

@@ -10,6 +10,8 @@ import app.stova.core.theme.AvatarColor
 import app.stova.core.theme.StovaTheme
 import app.stova.profiles.Profile
 import org.junit.Assert.assertEquals
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.test.performClick
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,6 +35,20 @@ class TopBarTest {
         compose.onNodeWithText("Innstillingar").assertIsDisplayed()
         compose.runOnIdle { mode.value = app.stova.profiles.ClockMode.H12 }
         compose.onNode(clock).assertIsDisplayed()
+    }
+
+    @Test fun settingsTellsWhereItSitsSoItsPageCanGrowFromIt() {
+        var origin: androidx.compose.ui.graphics.TransformOrigin? = null
+        var opened = false
+        compose.setContent { StovaTheme {
+            androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize()) {
+                TopBar(Profile("a", "A", AvatarColor.LIME), { opened = true }, {}, onPageOrigin = { origin = it })
+            }
+        } }
+        compose.onNodeWithText("Innstillingar").performClick()
+        org.junit.Assert.assertTrue(opened)
+        val at = origin!!
+        org.junit.Assert.assertTrue("top right: $at", at.pivotFractionX > 0.6f && at.pivotFractionY < 0.3f)
     }
 
     @Test fun adultHomeHasOneSettingsEntryAndNoSeparateAndroidIcon() {

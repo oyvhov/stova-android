@@ -26,6 +26,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.layout.findRootCoordinates
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -59,6 +65,8 @@ fun TopBar(
     onProfile: () -> Unit,
     modifier: Modifier = Modifier,
     onSmartHome: (() -> Unit)? = null,
+    /** Told where an icon sits on screen just before it opens its page, so the page can grow from it. */
+    onPageOrigin: (TransformOrigin) -> Unit = {},
     leading: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -74,15 +82,16 @@ fun TopBar(
         if (decorated && appearance.showCountdown && androidx.compose.ui.platform.LocalDensity.current.fontScale < 1.5f)
             app.stova.home.SeasonalCountdown(appearance.season())
         Clock(Modifier.padding(end = 16.dp))
-        if(onSmartHome!=null && appearance.showSmartHomeButton) TopBarButton(StovaIcons.Home,stringResource(R.string.nav_smart_home),onSmartHome)
-        TopBarButton(StovaIcons.Settings, stringResource(R.string.nav_settings), onSettings)
+        if(onSmartHome!=null && appearance.showSmartHomeButton) TopBarButton(StovaIcons.Home,stringResource(R.string.nav_smart_home),onSmartHome,onPageOrigin)
+        TopBarButton(StovaIcons.Settings, stringResource(R.string.nav_settings), onSettings, onPageOrigin)
         if (appearance.showProfile) ProfileButton(profile, onProfile)
     }
 }
 
 @Composable
-private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit) {
+private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit, onPageOrigin: (TransformOrigin) -> Unit = {}) {
     val source = remember { MutableInteractionSource() }
+    var centre by remember { mutableStateOf(TransformOrigin.Center) }
     val focused by source.collectIsFocusedAsState()
     val shape = MaterialTheme.shapes.extraLarge
     val motion = app.stova.core.theme.stovaMotion
@@ -90,8 +99,13 @@ private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit) 
     Box(
         Modifier
             .size(48.dp)
+            .onGloballyPositioned { coords ->
+                val root = coords.findRootCoordinates().size
+                val at = coords.boundsInRoot().center
+                if (root.width > 0 && root.height > 0) centre = TransformOrigin(at.x / root.width, at.y / root.height)
+            }
             .focusOutline(source, shape)
-            .clickable(source, indication = null, role = Role.Button, onClick = onClick)
+            .clickable(source, indication = null, role = Role.Button) { onPageOrigin(centre); onClick() }
             .semantics { text = AnnotatedString(label) },
         contentAlignment = Alignment.Center,
     ) {

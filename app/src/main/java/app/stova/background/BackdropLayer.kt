@@ -1,7 +1,11 @@
 package app.stova.background
 import app.stova.profiles.spotlightMillis
 import app.stova.profiles.dimmingPercent
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -54,7 +58,13 @@ class BackdropState { var shown by mutableStateOf<String?>(null) }
  }
  val motion=stovaMotion
  Box(modifier.fillMaxSize().background(ink)) {
-  Crossfade(shown,modifier=Modifier.graphicsLayer { scaleX=scale.value;scaleY=scale.value },animationSpec=motion.fade(motion.ambient),label="backdrop") { image ->
+  // A dissolve, not a crossfade: the next picture fades in over the current one, which stays
+  // opaque until it is covered, so a change never dips through the dark background.
+  AnimatedContent(shown,modifier=Modifier.graphicsLayer { scaleX=scale.value;scaleY=scale.value },
+   transitionSpec={ (fadeIn(motion.fade(motion.ambient)) togetherWith
+    // Going to no picture at all fades the last one out instead of cutting it.
+    (if(targetState==null) fadeOut(motion.fade(motion.ambient)) else ExitTransition.KeepUntilTransitionsFinished)).using(null) },
+   label="backdrop") { image ->
    if(image!=null) {
     var ready by remember(image) { mutableStateOf(false) }
     // "backdrop-target" is what the layer shows; "backdrop" only once that picture has decoded.

@@ -20,8 +20,9 @@ Rekkjefølgje no: A Barnetid, så steg 1 (fokus), B rørsle, C skrift og farge, 
 - [x] A. Barnetid (bibliotekbasert etter brukaren: «eg vil ikkje sjå barnefilmer og serier på kvelden»): `AppearancePrefs.kidsHours` (av som standard; 06–20 når på). Dagtid berre barnebiblioteka, elles blir dei trekte frå dei valde. Var: I vindauget brukar
   heroen same bibliotekval med maks 7 år (kjend aldersgrense påkravd). Heim byter ved timegrensa berre
   medan Heim er synleg. Val under Utsjånad → Bakgrunn.
-- [ ] B. Rørsle: fjør utan sprett for fokus og rulling, korte, forskuvde inngangar av rader, sidebyte som
-  veks frå ikonet, krysstoning via kunsten sin hovudfarge i staden for blekk.
+- [x] B. Rørsle: fjør utan sprett for fokus og rulling (rulling ber farten vidare ved raske trykk), korte,
+  forskuvde inngangar av rader (første Heim per profil), sidebyte som veks frå ikonet, og bakgrunnen
+  løyser seg opp i neste bilete i staden for å gå via blekk (betre enn ein mellomfarge).
 - [ ] C. Open skrift med karakter til titlar/klokke (OFL, inkludert i appen) og ein svak tone frå
   kunsten i scrim, fokus og appfliser. Fargar framleis berre i `core/theme`.
 

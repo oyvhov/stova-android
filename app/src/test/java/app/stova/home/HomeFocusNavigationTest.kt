@@ -82,11 +82,12 @@ class HomeFocusNavigationTest {
         app.performKeyInput { pressKey(Key.DirectionDown) }
         compose.mainClock.advanceTimeBy(64)
         val early = app.fetchSemanticsNode().positionInRoot.y
-        org.junit.Assert.assertTrue("The app row must still be travelling after 64 ms", early > start - 100f)
         compose.mainClock.advanceTimeBy(160)
         val middle = app.fetchSemanticsNode().positionInRoot.y
-        org.junit.Assert.assertTrue("The scroll must make visible progress", middle < early)
         compose.mainClock.advanceTimeBy(1_000)
+        // The spring leaves at once, but four frames in it has covered less than the next ten frames will.
+        org.junit.Assert.assertTrue("The app row must be moving after 64 ms", early < start)
+        org.junit.Assert.assertTrue("...and still travelling: ${start - early} then ${early - middle}", start - early < early - middle)
         compose.onNodeWithContentDescription("Film").assertIsFocused()
         compose.mainClock.autoAdvance=true
     }

@@ -18,7 +18,7 @@ class StovaMotionTest {
         assertEquals(0, still.focusRing)
         assertEquals(0, still.focusZoom)
         assertEquals(0, still.rowTravel)
-        assertEquals(0, still.travel<Float>().durationMillis)
+        assertTrue(still.travel<Float>() is androidx.compose.animation.core.SnapSpec)
         // A delayed entry would still be a wait: delays collapse with the durations.
         assertEquals(0, still.enter<Float>(delayMillis = 250).delay)
         assertEquals(0, still.enter<Float>(delayMillis = 250).durationMillis)
@@ -52,7 +52,11 @@ class StovaMotionTest {
         assertEquals(200, full.enter<Float>().durationMillis)
         assertEquals(250, full.enter<Float>(delayMillis = 250).delay)
         assertEquals(150, full.exit<Float>().durationMillis)
-        assertEquals(380, full.travel<Float>().durationMillis)
+        // Rows land in about the old 380 ms, within 1 % of the distance, and never pass the target.
+        val travel = androidx.compose.animation.core.TargetBasedAnimation(full.travel(), Float.VectorConverter, 0f, 1f)
+        assertTrue(travel.getValueFromNanos(380_000_000L) > 0.985f)
+        assertTrue(travel.getValueFromNanos(100_000_000L) > 0.3f) // it moves at once, no slow ease-in
+        for (ms in 0..800 step 10) assertTrue(travel.getValueFromNanos(ms * 1_000_000L) <= 1.0001f)
     }
 
     @Test fun entriesDecelerateAndExitsAccelerate() {
@@ -65,9 +69,6 @@ class StovaMotionTest {
             val t = i / 20f
             assertTrue(StovaMotion.Enter.transform(t) in 0f..1.0001f)
             assertTrue(StovaMotion.Exit.transform(t) in 0f..1.0001f)
-            assertTrue(StovaMotion.Travel.transform(t) in 0f..1.0001f)
         }
-        assertTrue(StovaMotion.Travel.transform(0.1f) < 0.05f)
-        assertTrue(StovaMotion.Travel.transform(0.9f) > 0.98f)
     }
 }
