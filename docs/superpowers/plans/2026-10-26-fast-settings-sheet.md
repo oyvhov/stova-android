@@ -19,6 +19,6 @@ Brukaren valde: fem hovudseksjonar, og panel frå høgre for langt OK.
   dagens dialogar i `home/RowOptions.kt`, `apps/AppActionsMenu.kt`, media-meny og HA-kortmeny.
   Bevar: OK-trykket som opna menyen vel ingenting (StovaDialog-regelen), favoritt/flytt/skjul i
   app-scopet, alle eksisterande handlingar.
-- [ ] 4. Full kontroll, emulatorbilete, Shield (brukaren har sagt ja til installering i kveld), overlevering.
+- [x] 4. Full kontroll (746/746, lint 0 feil), emulatorbilete, Shield (`6197504f…`, hash stemmer), overlevering.
 
 Ingen push. Ingen glas/blur. Fargar berre i `core/theme`.
