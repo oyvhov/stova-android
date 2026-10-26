@@ -105,9 +105,9 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
         else -> CardValue(entityStateLabel(entity))
     }
 }
-@Composable internal fun CardValue(value:String,unit:String?=null) {
+@Composable internal fun CardValue(value:String,unit:String?=null,style:androidx.compose.ui.text.TextStyle=MaterialTheme.typography.headlineMedium) {
     Row(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=androidx.compose.ui.Alignment.Bottom) {
-        Text(value,style=MaterialTheme.typography.headlineMedium,color=MaterialTheme.colorScheme.onSurface,modifier=Modifier.weight(1f,fill=false),maxLines=2,overflow=TextOverflow.Ellipsis)
+        Text(value,style=style,color=MaterialTheme.colorScheme.onSurface,modifier=Modifier.weight(1f,fill=false),maxLines=2,overflow=TextOverflow.Ellipsis)
         if(!unit.isNullOrBlank()) Text(unit,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(bottom=4.dp))
     }
 }

@@ -1,3 +1,10 @@
+# Blanda Smarthus-kort – ferdig på Shield og emulator
+2026-10-26: Plan `2026-10-26-mixed-smarthome-cards.md` er fullført etter «Ikkje berre breidde kort?». S har tettare luft/ikonflate utan mindre tekst eller tap av detaljar; L-vêr har større temperatur, vêrikon og fullbrei prognose under. M og dynamisk vekst ved stor skrift er bevarte.
+709/709 native/unit-prøver, 0 skip; lint 0 feil (62 åtvaringar, 1 hint), bygg OK. APK `9bd09278c1abbb8b3f29cee4701760493696cb2e5bacd2f294531508cad66e4b` er installert med -r og hashverifisert på begge. Rapport: `docs/verification/mixed-smarthome-cards.md`.
+Shield har kompakt samla rutenett: Ute L, Straumpris M, Stova S, Sonos M, Varmepumpa S. Alle fem er synlege ved opning. Pilnavigasjon til Sonos/klima og ny opning er prøvde. Reint faktisk bilete: `.superpowers/smart-home-view/smarthus-mixed-shield.png`.
+Berre Shield-kortstorleik/rekkjefølgje og tettleik er endra; andre profilverdiar er like. Emulatorprofil og konto-/hushaldsfiler på begge er byteidentiske. Ingen HA-styring, avspeling, sletting, launcher-/tilgjengeendringar eller push; brukarvedlegg er urørde.
+Ingen påbyrja kodearbeid er uferdig. Begge står på Smarthus. Eldre fysisk Heim-knapp-oppfølging er framleis ikkje stadfesta; vanleg TV-fokus kan rulle bandet litt når fokus går ned, medan fokusert kort er heilt synleg.
+
 # Smarthus-vising og skjermbilete – ferdig på Shield
 2026-10-26: Brukaren bad om ei fin Smarthus-vising og eit bilete. Sett opp faktisk Shield-profil gjennom Stova-menyane: samla/Balansert rutenett, M-kort for Ute, Straumpris, Stova og Varmepumpa på første skjerm; Sonos i neste rad.
 Vêr og Tibber-straumpris er lagde til som lesekort. Dei tre opphavlege kort-ID-ane/einingane er bevarte, med breiare storleik; korte lokale namn på vêr/pris/varme. Ingen HA-tenester eller avspeling er utløyste.

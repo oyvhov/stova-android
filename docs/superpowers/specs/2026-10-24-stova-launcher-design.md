@@ -277,6 +277,9 @@ statusar har nøytrale tekstfargar.
   Tilgjengeleg breidd og skriftstorleik avgjer talet (2–6), med meir plass ved stor skrift.
   Ei tett to-raders pakking fyller ledige plassar med seinare småkort. Radhøgd blir målt frå
   tekstinnhaldet og kan vekse ved stor skrift; S/M har minst 152 dp, L minst 320 dp.
+  S har kompakt innvendig luft (12 dp kant, 28 dp ikonrute, 4/3 dp mellomrom),
+  med same tekststorleikar og detaljar. Vanlege lys-/klimakort med rom passar ei 152 dp rad.
+  L-vêr har framheva temperatur og vêrikon over ein fullbrei femdagarsprognose; M bevarer den horisontale visinga.
 - Alle kort har ikon og namn øvst (`titleMedium`, `onSurface`), med hovudverdi og detalj
   nedst i S/M og sentralt i den ledige høgda i L. Tilstandsbrikke kjem berre når ho tilfører informasjon; ingen duplisert På-brikke.
   Rom-undertekst blir vist i samla rutenett og Favorittar. Fokusert kort blir bede heilt inn i synsfeltet,

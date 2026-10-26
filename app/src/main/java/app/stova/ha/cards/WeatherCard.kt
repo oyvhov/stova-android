@@ -28,14 +28,21 @@ fun weatherIcon(state:String) = when(state) {
     if(size==CardSize.S) {
         CurrentWeather(entity)
         ForecastStrip(forecast,size,zone)
+    } else if(size==CardSize.L) Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(28.dp)) {
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
+            Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {CurrentWeather(entity,prominent=true)}
+            Icon(weatherIcon(entity.state),null,Modifier.size(56.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        ForecastStrip(forecast,size,zone)
     } else Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(24.dp),verticalAlignment=Alignment.CenterVertically) {
         Column(Modifier.weight(1.3f),verticalArrangement=Arrangement.spacedBy(4.dp)) {CurrentWeather(entity)}
         Box(Modifier.weight(3f)) {ForecastStrip(forecast,size,zone)}
     }
 }
 
-@Composable private fun CurrentWeather(entity:HaEntity) {
-    CardValue(entity.attributes.number("temperature")?.let { formatNumber(it,LocalConfiguration.current.locales[0]) } ?: stringResource(R.string.ha_dash), entity.attributes["temperature_unit"]?.jsonPrimitive?.contentOrNull)
+@Composable private fun CurrentWeather(entity:HaEntity,prominent:Boolean=false) {
+    CardValue(entity.attributes.number("temperature")?.let { formatNumber(it,LocalConfiguration.current.locales[0]) } ?: stringResource(R.string.ha_dash), entity.attributes["temperature_unit"]?.jsonPrimitive?.contentOrNull,
+        style=if(prominent) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium)
     CardDetail(entityStateLabel(entity))
 }
 
@@ -45,7 +52,7 @@ fun weatherIcon(state:String) = when(state) {
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
             forecast.take(5).forEach {day -> Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(2.dp)) {
                 Text(Instant.ofEpochMilli(day.time).atZone(zone).format(DateTimeFormatter.ofPattern("EEE",locale)),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                Icon(weatherIcon(day.condition),null,Modifier.size(18.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(weatherIcon(day.condition),null,Modifier.size(if(size==CardSize.L) 22.dp else 18.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(formatNumber(day.high,locale)+"°",style=MaterialTheme.typography.labelMedium)
                 if(size!=CardSize.S) day.low?.let {Text(formatNumber(it,locale)+"°",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
             }}
