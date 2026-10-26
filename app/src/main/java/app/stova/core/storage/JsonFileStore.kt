@@ -7,6 +7,7 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
@@ -55,8 +56,12 @@ class JsonFileStore<T : Any>(
         val previous = loadedLocked()
         val next = transform(previous)
         if (next == previous) return@withLock previous
-        withContext(io) { write(next) }
-        state.value = next
+        // Once the file is being replaced, memory follows it even if the caller has gone; otherwise
+        // the next update would start from the old value and write the change away again.
+        withContext(NonCancellable) {
+            withContext(io) { write(next) }
+            state.value = next
+        }
         next
     }
 

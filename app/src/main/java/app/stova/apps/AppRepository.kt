@@ -45,6 +45,12 @@ class AppRepository(
                 else arrangeApps(apps, p.prefs, p.kid, Collator.getInstance(Locale.getDefault()))
             }
 
+    /**
+     * For a menu that closes as it acts: the change runs in the app scope, because the menu's own
+     * scope ends with the frame that removes it, often while the write is still on disk.
+     */
+    fun launchChange(change: suspend AppRepository.() -> Unit) { scope.launch { change() } }
+
     suspend fun toggleFavorite(profileId: String, key: String) = updatePrefs(profileId) { prefs ->
         prefs.copy(favorites = if (key in prefs.favorites) prefs.favorites - key else prefs.favorites + key)
     }

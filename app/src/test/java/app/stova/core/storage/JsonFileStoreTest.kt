@@ -1,7 +1,10 @@
 package app.stova.core.storage
 
 import java.io.File
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -40,6 +43,28 @@ class JsonFileStoreTest {
     @Test fun updateSurvivesReopen() = runTest {
         val f = tmp.root.resolve("s.json"); store(f).update { it.copy(n = 7) }
         assertEquals(7, store(f).current().n)
+    }
+
+    @Test fun aCallerCancelledDuringTheWriteStillLeavesMemoryAndDiskAgreeing() = runTest {
+        val held = ArrayDeque<Runnable>()
+        val io = object : CoroutineDispatcher() {
+            override fun dispatch(context: CoroutineContext, block: Runnable) { held += block }
+        }
+        fun drain() { runCurrent(); while (held.isNotEmpty()) { held.removeFirst().run(); runCurrent() } }
+        val f = tmp.root.resolve("s.json")
+        val s = JsonFileStore(f, Sample.serializer(), Sample(), io)
+        launch { s.update { it.copy(n = 1) } }
+        drain()
+        val caller = launch { s.update { it.copy(n = 2) } }
+        runCurrent()
+        held.removeFirst().run()
+        // The file now holds 2, and the screen that asked goes away before the caller resumes.
+        caller.cancel()
+        runCurrent()
+        assertEquals(2, s.current().n)
+        launch { s.update { it.copy(s = "next") } }
+        drain()
+        assertEquals(Sample(2, "next"), store(f).current())
     }
 
     @Test fun concurrentUpdatesAreNotLost() = runTest {

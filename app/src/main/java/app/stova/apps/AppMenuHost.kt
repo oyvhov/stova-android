@@ -42,9 +42,9 @@ fun AppMenuHost(app: InstalledApp, apps: AppRepository, profile: Profile, art: A
                 }
             }
             else -> AppActionsMenu(app, app.key in profile.apps.favorites, app.key in profile.apps.hidden,
-                onToggleFavorite = { scope.launch { apps.toggleFavorite(profile.id, app.key) } },
-                onMove = { delta -> scope.launch { apps.moveFavorite(profile.id, app.key, delta) } },
-                onToggleHidden = { scope.launch { apps.setHidden(profile.id, app.key, app.key !in profile.apps.hidden) } },
+                onToggleFavorite = { apps.launchChange { toggleFavorite(profile.id, app.key) } },
+                onMove = { delta -> apps.launchChange { moveFavorite(profile.id, app.key, delta) } },
+                onToggleHidden = { apps.launchChange { setHidden(profile.id, app.key, app.key !in profile.apps.hidden) } },
                 onAppInfo = { catalog.openAppInfo(app.packageName) }, onDismiss = onDismiss,
                 onChangeIcon = { changing = true }, rowActions = rowActions)
         }

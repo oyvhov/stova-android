@@ -35,7 +35,9 @@ import app.stova.core.theme.StovaTheme
 import app.stova.profiles.Profile
 import app.stova.profiles.ProfileRepository
 import app.stova.profiles.ProfilesFile
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
@@ -74,6 +76,15 @@ class AppsScreenTest {
             assertEquals(a.top, b.top)
             assertEquals(16f, (b.left - a.right).value, 1f)
         }
+    }
+
+    /** Runs IO at once, or keeps it until [release] while [hold] is set: a slow disk on demand. */
+    private class HeldWrites : CoroutineDispatcher() {
+        @Volatile var hold = false
+        private val held = java.util.concurrent.ConcurrentLinkedQueue<Runnable>()
+        override fun dispatch(context: CoroutineContext, block: Runnable) { if (hold) held += block else block.run() }
+        fun release() { hold = false; while (true) (held.poll() ?: break).run() }
+        fun heldCount() = held.size
     }
 
     private fun profiles() = ProfileRepository(
@@ -115,6 +126,24 @@ class AppsScreenTest {
         compose.onNodeWithText("Legg til i favorittar").performClick()
         compose.waitForIdle()
         assertEquals(listOf(banan.key), runBlocking { profiles.file.first().profiles.first().apps.favorites })
+    }
+
+    @Test fun favoriteSurvivesTheMenuClosingWhileTheWriteIsOnDisk() {
+        val io = HeldWrites()
+        val profiles = ProfileRepository(JsonFileStore(tmp.root.resolve("p.json"), ProfilesFile.serializer(), ProfilesFile(), io))
+        val adult = runBlocking { profiles.create("A", AvatarColor.LIME, false) }
+        show(profiles, adult, FakeAppCatalog(listOf(banan)))
+        compose.onNodeWithText("Banan").performTouchInput { longClick() }
+        // On the Shield the fsync outlasts the frame in which the menu closes.
+        io.hold = true
+        compose.onNodeWithText("Legg til i favorittar").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Legg til i favorittar").assertDoesNotExist()
+        assertEquals(1, io.heldCount())
+        io.release()
+        compose.waitForIdle()
+        assertEquals(listOf(banan.key), runBlocking { profiles.current().profiles.first().apps.favorites })
+        assertTrue(tmp.root.resolve("p.json").readText().contains(banan.key))
     }
 
     @Test fun openingHoldCannotChooseFavoriteButTheNextOkCan() {
