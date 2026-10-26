@@ -147,6 +147,10 @@ class HomeViewModelTest {
             advanceTimeBy(2)
             org.junit.Assert.assertNotEquals(before, vm.spotlight.value)
         }
+        repo.update(id) { it.copy(appearance = it.appearance.copy(spotlightSeconds = 17)) }
+        val beforeCustom = vm.spotlight.value
+        advanceTimeBy(16999); assertEquals(beforeCustom, vm.spotlight.value)
+        advanceTimeBy(2); org.junit.Assert.assertNotEquals(beforeCustom, vm.spotlight.value)
         assertEquals(1, loads)
     }
 

@@ -30,7 +30,7 @@ import app.stova.core.theme.StovaFocus
  * Animation state is read in drawing/layer phases; reduced motion keeps the surface cue still.
  */
 @Composable
-fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean = false): Modifier {
+fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean = false, dimSurfaceAlpha: Float = 1f): Modifier {
     val focused by source.collectIsFocusedAsState()
     val reduceMotion = LocalReduceMotion.current
     val motion = stovaMotion
@@ -76,7 +76,7 @@ fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean
             // Artwork and icon-pack colours stay exact; only control surfaces receive the light wash.
             if (!zoom && emphasis.value > 0.001f) drawOutline(artOutline, SolidColor(light.copy(alpha = StovaFocus.SurfaceAlpha * emphasis.value)))
             // Dim the art itself, keeping it opaque over the wallpaper.
-            if (brightness.value < 0.999f) drawOutline(artOutline, SolidColor(ink.copy(alpha = 1f - brightness.value)))
+            if (brightness.value < 0.999f) drawOutline(artOutline, SolidColor(ink.copy(alpha = (1f - brightness.value) * dimSurfaceAlpha)))
             val a = alpha.value
             if (a > 0.001f) {
                 inset(edge) { drawOutline(outline, SolidColor(color.copy(alpha = a)), style = style) }

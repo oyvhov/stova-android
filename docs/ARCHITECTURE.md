@@ -22,6 +22,7 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 | Innstillingsoversikt og ikonprøve | `settings/SettingsOverview.kt`, `settings/AppIconPreview.kt` | Ikonlenkjer og verkelege appar med utkastet til utsjånad |
 | Heim-knappen | `homebutton/HomeActivities.kt`, `homebutton/HomeKeyLogic.kt`, `homebutton/HomeButtonService.kt` | Oppdaga HOME-aktivitetar, tastefilter og avgrensa vindaugsreserveveg |
 | Utsjånad | `settings/AppearanceSettings.kt`, `settings/AppearanceMenu.kt`, `settings/AppearanceSettingsContent.kt` | Lagring, kategorioversikt og kontrollerte val kvar for seg |
+| Skyveknappar og lagring | `core/ui/SettingsSliderRow.kt`, `profiles/AppearanceValues.kt`, `settings/AppearanceEdits.kt` | TV-/touch-justering, bakoverkompatible verdiar og delt editor per profil med samla lagring |
 | Bakgrunnsutval | `profiles/BackgroundFilter.kt`, `media/BackgroundEligibility.kt`, `settings/BackgroundLibraryPicker.kt`, `settings/BackgroundAgeSetting.kt` | Konto-/bibliotekval, tolka aldersgrense, TV-dialogar og same sluttfilter på alle kunstvegar |
 | Bakgrunn ved filterbyte | `background/ProfileBackdrop.kt` | Ny bilet-/overgangstilstand ved endra utval, slik at gamal kunst ikkje blir halden att |
 | Fargar, mål og rørsle | `core/theme/` | Felles tokens; ingen fargelitteralar i skjermane |
@@ -135,6 +136,15 @@ Utsjånad har åtte små kategorisider; oversikta bruker to kolonnar, éi ved st
 `SectionHeading` gir same tekstkant og teljarplass i Appar og Smarthus. Opne innstillingsrader
 har små konkrete prøver av format, plassering, avstand og fokus. Berre Høgre/OK endrar eit val;
 Venstre går tilbake til seksjonsmenyen. Kompakte verktøyknappar er 36 dp og veks med teksten.
+Skyveknappar bruker OK for å gå inn/ut av pileredigering. Tilbake avsluttar justering før
+kategorien; Opp/Ned avsluttar og flyttar fokus. Fleire piler før neste ramme blir akkumulerte.
+Horisontale drag endrar verdi, vertikale sveip går til sida si rulling. `AppearanceValues`
+les nye talfelt med null som arv frå eldre bool/preset. `BackdropScrim` deler dei interpolerte
+kurvene mellom Heim og preview, med nøyaktige anker for gamle dempingsval.
+`AppContainer.appearanceEdits` eig éin editor per profil. Utkastet oppdaterer preview straks;
+ventande sliderskrivingar blir samla i 180 ms (knappar/innhaldsgrenser blir lagra straks), utan å kansellere pågåande atomisk skriving. Utgang
+flushar siste verdi i app-scopet, rask ny opning ser same utkast, og nullstilling/kopi ventar
+på eldre skrivingar. Lagra prosent på appkort påverkar berre flata, aldri alfa på ikon/tekst.
 Tilbake går til kategorien ein kom frå. Førehandsvisinga ligg etter vala og tek ikkje fast
 plass frå kontrollane. Ikon-sida har i staden ei kompakt, ikkje-fokuserbar appprøve før vala,
 med same `AppTile`, ikonpakke og bakgrunnsval som Heim. Langt-OK-menyane samlar dei detaljerte radvala under «Tilpass rada».

@@ -10,7 +10,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.dp
 import app.stova.profiles.AppearancePrefs
-import app.stova.profiles.Corners
+import app.stova.profiles.cornerDp
 import app.stova.profiles.seasonal
 
 val LocalSeasonDate = staticCompositionLocalOf { java.time.LocalDate.now() }
@@ -88,7 +88,7 @@ fun StovaTheme(
     val shown = appearance.seasonal(date)
     MaterialTheme(
         colorScheme = stovaColorScheme(shown.visualTheme, shown.accent),
-        shapes = RoundedCornerShape(appearance.cornerRadius.dp.dp).let { shape ->
+        shapes = RoundedCornerShape(appearance.cornerDp.dp).let { shape ->
             Shapes(shape, shape, shape, shape, shape)
         },
         typography = StovaTypography,

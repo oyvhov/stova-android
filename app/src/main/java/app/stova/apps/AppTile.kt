@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.LocalDensity
 import app.stova.core.theme.LocalAppearance
 import app.stova.profiles.AppStyle
+import app.stova.profiles.appBackgroundPercent
 import app.stova.profiles.RowFormat
 import app.stova.home.LocalRowStyle
 import app.stova.home.LocalArtworkScale
@@ -84,8 +85,8 @@ fun AppTile(
         .onKeyEvent { event ->
             if (event.type == KeyEventType.KeyUp && event.key == Key.Menu) { onLongClick(); true } else false
         }.combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick, onClick = onClick)) {
-        Box(Modifier.size(width, height).focusOutline(source, shape, zoom = true).clip(shape)
-            .background(if (prefs.appTileBackground) MaterialTheme.colorScheme.surfaceVariant else androidx.compose.ui.graphics.Color.Transparent), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(width, height).focusOutline(source, shape, zoom = true, dimSurfaceAlpha = prefs.appBackgroundPercent / 100f).clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = prefs.appBackgroundPercent / 100f)), contentAlignment = Alignment.Center) {
             val image = artwork
             if (image != null) {
                 val centered = if (image.packIcon) prefs.iconFill == IconFill.CENTER else iconStyle

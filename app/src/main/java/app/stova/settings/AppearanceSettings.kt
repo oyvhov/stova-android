@@ -2,9 +2,7 @@ package app.stova.settings
 
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
@@ -22,7 +20,6 @@ import androidx.compose.ui.focus.focusRequester
 
 @Composable
 fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Boolean = false, onEditRows: () -> Unit = {}) {
-    val scope = rememberCoroutineScope()
     val sectionFocus = LocalSettingsSectionFocus.current
     val packs by container.iconPacks.packs.collectAsStateWithLifecycle()
     LaunchedEffect(container.iconPacks) { container.iconPacks.installed() }
@@ -33,12 +30,18 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
     var pickingLibraries by remember(profile.id) { mutableStateOf(false) }
     var restoreLibraries by remember(profile.id) { mutableStateOf(false) }
     val libraryFocus=remember(profile.id) {FocusRequester()}
-    var draft by remember(profile.id) { mutableStateOf(profile.appearance) }
-    var pending by remember(profile.id) { mutableIntStateOf(0) }
-    LaunchedEffect(profile.appearance, pending) { if (pending == 0) draft = profile.appearance }
-    fun save(prefs:AppearancePrefs) {
-        draft=prefs;pending++
-        scope.launch {try {container.profiles.update(profile.id) {it.copy(appearance=prefs)}} finally {pending--}}
+    val edits = remember(container, profile.id) { container.appearanceEdits.open(profile) }
+    val draft = edits.draft
+    LaunchedEffect(profile.appearance, edits.pending) { edits.sync(profile.appearance) }
+    androidx.compose.runtime.DisposableEffect(edits) { onDispose { edits.flush() } }
+    fun save(prefs: AppearancePrefs) {
+        val before = edits.draft
+        // Only continuous slider input waits; buttons and content restrictions save at once.
+        val slidersOnly = prefs.copy(appTileBackground = before.appTileBackground,
+            appTileBackgroundOpacity = before.appTileBackgroundOpacity, backdropDimmingPercent = before.backdropDimmingPercent,
+            cornerRadiusDp = before.cornerRadiusDp, cardSpacingDp = before.cardSpacingDp,
+            spotlightSeconds = before.spotlightSeconds) == before
+        edits.change(prefs, delayed = slidersOnly)
     }
     LaunchedEffect(pickingLibraries,restoreLibraries) {
         if(!pickingLibraries && restoreLibraries) {withFrameNanos {};runCatching {libraryFocus.requestFocus()};restoreLibraries=false}
@@ -61,8 +64,9 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
         },
             includePreview = false, category = category, firstControl = firstControl, previewEntry = preview, homePrefs = profile.home,
             others = profiles.profiles.filter { it.id != profile.id },
-            onReset = { scope.launch { container.profiles.resetAppearance(profile.id) } },
-            onCopy = { sourceId -> scope.launch {
+            onReset = { container.appScope.launch { edits.awaitSaved(); container.profiles.resetAppearance(profile.id) } },
+            onCopy = { sourceId -> container.appScope.launch {
+                edits.awaitSaved()
                 val source = profiles.profiles.firstOrNull { it.id == sourceId } ?: return@launch
                 val accounts = container.mediaAccounts.all.first()
                 val sourceAccounts = accounts.filter { it.profileId == sourceId }
@@ -89,9 +93,9 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
         {pickingLibraries=false})
     if (picking) BackgroundPicker({ container.media.searchBackgrounds(profile.id, it,draft.backgroundFilter) }, { entry ->
         picking = false
-        scope.launch {
+        container.appScope.launch {
             container.media.rememberBackground(profile.id, entry)
-            save(draft.copy(backgroundSource = BackgroundSource.FIXED,
+            save(edits.draft.copy(backgroundSource = BackgroundSource.FIXED,
                 fixedBackground = BackgroundTitle(entry.account.id, entry.item.id, entry.item.title)))
         }
     }, { picking = false })

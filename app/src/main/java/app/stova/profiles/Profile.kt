@@ -90,6 +90,12 @@ data class AppearancePrefs(
     val clockSize: ClockSize = ClockSize.NORMAL,
     val homeRows: HomeRows = HomeRows.ONE,
     val homeRowInset: HomeRowInset = HomeRowInset.LOW,
+    // Null inherits the older preset, preserving existing profiles exactly.
+    val appTileBackgroundOpacity: Int? = null,
+    val backdropDimmingPercent: Int? = null,
+    val cornerRadiusDp: Int? = null,
+    val cardSpacingDp: Int? = null,
+    val spotlightSeconds: Int? = null,
     /** The mood and accent in use before a chosen Jul or Halloween; they come back when it ends. */
     val moodBeforeSeason: app.stova.core.theme.VisualTheme? = null,
     val accentBeforeSeason: Accent? = null,

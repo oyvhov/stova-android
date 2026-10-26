@@ -12,6 +12,8 @@ import app.stova.core.ui.SettingsGroup
 import app.stova.profiles.AppearancePrefs
 import app.stova.profiles.IconColor
 import app.stova.profiles.IconFill
+import app.stova.profiles.appBackgroundPercent
+import app.stova.core.ui.SettingsSliderRow
 
 @Composable
 fun IconPackSettingsContent(p: AppearancePrefs, packs: List<IconPack>, groupTitle: String? = null, description: String? = null, firstControl: Modifier = Modifier, showHeading: Boolean = true, onChange: (AppearancePrefs) -> Unit) {
@@ -24,10 +26,13 @@ fun IconPackSettingsContent(p: AppearancePrefs, packs: List<IconPack>, groupTitl
         val label = packs.firstOrNull { it.packageName == p.iconPack }?.label ?: if (p.iconPack == null) none else unavailable
         SettingsChoiceRow(stringResource(R.string.icon_pack), label, modifier = firstControl) { step ->
             val selected = choices[Math.floorMod(index + step, choices.size)]
-            onChange(p.copy(iconPack = selected, appTileBackground = if (selected == app.stova.apps.ProjectivyIcons.PACKAGE) false else p.appTileBackground))
+            onChange(if (selected == app.stova.apps.ProjectivyIcons.PACKAGE)
+                p.copy(iconPack = selected, appTileBackground = false, appTileBackgroundOpacity = 0)
+            else p.copy(iconPack = selected))
         }
-        SettingsChoiceRow(stringResource(R.string.icon_tile_background), stringResource(if (p.appTileBackground) R.string.appearance_on else R.string.appearance_off)) {
-            onChange(p.copy(appTileBackground = !p.appTileBackground))
+        SettingsSliderRow(stringResource(R.string.icon_tile_background), p.appBackgroundPercent, 0..100,
+            stringResource(R.string.slider_percent, p.appBackgroundPercent)) {
+            onChange(p.copy(appTileBackground = it > 0, appTileBackgroundOpacity = it))
         }
         SettingsChoiceRow(stringResource(R.string.icon_color), stringResource(if (p.iconColor == IconColor.ORIGINAL) R.string.icon_original else R.string.icon_accent)) {
             onChange(p.copy(iconColor = if (p.iconColor == IconColor.ORIGINAL) IconColor.ACCENT else IconColor.ORIGINAL))

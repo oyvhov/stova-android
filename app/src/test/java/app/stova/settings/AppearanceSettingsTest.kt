@@ -24,6 +24,13 @@ import org.robolectric.annotation.Config
 class AppearanceSettingsTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun appBackgroundHasARealPercentageRange() {
+        compose.setContent { StovaTheme { IconPackSettingsContent(AppearancePrefs(), emptyList()) {} } }
+        compose.onNodeWithText("Bakgrunn på appkort")
+            .assert(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.ProgressBarRangeInfo,
+                androidx.compose.ui.semantics.ProgressBarRangeInfo(100f, 0f..100f, 99)))
+    }
+
     @Test fun backgroundOffersLibraryAndAgeControls() {
         compose.setContent { StovaTheme {
             Column(Modifier.verticalScroll(rememberScrollState())) {
@@ -77,15 +84,27 @@ class AppearanceSettingsTest {
     }
 
     @Test fun projectivyStartsTransparentAndCardBackgroundCanBeEnabledAgain() {
-        var prefs by mutableStateOf(AppearancePrefs())
+        var prefs by mutableStateOf(AppearancePrefs(appTileBackgroundOpacity = 70))
         compose.setContent { StovaTheme(appearance=prefs) {
             IconPackSettingsContent(prefs,listOf(app.stova.apps.IconPack(app.stova.apps.ProjectivyIcons.PACKAGE,"Projectivy Icon Pack",119))) { prefs=it }
         } }
         compose.onNodeWithText("Ikonpakke").performClick()
         assertEquals(app.stova.apps.ProjectivyIcons.PACKAGE,prefs.iconPack)
         assertFalse(prefs.appTileBackground)
-        compose.onNodeWithText("Bakgrunn på appkort").performClick()
+        compose.onNodeWithText("Bakgrunn på appkort").performSemanticsAction(SemanticsActions.SetProgress) { it(43f) }
         assertTrue(prefs.appTileBackground)
+        assertEquals(43, prefs.appBackgroundPercent)
+    }
+
+    @Test fun numericChoicesUseSlidersAndChangeOnlyTheirOwnValues() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        compose.setContent { StovaTheme { Column(Modifier.verticalScroll(rememberScrollState())) {
+            AppearanceSettingsContent(prefs, includePreview = false) { prefs = it }
+        } } }
+        listOf("Hjørne" to 17, "Kortavstand" to 11, "Bakgrunnsdemping" to 63, "Spotlight-tid" to 23).forEach { (label, value) ->
+            compose.onNodeWithText(label).performScrollTo().performSemanticsAction(SemanticsActions.SetProgress) { it(value.toFloat()) }
+        }
+        assertEquals(AppearancePrefs(cornerRadiusDp = 17, cardSpacingDp = 11, backdropDimmingPercent = 63, spotlightSeconds = 23), prefs)
     }
 
     @Test fun homePresentationAndPositionAreVisibleAndChangeOnlyTheirOwnPreference() {
@@ -108,10 +127,10 @@ class AppearanceSettingsTest {
         compose.setContent { StovaTheme(appearance = prefs) {
             Column(Modifier.verticalScroll(rememberScrollState())) { AppearanceSettingsContent(prefs) { prefs = it } }
         } }
-        val choices = listOf("Herostorleik", "Logo eller tittel", "Omtale i heroen", "Sjangrar i heroen", "Spotlight-tid", "Radavstand",
+        val choices = listOf("Herostorleik", "Logo eller tittel", "Omtale i heroen", "Sjangrar i heroen", "Radavstand",
             "Vis årstal i heroen", "Vis aldersgrense i heroen", "Vis vurderingar i heroen", "Vis ny sesong i heroen",
-            "Kortstorleik", "Titlar under kort", "Appstil", "Nyleg lagt til · Filmar", "Hjørne", "Bakgrunnsdemping",
-            "Aksentfarge", "Fokuseffekt", "Klokkeformat", "Kortavstand", "Framdriftsstrek", "Bakgrunnskjelde",
+            "Kortstorleik", "Titlar under kort", "Appstil", "Nyleg lagt til · Filmar",
+            "Aksentfarge", "Fokuseffekt", "Klokkeformat", "Framdriftsstrek", "Bakgrunnskjelde",
             "Titlar til bakgrunnen", "Roleg bakgrunnsrørsle", "Vis dato", "Vis HA-brikker", "Vis julenedteljing", "Vis Appar-knapp",
             "Vis Smarthus-knapp", "Vis profilbilete", "Klokkestorleik")
         choices.forEach { label ->
@@ -137,9 +156,6 @@ class AppearanceSettingsTest {
         assertEquals(HeroSize.LARGE, prefs.heroSize)
         assertTrue(prefs.showOverview)
         assertFalse(prefs.showGenres)
-        assertEquals(SpotlightTime.SLOW, prefs.spotlightTime)
-        assertEquals(BackdropDimming.DARK, prefs.backdropDimming)
-        assertEquals(CornerRadius.EXTRA_ROUND, prefs.cornerRadius)
         assertEquals(Accent.OCEAN, prefs.accent)
         assertEquals(FocusEffect.ZOOM, prefs.focusEffect)
         assertEquals(ClockMode.H12, prefs.clock)

@@ -1,5 +1,7 @@
 package app.stova.home
 
+import app.stova.profiles.spacingDp
+
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -32,7 +34,7 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
         if (LocalRowStyle.current.showTitle) MediaRowHeader(row) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
         LazyRow(Modifier.focusRestorer(), state = state,
             contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
-            horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.cardSpacing.dp.dp)) {
+            horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.spacingDp.dp)) {
             itemsIndexed(row.items, key = { _, item -> item.id }) { i, item ->
                 val target = FocusedTarget.Media(item, row.account)
                 MediaCard(item, row.kind == MediaRowKind.LATEST_MOVIES && app.stova.core.theme.LocalAppearance.current.movieStyle == app.stova.profiles.MovieStyle.POSTER,
@@ -52,7 +54,7 @@ internal fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog,
         if (LocalRowStyle.current.showTitle) RowHeader(stringResource(if (row.favorites) R.string.row_favorite_apps else R.string.row_apps)) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
         LazyRow(Modifier.focusRestorer(), state = state,
             contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
-            horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.cardSpacing.dp.dp)) {
+            horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.spacingDp.dp)) {
             itemsIndexed(row.apps, key = { _, app -> app.key }) { i, app ->
                 val modifier = (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
                     .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier)
@@ -84,7 +86,7 @@ internal fun WatchNextRow(row: HomeRowUi.WatchNext, focus: FocusRequester?, onFo
     Column {
         if (LocalRowStyle.current.showTitle) RowHeader(stringResource(R.string.row_watch_next)) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
         LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
-            horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.cardSpacing.dp.dp)) {
+            horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.spacingDp.dp)) {
             itemsIndexed(row.entries, key = { _, entry -> entry.id }) { i, entry ->
                 app.stova.watchnext.WatchNextCard(entry, onClick = {
                     val intent = app.stova.watchnext.launchIntentFor(entry)

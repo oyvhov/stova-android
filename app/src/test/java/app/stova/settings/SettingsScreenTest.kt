@@ -11,6 +11,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
@@ -100,6 +101,25 @@ class SettingsScreenTest {
         rule.onNode(hasText("Fokus") and hasClickAction()).performScrollTo().performClick()
         rule.onNodeWithText("Reduser rørsle").performScrollTo().performClick()
         rule.waitUntil(5_000) { profile("A").appearance.reduceMotion }
+    }
+
+    @Test fun sliderLastValuePersistsWhenLeavingImmediately() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        rule.onNodeWithText("Utsjånad").performClick()
+        rule.onNode(hasText("Ikon") and hasClickAction()).performScrollTo().performClick()
+        rule.onNodeWithText("Bakgrunn på appkort").performScrollTo()
+            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(43f) }
+        // Android's back dispatcher owns page navigation; raw Compose keys only reach the category.
+        rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.waitForIdle()
+        rule.runOnUiThread { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag("screen-HOME").assertExists()
+        rule.waitUntil(5_000) { profile("A").appearance.appTileBackgroundOpacity == 43 }
+        openSettings()
+        rule.onNodeWithText("Utsjånad").performClick()
+        rule.onNode(hasText("Ikon") and hasClickAction()).performScrollTo().performClick()
+        rule.onNode(hasText("Bakgrunn på appkort") and hasText("43 %")).performScrollTo().assertIsDisplayed()
     }
 
     @Test fun appearanceStartsWithCategoriesAndOpensOnlyTheChosenControls() {

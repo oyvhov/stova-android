@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import app.stova.R
 import app.stova.core.theme.*
 import app.stova.core.ui.SettingsGroup
+import app.stova.core.ui.SettingsSliderRow
 import app.stova.core.ui.labelRes
 import app.stova.profiles.*
 import app.stova.profiles.Profile
@@ -65,7 +66,8 @@ fun AppearanceSettingsContent(
         Toggle(R.string.custom_hero_age, p.showHeroAge) { onChange(p.copy(showHeroAge = it)) }
         Toggle(R.string.custom_hero_ratings, p.showHeroRatings) { onChange(p.copy(showHeroRatings = it)) }
         Toggle(R.string.custom_hero_new_season, p.showNewSeason) { onChange(p.copy(showNewSeason = it)) }
-        Choice(R.string.appearance_spotlight_time, p.spotlightTime, SpotlightTime.entries, listOf(R.string.appearance_8s, R.string.appearance_12s, R.string.appearance_20s)) { onChange(p.copy(spotlightTime = it)) }
+        SettingsSliderRow(stringResource(R.string.appearance_spotlight_time), (p.spotlightMillis / 1000).toInt(), 5..60,
+            stringResource(R.string.slider_seconds, p.spotlightMillis / 1000)) { onChange(p.copy(spotlightSeconds = it)) }
     }
     if (category == null || category == AppearanceCategory.CARDS) SettingsGroup(stringResource(R.string.custom_cards_rows), showHeading = category == null) {
         if (category == null) GroupHint(R.string.custom_cards_hint)
@@ -73,8 +75,10 @@ fun AppearanceSettingsContent(
         Toggle(R.string.appearance_titles, p.showTitles) { onChange(p.copy(showTitles = it)) }
         Choice(R.string.appearance_app_style, p.appStyle, AppStyle.entries, listOf(R.string.appearance_banner, R.string.appearance_icon)) { onChange(p.copy(appStyle = it)) }
         Choice(R.string.row_latest_movies, p.movieStyle, MovieStyle.entries, listOf(R.string.appearance_poster, R.string.appearance_wide)) { onChange(p.copy(movieStyle = it)) }
-        Choice(R.string.appearance_corners, p.cornerRadius, CornerRadius.entries, listOf(R.string.appearance_sharp, R.string.custom_soft, R.string.appearance_round, R.string.custom_extra_round)) { onChange(p.copy(cornerRadius = it)) }
-        Choice(R.string.custom_card_spacing, p.cardSpacing, CardSpacing.entries, listOf(R.string.appearance_tight, R.string.appearance_normal, R.string.appearance_airy)) { onChange(p.copy(cardSpacing = it)) }
+        SettingsSliderRow(stringResource(R.string.appearance_corners), p.cornerDp, 0..32,
+            stringResource(R.string.slider_units, p.cornerDp)) { onChange(p.copy(cornerRadiusDp = it)) }
+        SettingsSliderRow(stringResource(R.string.custom_card_spacing), p.spacingDp, 0..40,
+            stringResource(R.string.slider_units, p.spacingDp)) { onChange(p.copy(cardSpacingDp = it)) }
         if (category == null || p.homeRows != HomeRows.ONE) Choice(R.string.appearance_row_spacing, p.rowSpacing, RowSpacing.entries, listOf(R.string.appearance_tight, R.string.appearance_normal, R.string.appearance_airy)) { onChange(p.copy(rowSpacing = it)) }
         Choice(R.string.custom_progress, p.progressStyle, ProgressStyle.entries, listOf(R.string.custom_thin, R.string.custom_thick, R.string.appearance_hidden)) { onChange(p.copy(progressStyle = it)) }
         app.stova.core.ui.SettingsNavRow(stringResource(R.string.custom_edit_rows), onClick = onEditRows)
@@ -91,7 +95,8 @@ fun AppearanceSettingsContent(
             stringResource(R.string.custom_pick_background), value = p.fixedBackground?.title, onClick = onPickBackground)
         Choice(R.string.custom_spotlight_source, p.spotlightSource, SpotlightSource.entries,
             listOf(R.string.custom_whole_library, R.string.custom_only_movies, R.string.custom_only_series, R.string.custom_favorites)) { onChange(p.copy(spotlightSource = it)) }
-        Choice(R.string.appearance_dimming, p.backdropDimming, BackdropDimming.entries, listOf(R.string.appearance_light, R.string.appearance_medium, R.string.appearance_dark)) { onChange(p.copy(backdropDimming = it)) }
+        SettingsSliderRow(stringResource(R.string.appearance_dimming), p.dimmingPercent, 0..100,
+            stringResource(R.string.slider_percent, p.dimmingPercent)) { onChange(p.copy(backdropDimmingPercent = it)) }
         Toggle(R.string.custom_background_motion, p.backgroundMotion) { onChange(p.copy(backgroundMotion = it)) }
     }
     if (category == null || category == AppearanceCategory.FOCUS) SettingsGroup(stringResource(R.string.custom_focus), showHeading = category == null) {

@@ -85,7 +85,7 @@ internal fun ThemePreview(stored: AppearancePrefs, entry: app.stova.media.Spotli
                 }
                 drawPath(mountain,p.visualTheme.raised)
             }
-            Box(Modifier.matchParentSize().background(Brush.horizontalGradient(listOf(ink,ink.copy(alpha=.86f),ink.copy(alpha=.12f)))))
+            BackdropScrim(p.dimmingPercent, Modifier.matchParentSize())
             Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                     Text(stringResource(R.string.theme_preview),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -99,7 +99,7 @@ internal fun ThemePreview(stored: AppearancePrefs, entry: app.stova.media.Spotli
                     else Text(title,style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=1,overflow=TextOverflow.Ellipsis)
                 }
                 CompositionLocalProvider(app.stova.home.LocalRowHasFocus provides true) {
-                    Row(horizontalArrangement=Arrangement.spacedBy((p.cardSpacing.dp*.4f).dp)) {
+                    Row(horizontalArrangement=Arrangement.spacedBy((p.spacingDp*.4f).dp)) {
                         listOf(source,sibling).forEach { interaction ->
                             Column {
                                 Box(Modifier.size((dimensions.width*.36f).dp,(dimensions.height*.36f).dp)

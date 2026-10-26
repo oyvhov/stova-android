@@ -18,6 +18,7 @@ import app.stova.assumeScreensEnabled
 import app.stova.saveScreen
 import app.stova.core.theme.StovaTheme
 import app.stova.profiles.AppearancePrefs
+import app.stova.home.LocalRowHasFocus
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Rule
@@ -45,7 +46,9 @@ class ProjectivyIconScreensTest {
         compose.setContent { StovaTheme(appearance=prefs) {
             wallpaper=MaterialTheme.colorScheme.background.toArgb();surface=MaterialTheme.colorScheme.surfaceVariant.toArgb()
             Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(48.dp)) {
-                AppTile(app,art,{}, {},Modifier.testTag("spole"))
+                CompositionLocalProvider(LocalRowHasFocus provides true) {
+                    AppTile(app,art,{}, {},Modifier.testTag("spole"))
+                }
             }
         } }
         val bounds=compose.onNodeWithTag("spole").fetchSemanticsNode().boundsInRoot
@@ -56,5 +59,18 @@ class ProjectivyIconScreensTest {
         val solid=BitmapFactory.decodeFile(compose.saveScreen("spole-projectivy-solid").path)
         assertEquals("card surface is opt-in",surface,solid.getPixel(x,y))
         assertEquals(bounds,compose.onNodeWithTag("spole").fetchSemanticsNode().boundsInRoot)
+        compose.runOnIdle { prefs = prefs.copy(appTileBackgroundOpacity = 50) }
+        val half = BitmapFactory.decodeFile(compose.saveScreen("spole-projectivy-half-background").path)
+        val expected = androidx.core.graphics.ColorUtils.compositeColors(androidx.core.graphics.ColorUtils.setAlphaComponent(surface,128),wallpaper)
+        // Skia rounds premultiplied channels; integer ColorUtils truncates. Allow one byte.
+        for (shift in listOf(0,8,16)) assertEquals(((expected shr shift) and 255).toDouble(), ((half.getPixel(x,y) shr shift) and 255).toDouble(), 1.0)
+        // A bright, opaque point in the logo must not fade along with its background.
+        val bright = (bounds.top.toInt()+24 until bounds.top.toInt()+170).flatMap { py ->
+            (bounds.left.toInt()+24 until bounds.right.toInt()-24).map { px -> px to py }
+        }.maxBy { (px,py) -> val c=transparent.getPixel(px,py); ((c shr 16) and 255)+((c shr 8) and 255)+(c and 255) }
+        assertEquals(transparent.getPixel(bright.first,bright.second),half.getPixel(bright.first,bright.second))
+        compose.runOnIdle { prefs=prefs.copy(appTileBackgroundOpacity=0,reduceMotion=true) }
+        val calm=BitmapFactory.decodeFile(compose.saveScreen("spole-projectivy-transparent-reduced-motion").path)
+        assertEquals(wallpaper,calm.getPixel(x,y))
     }
 }

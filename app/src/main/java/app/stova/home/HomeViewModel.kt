@@ -1,5 +1,7 @@
 package app.stova.home
 
+import app.stova.profiles.spotlightMillis
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.stova.media.SpotlightEntry
@@ -76,7 +78,7 @@ class HomeViewModel(
      * The title the hero shows, stepping through the library pool. It only ticks while Home is on
      * screen, and picks up where it left off when Home comes back.
      */
-    val spotlight: StateFlow<SpotlightEntry?> = combine(spotlightPool, rotation, session.active.map { it?.appearance?.spotlightTime?.millis ?: SPOTLIGHT_MILLIS }.distinctUntilChanged()) { pool, rotate, millis -> Triple(pool, rotate, millis) }
+    val spotlight: StateFlow<SpotlightEntry?> = combine(spotlightPool, rotation, session.active.map { it?.appearance?.spotlightMillis ?: SPOTLIGHT_MILLIS }.distinctUntilChanged()) { pool, rotate, millis -> Triple(pool, rotate, millis) }
         .flatMapLatest { (pool, rotate, millis) ->
             flow {
                 if (pool.isEmpty()) { emit(null); return@flow }

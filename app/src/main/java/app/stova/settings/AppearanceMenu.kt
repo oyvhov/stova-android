@@ -74,7 +74,7 @@ internal fun AppearanceMenu(scrollable: Boolean = true, content: @Composable (Ap
         }
         transferring = false
     }
-    Column(Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
+    Column(Modifier.fillMaxWidth().onKeyEvent { event ->
         if (selected != null && event.key in listOf(Key.Back, Key.Escape)) {
             if (event.type == KeyEventType.KeyUp) show(null)
             true

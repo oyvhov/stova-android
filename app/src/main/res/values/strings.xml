@@ -630,4 +630,9 @@
     <string name="background_age_years">Til og med %1$d år</string>
     <string name="background_age_unlimited">Utan grense</string>
     <string name="background_age_hint">Gjeld bakgrunn og hero, også faste bilete. Titlar utan kjend aldersgrense blir skjulte. Utan treff blir temabakgrunnen brukt.</string>
+    <string name="slider_start_hint">OK for å justere</string>
+    <string name="slider_adjust_hint">← → Juster · OK eller Tilbake for å avslutte</string>
+    <string name="slider_percent">%1$d %%</string>
+    <string name="slider_seconds">%1$d s</string>
+    <string name="slider_units">%1$d</string>
 </resources>

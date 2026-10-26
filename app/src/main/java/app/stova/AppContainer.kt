@@ -48,6 +48,9 @@ class AppContainer(
     )
 
     val session = ProfileSession(profiles, appScope)
+    internal val appearanceEdits = app.stova.settings.AppearanceEditsStore(appScope) { id, prefs ->
+        profiles.update(id) { it.copy(appearance = prefs) }
+    }
 
     val appCatalog = PackageManagerAppCatalog(
         appContext,

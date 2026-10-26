@@ -455,12 +455,12 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Heim og hero | Herostorleik | Av / **Kompakt** / Stor; Av stoppar spotlight-rotasjonen; radfeltet held botnplasseringa |
 | Heim og hero | Logo eller tittel | **Logo når han finst** / Alltid tittel |
 | Heim og hero | Omtale / sjangrar | Omtale **Av**, sjangrar **På**; to omtale-linjer ved vanleg skrift |
-| Heim og hero | Spotlight-tid | 8 / **12** / 20 s |
+| Heim og hero | Spotlight-tid | Skyveknapp 5–60 s, **12 s**; eldre 8/12/20 er bevarte |
 | Kort og rader | Kortstorleik | Ekstra liten (152) / Liten (200) / **Kompakt (224)** / Middels (248) / Stor (296) / Ekstra stor (344 dp brei); proporsjonale plakatar/ikon |
 | Kort og rader | Titlar under kort | Av / **På**; alltid skjermlesarnamn; undertitlar held same breidd som kunsten |
 | Kort og rader | Appstil / filmrad | **Banner** / Ikon; filmrada **Plakat** / Brei |
-| Kort og rader | Hjørne | Skarp 4 / Mjuk 12 / **Rund 20** / Ekstra rund 28 dp |
-| Kort og rader | Kortavstand | Tett 8 / **Normal 16** / Luftig 24 dp vassrett |
+| Kort og rader | Hjørne | Skyveknapp 0–32 dp, **20**; eldre 4/12/20/28 er bevarte |
+| Kort og rader | Kortavstand | Skyveknapp 0–40 dp vassrett, **16**; eldre 8/16/24 er bevarte |
 | Kort og rader | Radavstand | Tett 12 / **Normal 22** / Luftig 34 dp loddrett; skjult når berre éi rad blir vist |
 | Kort og rader | Framdriftsstrek | Tynn 2 / **Tjukk 4** dp / Skjult |
 | Kvar rad | Format | Plakat / Brei / Stor brei / Liten brei / Ikon; **arv eksisterande format** |
@@ -469,7 +469,7 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Bakgrunn | Bibliotek til bakgrunnen | **Alle bibliotek** / eitt eller fleire konkrete bibliotek per konto; tomt utval betyr ingen |
 | Bakgrunn | Høgaste aldersgrense | 0 / 6 / 9 / 12 / **15** / 16 / 18 år / Utan grense; direkte val i dialog |
 | Bakgrunn | Titlar til bakgrunnen | **Filmar og seriar** / Berre filmar / Berre seriar / Favorittar innan utvalet |
-| Bakgrunn | Demping | Lys / **Middels** / Mørk |
+| Bakgrunn | Demping | Skyveknapp 0–100 %, **50 %**; gamle Lys/Middels/Mørk-kurver svarar til 25/50/75 % |
 | Bakgrunn | Roleg rørsle | **Av** / På; 1,00→1,04; alltid av ved redusert rørsle, hero Av og utanfor Heim |
 | Fokus | Effekt | **Svakt løft** / Forstørring / Lys opp / Ramme / Ramme + forstørring |
 | Fokus | Ringbreidd | Tynn 2 / **Normal 3** / Tjukk 4 dp |
@@ -478,7 +478,17 @@ Utsjånadsval (standard i **feit**; alle nye JSON-felt har standardverdiar):
 | Toppfelt | Dato | **Av** / På; lokal vekedag, dag og månad, òg med skjult klokke |
 | Toppfelt | HA / julenedteljing / Appar / Smarthus / profilbilete | Alle **På** / Av; Innstillingar kan alltid nåast; Android-innstillingar ligg berre inne i Innstillingar |
 | Ikon | Pakke / farge / fyll | **Ingen** eller installert pakke; **Original** / Aksent; **Sentrert** / Fyll flata |
+| Ikon | Bakgrunn på appkort | Skyveknapp 0–100 %, **100 %**; gamle Av/På blir 0/100. Projectivy-val set 0 %. Ikon og tekst bevarer full styrke |
 | Profil | Tilbakestill / kopier | Stadfesta standard eller kopi frå annan profil, utan konto-/tryggleiksendringar |
+
+Skyveknappar (26.10.2026) har eitt fokuspunkt, fast verdi og linje med handtak. OK går inn
+i justering; Venstre/Høgre endrar eitt steg (fem ved halde pil), utan wrapping. OK/Tilbake
+avsluttar justering på same rad; Opp/Ned flyttar vidare. Venstre utanfor justering går
+til sidekolonnen. Mus/berøring kan trykkje eller dra langs linja; vertikale sveip rullar sida.
+Førehandsvisinga reagerer straks. Lagring samlar ventande verdiar i 180 ms og blir flusha ved
+utgang; éin editor per profil overlever rask retur og ventar på skriving før nullstilling/kopi.
+Nye talfelt vinn over eldre preset når dei finst, og blir avgrensa til gyldig område.
+Bakgrunnsdemping deler interpolert scrim mellom Heim og preview; toppfeltet held si lesestøtte.
 
 Bakgrunnsfilteret (26.10.2026) er profillagra og gjeld hero, roterande bakgrunn, faste bilete,
 førehandsvising og fast-bilete-søk. Bibliotek blir henta frå den innlogga Jellyfin-/Emby-brukaren.
