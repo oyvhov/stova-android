@@ -28,7 +28,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -91,7 +90,6 @@ private fun StovaOverlay(
     val visible = remember { MutableTransitionState(still).apply { targetState = true } }
     val dismiss by rememberUpdatedState(onDismissRequest)
     val back by rememberUpdatedState(onBack)
-    val confirmPresses = remember { mutableSetOf<Key>() }
     val exited = visible.isIdle && !visible.currentState
     LaunchedEffect(exited) { if (exited) dismiss() }
     fun close() { if (still) dismiss() else visible.targetState = false }
@@ -106,26 +104,14 @@ private fun StovaOverlay(
             decorFitsSystemWindows = properties.decorFitsSystemWindows,
         ),
     ) {
-        val windowFocused = LocalWindowInfo.current.isWindowFocused
-        LaunchedEffect(windowFocused) { if (!windowFocused) confirmPresses.clear() }
         AnimatedVisibility(visible, enter = fadeIn(motion.enter()), exit = fadeOut(motion.exit()), label = "dialog") {
             Box(Modifier.fillMaxSize().onPreviewKeyEvent { event ->
                 // A panel with pages answers Back itself, one page at a time, before the window sees it.
                 if (sideScrim && event.key in backKeys) {
                     if (event.type == KeyEventType.KeyUp && !back()) close()
-                    return@onPreviewKeyEvent true
-                }
-                if (event.key !in confirmKeys) false else when (event.type) {
-                    KeyEventType.KeyDown -> {
-                        // The opening hold may keep repeating after focus enters this window.
-                        // Only a fresh down here owns the subsequent release and its action.
-                        if (event.nativeKeyEvent.repeatCount == 0 && !event.nativeKeyEvent.isLongPress) confirmPresses.add(event.key)
-                        event.key !in confirmPresses
-                    }
-                    KeyEventType.KeyUp -> !confirmPresses.remove(event.key) || event.nativeKeyEvent.isCanceled
-                    else -> false
-                }
-            }, contentAlignment = alignment) {
+                    true
+                } else false
+            }.freshPressesOnly(), contentAlignment = alignment) {
                 val shade = MaterialTheme.colorScheme.background
                 // A side panel leaves the screen readable on the far side and darkens towards itself.
                 val scrim = if (sideScrim) Modifier.background(Brush.horizontalGradient(
@@ -150,5 +136,4 @@ private const val SIDE_SCRIM_FAR = 0.35f
 private const val SIDE_SCRIM_NEAR = 0.8f
 private const val PANEL_FROM = 0.985f
 private const val PANEL_TO = 0.98f
-private val confirmKeys = setOf(Key.DirectionCenter, Key.Enter, Key.NumPadEnter)
 private val backKeys = setOf(Key.Back, Key.Escape)

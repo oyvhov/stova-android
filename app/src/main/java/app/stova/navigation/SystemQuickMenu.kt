@@ -44,6 +44,7 @@ import app.stova.R
 import app.stova.core.theme.stovaMotion
 import app.stova.core.ui.StovaIcons
 import app.stova.core.ui.focusOutline
+import app.stova.core.ui.freshPressesOnly
 import app.stova.homebutton.HomeButtonService
 import app.stova.system.*
 import kotlinx.coroutines.Dispatchers
@@ -101,6 +102,8 @@ internal fun SystemQuickMenu(menu: SystemMenu, onDismiss: () -> Unit) {
                     if (event.key != Key.Back && event.key != Key.Escape) false
                     else { if (event.type == KeyEventType.KeyUp) onDismiss(); true }
                 }
+                // Holding OK opened the menu; that hold's repeats and release must not choose the first row.
+                .freshPressesOnly()
                 .padding(vertical = 10.dp)) {
                 val now = status
                 if (now != null) {

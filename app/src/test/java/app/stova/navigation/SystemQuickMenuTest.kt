@@ -59,6 +59,26 @@ class SystemQuickMenuTest {
         assertEquals("a long press is not a press", 0, settings)
     }
 
+    // On the Shield: «lukker seg før eg får trykt på noko og trykker på første val». The hold that
+    // opened the menu kept repeating into it, and its release chose the first row.
+    @Test fun theHoldThatOpensTheMenuNeitherChoosesNorClosesIt() {
+        render()
+        settingsIcon.performTouchInput { longClick() }
+        row("Nettverk").assertIsFocused()
+        fun send(action: Int, repeat: Int) = row("Nettverk").performKeyPress(androidx.compose.ui.input.key.KeyEvent(
+            android.view.KeyEvent(0L, 0L, action, android.view.KeyEvent.KEYCODE_DPAD_CENTER, repeat)))
+        send(android.view.KeyEvent.ACTION_DOWN, 4)
+        send(android.view.KeyEvent.ACTION_DOWN, 5)
+        send(android.view.KeyEvent.ACTION_UP, 0)
+        compose.onNodeWithText("SHIELD Android TV").assertIsDisplayed()
+        assertEquals(emptyList<SystemAction>(), done)
+        assertEquals(0, settings)
+        // A fresh press inside the menu chooses as usual.
+        send(android.view.KeyEvent.ACTION_DOWN, 0)
+        send(android.view.KeyEvent.ACTION_UP, 0)
+        assertEquals(listOf(SystemAction.NETWORK), done)
+    }
+
     @Test fun menuKeyOpensItWithFocusOnTheFirstRowAndEachRowDoesItsOwnJob() {
         render()
         settingsIcon.performSemanticsAction(SemanticsActions.RequestFocus)
