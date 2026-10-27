@@ -23,10 +23,11 @@ Rekkjefølgje no: A Barnetid, så steg 1 (fokus), B rørsle, C skrift og farge, 
 - [x] B. Rørsle: fjør utan sprett for fokus og rulling (rulling ber farten vidare ved raske trykk), korte,
   forskuvde inngangar av rader (første Heim per profil), sidebyte som veks frå ikonet, og bakgrunnen
   løyser seg opp i neste bilete i staden for å gå via blekk (betre enn ein mellomfarge).
-- [ ] C. Open skrift med karakter til titlar/klokke (OFL, inkludert i appen) og ein svak tone frå
+- [x] C. Open skrift med karakter til titlar/klokke (OFL, inkludert i appen) og ein svak tone frå
   kunsten i scrim, fokus og appfliser. Fargar framleis berre i `core/theme`.
-  Tonen er ferdig (`ArtTone`, berre Heim og Smarthus, same lysheit så kontrasten held). Skrifta står att:
-  krev nedlasting av ei OFL-fil, så brukaren må seie ja til fil og kjelde først.
+  Tonen: `ArtTone`, berre Heim og Smarthus, same lysheit så kontrasten held. Skrifta: Outfit (variabel,
+  OFL) etter brukaren sitt ja, på display/headline/titleLarge; resten i systemskrift. Små Smarthus-kort
+  har 3 dp mellomrom i staden for 4, så dei held 152 dp med dei høgare linjene til Outfit.
 
 Reglar som før: modulært (ingen arbeid når noko er av eller ikkje sett opp), test først,
 `DesignRulesTest` grøn, nynorsk/engelsk tekst, Shield berre når brukaren seier ja.

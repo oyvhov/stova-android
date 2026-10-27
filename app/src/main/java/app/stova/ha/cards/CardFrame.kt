@@ -76,7 +76,9 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
         }}
         .combinedClickable(interactionSource=source, indication=null, role=Role.Button, onClick=onClick, onLongClick=onLongClick)) {
         leading?.invoke(Modifier.width(if(config.size==CardSize.L) 184.dp else 136.dp).fillMaxHeight())
-        Column(Modifier.weight(1f).fillMaxHeight().padding(if(small) 12.dp else 16.dp),verticalArrangement=Arrangement.spacedBy(if(small) 4.dp else 8.dp)) {
+        // 3 dp in a small card: the display face's numerals stand 2.5 dp taller than the system sans,
+        // and a compact card keeps its one-row height.
+        Column(Modifier.weight(1f).fillMaxHeight().padding(if(small) 12.dp else 16.dp),verticalArrangement=Arrangement.spacedBy(if(small) 3.dp else 8.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             Box(Modifier.size(if(small) 28.dp else 36.dp).clip(MaterialTheme.shapes.medium).background(if(lit) glow.color else MaterialTheme.colorScheme.surfaceVariant), contentAlignment=Alignment.Center) {
                 Icon(icon,null,Modifier.size(22.dp),tint=if(lit) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurfaceVariant)

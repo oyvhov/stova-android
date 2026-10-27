@@ -19,13 +19,14 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 | Smarthus-geometri og val | `ha/cards/CardPacking.kt`, `ha/cards/CardFocusNavigation.kt`, `ha/ui/DashboardLayoutDialog.kt` | Same dynamiske pakking for teikning/piler, profillagra tettleik og gruppering |
 | Legg til Smarthus-kort | `ha/ui/AddCardFlow.kt` | Einingskatalog, filtrering og fokus mellom søk, kategoriar og einingar |
 | Innstillingar | `settings/SettingsScreen.kt`, `settings/SettingsLayout.kt`, `settings/SettingsNavigation.kt` | Datakopling, fokus mellom meny/innhald og fast overskrift |
-| Innstillingsoversikt og ikonprøve | `settings/SettingsOverview.kt`, `settings/AppIconPreview.kt` | Ikonlenkjer og verkelege appar med utkastet til utsjånad |
+| Ikonprøve | `settings/AppIconPreview.kt` | Verkelege appar med utkastet til utsjånad under Ikon |
 | Heim-knappen | `homebutton/HomeActivities.kt`, `homebutton/HomeKeyLogic.kt`, `homebutton/HomeButtonService.kt` | Oppdaga HOME-aktivitetar, tastefilter og avgrensa vindaugsreserveveg |
 | Utsjånad | `settings/AppearanceSettings.kt`, `settings/AppearanceMenu.kt`, `settings/AppearanceSettingsContent.kt` | Lagring, kategorioversikt og kontrollerte val kvar for seg |
 | Skyveknappar og lagring | `core/ui/SettingsSliderRow.kt`, `profiles/AppearanceValues.kt`, `settings/AppearanceEdits.kt` | TV-/touch-justering, bakoverkompatible verdiar og delt editor per profil med samla lagring |
 | Bakgrunnsutval | `profiles/BackgroundFilter.kt`, `media/BackgroundEligibility.kt`, `settings/BackgroundLibraryPicker.kt`, `settings/BackgroundAgeSetting.kt` | Konto-/bibliotekval, tolka aldersgrense, TV-dialogar og same sluttfilter på alle kunstvegar |
 | Bakgrunn ved filterbyte | `background/ProfileBackdrop.kt` | Ny bilet-/overgangstilstand ved endra utval, slik at gamal kunst ikkje blir halden att |
 | Fargar, mål og rørsle | `core/theme/` | Felles tokens; ingen fargelitteralar i skjermane |
+| Skrift og tone frå kunsten | `core/theme/Typography.kt`, `core/theme/ArtTone.kt` | Outfit (OFL, `res/font/outfit.ttf`, lisens i `assets/licenses`) til titlar, klokke og store tal; brødtekst i systemskrift. Éin dempa farge frå bakgrunnsbiletet, same lysheit |
 | Dialogar og fokus | `core/ui/` | Gjenbrukbare TV-komponentar, éin dialogovergang |
 | Radoverskrifter og radval | `home/RowOptions.kt`, `home/RowHeadingEditor.kt`, `home/RowLabels.kt` | Same redigering frå langt OK og Innstillingar; lagra i profilens `RowStyle` |
 | Media | `media/` | Kontoar, REST, parser, rader, diskbuffer og Spole-kontrakt |
