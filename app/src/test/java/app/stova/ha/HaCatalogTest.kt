@@ -16,12 +16,13 @@ class HaCatalogTest {
         val registry = parseRegistry(
             array("""[{"area_id":"living","name":"Stove"},{"area_id":"hall","name":"Gang"}]"""),
             array("""[{"id":"dev1","area_id":"living","name_by_user":"Lampe"}]"""),
-            array("""[{"entity_id":"light.a","device_id":"dev1","area_id":null,"name":"Leselys","hidden_by":null,"disabled_by":null,"entity_category":null},{"entity_id":"sensor.b","device_id":"dev1","area_id":"hall","name":null,"original_name":"Batteri","entity_category":"diagnostic"},{"entity_id":"switch.c","hidden_by":"user"},{"entity_id":"sensor.d","disabled_by":"integration"}]"""))
+            array("""[{"entity_id":"light.a","device_id":"dev1","area_id":null,"name":"Leselys","icon":"mdi:lamp","original_icon":"mdi:lightbulb","hidden_by":null,"disabled_by":null,"entity_category":null},{"entity_id":"sensor.b","device_id":"dev1","area_id":"hall","name":null,"original_name":"Batteri","entity_category":"diagnostic"},{"entity_id":"switch.c","hidden_by":"user"},{"entity_id":"sensor.d","disabled_by":"integration"}]"""))
         val entities = listOf("light.a", "sensor.b", "switch.c", "sensor.d").map { HaEntity(it,"on",JsonObject(emptyMap()),0,0) }
         val items = entityCatalog(entities, registry)
         assertEquals(listOf("sensor.b","light.a","sensor.d","switch.c"),items.map { it.entity.id })
         assertEquals("Gang",items.first().room)
         assertEquals("Leselys",items[1].name)
+        assertEquals(listOf("mdi:lamp","mdi:lightbulb"),registry.entities["light.a"]!!.let { listOf(it.icon,it.originalIcon) })
         assertEquals("Stove",items[1].room)
         assertEquals(listOf("light.a"),items.filterNot {it.hidden}.map {it.entity.id})
     }

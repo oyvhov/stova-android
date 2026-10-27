@@ -15,7 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -24,6 +23,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.stova.core.ui.StovaIcons
+import app.stova.ha.HaIcon
+import app.stova.ha.HaIconFont
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 
@@ -46,19 +47,23 @@ fun ShortcutTile(tile: FavoriteTile, onClick: () -> Unit, onLongClick: () -> Uni
             AsyncImage(request, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
                 onError = { failed = true })
         } else {
-            ShortcutIcon(if (tile is FavoriteTile.Scene) StovaIcons.Sun else StovaIcons.Rows, tile.label, spec.height, showName = !spec.captions)
+            ShortcutIcon(tile, spec.height, showName = !spec.captions)
         }
     }
 }
 
 @Composable
-private fun ShortcutIcon(icon: ImageVector, label: String, height: Dp, showName: Boolean) {
+private fun ShortcutIcon(tile: FavoriteTile, height: Dp, showName: Boolean) {
     val lineHeight = with(LocalDensity.current) { MaterialTheme.typography.titleSmall.lineHeight.toDp() }
     val size = (height - 16.dp - if (showName) lineHeight + 6.dp else 0.dp).coerceIn(0.dp, 48.dp)
     Column(Modifier.padding(horizontal = 8.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (size > 0.dp) Icon(icon, contentDescription = null, modifier = Modifier.size(size), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (showName) Text(label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface,
+        val tint = MaterialTheme.colorScheme.onSurfaceVariant
+        if (size > 0.dp) {
+            if (tile is FavoriteTile.Scene) HaIcon(tile.icon ?: HaIconFont.defaultFor(tile.entityId), StovaIcons.Sun, size, tint)
+            else Icon(StovaIcons.Rows, contentDescription = null, modifier = Modifier.size(size), tint = tint)
+        }
+        if (showName) Text(tile.label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
     }
 }

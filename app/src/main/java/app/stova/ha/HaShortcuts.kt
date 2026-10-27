@@ -38,7 +38,12 @@ suspend fun haShortcutScenes(connection: HaConnection, registry: suspend () -> H
         val known = registry() ?: HaRegistry()
         return entityCatalog(states, known)
             .filter { it.entity.id.substringBefore('.') in shortcutDomains && !it.hidden && known.entities[it.entity.id]?.disabled != true }
-            .map { FavoriteTile.Scene(ShortcutKey.Ha(it.entity.id).key, it.name, it.entity.id) }
+            .map { item ->
+                val info = known.entities[item.entity.id]
+                // The icon Home Assistant shows: the one chosen for the entity, else its own, else the domain's.
+                val icon = info?.icon ?: item.entity.attributes.text("icon") ?: info?.originalIcon ?: HaIconFont.defaultFor(item.entity.id)
+                FavoriteTile.Scene(ShortcutKey.Ha(item.entity.id).key, item.name, item.entity.id, icon)
+            }
             .sortedBy { it.label.lowercase() }
     } finally {
         connection.release()

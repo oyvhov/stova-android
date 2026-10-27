@@ -16,7 +16,8 @@ sealed interface FavoriteTile {
     data class Library(override val key: String, override val label: String, val image: String?,
         val account: MediaAccount, val libraryId: String) : FavoriteTile
 
-    data class Scene(override val key: String, override val label: String, val entityId: String) : FavoriteTile
+    /** [icon] is Home Assistant's own, such as `mdi:movie-open`. */
+    data class Scene(override val key: String, override val label: String, val entityId: String, val icon: String? = null) : FavoriteTile
 }
 
 /**
@@ -32,7 +33,7 @@ fun favoriteTiles(prefs: AppPrefs, apps: List<InstalledApp>, accounts: List<Medi
         val saved = prefs.shortcuts[key]?.takeIf { !kid } ?: return@mapNotNull null
         when (val shortcut = ShortcutKey.parse(key)) {
             is ShortcutKey.Library -> accountsById[shortcut.accountId]?.let { FavoriteTile.Library(key, saved.label, saved.image, it, shortcut.libraryId) }
-            is ShortcutKey.Ha -> if (haReady) FavoriteTile.Scene(key, saved.label, shortcut.entityId) else null
+            is ShortcutKey.Ha -> if (haReady) FavoriteTile.Scene(key, saved.label, shortcut.entityId, saved.icon) else null
             null -> null
         }
     }

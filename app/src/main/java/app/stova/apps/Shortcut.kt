@@ -2,9 +2,12 @@ package app.stova.apps
 
 import kotlinx.serialization.Serializable
 
-/** What Home shows for a favourite that is not an app. Saved when it is added, so Home needs no network for it. */
+/**
+ * What Home shows for a favourite that is not an app: a library's image, a scene's Home Assistant
+ * icon. Saved when it is added, so Home needs no network for it.
+ */
 @Serializable
-data class Shortcut(val label: String, val image: String? = null)
+data class Shortcut(val label: String, val image: String? = null, val icon: String? = null)
 
 /**
  * A favourite that is not an app: a media library, or a Home Assistant scene or script. Its key

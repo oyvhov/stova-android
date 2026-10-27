@@ -28,7 +28,7 @@ class ShortcutTileTest {
     private val app = InstalledApp("demo/.Main", "demo", ".Main", "Demo", true)
     private val account = MediaAccount("acc", "p", ServerKind.JELLYFIN, "s", "Heim", "https://demo.invalid", "u1", "U")
     private val library = FavoriteTile.Library("library:acc:lib1", "Filmar", null, account, "lib1")
-    private val scene = FavoriteTile.Scene("ha:scene.kino", "Kino", "scene.kino")
+    private val scene = FavoriteTile.Scene("ha:scene.kino", "Kino", "scene.kino", "mdi:movie-open")
 
     private fun render(onClick: (FavoriteTile) -> Unit = {}, menu: MutableList<FavoriteTile> = mutableListOf()) {
         val row = HomeRowUi.Apps(HomeRowKey.APPS, listOf(app), tiles = listOf(FavoriteTile.App(app), library, scene))
@@ -67,5 +67,11 @@ class ShortcutTileTest {
         compose.setContent { StovaTheme(reduceMotion = true) { ShortcutActionsMenu(scene, {}, {}, {}, {}) } }
         compose.onNodeWithText("Smarthus · i favorittane").assertIsDisplayed()
         compose.onNodeWithText("Køyr").assertIsDisplayed()
+    }
+
+    // A scene tile draws Home Assistant's own icon for it, from the bundled icon font.
+    @Test fun aSceneTileShowsItsHomeAssistantIcon() {
+        render()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("ha-icon", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
     }
 }

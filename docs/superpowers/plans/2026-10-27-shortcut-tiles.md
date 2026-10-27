@@ -32,3 +32,7 @@ når brukaren seier ja.
 - [x] 5. Appar-sida: gruppene «Bibliotek» (bilete frå Jellyfin/Emby) og «Scenar og skript», med
   Legg til i favorittar.
 - [x] 6. Full kontroll, emulatorbilete, ARCHITECTURE og HANDOFF.
+- [x] 7. Tillegg (brukaren: «Home assistant ikonet», «Pass på at ikke heile pakken blir lasta inn
+  unødvendig»): sceneflisa viser ikonet Home Assistant viser, frå registeret, attributtet eller
+  domenet. Berre fonten, CSS-en (til namnelista) og lisensen frå `@mdi/font` 7.4.47 er lasta ned;
+  fonten blir lasta først når ei flis teiknar eit ikon, og namnelista blir lesen per namn.

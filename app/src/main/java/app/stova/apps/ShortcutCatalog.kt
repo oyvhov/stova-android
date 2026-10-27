@@ -32,7 +32,7 @@ class ShortcutCatalog(
 )
 
 /** The name and art a shortcut keeps in the profile, so Home can draw it without asking anyone. */
-fun FavoriteTile.saved(): Shortcut = Shortcut(label, (this as? FavoriteTile.Library)?.image)
+fun FavoriteTile.saved(): Shortcut = Shortcut(label, (this as? FavoriteTile.Library)?.image, (this as? FavoriteTile.Scene)?.icon)
 
 /**
  * What pressing a library or scene does, on Home and on the Apps page: a library opens in Spole, a

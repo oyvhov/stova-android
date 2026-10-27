@@ -7,6 +7,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.ui.SheetAction
 import app.stova.core.ui.SheetHeader
@@ -33,8 +34,14 @@ fun ShortcutActionsMenu(
 ) {
     val scene = tile is FavoriteTile.Scene
     val image = (tile as? FavoriteTile.Library)?.image
-    val art: (@Composable BoxScope.() -> Unit)? = image?.let { url ->
-        { AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize()) }
+    val tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+    val art: (@Composable BoxScope.() -> Unit)? = when {
+        image != null -> { { AsyncImage(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize()) } }
+        tile is FavoriteTile.Scene -> { {
+            app.stova.ha.HaIcon(tile.icon ?: app.stova.ha.HaIconFont.defaultFor(tile.entityId), StovaIcons.Sun, SceneArtSize, tint,
+                Modifier.align(androidx.compose.ui.Alignment.Center))
+        } }
+        else -> null
     }
     StovaSheet(onDismiss) { pages ->
         if (pages.current == null) {
@@ -74,3 +81,5 @@ fun ShortcutMenuHost(tile: FavoriteTile, apps: AppRepository, profile: Profile, 
             onDismiss = onDismiss, rowActions = rowActions, favorite = favorite)
     }
 }
+
+private val SceneArtSize = 88.dp

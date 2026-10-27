@@ -52,4 +52,18 @@ class HaShortcutsTest {
         assertEquals("ha:scene.kino", scenes.last().key)
         assertEquals(0, ha.holders)
     }
+
+    // The tile shows the icon Home Assistant shows: chosen for the entity, its own, or the domain's.
+    @Test fun scenesCarryTheIconHomeAssistantShows() = runTest {
+        fun entity(id: String, icon: String? = null) = HaEntity(id, "off", kotlinx.serialization.json.buildJsonObject {
+            put("friendly_name", kotlinx.serialization.json.JsonPrimitive(id))
+            icon?.let { put("icon", kotlinx.serialization.json.JsonPrimitive(it)) } }, 0, 0)
+        val ha = FakeHaConnection().apply {
+            allStates = listOf(entity("scene.a", "mdi:sofa"), entity("scene.b", "mdi:sofa"), entity("scene.c"), entity("script.d"), entity("scene.e"))
+        }
+        val registry = HaRegistry(mapOf("scene.b" to HaEntityInfo(icon = "mdi:movie-open"), "scene.e" to HaEntityInfo(originalIcon = "mdi:weather-night")))
+        val icons = haShortcutScenes(ha) { registry }.associate { it.entityId to it.icon }
+        assertEquals(mapOf("scene.a" to "mdi:sofa", "scene.b" to "mdi:movie-open", "scene.c" to "mdi:palette",
+            "script.d" to "mdi:script-text", "scene.e" to "mdi:weather-night"), icons)
+    }
 }

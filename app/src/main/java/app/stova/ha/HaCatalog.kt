@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
 @Serializable data class HaEntityInfo(val name: String? = null, val room: String? = null, val hidden: Boolean = false,
-    val originalName:String?=null,val disabled:Boolean=false)
+    val originalName:String?=null,val disabled:Boolean=false,val icon:String?=null,val originalIcon:String?=null)
 @Serializable data class HaRegistry(val entities: Map<String, HaEntityInfo> = emptyMap())
 data class HaCatalogItem(val entity: HaEntity, val name: String, val room: String?, val hidden: Boolean)
 internal fun JsonObject.text(key: String) = (get(key) as? JsonPrimitive)?.contentOrNull
@@ -19,7 +19,7 @@ fun parseRegistry(areas: JsonArray, devices: JsonArray, entities: JsonArray): Ha
         val areaId = j.text("area_id") ?: deviceRooms[j.text("device_id")]
         id to HaEntityInfo(j.text("name"), rooms[areaId],
             j.text("hidden_by") != null || j.text("disabled_by") != null || j.text("entity_category") in setOf("config", "diagnostic"),
-            originalName=j.text("original_name"),disabled=j.text("disabled_by")!=null)
+            originalName=j.text("original_name"),disabled=j.text("disabled_by")!=null,icon=j.text("icon"),originalIcon=j.text("original_icon"))
     }.toMap())
 }
 
