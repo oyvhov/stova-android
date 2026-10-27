@@ -1,7 +1,7 @@
-# Skrift (Outfit) ferdig – steg C i plan `2026-10-26-outstanding-launcher.md` ferdig; ikkje på Shield
+# Skrift (Outfit) ferdig – steg C i plan `2026-10-26-outstanding-launcher.md` ferdig; på Shield
 2026-10-27 morgon, brukaren: «Ja! Do it» (last ned Outfit). Lasta ned `Outfit[wght].ttf` (110 884 byte, sha256 `fc728727…`) og `OFL.txt` (4 389 byte) frå raw.githubusercontent.com/google/fonts/main/ofl/outfit/. 1243cd8: `res/font/outfit.ttf`, lisensen i `assets/licenses/outfit-OFL.txt`, `StovaFonts.Display` med éi oppføring per vekt (100–700 på wght-aksen) på displaySmall, headline* og titleLarge; resten i systemskrift. Dermed får klokka, side- og radtitlar og dei store tala på Smarthus-korta Outfit.
 Funne: Outfit-linjer er om lag 2,5 dp høgare enn Roboto (høgare ascent/descent); `LineHeightStyle` (Trim/Mode.Fixed) endrar ikkje einlinjehøgda. Små Smarthus-kort fekk difor 3 dp mellomrom i staden for 4 og held 152 dp (`MixedDashboardLayoutTest`).
-Kontroll: 762/762, 0 skip, lint 0 feil (63 åtvaringar), bygg OK. Emulator-5580: `font-home.png`, `font-smarthome.png`, `font-settings.png` i `.superpowers/design-review/`. Shield: IKKJE installert (ny dag, ikkje spurt). APK `dbdff9d0…`.
+Kontroll: 762/762, 0 skip, lint 0 feil (63 åtvaringar), bygg OK. Emulator-5580: `font-home.png`, `font-smarthome.png`, `font-settings.png` i `.superpowers/design-review/`. Shield: brukaren sa «Installer på Shield og vis meg». APK `dbdff9d0…` installert og hashverifisert; Heim, Smarthus og Innstillingar sett på TV-en (`shield-font-*.png`), Shield står på Heim. scrcpy opna med `--no-audio`: PC-en hadde ingen standard lydeining, så `Show-StovaScreen.ps1` (AAC) døydde med «Could not open audio device».
 Neste: plan steg 2 (harde klipp nedst – synleg nedst på Smarthus), 3 (småfunn), 4, 5, 6, 7, 8, 9.
 
 # Fokus, rørsle og tone frå kunsten – på Shield; skrifta ventar på ja til nedlasting
