@@ -69,9 +69,11 @@ class ShortcutTileTest {
         compose.onNodeWithText("Køyr").assertIsDisplayed()
     }
 
-    // A scene tile draws Home Assistant's own icon for it, from the bundled icon font.
-    @Test fun aSceneTileShowsItsHomeAssistantIcon() {
+    // A scene tile draws Home Assistant's own icon for it, from the bundled icon font, and carries
+    // Home Assistant's mark; a library tile does not.
+    @Test fun aSceneTileShowsItsHomeAssistantIconAndMark() {
         render()
         compose.waitUntil(5_000) { compose.onAllNodesWithTag("ha-icon", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+        assertEquals(1, compose.onAllNodesWithTag("ha-badge", useUnmergedTree = true).fetchSemanticsNodes().size)
     }
 }

@@ -1,6 +1,10 @@
 package app.stova.apps
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import app.stova.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -49,8 +53,14 @@ fun ShortcutTile(tile: FavoriteTile, onClick: () -> Unit, onLongClick: () -> Uni
         } else {
             ShortcutIcon(tile, spec.height, showName = !spec.captions)
         }
+        // A scene does something in the house when pressed: Home Assistant's own mark says so. The
+        // brand rules: unchanged, in no container, and clear space of a quarter of its height.
+        if (tile is FavoriteTile.Scene) Image(painterResource(R.drawable.ic_home_assistant), contentDescription = null,
+            modifier = Modifier.align(Alignment.TopEnd).padding(HaMarkSize * .4f).size(HaMarkSize).testTag("ha-badge"))
     }
 }
+
+private val HaMarkSize = 22.dp
 
 @Composable
 private fun ShortcutIcon(tile: FavoriteTile, height: Dp, showName: Boolean) {

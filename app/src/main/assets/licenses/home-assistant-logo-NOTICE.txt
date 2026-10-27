@@ -1,0 +1,10 @@
+Home Assistant logomark (res/drawable/ic_home_assistant.xml)
+
+Source: https://github.com/OpenHomeFoundation/brand-assets
+        home-assistant/logo/screen/logomark/HA-logomark-color.svg
+
+This logo is trademarked and the property of the Open Home Foundation. It is not
+available for commercial use without express written permission from the
+foundation. Stova is free and not for sale; it shows the logomark unchanged, in no
+container, on tiles that start a Home Assistant scene or script, following
+https://contributors.home-assistant.io/brand/name-and-logo/

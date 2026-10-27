@@ -1,3 +1,7 @@
+# Home Assistant-merket på sceneflisene
+2026-10-28, brukaren: «Skulle en hatt ein liten Ha logo badge på flisa? (Ekte nye Logoen)», «Det kan vere den gamle logoen. Det får du finne ut», «Eg vil ha det», «Lag det pittlitt større». MDI sitt `home-assistant`-ikon er den gamle logoen (pipe på taket); den nye frå 2023 er lasta ned som `HA-logomark-color.svg` (1,3 kB) frå OpenHomeFoundation/brand-assets og ligg som `res/drawable/ic_home_assistant.xml`, med merknad i `assets/licenses/home-assistant-logo-NOTICE.txt`. Etter merkereglane: uendra, utan ramme eller sirkel, luft rundt; 22 dp øvst til høgre på kvar sceneflis.
+Kontroll: 814/814, lint 0 feil (63 åtvaringar), bygg OK. Emulator: `.superpowers/readme/b3_s.jpg`. Shield: ikkje installert. Ikkje pusha.
+
 # Sceneflisene viser ikonet frå Home Assistant – ikkje på Shield
 2026-10-28, brukaren: «Home assistant ikonet», «Last ned. Pass på at ikke heile pakken blir lasta inn unødvendig». Lasta ned berre `materialdesignicons-webfont.ttf` (1,3 MB), `materialdesignicons.css` (418 kB, berre til namnelista) og `LICENSE` frå `@mdi/font` 7.4.47 på jsDelivr; lisens Apache 2.0 for fontane.
 `ha/HaIconFont.kt`: font i `res/font/material_design_icons.ttf`, sortert namneliste `assets/mdi/names.txt` (7448 ikon, 165 kB) som blir lesen per namn til første treff og hugsa; fonten blir lasta først når ei flis teiknar eit ikon. Ikonet kjem frå registeret (`icon`), attributtet `icon`, `original_icon` eller domenet (`mdi:palette`, `mdi:script-text`), blir lagra i `Shortcut.icon` og vist på flisa og i panelet. Ukjende ikon gir sola.
