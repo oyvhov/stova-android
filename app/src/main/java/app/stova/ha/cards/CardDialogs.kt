@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
@@ -23,7 +24,7 @@ import kotlinx.serialization.json.*
 sealed interface CardDialog {
     val entityId:String
     data class Brightness(override val entityId:String):CardDialog
-    data class Climate(override val entityId:String):CardDialog
+    data class Climate(override val entityId:String,val hiddenModes:Set<String> = emptySet()):CardDialog
     data class Graph(override val entityId:String,val today:Boolean=false):CardDialog
     data class Camera(override val entityId:String):CardDialog
     data class Cover(override val entityId:String):CardDialog
@@ -31,9 +32,9 @@ sealed interface CardDialog {
     data class Controls(override val entityId:String,val type:CardType):CardDialog
 }
 
-fun controlPanel(type:CardType,id:String):CardDialog=when(type) {
+fun controlPanel(type:CardType,id:String,hiddenModes:Set<String> = emptySet()):CardDialog=when(type) {
     CardType.LIGHT->CardDialog.Brightness(id)
-    CardType.CLIMATE->CardDialog.Climate(id)
+    CardType.CLIMATE->CardDialog.Climate(id,hiddenModes)
     CardType.SENSOR->CardDialog.Graph(id)
     CardType.ENERGY_PRICE->CardDialog.Graph(id,true)
     CardType.CAMERA->CardDialog.Camera(id)
@@ -53,8 +54,16 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
     val energyGraph=dialog is CardDialog.Graph && dialog.today
     StovaDialog(onDismiss) {
         val windowHeight=with(LocalDensity.current) {LocalWindowInfo.current.containerSize.height.toDp()}
+        // The panel never shrinks while it is open: a shorter state keeps the height it has had.
+        val tallest=remember(dialog) {IntArray(1)}
         val frame=if(dialog is CardDialog.Camera) Modifier.fillMaxSize() else Modifier
-            .width(if(energyGraph) 640.dp else 480.dp).heightIn(max=(windowHeight-96.dp).coerceAtLeast(160.dp))
+            .width(if(energyGraph) 640.dp else 480.dp)
+            .layout {measurable,constraints ->
+                val placeable=measurable.measure(constraints.copy(minHeight=tallest[0].coerceIn(constraints.minHeight,constraints.maxHeight)))
+                tallest[0]=maxOf(tallest[0],placeable.height)
+                layout(placeable.width,placeable.height) {placeable.place(0,0)}
+            }
+            .heightIn(max=(windowHeight-96.dp).coerceAtLeast(160.dp))
             .background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).verticalScroll(rememberScrollState())
         Column(frame.padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Text(name ?: entity?.let(::friendlyName) ?: dialog.entityId,style=MaterialTheme.typography.titleLarge)

@@ -166,7 +166,7 @@ import kotlin.math.ceil
             if(event.type==KeyEventType.KeyDown && !editHeld) {
                 editHeld=true;editConsumed=false;movingId=focusedId
                 holdJob=scope.launch {delay(timeout);editConsumed=true
-                    cards.find {it.id==movingId}?.let {card->restoreId=card.id;onDialog(controlPanel(card.type,card.entityId))}
+                    cards.find {it.id==movingId}?.let {card->restoreId=card.id;onDialog(controlPanel(card.type,card.entityId,card.hiddenModes))}
                 }
             } else if(event.type==KeyEventType.KeyUp) {
                 holdJob?.cancel();editHeld=false
@@ -226,6 +226,9 @@ import kotlin.math.ceil
             }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
+        // Moving between cards that show must not slide the dashboard; only a hidden card scrolls.
+        @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+        CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides app.stova.core.ui.ScrollOnlyWhenHidden) {
         LazyColumn(Modifier.fillMaxSize().onFocusChanged {gridFocused=it.hasFocus}.onPreviewKeyEvent {event ->
             if(!covered && menuId==null && !editHeld && event.key in listOf(Key.DirectionUp,Key.DirectionDown,Key.DirectionLeft,Key.DirectionRight)) {
                 if(event.type==KeyEventType.KeyDown) navigate(event.key)
@@ -264,6 +267,7 @@ import kotlin.math.ceil
             }
         }
         }
+        }
     }
     val hintCard=cards.find {it.id==focusedId}
     val motion=app.stova.core.theme.stovaMotion
@@ -288,8 +292,10 @@ import kotlin.math.ceil
         }
     }
     cards.find {it.id==menuId}?.takeUnless {profile.kid}?.let {card ->
+        val attrs=entities[card.entityId]?.attributes.takeIf {card.type==CardType.CLIMATE}
         CardMenu(card,card.name ?: entities[card.entityId]?.let(::friendlyName) ?: card.entityId,
             onMove=onMove,onConfigure=onConfigure,onHome=onHome,onRemove=onRemove,
+            hvacModes=attrs?.strings("hvac_modes").orEmpty(),presets=attrs?.strings("preset_modes").orEmpty(),
             onDismiss={menuId=null})
     }
     if(layoutOpen) DashboardLayoutDialog(profile.smartHome,onLayoutChange) {layoutOpen=false}

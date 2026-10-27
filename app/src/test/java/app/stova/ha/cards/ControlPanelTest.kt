@@ -26,6 +26,21 @@ class ControlPanelTest {
     private fun panel(dialog:CardDialog,e:HaEntity,locked:Boolean=false) {
         compose.setContent {StovaTheme {CardDialogHost(dialog,mapOf(e.id to e),FakeHaConnection(),null,locked,{c,_->calls+=c},{})}}
     }
+    @Test fun thePanelKeepsItsSizeWhileAChangeIsSentAndWhenItFails() {
+        val light=entity("light.a",attrs="""{"brightness":128,"supported_color_modes":["brightness"]}""")
+        val answer=kotlinx.coroutines.CompletableDeferred<Boolean>()
+        compose.setContent {StovaTheme {CardDialogHost(CardDialog.Brightness(light.id),mapOf(light.id to light),FakeHaConnection(),null,false,
+            {_,_->},{},send={c,_->calls+=c;answer.await()})}}
+        fun frame()=compose.onNodeWithText("Lukk").getUnclippedBoundsInRoot() to compose.onNodeWithText("light.a").getUnclippedBoundsInRoot()
+        val before=frame()
+        compose.onNodeWithText("Slå av").performClick()
+        compose.onNodeWithText("Ventar …").assertExists()
+        assertEquals("the panel grew while sending",before,frame())
+        compose.runOnIdle {answer.complete(false)}
+        compose.onNodeWithText("Endringa lukkast ikkje. Prøv igjen.").assertExists()
+        assertEquals("the panel grew when the change failed",before,frame())
+    }
+
     @Test fun unlockNeedsSeparateExplicitConfirmationAndCancelIsSafe() {
         panel(CardDialog.Lock("lock.front"),entity("lock.front","locked"))
         compose.onNodeWithText("Lås opp").performClick()
@@ -111,6 +126,12 @@ class ControlPanelTest {
         compose.onNodeWithText("Kjøling").performClick()
         assertEquals("cool",calls.single().data["hvac_mode"].toString().trim('"'))
         compose.onNodeWithText("eco").assertExists()
+    }
+    @Test fun aHeatPumpShowsOnlyTheModesChosenForItsCard() {
+        val pump=entity("climate.a","heat","""{"temperature":21.5,"hvac_modes":["off","heat","cool","dry","fan_only"],"preset_modes":["none","heat_8_15"]}""")
+        panel(CardDialog.Climate(pump.id,hiddenModes=setOf("cool","dry","fan_only","heat_8_15")),pump)
+        listOf("Varme","Av","none").forEach {compose.onNode(hasText(it) and hasClickAction()).assertExists()}
+        listOf("Kjøling","Avfukting","Vifte","heat_8_15").forEach {compose.onNode(hasText(it) and hasClickAction()).assertDoesNotExist()}
     }
     @Test fun mediaPanelHasTransportVolumeAndSupportedSource() {
         panel(CardDialog.Controls("media_player.a",CardType.MEDIA_PLAYER),entity("media_player.a","playing","""{"volume_level":0.5,"source_list":["TV","Radio"]}"""))

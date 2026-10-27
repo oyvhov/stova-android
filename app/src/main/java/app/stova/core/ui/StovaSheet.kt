@@ -94,10 +94,6 @@ fun StovaSheet(onDismissRequest: () -> Unit, content: @Composable ColumnScope.(S
     }
 }
 
-/** The platform's own rule: scroll just enough to show the focused row, and not at all when it shows. */
-@OptIn(ExperimentalFoundationApi::class)
-private val ScrollOnlyWhenHidden = object : BringIntoViewSpec {}
-
 /** Artwork across the panel, then the title and one line of detail. Without art, an icon leads. */
 @Composable
 fun SheetHeader(title: String, subtitle: String? = null, icon: ImageVector? = null,

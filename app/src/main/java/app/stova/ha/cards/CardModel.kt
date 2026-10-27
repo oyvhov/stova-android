@@ -17,6 +17,8 @@ import app.stova.ha.text
     val wide: Boolean = false, val onHome: Boolean = false,
     val size: CardSize = if (wide) CardSize.M else CardSize.S,
     val name: String? = null, val icon: String? = null, val favorite: Boolean = false,
+    /** Climate modes and presets left out of this card's panel, by Home Assistant name. */
+    val hiddenModes: Set<String> = emptySet(),
 )
 data class DashboardSection(val room: String?, val favorites: Boolean, val cards: List<CardConfig>)
 @Serializable enum class DashboardGrouping { NONE, ROOM }

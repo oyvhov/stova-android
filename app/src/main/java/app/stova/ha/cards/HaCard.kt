@@ -49,7 +49,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
         CardType.MEDIA_PLAYER -> if(shown.state=="playing") entityStateLabel(shown) else null
         else -> null
     }
-    fun panel() {if(entity!=null) openDialog(controlPanel(config.type,entity.id))}
+    fun panel() {if(entity!=null) openDialog(controlPanel(config.type,entity.id,config.hiddenModes))}
     fun click() {
         if(onEdit!=null) {onEdit();return}
         if(unavailable || entity==null) return
@@ -58,7 +58,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
             CardType.SENSOR -> openDialog(CardDialog.Graph(entity.id))
             CardType.ENERGY_PRICE -> openDialog(CardDialog.Graph(entity.id,true))
             CardType.CAMERA -> openDialog(CardDialog.Camera(entity.id))
-            CardType.CLIMATE -> if(!locked) openDialog(CardDialog.Climate(entity.id))
+            CardType.CLIMATE -> if(!locked) openDialog(CardDialog.Climate(entity.id,config.hiddenModes))
             CardType.COVER -> if(!locked) openDialog(CardDialog.Cover(entity.id))
             CardType.LOCK -> if(!locked) openDialog(CardDialog.Lock(entity.id))
             else -> if(!pending) primaryAction(config.type,entity)?.let(perform) ?: panel()

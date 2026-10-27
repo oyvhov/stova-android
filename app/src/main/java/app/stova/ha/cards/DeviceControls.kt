@@ -57,8 +57,10 @@ import kotlin.math.roundToInt
         is CardDialog.Climate -> CardValue(attrs.number("current_temperature")?.let {formatNumber(it,locale)} ?: entityStateLabel(shown),stringResource(R.string.ha_celsius))
         else -> CardValue(entityStateLabel(shown))
     }
-    if(state.pending) CardDetail(stringResource(R.string.ha_v2_pending))
-    if(state.failed) CardDetail(stringResource(R.string.ha_v2_failed))
+    // One line is always kept for the status, so sending a change never grows the panel.
+    Text(when {state.pending->stringResource(R.string.ha_v2_pending);state.failed->stringResource(R.string.ha_v2_failed);else->""},
+        style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant,
+        minLines=1,maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     when(dialog) {
         is CardDialog.Brightness -> {
             val modes=attrs.strings("supported_color_modes")
@@ -88,10 +90,10 @@ import kotlin.math.roundToInt
                 act(ServiceCall("climate","set_temperature",buildJsonObject {put("temperature",it)}),true)
             }
             FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                attrs.strings("hvac_modes").forEach {mode ->
+                attrs.strings("hvac_modes").filter {it !in dialog.hiddenModes}.forEach {mode ->
                     StovaButton(modeLabel(mode),{act(ServiceCall("climate","set_hvac_mode",buildJsonObject {put("hvac_mode",mode)}))},enabled=enabled,primary=shown.state==mode)
                 }
-                attrs.strings("preset_modes").forEach {preset ->
+                attrs.strings("preset_modes").filter {it !in dialog.hiddenModes}.forEach {preset ->
                     StovaButton(preset,{act(ServiceCall("climate","set_preset_mode",buildJsonObject {put("preset_mode",preset)}))},enabled=enabled,primary=attrs.text("preset_mode")==preset)
                 }
             }
@@ -170,7 +172,7 @@ internal fun JsonObject.strings(key:String)=(get(key) as? JsonArray).orEmpty().m
     }
 }
 
-@Composable private fun modeLabel(mode:String)=stringResource(when(mode) {
+@Composable internal fun modeLabel(mode:String)=stringResource(when(mode) {
     "heat"->R.string.ha_v2_heat;"cool"->R.string.ha_v2_cool;"auto","heat_cool"->R.string.ha_v2_auto;"off"->R.string.ha_off
     "dry"->R.string.ha_action_dry;"fan_only"->R.string.ha_action_fan_mode;else->R.string.ha_action_mode
 })

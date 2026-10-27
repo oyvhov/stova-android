@@ -246,6 +246,8 @@
     <string name="ha_v2_done">Done</string>
     <string name="ha_v2_remote_hint">Arrows: navigate · Hold OK: more controls · Menu: customise</string>
     <string name="ha_v2_size">Size</string>
+    <string name="ha_v2_modes">Modes</string>
+    <string name="ha_v2_modes_count">%1$d of %2$d</string>
     <string name="ha_v2_size_s">S · 1 × 1</string>
     <string name="ha_v2_size_m">M · 2 × 1</string>
     <string name="ha_v2_size_l">L · 2 × 2</string>

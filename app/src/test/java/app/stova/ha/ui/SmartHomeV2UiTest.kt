@@ -30,6 +30,28 @@ class SmartHomeV2UiTest {
         compose.onNodeWithText("Storleik").assertIsFocused().performKeyInput {pressKey(Key.DirectionCenter)}
         compose.onNodeWithText("S · 1 × 1").assertIsFocused()
     }
+    @Test fun aClimateCardChoosesWhichModeButtonsItsPanelShows() {
+        val pump=HaEntity("climate.a","heat",buildJsonObject {
+            putJsonArray("hvac_modes") {add("off");add("heat");add("cool")};putJsonArray("preset_modes") {add("heat_8_15")}},0,0)
+        var cards by mutableStateOf(listOf(CardConfig("c",CardType.CLIMATE,pump.id,name="Varmepumpa")))
+        compose.setContent { StovaTheme(reduceMotion=true) { SmartHomeContent(adult,cards,mapOf(pump.id to pump),HaStatus.CONNECTED,
+            onConfigure={updated -> cards=cards.map {if(it.id==updated.id) updated else it}}) } }
+        compose.onRoot().performKeyInput {pressKey(Key.Menu)}
+        compose.onNodeWithText("Modusar").performClick()
+        compose.onNodeWithText("Kjøling").performClick()
+        compose.onNodeWithText("heat_8_15").performClick()
+        assertEquals(setOf("cool","heat_8_15"),cards.single().hiddenModes)
+        // The page stays open so several can be chosen; a second press shows the mode again.
+        compose.onNodeWithText("Kjøling").performClick()
+        assertEquals(setOf("heat_8_15"),cards.single().hiddenModes)
+    }
+    @Test fun otherCardsHaveNoModesPage() {
+        compose.setContent { StovaTheme(reduceMotion=true) { SmartHomeContent(adult,
+            listOf(CardConfig("a",CardType.SENSOR,"sensor.a")),emptyMap(),HaStatus.CONNECTED) } }
+        compose.onRoot().performKeyInput {pressKey(Key.Menu)}
+        compose.onNodeWithText("Storleik").assertExists()
+        compose.onNodeWithText("Modusar").assertDoesNotExist()
+    }
     @Test fun delayedSizeWriteRestoresTheSameCardAfterItMovesToAnotherBand() {
         var cards by mutableStateOf(List(9) { CardConfig("$it",CardType.SENSOR,"sensor.$it") })
         var delayed: CardConfig? = null

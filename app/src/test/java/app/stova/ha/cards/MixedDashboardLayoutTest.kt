@@ -94,6 +94,49 @@ class MixedDashboardLayoutTest {
         assertEquals(0,calls)
     }
 
+    @Test fun theDashboardOnATvMovesOnlyToRevealAHiddenCard() {
+        // The TV's own bring-into-view rule pulls a focused item a third of the way down the screen,
+        // which slid the whole dashboard when focus moved between cards that were already in view.
+        org.robolectric.Shadows.shadowOf(androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>().packageManager)
+            .setSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK,true)
+        val media=HaEntity("media_player.a","playing",buildJsonObject {put("media_title","TV");put("volume_level",0.14)},0,0)
+        val energy=HaEntity("sensor.price","94.5",buildJsonObject {put("unit_of_measurement","øre")},0,0)
+        val cards=listOf(CardConfig("w",CardType.WEATHER,weather.id,name="Ute",size=CardSize.L),
+            CardConfig("p",CardType.ENERGY_PRICE,energy.id,name="Straumpris",size=CardSize.M),
+            CardConfig("l",CardType.LIGHT,light.id,name="Stova"),
+            CardConfig("m",CardType.MEDIA_PLAYER,media.id,name="Sonos",size=CardSize.M),
+            CardConfig("c",CardType.CLIMATE,climate.id,name="Varmepumpa"))
+        val entities=listOf(weather,energy,light,media,climate).associateBy {it.id}
+        compose.setContent {StovaTheme(reduceMotion=true) {
+            val input=LocalInputModeManager.current
+            SideEffect {input.requestInputMode(InputMode.Keyboard)}
+            SmartHomeContent(Profile("a","A",AvatarColor.OCEAN),cards,entities,HaStatus.CONNECTED,onPerform={_,_->})
+        }}
+        val grid=compose.onNode(hasScrollAction()).getUnclippedBoundsInRoot()
+        fun top()=compose.onNodeWithText("Ute").getUnclippedBoundsInRoot().top.value
+        fun press(key:Key) {compose.onRoot().performKeyInput {pressKey(key)};compose.waitForIdle()}
+        val start=top()
+        press(Key.DirectionRight)
+        compose.onNodeWithText("Straumpris").assertIsFocused()
+        press(Key.DirectionDown)
+        val below=compose.onNode(isFocused()).getUnclippedBoundsInRoot()
+        assertTrue("a card in view below: $below in $grid",below.top>=grid.top && below.bottom<=grid.bottom)
+        assertEquals("the dashboard moved to a card already in view",start,top(),0.5f)
+        // Sonos sits partly below the screen: just enough to show all of it.
+        repeat(3) {if(runCatching {compose.onNodeWithText("Sonos").assertIsFocused()}.isFailure) press(Key.DirectionDown)}
+        compose.onNodeWithText("Sonos").assertIsFocused()
+        val sonos=compose.onNodeWithText("Sonos").getUnclippedBoundsInRoot()
+        // All of it shows, above the grid's 28 dp bottom margin, and no further up than that.
+        assertTrue("Sonos shows just above the margin: $sonos in $grid",sonos.bottom<=grid.bottom && sonos.bottom>=grid.bottom-29.dp)
+        val revealed=top()
+        val before=listOf("Ute","Straumpris","Stova","Varmepumpa").associateWith {compose.onNodeWithText(it).getUnclippedBoundsInRoot()}
+        press(Key.DirectionUp)
+        val name=before.keys.first {runCatching {compose.onNodeWithText(it).assertIsFocused()}.isSuccess}
+        val was=before.getValue(name)
+        if(was.top>=grid.top && was.bottom<=grid.bottom) assertEquals("back up to $name, in view: nothing moves",revealed,top(),0.5f)
+        else assertTrue("$name was hidden at the top and now shows",compose.onNodeWithText(name).getUnclippedBoundsInRoot().top>=grid.top)
+    }
+
     @Test fun largeWeatherPlacesAFullWidthForecastBelowCurrentConditions() {
         val forecast=List(5) {ForecastDay(it*86_400_000L,"rainy",15.0+it,5.0+it)}
         compose.setContent {StovaTheme(reduceMotion=true) {
