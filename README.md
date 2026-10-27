@@ -15,7 +15,8 @@ Ein flat og rask Android TV-launcher for NVIDIA Shield. Stova viser filmar og se
 - **Heim-knappen:** Stova kan opne seg når du trykkjer på Heim, medan systemlauncheren framleis er tilgjengeleg.
 
 For utviklarar og AI-agentar: [arkitektur og filkart](docs/ARCHITECTURE.md),
-[arbeidsflyt og testar](CONTRIBUTING.md), [arbeidsreglar](AGENTS.md).
+[arbeidsflyt og testar](CONTRIBUTING.md), [emulator og demodata](docs/EMULATOR.md),
+[arbeidsreglar](AGENTS.md) og [planar](docs/superpowers/plans/README.md).
 
 ## Skjermbilete
 

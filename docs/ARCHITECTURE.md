@@ -192,5 +192,7 @@ systemlauncheren blir bevarte. Debug-loggen inneheld berre HOME-/vindaugsavgjerd
 ## Verifisering
 
 Testane speglar pakkane under `app/src/test/java/app/stova/`. Sjå [CONTRIBUTING.md](../CONTRIBUTING.md)
-for kommandoar og [AGENTS.md](../AGENTS.md) for arbeidsreglar. Planar og eldre verifikasjon ligg i
+for kommandoar, [EMULATOR.md](EMULATOR.md) for emulator, demodata og `scripts/Send-TvRemote.ps1`,
+og [AGENTS.md](../AGENTS.md) for arbeidsreglar. Demodata kjem frå `PerformanceSeedActivity` i
+kjeldesettet `performance`, som berre debug og verktøyvariantane har. Planar og eldre verifikasjon ligg i
 `docs/superpowers/` og `docs/verification/`; dei erstattar ikkje dei faktiske testresultata.

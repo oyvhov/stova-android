@@ -8,7 +8,7 @@ og [AGENTS.md](AGENTS.md). Dei same kontraktane gjeld for menneske, Claude og Co
 1. Sjekk `git status` og `docs/HANDOFF.md`. Ta vare på arbeid som alt ligg der.
 2. Finn pakken som eig åtferda i arkitekturoversikta. Hald endringa lokal.
 3. Ved ein feil eller ny kontrakt: legg til ein målretta test, sjå han feile, og rett årsaka.
-4. Bruk kontrollerte data for UI-testar og MockWebServer for transport. Ekte data høyrer til emulatorverifiseringa.
+4. Bruk kontrollerte data for UI-testar og MockWebServer for transport. Ekte data og demodata høyrer til emulatorverifiseringa.
 
 ## Bygg og testar
 
@@ -24,11 +24,19 @@ Den siste kommandoen køyrer også skjermtestane. Resultat ligg i `app/build/tes
 lint i `app/build/reports/lint-results-debug.html`, og debug-APK i `app/build/outputs/apk/debug/`.
 Kontroller Gradle-resultatet og XML-resultata. Ikkje start to bygg i same worktree samstundes.
 
-## Emulator med ekte data
+## Emulator
 
-Stova sin emulator er `emulator-5580`. Installer med `adb -s emulator-5580 install -r ...` slik at
-profilar, kontoar og innstillingar blir bevarte. Ikkje bruk `pm clear`, avinstallering eller demoseeding
-for å gjere ein test lettare. Ikkje rør Spole-emulatorane eller installer på Shield som del av denne flyten.
+[Køyr Stova på ein emulator](docs/EMULATOR.md) forklarer oppsett, demodata og skriptet som styrer
+TV-en. Kort sagt:
+
+```powershell
+pwsh -NoProfile -File scripts/Start-StovaEmulator.ps1
+pwsh -NoProfile -File scripts/Install-Stova.ps1 -Demo
+```
+
+Har emulatoren ekte profilar og kontoar, installer utan `-Demo`. Skriptet bruker `install -r`, så
+profilar, kontoar og innstillingar blir verande. Ikkje bruk `pm clear` eller avinstallering for å
+gjere ein test lettare. Ikkje rør andre emulatorar eller ein ekte TV utan at eigaren ber om det.
 
 Prøv D-pad ned og opp, retur frå ei anna side, profilbyte, store skrifter og redusert rørsle.
 Smarthusverifisering av layout krev ingen endring av lys, låsar eller andre verkelege einingar.
