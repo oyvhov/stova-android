@@ -182,7 +182,9 @@ fun HomeContent(
         .let { if (step > 0) it else it.reversed() }
         .firstOrNull { currentRows!![it].hasFocusableItems() }
     Box(Modifier.fillMaxSize()) {
-    SeasonalScene(Modifier.matchParentSize())
+    // One clock for the decor behind the content and the see-through layer over it.
+    val seasonClock = rememberSeasonalClock()
+    SeasonalScene(Modifier.matchParentSize(), clock = seasonClock)
     Column(Modifier.fillMaxSize().onPreviewKeyEvent { event ->
         if (event.type == KeyEventType.KeyDown) {
             viewerMoved = true
@@ -246,6 +248,8 @@ fun HomeContent(
             } else null
             val heroHeight = if (appearance.heroSize == HeroSize.OFF) 0.dp else if (deckHeroSpace != null) {
                 if (deckHeroSpace < if (fontScale >= 1.5f) 140.dp else 112.dp) 0.dp
+                // A large hero takes all the room above the rows, so its bigger logo has space to grow.
+                else if (appearance.heroSize == HeroSize.LARGE) deckHeroSpace
                 else minOf(deckHeroSpace, maxOf(maxHeight * appearance.heroSize.fraction,
                     if (appearance.showOverview && fontScale < 1.5f) 208.dp else 0.dp))
             } else if (scrollHeroSpace != null && scrollHeroSpace >= 112.dp) scrollHeroSpace
@@ -364,6 +368,7 @@ fun HomeContent(
                 }
             }
         }
+    SeasonalScene(Modifier.matchParentSize(), front = true, clock = seasonClock)
     hiddenRow?.let { hidden ->
         androidx.compose.material3.Surface(Modifier.align(Alignment.BottomCenter).padding(24.dp), shape = MaterialTheme.shapes.large) {
             Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {

@@ -200,8 +200,9 @@ class AppearanceRenderingTest {
         val overviewNode = compose.onNodeWithText(item.overview!!).assertIsDisplayed()
         val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
         overviewNode.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
-        assertEquals(2, layouts.single().lineCount)
-        assertTrue("Both overview lines must fit", layouts.single().getLineBottom(1) <= layouts.single().size.height + 0.5f)
+        // A large hero tells three lines of the story (a compact one two).
+        assertEquals(3, layouts.single().lineCount)
+        assertTrue("All three overview lines must fit", layouts.single().getLineBottom(2) <= layouts.single().size.height + 0.5f)
         val overview = overviewNode.getUnclippedBoundsInRoot()
         val header = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot()
         assertTrue("Hero overview must not cover row heading: $overview vs $header", overview.bottom <= header.top)

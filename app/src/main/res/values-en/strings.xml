@@ -384,7 +384,7 @@
     <string name="theme_calendar">Follow calendar</string>
     <string name="theme_decor">Seasonal decorations</string>
     <string name="theme_calm">Calm</string>
-    <string name="theme_full">Full</string>
+    <string name="theme_full">Max</string>
     <string name="theme_greeting_halloween">Happy Halloween</string>
     <string name="theme_greeting_christmas">Merry Christmas</string>
     <plurals name="theme_countdown_halloween">
@@ -652,4 +652,32 @@
     <string name="slider_percent">%1$d%%</string>
     <string name="slider_seconds">%1$d s</string>
     <string name="slider_units">%1$d</string>
+    <string name="system_android_up">Android %1$s · up %2$s</string>
+    <string name="system_uptime_days">%1$dd %2$dh</string>
+    <string name="system_uptime_hours">%1$dh %2$dm</string>
+    <string name="system_network">Network</string>
+    <string name="system_wifi">Wi-Fi</string>
+    <string name="system_signal_strong">strong signal</string>
+    <string name="system_signal_good">good signal</string>
+    <string name="system_signal_weak">weak signal</string>
+    <string name="system_band_24">2.4 GHz</string>
+    <string name="system_band_5">5 GHz</string>
+    <string name="system_band_6">6 GHz</string>
+    <string name="system_ethernet">Ethernet</string>
+    <string name="system_offline">Not connected</string>
+    <string name="system_bluetooth">Bluetooth</string>
+    <string name="system_on">On</string>
+    <string name="system_off">Off</string>
+    <string name="system_display">Picture and sound</string>
+    <string name="system_display_mode">%1$d × %2$d · %3$d Hz</string>
+    <string name="system_storage">Storage</string>
+    <string name="system_storage_free">%1$s free of %2$s</string>
+    <string name="system_restart">Restart</string>
+    <string name="system_restart_hint">Android\'s power menu</string>
+    <string name="system_restart_needs">Turn on Stova\'s Home button first</string>
+    <string name="system_all_settings">All Android settings</string>
+    <plurals name="system_bluetooth_paired">
+        <item quantity="one">%1$d device paired</item>
+        <item quantity="other">%1$d devices paired</item>
+    </plurals>
 </resources>

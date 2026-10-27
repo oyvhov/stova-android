@@ -21,6 +21,8 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 | Innstillingar | `settings/SettingsScreen.kt`, `settings/SettingsLayout.kt`, `settings/SettingsNavigation.kt` | Datakopling, fokus mellom meny/innhald og fast overskrift; seksjonane med merke og ei forklarande line |
 | Heim i lite format | `settings/HomeMiniature.kt`, `home/HomeContent.kt` (`LocalHomePreview`), `core/ui/FocusOutline.kt` (`LocalDrawnFocus`) | Den ekte Heim med utkastet, skalert med tettleiken, ved sida av tittelen på kvar Utsjånad-side; tek aldri fokus og teiknar startkortet som fokusert |
 | Ikonprøve | `settings/AppIconPreview.kt` | Verkelege appar med utkastet til utsjånad under Ikon |
+| Sesongpynt | `home/SeasonalScene.kt`, `home/SeasonalTile.kt` | Max: to lag på éi klokke (bak og gjennomsiktig framfor korta), mange ulike delar per sesong (`seasonTouches`), og pynt på kvar appflis plassert etter appen sin nøkkel |
+| Einingsmeny | `navigation/SystemQuickMenu.kt`, `system/SystemStatus.kt`, `homebutton/HomeButtonService.kt` | Langt OK/Meny på Innstillingar: ekte status lesen éin gong ved opning, rader til Android-sidene, omstart via straummenyen til Heim-knapp-tenesta |
 | Heim-knappen | `homebutton/HomeActivities.kt`, `homebutton/HomeKeyLogic.kt`, `homebutton/HomeButtonService.kt` | Oppdaga HOME-aktivitetar, tastefilter og avgrensa vindaugsreserveveg |
 | Utsjånad | `settings/AppearanceSettings.kt`, `settings/AppearanceMenu.kt`, `settings/AppearanceSettingsContent.kt` | Lagring, kategorioversikt og kontrollerte val kvar for seg |
 | Skyveknappar og lagring | `core/ui/SettingsSliderRow.kt`, `profiles/AppearanceValues.kt`, `settings/AppearanceEdits.kt` | TV-/touch-justering, bakoverkompatible verdiar og delt editor per profil med samla lagring |

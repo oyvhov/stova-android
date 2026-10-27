@@ -119,6 +119,40 @@ class SeasonalDecorTest {
         compose.mainClock.advanceTimeBy(3_000)
         assertEquals(1f,clock!!.presence)
     }
+    // The user: «Eg vil ikkje ha berre meir snøfnugg. Eg vil ha mykje forskjellig».
+    @Test fun maxBringsManyDifferentThingsNotOnlyMoreSnow() {
+        assertTrue(seasonTouches(Season.CHRISTMAS).size >= 7)
+        assertTrue(seasonTouches(Season.HALLOWEEN).size >= 7)
+        assertTrue(SeasonTouch.SLEIGH in seasonTouches(Season.CHRISTMAS) && SeasonTouch.LIGHTS in seasonTouches(Season.CHRISTMAS))
+        assertTrue(SeasonTouch.GHOST in seasonTouches(Season.HALLOWEEN) && SeasonTouch.LANTERNS in seasonTouches(Season.HALLOWEEN))
+        assertTrue(seasonTouches(Season.NONE).isEmpty())
+        // The app tiles themselves are dressed too: snow on the box at Jul, a web in its corner at Halloween.
+        assertEquals(SeasonTouch.SNOW_CAPS, tileTouch(Season.CHRISTMAS, SeasonalDecor.FULL))
+        assertEquals(SeasonTouch.TILE_WEBS, tileTouch(Season.HALLOWEEN, SeasonalDecor.FULL))
+        for (decor in listOf(SeasonalDecor.OFF, SeasonalDecor.CALM)) assertEquals(null, tileTouch(Season.CHRISTMAS, decor))
+        assertEquals(null, tileTouch(Season.NONE, SeasonalDecor.FULL))
+        assertTrue((seasonTouches(Season.CHRISTMAS) intersect seasonTouches(Season.HALLOWEEN)).isEmpty())
+    }
+    // The user: «Kan spindelvev vere plassert forskjellig på kvar app».
+    @Test fun eachAppGetsItsOwnWebAndKeepsIt() {
+        val keys = listOf("no.nrk.tv/.Main", "com.netflix.ninja/.Main", "com.google.android.youtube.tv/.Main",
+            "com.plexapp.android/.Main", "app.spole/.Main", "com.disney.disneyplus/.Main", "tv.twitch/.Main", "com.spotify.tv/.Main")
+        val webs = keys.map { tileWeb(it.hashCode()) }
+        assertTrue("corners ${webs.map { it.corner }}", webs.map { it.corner }.distinct().size >= 3)
+        assertTrue(webs.map { it.reach }.distinct().size >= 6)
+        assertTrue(webs.all { it.reach in 0.28f..0.56f })
+        assertTrue(webs.any { it.spider } && webs.any { !it.spider })
+        assertEquals(webs, keys.map { tileWeb(it.hashCode()) })
+    }
+    @Test fun christmasLightsHangAcrossTheTopAboveTheTopBar() {
+        val bulbs = christmasLights(960f)
+        assertTrue(bulbs.size >= 20)
+        // The top bar's controls start 28 dp down; the garland stays above them.
+        assertTrue(bulbs.all { it.y in 2f..24f })
+        assertTrue(bulbs.minOf { it.x } < .05f && bulbs.maxOf { it.x } > .95f)
+        assertTrue(bulbs.map { it.colour }.distinct().size >= 4)
+        assertTrue(christmasLights(960f) == bulbs)
+    }
     @Test fun presenceFadesOutOnlyAfterTheRest() {
         assertEquals(1f,seasonalPresence(idleSeconds=0f,awakeSeconds=10f))
         assertEquals(1f,seasonalPresence(idleSeconds=SEASON_REST_SECONDS,awakeSeconds=500f))
@@ -142,13 +176,14 @@ class SeasonalDecorTest {
         assertTrue(spiderDrop(47f) in 0f..1f)
         assertEquals(1f,spiderDrop(50f))
         assertEquals(seasonParticles(Season.HALLOWEEN),seasonParticles(Season.HALLOWEEN))
-        // Light snow across the whole screen: enough to fill it, few enough to stay calm.
-        for (season in listOf(Season.CHRISTMAS, Season.HALLOWEEN)) {
-            val particles = seasonParticles(season)
-            assertTrue(particles.size in 30..64)
-            assertTrue(particles.minOf { it.x } < .15f && particles.maxOf { it.x } > .85f)
-        }
-        assertEquals(3, seasonBats(Season.HALLOWEEN).size)
+        // Max: a thick snowfall in three depths, far specks to large near crystals, over the whole screen.
+        val snow = seasonParticles(Season.CHRISTMAS)
+        assertTrue(snow.size >= 140)
+        assertTrue(snow.minOf { it.radius } < 1f && snow.maxOf { it.radius } >= 4f)
+        val embers = seasonParticles(Season.HALLOWEEN)
+        assertTrue(embers.size >= 80)
+        for (particles in listOf(snow, embers)) assertTrue(particles.minOf { it.x } < .1f && particles.maxOf { it.x } > .9f)
+        assertEquals(7, seasonBats(Season.HALLOWEEN).size)
         assertTrue(seasonBats(Season.CHRISTMAS).isEmpty())
     }
 }

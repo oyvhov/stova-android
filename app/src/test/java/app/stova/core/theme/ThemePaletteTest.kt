@@ -14,6 +14,13 @@ class ThemePaletteTest {
             assertTrue("$theme $accent contrast $contrast", contrast >= 7f)
         }
     }
+    @Test fun christmasIsATrueRedOverDeepBerrySurfacesNotCoral() {
+        val red = Accent.HOLLY.color
+        assertTrue("$red", red.red > .95f && red.red - maxOf(red.green, red.blue) > .5f && kotlin.math.abs(red.green - red.blue) < .05f)
+        val berry = Accent.HOLLY.container
+        assertTrue("$berry", berry.red > .35f && berry.green < .12f && berry.blue < .15f)
+        assertEquals(berry, stovaColorScheme(VisualTheme.NOEL, Accent.HOLLY).primaryContainer)
+    }
     @Test fun everyMaterialSurfaceAndNeutralComesFromTheChosenMood() {
         for (theme in VisualTheme.entries) {
             val scheme = stovaColorScheme(theme, Accent.OCEAN)

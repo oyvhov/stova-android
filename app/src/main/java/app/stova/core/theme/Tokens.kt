@@ -27,6 +27,12 @@ object StovaColors {
     val Snow = Color(0xFFE8F2FF)
     val Spider = Color(0xFFD8D1E9)
     val Divider = Color(0xFF3D443C)
+    /** Christmas lights in turn: red, green, gold, blue and warm white, on a dark green wire. */
+    val Bulbs = listOf(Color(0xFFFF5A52), Color(0xFF4FD27A), Color(0xFFFFC94D), Color(0xFF5AA9FF), Color(0xFFFFF0D2))
+    val Wire = Color(0xFF22352A)
+    val Fir = Color(0xFF1F4A33)
+    /** Halloween's low mist. */
+    val Mist = Color(0xFF9A86B8)
 }
 
 /** Critic status colours stay independent of the profile's action accent. */
@@ -110,11 +116,15 @@ val AvatarColor.color: Color get() = Color(argb)
 
 /** Appearance accents share the same muted palette as profile avatars. */
 val app.stova.profiles.Accent.color: Color get() = when (this) {
-    app.stova.profiles.Accent.HOLLY -> Color(0xFFF6806C)
+    // Jul: a true red at the edge of 7:1 on the darkest mood, not the old coral.
+    app.stova.profiles.Accent.HOLLY -> Color(0xFFFF7575)
     app.stova.profiles.Accent.PUMPKIN -> Color(0xFFFFA74F)
     else -> AvatarColor.valueOf(name).color
 }
 
-val app.stova.profiles.Accent.container: Color get() =
-    if (this == app.stova.profiles.Accent.LIME) StovaColors.PrimaryContainer
-    else androidx.compose.ui.graphics.lerp(StovaColors.Ink, color, 0.18f)
+val app.stova.profiles.Accent.container: Color get() = when (this) {
+    app.stova.profiles.Accent.LIME -> StovaColors.PrimaryContainer
+    // Deep berry, so chosen rows and chips read as Christmas red rather than brown.
+    app.stova.profiles.Accent.HOLLY -> Color(0xFF6E1219)
+    else -> androidx.compose.ui.graphics.lerp(StovaColors.Ink, color, 0.18f)
+}

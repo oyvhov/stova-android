@@ -27,6 +27,10 @@ class HomeButtonService : AccessibilityService() {
     private val packageChanges = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) { refreshHomes() }
     }
+    /** Stova's own request (not exported) from the Settings icon's menu: show Android's power menu. */
+    private val powerMenu = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) { performGlobalAction(GLOBAL_ACTION_POWER_DIALOG) }
+    }
 
     private fun refreshHomes() {
         homes = HomeActivities.discover(this)
@@ -49,6 +53,7 @@ class HomeButtonService : AccessibilityService() {
                 addAction(Intent.ACTION_PACKAGE_ADDED); addAction(Intent.ACTION_PACKAGE_REMOVED)
                 addAction(Intent.ACTION_PACKAGE_CHANGED); addDataScheme("package")
             }, ContextCompat.RECEIVER_NOT_EXPORTED)
+            ContextCompat.registerReceiver(this, powerMenu, IntentFilter(ACTION_POWER_MENU), ContextCompat.RECEIVER_NOT_EXPORTED)
             observingPackages = true
         }
         // Load serializers and the JSON reader before the first latency-sensitive Home event.
@@ -78,8 +83,12 @@ class HomeButtonService : AccessibilityService() {
     }
 
     override fun onInterrupt() = Unit
+
+    companion object {
+        const val ACTION_POWER_MENU = "app.stova.action.POWER_MENU"
+    }
     override fun onDestroy() {
-        if (observingPackages) unregisterReceiver(packageChanges)
+        if (observingPackages) { unregisterReceiver(packageChanges); unregisterReceiver(powerMenu) }
         observingPackages = false
         super.onDestroy()
     }

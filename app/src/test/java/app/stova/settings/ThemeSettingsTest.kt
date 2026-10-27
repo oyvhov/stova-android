@@ -25,6 +25,8 @@ class ThemeSettingsTest {
     @Test fun allMoodsAccentsSeasonsAndDecorationsAreDpadChoices() {
         var p by mutableStateOf(AppearancePrefs(seasonChoice=SeasonChoice.NONE))
         compose.setContent { StovaTheme(appearance=p) { Column(Modifier.verticalScroll(rememberScrollState())) { AppearanceSettingsContent(p) { p=it } } } }
+        // The fullest level is called Max.
+        compose.onNode(hasText("Sesongpynt") and hasText("Max")).assertExists()
         fun step(label: String,key: Key=Key.DirectionRight) {
             val row=compose.onNode(hasText(label) and hasClickAction()).performScrollTo()
             row.performSemanticsAction(SemanticsActions.RequestFocus) { it() }

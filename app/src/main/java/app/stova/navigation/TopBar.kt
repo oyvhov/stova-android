@@ -2,6 +2,12 @@ package app.stova.navigation
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -67,6 +73,8 @@ fun TopBar(
     onSmartHome: (() -> Unit)? = null,
     /** Told where an icon sits on screen just before it opens its page, so the page can grow from it. */
     onPageOrigin: (TransformOrigin) -> Unit = {},
+    /** Holding OK (or Menu) on Settings drops this device menu; null for kids and previews. */
+    systemMenu: SystemMenu? = null,
     leading: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -83,13 +91,19 @@ fun TopBar(
             app.stova.home.SeasonalCountdown(appearance.season())
         Clock(Modifier.padding(end = 16.dp))
         if(onSmartHome!=null && appearance.showSmartHomeButton) TopBarButton(StovaIcons.Home,stringResource(R.string.nav_smart_home),onSmartHome,onPageOrigin)
-        TopBarButton(StovaIcons.Settings, stringResource(R.string.nav_settings), onSettings, onPageOrigin)
+        var menuOpen by remember { mutableStateOf(false) }
+        TopBarButton(StovaIcons.Settings, stringResource(R.string.nav_settings), onSettings, onPageOrigin,
+            onLongClick = systemMenu?.let { { menuOpen = true } }) {
+            if (menuOpen && systemMenu != null) SystemQuickMenu(systemMenu) { menuOpen = false }
+        }
         if (appearance.showProfile) ProfileButton(profile, onProfile)
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit, onPageOrigin: (TransformOrigin) -> Unit = {}) {
+private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit, onPageOrigin: (TransformOrigin) -> Unit = {},
+    onLongClick: (() -> Unit)? = null, anchored: @Composable () -> Unit = {}) {
     val source = remember { MutableInteractionSource() }
     var centre by remember { mutableStateOf(TransformOrigin.Center) }
     val focused by source.collectIsFocusedAsState()
@@ -105,7 +119,10 @@ private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit, 
                 if (root.width > 0 && root.height > 0) centre = TransformOrigin(at.x / root.width, at.y / root.height)
             }
             .focusOutline(source, shape)
-            .clickable(source, indication = null, role = Role.Button) { onPageOrigin(centre); onClick() }
+            .then(if (onLongClick == null) Modifier else Modifier.onKeyEvent { event ->
+                if (event.key == Key.Menu && event.type == KeyEventType.KeyUp) { onLongClick(); true } else false
+            })
+            .combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick) { onPageOrigin(centre); onClick() }
             .semantics { text = AnnotatedString(label) },
         contentAlignment = Alignment.Center,
     ) {
@@ -118,6 +135,7 @@ private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit, 
             modifier = Modifier.align(Alignment.TopCenter).offset(y = 48.dp)
                 .wrapContentWidth(unbounded = true).alpha(labelAlpha).clearAndSetSemantics { },
         )
+        anchored()
     }
 }
 

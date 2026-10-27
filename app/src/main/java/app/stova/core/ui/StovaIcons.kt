@@ -139,6 +139,28 @@ object StovaIcons {
     } }
     val Pause by lazy { icon("pause") { moveTo(8f, 4f); lineTo(8f, 20f); moveTo(16f, 4f); lineTo(16f, 20f) } }
     val Camera by lazy { icon("camera") { moveTo(3f, 7f); lineTo(16f, 7f); lineTo(16f, 17f); lineTo(3f, 17f); close(); moveTo(16f, 10f); lineTo(22f, 6f); lineTo(22f, 18f); lineTo(16f, 14f) } }
+    val Wifi by lazy { icon("wifi") {
+        moveTo(4.2f, 11.2f); arcTo(11f, 11f, 0f, false, true, 19.8f, 11.2f)
+        moveTo(7.1f, 14.1f); arcTo(7f, 7f, 0f, false, true, 16.9f, 14.1f)
+        moveTo(9.9f, 16.9f); arcTo(3f, 3f, 0f, false, true, 14.1f, 16.9f)
+        moveTo(12f, 20f); lineTo(12.01f, 20f)
+    } }
+    val Bluetooth by lazy { icon("bluetooth") {
+        moveTo(7f, 7f); lineTo(17f, 16f); lineTo(12f, 21f); lineTo(12f, 3f); lineTo(17f, 8f); lineTo(7f, 17f)
+    } }
+    val Tv by lazy { icon("tv") {
+        moveTo(3f, 5f); lineTo(21f, 5f); lineTo(21f, 16f); lineTo(3f, 16f); close()
+        moveTo(12f, 16f); lineTo(12f, 20f); moveTo(8f, 20f); lineTo(16f, 20f)
+    } }
+    val Storage by lazy { icon("storage") {
+        moveTo(3f, 5f); lineTo(21f, 5f); lineTo(21f, 11f); lineTo(3f, 11f); close()
+        moveTo(3f, 13f); lineTo(21f, 13f); lineTo(21f, 19f); lineTo(3f, 19f); close()
+        moveTo(17f, 8f); lineTo(17.01f, 8f); moveTo(17f, 16f); lineTo(17.01f, 16f)
+    } }
+    val Power by lazy { icon("power") {
+        moveTo(7.05f, 8.05f); arcTo(7f, 7f, 0f, true, false, 16.95f, 8.05f)
+        moveTo(12f, 3f); lineTo(12f, 11f)
+    } }
     val Home: ImageVector by lazy {
         icon("home") {
             moveTo(4f, 10.5f); lineTo(12f, 4f); lineTo(20f, 10.5f); lineTo(20f, 20f); lineTo(14.5f, 20f)

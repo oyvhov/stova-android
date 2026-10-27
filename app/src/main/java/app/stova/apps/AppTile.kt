@@ -57,6 +57,7 @@ import app.stova.home.LocalRowHasFocus
 import app.stova.home.showsCardTitles
 import app.stova.home.LocalArtworkScale
 import app.stova.home.artworkDimensions
+import app.stova.home.seasonalTile
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.StovaShapes
 import app.stova.core.ui.LocalDrawnFocus
@@ -99,7 +100,7 @@ fun AppTile(
             if (event.type == KeyEventType.KeyUp && event.key == Key.Menu) { onLongClick(); true } else false
         }.combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick, onClick = onClick)) {
         Box(Modifier.size(width, height).focusOutline(source, shape, zoom = true, dimSurfaceAlpha = prefs.appBackgroundPercent / 100f).clip(shape)
-            .drawBehind { drawRect(tone?.surface(surface) ?: surface) }, contentAlignment = Alignment.Center) {
+            .drawBehind { drawRect(tone?.surface(surface) ?: surface) }.seasonalTile(app.key.hashCode()), contentAlignment = Alignment.Center) {
             val image = artwork
             if (image != null) {
                 val centered = if (image.packIcon) prefs.iconFill == IconFill.CENTER else iconStyle

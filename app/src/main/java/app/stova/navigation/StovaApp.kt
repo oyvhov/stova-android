@@ -198,6 +198,8 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                                     onPageOrigin = { origin = it },
                                     onProfile = switchProfile,
                                     onSmartHome = if(household?.haBaseUrl!=null) {{smartHomeCardId=null;current=Destination.SMART_HOME}} else null,
+                                    // Android's own settings are for adults only, as Settings is.
+                                    systemMenu = if (profile.kid) null else rememberSystemMenu(),
                                     leading = { app.stova.ha.ui.HomeStatusChips(chips,onOpenCard={id->smartHomeCardId=id;origin=TransformOrigin.Center;current=Destination.SMART_HOME}) },
                                 )
                             },
