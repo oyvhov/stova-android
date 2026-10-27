@@ -12,8 +12,12 @@ sealed interface HomeRowUi {
 
     data class Media(override val key: HomeRowKey, val account: app.stova.media.model.MediaAccount, val kind: app.stova.media.MediaRowKind, val items: List<app.stova.media.model.MediaItem>, val offline: Boolean) : HomeRowUi
 
-    /** [favorites] false: no favourites chosen yet, so the row shows the installed TV apps. */
-    data class Apps(override val key: HomeRowKey, val apps: List<InstalledApp>, val favorites: Boolean = true) : HomeRowUi
+    /**
+     * [favorites] false: no favourites chosen yet, so the row shows the installed TV apps. [tiles] is
+     * what the row draws, in order: the apps, and any favourite libraries and scenes among them.
+     */
+    data class Apps(override val key: HomeRowKey, val apps: List<InstalledApp>, val favorites: Boolean = true,
+        val tiles: List<app.stova.apps.FavoriteTile> = apps.map { app.stova.apps.FavoriteTile.App(it) }) : HomeRowUi
 }
 
 /** Anything that contributes rows. Called again only when the active profile changes. */

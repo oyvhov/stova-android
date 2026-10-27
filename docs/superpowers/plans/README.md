@@ -1,13 +1,14 @@
 # Planar
 
-Kvar plan er ei bestilling frå eigaren, delt i steg med testar. Berre planen under «Gjeld no» er
-open. Dei andre er historikk: dei forklarer kvifor koden er som han er, men opne
+Kvar plan er ei bestilling frå eigaren, delt i steg med testar. Berre planane under «Gjeld no» er
+opne, den nyaste først. Dei andre er historikk: dei forklarer kvifor koden er som han er, men opne
 avkryssingsboksar i dei er inga bestilling.
 
 ## Gjeld no
 
 | Plan | Står att |
 |---|---|
+| [Snarvegar i favorittrada: bibliotek og Home Assistant](2026-10-27-shortcut-tiles.md) | Spole-lenkja (eiga grein i Spole-repoet) |
 | [Eineståande launcher: finpuss, Heim etter tid, fart og huset](2026-10-26-outstanding-launcher.md) | Steg 2–9. I steg 4 er punkt 8 (snøggmenyen på Innstillingar) gjort. |
 
 ## Historikk

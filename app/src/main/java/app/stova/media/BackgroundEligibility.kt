@@ -31,7 +31,7 @@ fun backgroundForProfile(entry:SpotlightEntry?,profileId:String,filter:Backgroun
     it.account.profileId==profileId && it.item.accountId==it.account.id && acceptsBackground(it.item,filter)
 }
 
-data class BackgroundLibrary(val ref: BackgroundLibraryRef, val name: String, val accountName: String)
+data class BackgroundLibrary(val ref: BackgroundLibraryRef, val name: String, val accountName: String, val image: String? = null)
 data class BackgroundLibraryCatalog(val libraries: List<BackgroundLibrary> = emptyList(),
     val failedAccounts: List<String> = emptyList(), val hasAccounts: Boolean = false)
 

@@ -42,7 +42,8 @@ class JellyfinEmbyClient(private val account: MediaAccount, private val token: S
    if(view.text("CollectionType")?.lowercase() !in listOf(null,"movies","tvshows","mixed","homevideos")) return@mapNotNull null
    val id=view.text("Id") ?: return@mapNotNull null
    val name=view.text("Name") ?: return@mapNotNull null
-   BackgroundLibrary(BackgroundLibraryRef(account.id,id),name,"${account.serverName} · ${account.userName}")
+   val image=(view.field("ImageTags") as? JsonObject)?.text("Primary")?.let { tag -> "${account.baseUrl}/Items/$id/Images/Primary?maxWidth=640&tag=$tag" }
+   BackgroundLibrary(BackgroundLibraryRef(account.id,id),name,"${account.serverName} · ${account.userName}",image)
   }
  }
  private suspend fun load(candidates: List<String>): List<MediaItem> {

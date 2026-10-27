@@ -28,6 +28,6 @@ if ($Demo) {
     if ($crash -match 'Demo seeding requires an emulator') { throw 'Demodata kan berre leggjast inn på ein emulator.' }
     Write-Output 'Demodata er lagt inn.'
 } else {
-    & $Adb -s $Serial shell monkey -p app.stova.debug -c android.intent.category.LEANBACK_LAUNCHER 1 | Out-Null
+    & $Adb -s $Serial shell monkey -p app.stova.debug -c android.intent.category.LEANBACK_LAUNCHER 1 2>&1 | Out-Null
 }
 Write-Output "Stova er opna på $Serial."

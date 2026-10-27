@@ -27,6 +27,8 @@ data class AppPrefs(
     val hidden: Set<String> = emptySet(),
     val kidAllowed: Set<String> = emptySet(),
     val iconOverrides: Map<String, app.stova.apps.IconOverride> = emptyMap(),
+    /** Name and art of each favourite library or Home Assistant scene, by its key in [favorites]. */
+    val shortcuts: Map<String, app.stova.apps.Shortcut> = emptyMap(),
 )
 
 @Serializable

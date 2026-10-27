@@ -49,20 +49,23 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
 }
 
 @Composable
-internal fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, iconOverrides: Map<String, IconOverride>, onLongClick: (InstalledApp) -> Unit, returnFocus: FocusRequester?, onFocused: (String) -> Unit) {
-    val index = row.apps.indexOfFirst { it.label == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
+internal fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, iconOverrides: Map<String, IconOverride>, onLongClick: (InstalledApp) -> Unit, returnFocus: FocusRequester?,
+    onShortcut: (FavoriteTile) -> Unit = {}, onShortcutLongClick: (FavoriteTile) -> Unit = {}, onFocused: (String) -> Unit) {
+    val index = row.tiles.indexOfFirst { it.label == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     Column {
         if (LocalRowStyle.current.showTitle) RowHeader(stringResource(if (row.favorites) R.string.row_favorite_apps else R.string.row_apps)) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
         LazyRow(Modifier.focusRestorer(), state = state,
             contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
             horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.spacingDp.dp)) {
-            itemsIndexed(row.apps, key = { _, app -> app.key }) { i, app ->
+            itemsIndexed(row.tiles, key = { _, tile -> tile.key }) { i, tile ->
                 val modifier = (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
                     .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier)
+                    .onFocusChanged { if (it.isFocused) onFocused(tile.label) }
                 DrawnFocus(i == index && focus != null) {
-                    AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = { onLongClick(app) },
-                        modifier = modifier.onFocusChanged { if (it.isFocused) onFocused(app.label) }, iconOverride = iconOverrides[app.key])
+                    if (tile is FavoriteTile.App) AppTile(tile.app, art, onClick = { catalog.launch(tile.app) }, onLongClick = { onLongClick(tile.app) },
+                        modifier = modifier, iconOverride = iconOverrides[tile.key])
+                    else ShortcutTile(tile, onClick = { onShortcut(tile) }, onLongClick = { onShortcutLongClick(tile) }, modifier = modifier)
                 }
             }
         }

@@ -19,6 +19,11 @@ object SpoleContract {
             .appendQueryParameter("kind", if (kind == ServerKind.JELLYFIN) "jellyfin" else "emby")
             .appendQueryParameter("user", userId).appendQueryParameter("item", itemId)
             .appendQueryParameter("action", action.wire).build()
+    /** One library view. A Spole without this link has no filter for the host, so it falls back to Spole's home. */
+    fun libraryUri(kind: ServerKind, userId: String, libraryId: String): Uri =
+        Uri.Builder().scheme("spole").authority("library")
+            .appendQueryParameter("kind", if (kind == ServerKind.JELLYFIN) "jellyfin" else "emby")
+            .appendQueryParameter("user", userId).appendQueryParameter("library", libraryId).build()
 }
 sealed interface HandoffResult {
     data object Opened : HandoffResult
@@ -35,16 +40,25 @@ class SpoleHandoff(private val context: Context) {
     }
     fun open(account: MediaAccount, item: MediaItem, action: SpoleAction): HandoffResult {
         if (!SpoleContract.ID_PATTERN.matches(account.userId) || !SpoleContract.ID_PATTERN.matches(item.id) || item.accountId != account.id) return HandoffResult.InvalidIds
+        return send(SpoleContract.uri(account.kind, account.userId, item.id, action))
+    }
+
+    /** Opens Spole on one of [account]'s libraries, for a favourite library tile. */
+    fun openLibrary(account: MediaAccount, libraryId: String): HandoffResult {
+        if (!SpoleContract.ID_PATTERN.matches(account.userId) || !SpoleContract.ID_PATTERN.matches(libraryId)) return HandoffResult.InvalidIds
+        return send(SpoleContract.libraryUri(account.kind, account.userId, libraryId))
+    }
+
+    private fun send(link: Uri): HandoffResult {
         val packages = installedPackages().ifEmpty { return HandoffResult.SpoleMissing }
         // Every installed Spole gets the link in turn: a release may be older than a debug build.
         for (pkg in packages) {
             try {
-                context.startActivity(Intent(Intent.ACTION_VIEW, SpoleContract.uri(account.kind, account.userId, item.id, action))
-                    .setPackage(pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                context.startActivity(Intent(Intent.ACTION_VIEW, link).setPackage(pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 return HandoffResult.Opened
             } catch (_: ActivityNotFoundException) { }
         }
-        // Spole is here but cannot open a title yet: open it anyway rather than claim it is missing.
+        // Spole is here but cannot open the link yet: open it anyway rather than claim it is missing.
         val pkg = packages.first()
         val launch = context.packageManager.getLeanbackLaunchIntentForPackage(pkg) ?: context.packageManager.getLaunchIntentForPackage(pkg)
             ?: Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER).setPackage(pkg)

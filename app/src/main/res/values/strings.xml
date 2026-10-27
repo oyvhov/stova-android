@@ -57,6 +57,16 @@
     <string name="sheet_app">App</string>
     <string name="sheet_app_favorite">App · i favorittane</string>
     <string name="sheet_open">Opne</string>
+    <string name="sheet_library">Bibliotek</string>
+    <string name="sheet_library_favorite">Bibliotek · i favorittane</string>
+    <string name="sheet_scene">Smarthus</string>
+    <string name="sheet_scene_favorite">Smarthus · i favorittane</string>
+    <string name="shortcut_run">Køyr</string>
+    <string name="shortcut_ran">%1$s er starta</string>
+    <string name="shortcut_failed">Fekk ikkje starta %1$s</string>
+    <string name="spole_update_for_libraries">Opna Spole. Oppdater Spole for å gå rett til biblioteket.</string>
+    <string name="apps_libraries">Bibliotek</string>
+    <string name="apps_scenes">Scenar og skript</string>
 
     <string name="settings_profile">Profil</string>
     <string name="settings_home">Heim</string>

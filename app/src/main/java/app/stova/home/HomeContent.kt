@@ -77,6 +77,8 @@ fun HomeContent(
     onMediaPlay: (FocusedTarget.Media) -> Unit = onMediaClick,
     appActions: (@Composable (InstalledApp, @Composable (app.stova.core.ui.SheetPages) -> Unit, () -> Unit) -> Unit)? = null,
     onRowFocus: (HomeRowKey) -> Unit = {},
+    onShortcutClick: (FavoriteTile) -> Unit = {},
+    shortcutActions: (@Composable (FavoriteTile, @Composable (app.stova.core.ui.SheetPages) -> Unit, () -> Unit) -> Unit)? = null,
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
     val preview = LocalHomePreview.current
@@ -86,6 +88,7 @@ fun HomeContent(
     var menuRow by remember { mutableStateOf<HomeRowUi?>(null) }
     var menuMedia by remember { mutableStateOf<FocusedTarget.Media?>(null) }
     var menuApp by remember { mutableStateOf<InstalledApp?>(null) }
+    var menuShortcut by remember { mutableStateOf<FavoriteTile?>(null) }
     var movingRow by remember { mutableStateOf<HomeRowKey?>(null) }
     var hiddenRow by remember { mutableStateOf<HomeRowKey?>(null) }
     var returnRow by remember { mutableStateOf<HomeRowKey?>(null) }
@@ -104,7 +107,7 @@ fun HomeContent(
         kotlinx.coroutines.delay(ARRIVAL_WINDOW_MILLIS)
         arriving = false
     }
-    fun closeMenu() { val key = menuRow?.key; menuRow = null; menuMedia = null; menuApp = null; restore(key) }
+    fun closeMenu() { val key = menuRow?.key; menuRow = null; menuMedia = null; menuApp = null; menuShortcut = null; restore(key) }
     BackHandler(enabled = movingRow != null) { val key = movingRow; movingRow = null; restore(key) }
     LaunchedEffect(hiddenRow) {
         val hidden = hiddenRow ?: return@LaunchedEffect
@@ -118,7 +121,7 @@ fun HomeContent(
             is HomeRowUi.Media -> (restoreTarget as? FocusedTarget.Media)?.let { target ->
                 row.account.id == target.account.id && row.items.any { it.id == target.item.id }
             } == true
-            is HomeRowUi.Apps -> restoreTarget is FocusedTarget.App && row.apps.any { it.label == restoreTarget.label }
+            is HomeRowUi.Apps -> restoreTarget is FocusedTarget.App && row.tiles.any { it.label == restoreTarget.label }
             is HomeRowUi.WatchNext -> restoreTarget is FocusedTarget.App && row.entries.any { it.title == restoreTarget.label }
     }
     val requestedRow = availableRows?.firstOrNull { it.key == initial && matchesRestore(it) }?.key
@@ -354,7 +357,9 @@ fun HomeContent(
                                                 }, rowRequester)
                                                 is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, rowTarget, appIconOverrides, { app ->
                                                     if (canEditRows) { menuApp = app; rowMenu() } else onAppLongClick(app)
-                                                }, rowRequester) { trackFocus(FocusedTarget.App(it)) }
+                                                }, rowRequester, onShortcutClick, { tile -> if (canEditRows) { menuShortcut = tile; rowMenu() } }) {
+                                                    trackFocus(FocusedTarget.App(it))
+                                                }
                                             }
                                           }
                                             }
@@ -382,7 +387,7 @@ fun HomeContent(
     }
     menuRow?.let { row ->
         val controls: @Composable (app.stova.core.ui.SheetPages) -> Unit = { pages ->
-            RowSheetSection(row.key, homePrefs, pages, onHomeChange, heading = menuApp != null || menuMedia != null,
+            RowSheetSection(row.key, homePrefs, pages, onHomeChange, heading = menuApp != null || menuShortcut != null || menuMedia != null,
                 onMove = { movingRow = row.key; closeMenu() },
                 onHide = {
                     onHomeChange(homePrefs.copy(hiddenRows = homePrefs.hiddenRows + row.key,
@@ -393,6 +398,7 @@ fun HomeContent(
         }
         when {
             menuApp != null && appActions != null -> appActions(menuApp!!, controls, ::closeMenu)
+            menuShortcut != null && shortcutActions != null -> shortcutActions(menuShortcut!!, controls, ::closeMenu)
             menuMedia != null -> ItemActionsMenu(menuMedia!!.item,
                 { val target = menuMedia!!; closeMenu(); onMediaPlay(target) },
                 { val target = menuMedia!!; closeMenu(); onMediaClick(target) }, ::closeMenu, controls)
@@ -413,7 +419,7 @@ private val StayPut = object : BringIntoViewSpec {
 }
 
 private fun HomeRowUi.hasFocusableItems(): Boolean = when (this) {
-    is HomeRowUi.Apps -> apps.isNotEmpty()
+    is HomeRowUi.Apps -> tiles.isNotEmpty()
     is HomeRowUi.Media -> items.isNotEmpty()
     is HomeRowUi.WatchNext -> entries.isNotEmpty()
 }

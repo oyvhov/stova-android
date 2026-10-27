@@ -52,7 +52,23 @@ class AppRepository(
     fun launchChange(change: suspend AppRepository.() -> Unit) { scope.launch { change() } }
 
     suspend fun toggleFavorite(profileId: String, key: String) = updatePrefs(profileId) { prefs ->
-        prefs.copy(favorites = if (key in prefs.favorites) prefs.favorites - key else prefs.favorites + key)
+        if (key in prefs.favorites) prefs.copy(favorites = prefs.favorites - key, shortcuts = prefs.shortcuts - key)
+        else prefs.copy(favorites = prefs.favorites + key)
+    }
+
+    /** Adds a library or scene to the end of the favourites, with the name and art Home shows for it. */
+    suspend fun addShortcut(profileId: String, key: String, shortcut: Shortcut) = updatePrefs(profileId) { prefs ->
+        prefs.copy(favorites = if (key in prefs.favorites) prefs.favorites else prefs.favorites + key,
+            shortcuts = prefs.shortcuts + (key to shortcut))
+    }
+
+    /** Renames saved shortcuts from a fresh list; adds none that were not chosen. */
+    suspend fun refreshShortcuts(profileId: String, fresh: Map<String, Shortcut>) {
+        val changed = profiles.current().profiles.firstOrNull { it.id == profileId }?.apps?.shortcuts.orEmpty()
+            .any { (key, saved) -> fresh[key]?.let { it != saved } == true }
+        if (changed) updatePrefs(profileId) { prefs ->
+            prefs.copy(shortcuts = prefs.shortcuts.mapValues { (key, saved) -> fresh[key] ?: saved })
+        }
     }
 
     suspend fun moveFavorite(profileId: String, key: String, delta: Int) = updatePrefs(profileId) { prefs ->
@@ -74,7 +90,7 @@ class AppRepository(
     /** Drops keys of apps that are gone from favourites, hidden and the kid allow-list. */
     suspend fun pruneMissing(profileId: String, installedKeys: Set<String>) = updatePrefs(profileId) { prefs ->
         prefs.copy(
-            favorites = prefs.favorites.filter { it in installedKeys },
+            favorites = prefs.favorites.filter { it in installedKeys || isShortcutKey(it) },
             hidden = prefs.hidden.filterTo(mutableSetOf()) { it in installedKeys },
             kidAllowed = prefs.kidAllowed.filterTo(mutableSetOf()) { it in installedKeys },
             iconOverrides = prefs.iconOverrides.filterKeys { it in installedKeys },
@@ -89,7 +105,8 @@ class AppRepository(
     private fun reconcileIfNeeded(profile: Arrangement, apps: List<InstalledApp>) {
         if (apps.isEmpty()) return
         val keys = apps.mapTo(mutableSetOf()) { it.key }
-        val referenced = profile.prefs.favorites + profile.prefs.hidden + profile.prefs.kidAllowed + profile.prefs.iconOverrides.keys
+        val referenced = (profile.prefs.favorites + profile.prefs.hidden + profile.prefs.kidAllowed + profile.prefs.iconOverrides.keys)
+            .filterNot(::isShortcutKey)
         if (referenced.all { it in keys }) return
         scope.launch {
             val mapping = withContext(io) { reconcileKeys(referenced.toSet(), apps, catalog::isInstalled) }

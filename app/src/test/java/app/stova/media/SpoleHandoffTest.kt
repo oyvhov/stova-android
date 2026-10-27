@@ -49,4 +49,26 @@ class SpoleHandoffTest {
         assertNotEquals(android.content.Intent.ACTION_VIEW, started.action)
     }
     @Test fun rejectsBadIds() = assertEquals(HandoffResult.InvalidIds, SpoleHandoff(context).open(acc, item.copy(id = "../x"), SpoleAction.PLAY))
+
+    // A favourite library opens Spole on that library; ids and kind are the account's, as for titles.
+    @Test fun libraryLinkFormat() = assertEquals(
+        "spole://library?kind=emby&user=0f1e2d3c4b5a69788796a5b4c3d2e1f0&library=f137a2",
+        SpoleContract.libraryUri(ServerKind.EMBY, acc.userId, "f137a2").toString())
+    @Test fun opensALibraryInSpole() {
+        shadowOf(context.packageManager).installPackage(PackageInfo().apply { packageName = "app.reelstack" })
+        val recorder = Recorder(emptySet())
+        assertEquals(HandoffResult.Opened, SpoleHandoff(recorder).openLibrary(acc, "f137a2"))
+        assertEquals("library", recorder.started.single().data!!.host)
+    }
+    // Until Spole has library links, the tile still opens Spole, at its own start page.
+    @Test fun aSpoleWithoutLibraryLinksOpensAtHome() {
+        shadowOf(context.packageManager).installPackage(PackageInfo().apply { packageName = "app.reelstack" })
+        val recorder = Recorder(setOf("app.reelstack"))
+        assertEquals(HandoffResult.OpenedWithoutLink, SpoleHandoff(recorder).openLibrary(acc, "f137a2"))
+        assertNotEquals(android.content.Intent.ACTION_VIEW, recorder.started.single().action)
+    }
+    @Test fun libraryNeedsSpoleAndCleanIds() {
+        assertEquals(HandoffResult.SpoleMissing, SpoleHandoff(context).openLibrary(acc, "f137a2"))
+        assertEquals(HandoffResult.InvalidIds, SpoleHandoff(context).openLibrary(acc, "../x"))
+    }
 }

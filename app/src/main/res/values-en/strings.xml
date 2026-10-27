@@ -57,6 +57,16 @@
     <string name="sheet_app">App</string>
     <string name="sheet_app_favorite">App · in your favourites</string>
     <string name="sheet_open">Open</string>
+    <string name="sheet_library">Library</string>
+    <string name="sheet_library_favorite">Library · in your favourites</string>
+    <string name="sheet_scene">Smart home</string>
+    <string name="sheet_scene_favorite">Smart home · in your favourites</string>
+    <string name="shortcut_run">Run</string>
+    <string name="shortcut_ran">%1$s started</string>
+    <string name="shortcut_failed">Could not start %1$s</string>
+    <string name="spole_update_for_libraries">Opened Spole. Update Spole to go straight to the library.</string>
+    <string name="apps_libraries">Libraries</string>
+    <string name="apps_scenes">Scenes and scripts</string>
 
     <string name="settings_profile">Profile</string>
     <string name="settings_home">Home</string>

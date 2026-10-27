@@ -2,6 +2,9 @@ package app.stova
 
 import android.content.Context
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import app.stova.apps.AppArtCache
@@ -104,7 +107,23 @@ class AppContainer(
         androidx.core.content.ContextCompat.checkSelfPermission(appContext, "android.permission.READ_TV_LISTINGS") == android.content.pm.PackageManager.PERMISSION_GRANTED
     }, appContext.packageName)
 
-    val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session), app.stova.media.MediaRowSource(media), app.stova.watchnext.WatchNextRowSource(watchNext))
+    /** Favourite libraries and scenes: local facts for Home, and lists from the servers for the Apps page. */
+    val shortcuts = app.stova.apps.ShortcutCatalog(
+        accounts = mediaAccounts::forProfile,
+        haReady = household.data.map { it.haBaseUrl != null }.distinctUntilChanged(),
+        libraries = { profileId ->
+            val owned = mediaAccounts.forProfile(profileId).first().associateBy { it.id }
+            if (owned.isEmpty()) emptyList() else media.backgroundLibraries(profileId).libraries.mapNotNull { library ->
+                owned[library.ref.accountId]?.let { account ->
+                    app.stova.apps.FavoriteTile.Library(app.stova.apps.ShortcutKey.Library(account.id, library.ref.libraryId).key,
+                        library.name, library.image, account, library.ref.libraryId)
+                }
+            }
+        },
+        scenes = { if (household.current().haBaseUrl == null) emptyList() else app.stova.ha.haShortcutScenes(haSocket, haRepository::loadRegistry) },
+    )
+
+    val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session, shortcuts.accounts, shortcuts.haReady), app.stova.media.MediaRowSource(media), app.stova.watchnext.WatchNextRowSource(watchNext))
 
 
     val haHttp = OkHttpClient.Builder().connectTimeout(4, TimeUnit.SECONDS).readTimeout(8, TimeUnit.SECONDS)

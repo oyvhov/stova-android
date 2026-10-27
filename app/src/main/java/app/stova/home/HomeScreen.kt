@@ -68,6 +68,7 @@ fun HomeScreen(
             HandoffResult.InvalidIds -> Toast.makeText(context, R.string.invalid_media_ids, Toast.LENGTH_SHORT).show()
         }
     }
+    val openShortcut = rememberShortcutOpener(haConnection, profile, onPlaybackOpened) { missing = true }
     HomeContent(rows, focused, initial, art, catalog, onOpenApps, vm::focus,
         onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { HomeChips(haRepository, topBar) },
         spotlight = if(profile==null) spotlight else backgroundForProfile(spotlight,profile.id,profile.appearance.backgroundFilter), appIconOverrides = profile?.apps?.iconOverrides.orEmpty(),
@@ -77,6 +78,10 @@ fun HomeScreen(
         onMediaPlay = { open(it, SpoleAction.PLAY) },
         appActions = { app, rowActions, dismiss ->
             if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog, rowActions, dismiss)
+        },
+        onShortcutClick = openShortcut,
+        shortcutActions = { tile, rowActions, dismiss ->
+            if (profile != null && apps != null) ShortcutMenuHost(tile, apps, profile, openShortcut, rowActions, dismiss)
         })
     appMenu?.let { app -> if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog) { appMenu = null } }
     actions?.let { target ->
@@ -87,3 +92,4 @@ fun HomeScreen(
     }
     if (missing) SpoleMissingDialog { missing = false }
 }
+

@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -63,11 +64,55 @@ import app.stova.core.theme.StovaShapes
 import app.stova.core.ui.LocalDrawnFocus
 import app.stova.core.ui.focusOutline
 
+/** What a tile's content draws into: the artwork box and whether names sit under the tiles. */
+internal class TileSpec(val width: Dp, val height: Dp, val iconStyle: Boolean, val captions: Boolean)
+
 /**
- * A 16:9 app tile: the app's own banner, or its icon and name on a raised surface. OK opens it;
- * holding OK or pressing Menu asks for [onLongClick].
+ * The frame every favourite tile shares: size from the row's style, focus ring, surface, seasonal
+ * decor placed by [seed], and the name under it. OK opens; holding OK or pressing Menu asks for
+ * [onLongClick].
  */
 @OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun TileFrame(
+    label: String,
+    seed: Int,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.(TileSpec) -> Unit,
+) {
+    val prefs = LocalAppearance.current
+    val source = remember { MutableInteractionSource() }
+    val shape = MaterialTheme.shapes.medium
+    val style = LocalRowStyle.current
+    val captions = style.showsCardTitles(prefs)
+    val format = style.format ?: if (prefs.appStyle == AppStyle.ICON) RowFormat.ICON else RowFormat.WIDE
+    val dimensions = artworkDimensions(format, style.size ?: prefs.cardSize)
+    val fit = LocalArtworkScale.current
+    val spec = TileSpec((dimensions.width * fit).dp, (dimensions.height * fit).dp, format == RowFormat.ICON, captions)
+    val surface = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = prefs.appBackgroundPercent / 100f)
+    val tone = LocalArtTone.current
+    Column(modifier.width(spec.width).semantics { contentDescription = label }
+        .onKeyEvent { event ->
+            if (event.type == KeyEventType.KeyUp && event.key == Key.Menu) { onLongClick(); true } else false
+        }.combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick, onClick = onClick)) {
+        Box(Modifier.size(spec.width, spec.height).focusOutline(source, shape, zoom = true, dimSurfaceAlpha = prefs.appBackgroundPercent / 100f).clip(shape)
+            .drawBehind { drawRect(tone?.surface(surface) ?: surface) }.seasonalTile(seed), contentAlignment = Alignment.Center) {
+            content(spec)
+        }
+        if (captions) {
+            val focused by source.collectIsFocusedAsState()
+            val motion = stovaMotion
+            val strength by animateFloatAsState(cardTitleAlpha(focused || LocalDrawnFocus.current, LocalRowHasFocus.current),
+                motion.fade(motion.focusRing), label = "card-title")
+            Text(label, Modifier.padding(top = 8.dp).graphicsLayer { alpha = strength }, style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+/** A 16:9 app tile: the app's own banner, or its icon and name on a raised surface. */
 @Composable
 fun AppTile(
     app: InstalledApp,
@@ -78,48 +123,22 @@ fun AppTile(
     iconOverride: IconOverride? = null,
 ) {
     val prefs = LocalAppearance.current
-    val source = remember { MutableInteractionSource() }
-    val shape = MaterialTheme.shapes.medium
-    val style = LocalRowStyle.current
-    val captions = style.showsCardTitles(prefs)
-    val format = style.format ?: if (prefs.appStyle == AppStyle.ICON) RowFormat.ICON else RowFormat.WIDE
-    val iconStyle = format == RowFormat.ICON
-    val dimensions = artworkDimensions(format, style.size ?: prefs.cardSize)
-    val fit = LocalArtworkScale.current
-    val height = (dimensions.height * fit).dp
-    val width = (dimensions.width * fit).dp
     val packs by art.iconPacks.packs.collectAsStateWithLifecycle()
-    val surface = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = prefs.appBackgroundPercent / 100f)
-    val tone = LocalArtTone.current
-    val artwork by produceState<AppArtwork?>(null, app, art, prefs.iconPack, iconStyle, iconOverride, packs) {
-        value = null
-        value = art.artwork(app, prefs, iconOverride)
-    }
-    Column(modifier.width(width).semantics { contentDescription = app.label }
-        .onKeyEvent { event ->
-            if (event.type == KeyEventType.KeyUp && event.key == Key.Menu) { onLongClick(); true } else false
-        }.combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick, onClick = onClick)) {
-        Box(Modifier.size(width, height).focusOutline(source, shape, zoom = true, dimSurfaceAlpha = prefs.appBackgroundPercent / 100f).clip(shape)
-            .drawBehind { drawRect(tone?.surface(surface) ?: surface) }.seasonalTile(app.key.hashCode()), contentAlignment = Alignment.Center) {
-            val image = artwork
-            if (image != null) {
-                val centered = if (image.packIcon) prefs.iconFill == IconFill.CENTER else iconStyle
-                Image(image.bitmap, contentDescription = null, contentScale = if (centered) ContentScale.Fit else ContentScale.Crop,
-                    colorFilter = if (image.monochrome && prefs.iconColor == IconColor.ACCENT) ColorFilter.tint(MaterialTheme.colorScheme.primary) else null,
-                    modifier = if (centered && image.packIcon && image.bitmap.width > image.bitmap.height)
-                        Modifier.fillMaxSize().padding(12.dp)
-                    else if (centered) Modifier.size(height * if (image.packIcon) 0.82f else 0.65f) else Modifier.fillMaxSize())
-            } else {
-                IconAndName(app, art, iconStyle, height, captions)
-            }
+    TileFrame(app.label, app.key.hashCode(), onClick, onLongClick, modifier) { spec ->
+        val artwork by produceState<AppArtwork?>(null, app, art, prefs.iconPack, spec.iconStyle, iconOverride, packs) {
+            value = null
+            value = art.artwork(app, prefs, iconOverride)
         }
-        if (captions) {
-            val focused by source.collectIsFocusedAsState()
-            val motion = stovaMotion
-            val strength by animateFloatAsState(cardTitleAlpha(focused || LocalDrawnFocus.current, LocalRowHasFocus.current),
-                motion.fade(motion.focusRing), label = "card-title")
-            Text(app.label, Modifier.padding(top = 8.dp).graphicsLayer { alpha = strength }, style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        val image = artwork
+        if (image != null) {
+            val centered = if (image.packIcon) prefs.iconFill == IconFill.CENTER else spec.iconStyle
+            Image(image.bitmap, contentDescription = null, contentScale = if (centered) ContentScale.Fit else ContentScale.Crop,
+                colorFilter = if (image.monochrome && prefs.iconColor == IconColor.ACCENT) ColorFilter.tint(MaterialTheme.colorScheme.primary) else null,
+                modifier = if (centered && image.packIcon && image.bitmap.width > image.bitmap.height)
+                    Modifier.fillMaxSize().padding(12.dp)
+                else if (centered) Modifier.size(spec.height * if (image.packIcon) 0.82f else 0.65f) else Modifier.fillMaxSize())
+        } else {
+            IconAndName(app, art, spec.iconStyle, spec.height, spec.captions)
         }
     }
 }

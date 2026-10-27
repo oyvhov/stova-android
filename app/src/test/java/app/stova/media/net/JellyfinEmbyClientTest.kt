@@ -23,6 +23,14 @@ class JellyfinEmbyClientTest {
         assertEquals("IsFavorite",request.queryParameter("Filters"))
         assertNull(request.queryParameter("MaxParentalRating"))
     }
+    // A favourite library tile shows the library's own image, the one Spole and Jellyfin show.
+    @Test fun librariesCarryTheirOwnImage() = runTest {
+        server.enqueue(MockResponse().setBody("""{"Items":[{"Id":"film","Name":"Filmar","CollectionType":"movies","ImageTags":{"Primary":"t1"}},{"Id":"tv","Name":"Seriar","CollectionType":"tvshows"}]}"""))
+        val libraries = client().backgroundLibraries()
+        val base = server.url("/").toString().trimEnd('/')
+        assertEquals("$base/Items/film/Images/Primary?maxWidth=640&tag=t1", libraries.first().image)
+        assertNull(libraries.last().image)
+    }
     @Test fun fallsBackOn404() = runTest {
         server.enqueue(MockResponse().setResponseCode(404)); server.enqueue(MockResponse().setBody("""{"Items":[]}"""))
         assertEquals(emptyList<MediaItem>(), client().resume())

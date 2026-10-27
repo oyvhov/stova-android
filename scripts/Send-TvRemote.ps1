@@ -7,6 +7,7 @@
 # Example: pwsh scripts/Send-TvRemote.ps1 key:DPAD_UP key:DPAD_RIGHT hold:1500 shot:menu.png
 # adb's own long press releases at the long-press timeout and races Compose's timer, so hold: registers a
 # virtual Bluetooth remote with Android's hid tool and holds its OK key; Android repeats it like a real one.
+[CmdletBinding(PositionalBinding = $false)]
 param(
     [string]$Serial = 'emulator-5580',
     [Parameter(Mandatory, ValueFromRemainingArguments)][string[]]$Steps

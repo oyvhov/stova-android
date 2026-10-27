@@ -206,7 +206,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         )
                         }
                     }
-                    Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog)
+                    Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog, container.shortcuts, container.haSocket)
                     Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId,backdrop=backdrop.shown)
                     Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile,
                         onOpenApps = { appsFromSettings = true; origin = TransformOrigin.Center; current = Destination.APPS })
