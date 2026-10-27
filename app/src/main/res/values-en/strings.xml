@@ -385,7 +385,6 @@
     <string name="theme_decor">Seasonal decorations</string>
     <string name="theme_calm">Calm</string>
     <string name="theme_full">Full</string>
-    <string name="theme_preview">Preview</string>
     <string name="theme_greeting_halloween">Happy Halloween</string>
     <string name="theme_greeting_christmas">Merry Christmas</string>
     <plurals name="theme_countdown_halloween">
@@ -526,7 +525,6 @@
     <string name="custom_focus_hint">Make it easy to see what the remote is pointing at.</string>
     <string name="custom_top_hint">Show what you want in the top bar.</string>
     <string name="custom_icons_hint">Use original app icons or an installed icon pack.</string>
-    <string name="custom_preview_title">Your home</string>
     <string name="custom_soft">Soft</string>
     <string name="custom_extra_round">Extra round</string>
     <string name="custom_card_spacing">Card spacing</string>
@@ -566,6 +564,12 @@
     <string name="settings_section_connections">Smart home and accounts</string>
     <string name="settings_section_profiles">Profiles</string>
     <string name="settings_section_system">System</string>
+    <string name="settings_rail_look">Themes, rows and backdrop</string>
+    <string name="settings_rail_connections">Home Assistant and media</string>
+    <string name="settings_rail_profiles">Names, PINs and kids</string>
+    <string name="settings_rail_apps">Favourites and icons</string>
+    <string name="settings_rail_system">Home button and about</string>
+    <string name="home_preview_description">Preview of Home</string>
     <string name="settings_home_rows">Rows on Home</string>
     <string name="settings_android_hint">Network, sound, display and apps in Android</string>
     <string name="settings_summary_theme">Colours and seasons</string>

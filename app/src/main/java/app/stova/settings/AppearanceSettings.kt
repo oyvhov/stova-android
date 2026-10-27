@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.layout.width
 
 @Composable
 fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Boolean = false, home: app.stova.home.HomeViewModel? = null) {
@@ -59,7 +60,7 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
         if (category == AppearanceCategory.ROWS) HomeRowSettings(container, profile, home, firstControl = firstControl) else
         AppearanceSettingsContent(draft, packs, onPickBackground = { picking = true },
             onPickLibraries={restoreLibraries=true;pickingLibraries=true},onPickKidsLibraries={pickingKidsLibraries=true},libraryControl=Modifier.focusRequester(libraryFocus),
-            includePreview = false, category = category, firstControl = firstControl, previewEntry = preview, homePrefs = profile.home,
+            category = category, firstControl = firstControl,
             others = profiles.profiles.filter { it.id != profile.id },
             onReset = { container.appScope.launch { edits.awaitSaved(); container.profiles.resetAppearance(profile.id) } },
             onCopy = { sourceId -> container.appScope.launch {
@@ -78,12 +79,26 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
                 container.profiles.copyAppearance(profile.id, sourceId, mapping)
             } },onChange=::save)
     }
-    AppearanceMenu(scrollable = scrollable) { category, firstControl ->
+    // Home's own rows and start row; another profile's page has no Home to show, only its hero.
+    val noRows = remember { kotlinx.coroutines.flow.MutableStateFlow<List<app.stova.home.HomeRowUi>?>(null) }
+    val noStart = remember { kotlinx.coroutines.flow.MutableStateFlow<app.stova.home.HomeRowKey?>(null) }
+    val rows by (home?.rows ?: noRows).collectAsStateWithLifecycle()
+    val start by (home?.initialFocus ?: noStart).collectAsStateWithLifecycle()
+    val household by container.household.data.collectAsStateWithLifecycle(initialValue = null)
+    val smartHome = household?.haBaseUrl != null
+    val miniature: @Composable (AppearanceCategory) -> Unit = {
+        // Chips are asked for only when Home Assistant is set up.
+        app.stova.home.HomeChips(container.haRepository.takeIf { smartHome }) { chips ->
+            androidx.compose.runtime.key(profile.id, draft.backgroundFilter, draft.backgroundSource, draft.fixedBackground, draft.spotlightSource) {
+                HomeMiniature(draft, profile, rows, start, preview, container.appArt, container.appCatalog,
+                    Modifier.width(app.stova.core.theme.StovaLayout.SettingsPreviewWidth), smartHome, chips)
+            }
+        }
+    }
+    AppearanceMenu(scrollable = scrollable, preview = miniature) { category, firstControl ->
         if (category == AppearanceCategory.ICONS) AppIconPreview(draft,
             (previewApps.favorites + previewApps.all).distinctBy { it.key }, container.appArt, profile.apps.iconOverrides)
         contents(category, firstControl)
-        if (category != AppearanceCategory.PROFILE && category != AppearanceCategory.ICONS)
-            androidx.compose.runtime.key(profile.id,draft.backgroundFilter,draft.backgroundSource,draft.fixedBackground,draft.spotlightSource) {ThemePreview(draft, preview, profile.home)}
     }
     if(pickingLibraries) BackgroundLibraryPicker(draft.backgroundFilter.libraries,{container.media.backgroundLibraries(profile.id)},
         {selected->save(draft.copy(backgroundFilter=draft.backgroundFilter.copy(libraries=selected)));pickingLibraries=false},

@@ -64,11 +64,15 @@ object StovaLayout {
     /** About 5 % of a 1080p panel; sets that still overscan keep the last row on screen. */
     val TvSafeEdge = 48.dp
     val Gutter = 24.dp
-    val SettingsNavigationWidth = 200.dp
-    val SettingsNavigationMinHeight = 34.dp
+    /** Wide enough for "Smarthus og kontoar" on one line beside its badge. */
+    val SettingsNavigationWidth = 240.dp
+    /** A name and its one-line description. */
+    val SettingsNavigationMinHeight = 60.dp
     val SettingsRowMinHeight = 44.dp
     val SettingsControlMinHeight = 48.dp
     val PageIconSize = 40.dp
+    /** Home drawn small beside a look page's title: a third of the television's width. */
+    val SettingsPreviewWidth = 304.dp
     val CategoryIconSize = 34.dp
     val RowSourceMaxWidth = 200.dp
     val RailCollapsed = 80.dp

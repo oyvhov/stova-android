@@ -22,7 +22,7 @@ import org.robolectric.annotation.Config
 @Config(sdk=[30],qualifiers=TV_QUALIFIERS)
 class ThemeSettingsTest {
     @get:Rule val compose=createComposeRule()
-    @Test fun allMoodsAccentsSeasonsAndDecorationsAreDpadChoicesWithPreview() {
+    @Test fun allMoodsAccentsSeasonsAndDecorationsAreDpadChoices() {
         var p by mutableStateOf(AppearancePrefs(seasonChoice=SeasonChoice.NONE))
         compose.setContent { StovaTheme(appearance=p) { Column(Modifier.verticalScroll(rememberScrollState())) { AppearanceSettingsContent(p) { p=it } } } }
         fun step(label: String,key: Key=Key.DirectionRight) {
@@ -48,6 +48,5 @@ class ThemeSettingsTest {
         step("Sesongpynt"); assertEquals(SeasonalDecor.OFF,p.seasonalDecor)
         step("Sesongpynt",Key.DirectionLeft); assertEquals(SeasonalDecor.OFF,p.seasonalDecor)
         step("Sesongpynt",Key.Enter); assertEquals(SeasonalDecor.CALM,p.seasonalDecor)
-        compose.onNodeWithText("Førehandsvising").assertExists()
     }
 }

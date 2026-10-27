@@ -254,7 +254,7 @@ class AppScreensTest {
         if (previewSettings) {
             rule.onAllNodesWithText("Heim og utsjånad")[0].performClick()
             rule.onNode(hasText("Tema") and hasClickAction()).performClick()
-            rule.waitUntil(5_000) { rule.onAllNodesWithTag("preview-backdrop",useUnmergedTree=true).fetchSemanticsNodes().isNotEmpty() }
+            rule.waitUntil(5_000) { rule.onAllNodesWithTag("home-preview").fetchSemanticsNodes().isNotEmpty() }
             rule.onNode(hasText("Tema") and hasClickAction()).performSemanticsAction(SemanticsActions.RequestFocus) { it() }
             rule.mainClock.advanceTimeBy(250)
             return

@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Size
@@ -26,12 +27,16 @@ import app.stova.profiles.FocusEffect
 import app.stova.profiles.resolved
 import app.stova.core.theme.StovaFocus
 
+/** Drawn as focused without holding focus: the start card in Settings' small Home. */
+val LocalDrawnFocus = staticCompositionLocalOf { false }
+
 /** Shared focus for artwork and controls: calm lift and surface light by default.
  * Animation state is read in drawing/layer phases; reduced motion keeps the surface cue still.
  */
 @Composable
 fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean = false, dimSurfaceAlpha: Float = 1f): Modifier {
-    val focused by source.collectIsFocusedAsState()
+    val hasFocus by source.collectIsFocusedAsState()
+    val focused = hasFocus || LocalDrawnFocus.current
     val reduceMotion = LocalReduceMotion.current
     val motion = stovaMotion
     val effect = LocalAppearance.current.focusEffect.resolved()

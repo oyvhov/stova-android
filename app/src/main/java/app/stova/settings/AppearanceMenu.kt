@@ -46,9 +46,13 @@ enum class AppearanceCategory(@StringRes val title: Int, @StringRes val hint: In
     ROWS(R.string.settings_home_rows, R.string.settings_hint_home),
 }
 
-/** One small page at a time. The persistent breadcrumb protects focus while a page is replaced. */
+/**
+ * One small page at a time. The persistent breadcrumb protects focus while a page is replaced.
+ * [preview] is Home with the page's look; it stays beside the title while the controls scroll.
+ */
 @Composable
-internal fun AppearanceMenu(scrollable: Boolean = true, content: @Composable (AppearanceCategory, Modifier) -> Unit) {
+internal fun AppearanceMenu(scrollable: Boolean = true, preview: (@Composable (AppearanceCategory) -> Unit)? = null,
+    content: @Composable (AppearanceCategory, Modifier) -> Unit) {
     var selected by rememberSaveable { mutableStateOf<AppearanceCategory?>(null) }
     var last by rememberSaveable { mutableStateOf(AppearanceCategory.THEME) }
     var transferring by remember { mutableStateOf(false) }
@@ -89,9 +93,22 @@ internal fun AppearanceMenu(scrollable: Boolean = true, content: @Composable (Ap
             }
         }
     }.focusGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (selected != null) {
-            StovaButton(stringResource(R.string.settings_section_look), { show(null) },
-                Modifier.focusRequester(breadcrumb), icon = StovaIcons.ChevronLeft, compact = true, quiet = true)
+        // Large text needs the height for its controls, so Home scrolls with them there.
+        val largeText = LocalDensity.current.fontScale >= 1.5f
+        val shows: (AppearanceCategory) -> Boolean = { preview != null && it != AppearanceCategory.PROFILE }
+        selected?.let { category ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // Explicit routes: the small Home beside them is nearer, but focus never enters it.
+                    StovaButton(stringResource(R.string.settings_section_look), { show(null) },
+                        Modifier.focusRequester(breadcrumb).focusProperties { down = controls },
+                        icon = StovaIcons.ChevronLeft, compact = true, quiet = true)
+                    PageHeader(stringResource(category.title), category.icon, Modifier.softEntrance(category),
+                        subtitle = stringResource(category.hint), tint = category.tone,
+                        iconModifier = Modifier.testTag("appearance-header-icon-${category.name}"))
+                }
+                if (shows(category) && !largeText) Box(Modifier.softEntrance(category)) { preview!!(category) }
+            }
         }
         key(selected) {
             val scroll = rememberScrollState()
@@ -132,9 +149,8 @@ internal fun AppearanceMenu(scrollable: Boolean = true, content: @Composable (Ap
                     }
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        PageHeader(stringResource(category.title), category.icon, subtitle = stringResource(category.hint),
-                            tint = category.tone, iconModifier = Modifier.testTag("appearance-header-icon-${category.name}"))
-                        content(category, Modifier.focusRequester(controls))
+                        if (shows(category) && largeText) preview!!(category)
+                        content(category, Modifier.focusRequester(controls).focusProperties { up = breadcrumb })
                     }
                 }
             }

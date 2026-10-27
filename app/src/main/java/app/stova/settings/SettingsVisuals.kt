@@ -45,6 +45,13 @@ internal val SettingsSection.hint: Int get() = when (this) {
     SettingsSection.ABOUT -> R.string.settings_hint_about
     SettingsSection.APPEARANCE -> R.string.settings_appearance_intro
 }
+/** The short line under each name in the section list. */
+internal val SettingsSection.railHint: Int get() = when (this) {
+    SettingsSection.SMART_HOME, SettingsSection.ACCOUNTS -> R.string.settings_rail_connections
+    SettingsSection.PROFILE -> R.string.settings_rail_profiles
+    SettingsSection.HOME_BUTTON, SettingsSection.ABOUT -> R.string.settings_rail_system
+    SettingsSection.APPEARANCE, SettingsSection.HOME, SettingsSection.OVERVIEW -> R.string.settings_rail_look
+}
 internal val AppearanceCategory.icon: ImageVector get() = when (this) {
     AppearanceCategory.THEME -> StovaIcons.Palette
     AppearanceCategory.HERO -> StovaIcons.Home

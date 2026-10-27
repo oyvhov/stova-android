@@ -37,10 +37,12 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
             horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.spacingDp.dp)) {
             itemsIndexed(row.items, key = { _, item -> item.id }) { i, item ->
                 val target = FocusedTarget.Media(item, row.account)
-                MediaCard(item, row.kind == MediaRowKind.LATEST_MOVIES && app.stova.core.theme.LocalAppearance.current.movieStyle == app.stova.profiles.MovieStyle.POSTER,
-                    { onClick(target) }, { onLongClick(target) }, { onFocus(target) },
-                    (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
-                        .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier))
+                DrawnFocus(i == index && focus != null) {
+                    MediaCard(item, row.kind == MediaRowKind.LATEST_MOVIES && app.stova.core.theme.LocalAppearance.current.movieStyle == app.stova.profiles.MovieStyle.POSTER,
+                        { onClick(target) }, { onLongClick(target) }, { onFocus(target) },
+                        (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
+                            .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier))
+                }
             }
         }
     }
@@ -58,12 +60,19 @@ internal fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog,
             itemsIndexed(row.apps, key = { _, app -> app.key }) { i, app ->
                 val modifier = (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
                     .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier)
-                AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = { onLongClick(app) },
-                    modifier = modifier.onFocusChanged { if (it.isFocused) onFocused(app.label) }, iconOverride = iconOverrides[app.key])
+                DrawnFocus(i == index && focus != null) {
+                    AppTile(app, art, onClick = { catalog.launch(app) }, onLongClick = { onLongClick(app) },
+                        modifier = modifier.onFocusChanged { if (it.isFocused) onFocused(app.label) }, iconOverride = iconOverrides[app.key])
+                }
             }
         }
     }
 }
+
+/** In Settings' small Home, the card that focus would land on is drawn focused. */
+@Composable
+private fun DrawnFocus(start: Boolean, content: @Composable () -> Unit) =
+    CompositionLocalProvider(app.stova.core.ui.LocalDrawnFocus provides (start && LocalHomePreview.current), content = content)
 
 @Composable
 internal fun EmptyHome(onOpenApps: () -> Unit) {
@@ -88,6 +97,7 @@ internal fun WatchNextRow(row: HomeRowUi.WatchNext, focus: FocusRequester?, onFo
         LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
             horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.spacingDp.dp)) {
             itemsIndexed(row.entries, key = { _, entry -> entry.id }) { i, entry ->
+              DrawnFocus(i == index && focus != null) {
                 app.stova.watchnext.WatchNextCard(entry, onClick = {
                     val intent = app.stova.watchnext.launchIntentFor(entry)
                     try {
@@ -101,6 +111,7 @@ internal fun WatchNextRow(row: HomeRowUi.WatchNext, focus: FocusRequester?, onFo
                 }, onFocused = { onFocus(FocusedTarget.App(entry.title)) },
                     modifier = (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
                         .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier), onLongClick = onLongClick)
+              }
             }
         }
     }

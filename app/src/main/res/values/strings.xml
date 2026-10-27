@@ -385,7 +385,6 @@
     <string name="theme_decor">Sesongpynt</string>
     <string name="theme_calm">Roleg</string>
     <string name="theme_full">Mykje</string>
-    <string name="theme_preview">Førehandsvising</string>
     <string name="theme_greeting_halloween">God Halloween</string>
     <string name="theme_greeting_christmas">God jul</string>
     <plurals name="theme_countdown_halloween">
@@ -526,7 +525,6 @@
     <string name="custom_focus_hint">Gjer det lett å sjå kva fjernkontrollen peikar på.</string>
     <string name="custom_top_hint">Vis berre det du vil ha i toppfeltet.</string>
     <string name="custom_icons_hint">Bruk appane sine eigne ikon eller ein installert ikonpakke.</string>
-    <string name="custom_preview_title">Heimen din</string>
     <string name="custom_soft">Mjuk</string>
     <string name="custom_extra_round">Ekstra rund</string>
     <string name="custom_card_spacing">Kortavstand</string>
@@ -566,6 +564,12 @@
     <string name="settings_section_connections">Smarthus og kontoar</string>
     <string name="settings_section_profiles">Profilar</string>
     <string name="settings_section_system">System</string>
+    <string name="settings_rail_look">Tema, rader og bakgrunn</string>
+    <string name="settings_rail_connections">Home Assistant og media</string>
+    <string name="settings_rail_profiles">Namn, PIN og barn</string>
+    <string name="settings_rail_apps">Favorittar og ikon</string>
+    <string name="settings_rail_system">Heim-knappen og om Stova</string>
+    <string name="home_preview_description">Førehandsvising av Heim</string>
     <string name="settings_home_rows">Rader på Heim</string>
     <string name="settings_android_hint">Nettverk, lyd, skjerm og appar i Android</string>
     <string name="settings_summary_theme">Fargar og sesong</string>

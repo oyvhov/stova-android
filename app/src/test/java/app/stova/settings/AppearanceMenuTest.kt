@@ -19,6 +19,13 @@ import app.stova.assumeScreensEnabled
 import app.stova.saveScreen
 import app.stova.core.theme.StovaTheme
 import app.stova.profiles.AppearancePrefs
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.unit.dp
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,7 +37,7 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class AppearanceMenuTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
-    private fun render(fontScale: Float = 1f) {
+    private fun render(fontScale: Float = 1f, preview: (@Composable (AppearanceCategory) -> Unit)? = null) {
         compose.setContent {
             val density = LocalDensity.current
             val input = LocalInputModeManager.current
@@ -40,10 +47,10 @@ class AppearanceMenuTest {
                     var section by remember { mutableStateOf(SettingsSection.APPEARANCE) }
                     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
                         SettingsLayout(section, { section = it }) { shown, _ ->
-                            if (shown == SettingsSection.APPEARANCE) AppearanceMenu { category, firstControl ->
+                            if (shown == SettingsSection.APPEARANCE) AppearanceMenu(preview = preview) { category, firstControl ->
                                 // The real screen puts HomeRowSettings here; it needs a container.
                                 if (category == AppearanceCategory.ROWS) app.stova.core.ui.StovaButton("Rows control", {}, firstControl)
-                                else AppearanceSettingsContent(AppearancePrefs(), category = category, firstControl = firstControl, includePreview = false, onChange = {})
+                                else AppearanceSettingsContent(AppearancePrefs(), category = category, firstControl = firstControl, onChange = {})
                             } else app.stova.core.ui.StovaButton("Other section", {})
                         }
                     }
@@ -100,6 +107,41 @@ class AppearanceMenuTest {
             compose.onNodeWithTag("appearance-icon-${category.name}", useUnmergedTree = true)
                 .onParent().assertIsFocused()
         }
+    }
+
+    @Test fun everyLookPageButProfileShowsHomeBesideItsTitleWhileTheControlsScroll() {
+        render(preview = { Box(Modifier.size(304.dp, 171.dp).testTag("preview-${it.name}")) })
+        AppearanceCategory.entries.forEach { category ->
+            compose.onNodeWithTag("appearance-icon-${category.name}", useUnmergedTree = true).onParent().performClick()
+            if (category == AppearanceCategory.PROFILE) compose.onNodeWithTag("preview-PROFILE").assertDoesNotExist()
+            else {
+                val preview = compose.onNodeWithTag("preview-${category.name}").assertIsDisplayed().getBoundsInRoot()
+                val icon = compose.onNodeWithTag("appearance-header-icon-${category.name}", useUnmergedTree = true).getBoundsInRoot()
+                assertTrue(category.name, preview.left > icon.right && preview.top < icon.bottom)
+            }
+            compose.onRoot().performKeyInput { pressKey(Key.Back) }
+        }
+        compose.onNode(hasText("Kort og rader") and hasClickAction()).performClick()
+        val top = compose.onNodeWithTag("preview-CARDS").getBoundsInRoot().top
+        compose.onNodeWithText("Framdriftsstrek").performScrollTo().performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithTag("preview-CARDS").assertIsDisplayed()
+        assertEquals(top, compose.onNodeWithTag("preview-CARDS").getBoundsInRoot().top)
+    }
+
+    @Test fun upFromTheFirstControlReachesTheBreadcrumbPastTheSmallHome() {
+        val apps = listOf(app.stova.home.HomeRowUi.Apps(app.stova.home.HomeRowKey.APPS,
+            listOf(app.stova.apps.InstalledApp("demo/.Main", "demo", ".Main", "Min app", true))))
+        render(preview = {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            HomeMiniature(AppearancePrefs(), app.stova.profiles.Profile("p", "A", app.stova.core.theme.AvatarColor.LIME), apps,
+                app.stova.home.HomeRowKey.APPS, null, app.stova.apps.AppArtCache(context),
+                app.stova.apps.PackageManagerAppCatalog(context, emptySet()), Modifier.width(304.dp))
+        })
+        val breadcrumb = hasText("Heim og utsjånad") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)
+        compose.onNode(hasText("Tema") and hasClickAction()).performClick()
+        compose.onNode(hasText("Tema") and hasClickAction()).assertIsFocused().performKeyInput { pressKey(Key.DirectionUp) }
+        compose.onNode(breadcrumb).assertIsFocused().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.onNode(hasText("Tema") and hasClickAction()).assertIsFocused()
     }
 
     @Test fun homeLayoutScreen() {

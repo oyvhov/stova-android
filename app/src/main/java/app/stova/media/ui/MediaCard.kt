@@ -58,7 +58,7 @@ import coil3.request.ImageRequest
   if(rowStyle.showsCardTitles(prefs)) {
   val focused by source.collectIsFocusedAsState()
   val motion=app.stova.core.theme.stovaMotion
-  val strength by animateFloatAsState(app.stova.core.theme.cardTitleAlpha(focused,app.stova.home.LocalRowHasFocus.current),motion.fade(motion.focusRing),label="card-title")
+  val strength by animateFloatAsState(app.stova.core.theme.cardTitleAlpha(focused || app.stova.core.ui.LocalDrawnFocus.current,app.stova.home.LocalRowHasFocus.current),motion.fade(motion.focusRing),label="card-title")
   Text(title,Modifier.padding(top=8.dp).graphicsLayer { alpha=strength },style=MaterialTheme.typography.titleSmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurface)
  }
  }

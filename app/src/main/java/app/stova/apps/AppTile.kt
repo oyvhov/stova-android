@@ -59,6 +59,7 @@ import app.stova.home.LocalArtworkScale
 import app.stova.home.artworkDimensions
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.StovaShapes
+import app.stova.core.ui.LocalDrawnFocus
 import app.stova.core.ui.focusOutline
 
 /**
@@ -114,7 +115,7 @@ fun AppTile(
         if (captions) {
             val focused by source.collectIsFocusedAsState()
             val motion = stovaMotion
-            val strength by animateFloatAsState(cardTitleAlpha(focused, LocalRowHasFocus.current),
+            val strength by animateFloatAsState(cardTitleAlpha(focused || LocalDrawnFocus.current, LocalRowHasFocus.current),
                 motion.fade(motion.focusRing), label = "card-title")
             Text(app.label, Modifier.padding(top = 8.dp).graphicsLayer { alpha = strength }, style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)

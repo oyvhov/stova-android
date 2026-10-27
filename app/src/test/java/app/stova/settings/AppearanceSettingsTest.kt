@@ -34,7 +34,7 @@ class AppearanceSettingsTest {
     @Test fun backgroundOffersLibraryAndAgeControls() {
         compose.setContent { StovaTheme {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                AppearanceSettingsContent(AppearancePrefs(), category = AppearanceCategory.BACKGROUND, includePreview = false) {}
+                AppearanceSettingsContent(AppearancePrefs(), category = AppearanceCategory.BACKGROUND) {}
             }
         } }
         compose.onNodeWithText("Bibliotek til bakgrunnen").performScrollTo().assertIsDisplayed()
@@ -45,7 +45,7 @@ class AppearanceSettingsTest {
         var prefs by mutableStateOf(AppearancePrefs())
         val changes=mutableListOf<Int?>()
         compose.setContent {StovaTheme {Column(Modifier.verticalScroll(rememberScrollState())) {
-            AppearanceSettingsContent(prefs,category=AppearanceCategory.BACKGROUND,includePreview=false) {
+            AppearanceSettingsContent(prefs,category=AppearanceCategory.BACKGROUND) {
                 prefs=it;changes+=it.backgroundFilter.maxAge
             }
         }}}
@@ -62,7 +62,7 @@ class AppearanceSettingsTest {
         compose.setContent { StovaTheme {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 if (rowMode) app.stova.home.RowStyleChoices(style, RowFormat.WIDE, prefs.cardSize, globalTitles = prefs.showTitles) { style = it }
-                else AppearanceSettingsContent(prefs, category = AppearanceCategory.CARDS, includePreview = false) { prefs = it }
+                else AppearanceSettingsContent(prefs, category = AppearanceCategory.CARDS) { prefs = it }
             }
         } }
         val sizes = listOf("Kompakt" to 224, "Middels" to 248, "Stor" to 296,
@@ -99,7 +99,7 @@ class AppearanceSettingsTest {
     @Test fun numericChoicesUseSlidersAndChangeOnlyTheirOwnValues() {
         var prefs by mutableStateOf(AppearancePrefs())
         compose.setContent { StovaTheme { Column(Modifier.verticalScroll(rememberScrollState())) {
-            AppearanceSettingsContent(prefs, includePreview = false) { prefs = it }
+            AppearanceSettingsContent(prefs) { prefs = it }
         } } }
         listOf("Hjørne" to 17, "Kortavstand" to 11, "Bakgrunnsdemping" to 63, "Spotlight-tid" to 23).forEach { (label, value) ->
             compose.onNodeWithText(label).performScrollTo().performSemanticsAction(SemanticsActions.SetProgress) { it(value.toFloat()) }
@@ -111,7 +111,7 @@ class AppearanceSettingsTest {
         var prefs by mutableStateOf(AppearancePrefs(homeRows = HomeRows.ONE))
         compose.setContent { StovaTheme {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                AppearanceSettingsContent(prefs, category = AppearanceCategory.HERO, includePreview = false) { prefs = it }
+                AppearanceSettingsContent(prefs, category = AppearanceCategory.HERO) { prefs = it }
             }
         } }
         compose.onNodeWithText("Synlege rader").performClick()
@@ -162,7 +162,7 @@ class AppearanceSettingsTest {
         assertEquals(RowSpacing.AIRY, prefs.rowSpacing)
     }
 
-    @Test fun pageHasEightExplainedGroupsAndPreviewChangesWithHero() {
+    @Test fun pageHasEightExplainedGroups() {
         var prefs by mutableStateOf(AppearancePrefs())
         compose.setContent { StovaTheme(appearance = prefs) {
             Column(Modifier.verticalScroll(rememberScrollState())) { AppearanceSettingsContent(prefs) { prefs = it } }
@@ -170,9 +170,5 @@ class AppearanceSettingsTest {
         listOf("Tema", "Heim og hero", "Kort og rader", "Bakgrunn", "Fokus", "Toppfelt", "Ikon", "Profil").forEach {
             compose.onAllNodesWithText(it)[0].performScrollTo().assertExists()
         }
-        compose.onNodeWithTag("appearance-preview").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("preview-hero",useUnmergedTree=true).assertExists()
-        compose.runOnIdle { prefs = prefs.copy(heroSize = HeroSize.OFF) }
-        compose.onNodeWithTag("preview-hero",useUnmergedTree=true).assertDoesNotExist()
     }
 }

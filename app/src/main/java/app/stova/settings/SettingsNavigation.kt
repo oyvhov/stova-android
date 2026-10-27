@@ -9,7 +9,6 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,7 +26,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import app.stova.R
+import app.stova.core.theme.AvatarColor
 import app.stova.core.theme.StovaLayout
+import app.stova.core.theme.color
+import app.stova.core.ui.CategoryIcon
 import app.stova.core.ui.focusOutline
 import app.stova.core.ui.StovaIcons
 
@@ -59,7 +61,7 @@ internal fun SettingsNavigation(
             false
         }.focusProperties {
             onExit = { if (requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down) cancelFocusChange() }
-        }.focusGroup().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        }.focusGroup().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             entries.forEachIndexed { index, entry ->
                 val order = Modifier.focusRequester(requesters[index]).focusProperties {
                     up = requesters.getOrNull(index - 1) ?: FocusRequester.Cancel
@@ -67,9 +69,9 @@ internal fun SettingsNavigation(
                     left = FocusRequester.Cancel
                     if (entry == null) right = FocusRequester.Cancel
                 }
-                if (entry == null) SectionTab(stringResource(R.string.nav_apps), false, modifier = order,
-                    icon = StovaIcons.Apps, iconTag = "settings-icon-apps", onClick = onApps ?: {})
-                else SectionTab(stringResource(entry.label), entry == selected, { onSelect(entry) },
+                if (entry == null) SectionTab(stringResource(R.string.nav_apps), stringResource(R.string.settings_rail_apps), false,
+                    modifier = order, icon = StovaIcons.Apps, iconTint = AvatarColor.ROSE.color, iconTag = "settings-icon-apps", onClick = onApps ?: {})
+                else SectionTab(stringResource(entry.label), stringResource(entry.railHint), entry == selected, { onSelect(entry) },
                     modifier = order.onPreviewKeyEvent { event ->
                         if (event.key != Key.DirectionRight) false else {
                             if (event.type == KeyEventType.KeyDown) onEnterContent?.invoke(entry)
@@ -84,7 +86,7 @@ internal fun SettingsNavigation(
 }
 
 @Composable
-private fun SectionTab(label: String, selected: Boolean, onFocused: (() -> Unit)? = null, modifier: Modifier = Modifier,
+private fun SectionTab(label: String, hint: String, selected: Boolean, onFocused: (() -> Unit)? = null, modifier: Modifier = Modifier,
     icon: ImageVector = StovaIcons.Gear, iconTint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     iconTag: String = "settings-icon-system", onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
@@ -94,9 +96,13 @@ private fun SectionTab(label: String, selected: Boolean, onFocused: (() -> Unit)
         .focusOutline(source, shape).clip(shape)
         .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
         .selectable(selected, source, indication = null, role = Role.Tab, onClick = onClick)
-        .padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically,
+        .padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(icon, null, Modifier.size(20.dp).testTag(iconTag), tint = iconTint)
-        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+        // The same tinted badge as the section's page header and the look categories.
+        CategoryIcon(icon, Modifier.testTag(iconTag), iconTint, StovaLayout.CategoryIconSize)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(label, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+            Text(hint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }

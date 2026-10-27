@@ -25,9 +25,6 @@ fun AppearanceSettingsContent(
     onPickLibraries: () -> Unit = {},
     onPickKidsLibraries: () -> Unit = {},
     libraryControl: Modifier = Modifier,
-    includePreview: Boolean = true,
-    previewEntry: app.stova.media.SpotlightEntry? = null,
-    homePrefs: HomePrefs = HomePrefs(),
     others: List<Profile> = emptyList(),
     onReset: (() -> Unit)? = null,
     onCopy: (String) -> Unit = {},
@@ -35,7 +32,6 @@ fun AppearanceSettingsContent(
     firstControl: Modifier = Modifier,
     onChange: (AppearancePrefs) -> Unit,
 ) {
-    if (includePreview) ThemePreview(p, previewEntry, homePrefs)
     if (category == null) Text(stringResource(R.string.appearance_choice_hint), style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
     if (category == null || category == AppearanceCategory.THEME) SettingsGroup(stringResource(R.string.theme_group), showHeading = category == null) {
@@ -165,8 +161,7 @@ private fun ClockStylePreview(style: ClockStyle) {
 @Composable
 private fun <T> Choice(title: Int, value: T, entries: List<T>, labels: List<Int>, preview: (@Composable () -> Unit)? = null, modifier: Modifier = Modifier, onChange: (T) -> Unit) {
     val index = entries.indexOf(value)
-    val sample: (@Composable () -> Unit)? = preview ?: if (hasOptionPreview(value)) ({ SettingsOptionPreview(value) }) else null
-    app.stova.core.ui.SettingsChoiceRow(stringResource(title), stringResource(labels[index]), sample, modifier) { step ->
+    app.stova.core.ui.SettingsChoiceRow(stringResource(title), stringResource(labels[index]), preview, modifier) { step ->
         onChange(entries[Math.floorMod(index + step, entries.size)])
     }
 }

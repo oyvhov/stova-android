@@ -51,6 +51,9 @@ private fun Modifier.bottomFade(margin: androidx.compose.ui.unit.Dp) = graphicsL
             topLeft = androidx.compose.ui.geometry.Offset(0f, top), blendMode = androidx.compose.ui.graphics.BlendMode.DstOut)
     }
 
+/** Settings draws Home small: it places no focus, and draws the start row's card as focused instead. */
+internal val LocalHomePreview = staticCompositionLocalOf { false }
+
 /** The rendered home with controlled data, shared by the launcher and visual tests. */
 @OptIn(ExperimentalFoundationApi::class) // LocalBringIntoViewSpec, the TV pivot hook
 @Composable
@@ -76,6 +79,7 @@ fun HomeContent(
     onRowFocus: (HomeRowKey) -> Unit = {},
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
+    val preview = LocalHomePreview.current
     val deck = appearance.homeRows != HomeRows.SCROLLING
     val availableRows = remember(rows, deck) { if (deck) rows?.filter { it.hasFocusableItems() } else rows }
     val rowTargets = remember { mutableStateMapOf<HomeRowKey, FocusedTarget>() }
@@ -271,6 +275,7 @@ fun HomeContent(
                             if (restoreRow == null || restoreRow == placedRow || (placedRow != null && viewerMoved)) return@LaunchedEffect
                             // A row inserted above the visible ones is not composed yet: bring it in first.
                             availableRows.indexOfFirst { it.key == restoreRow }.takeIf { it >= 0 }?.let { listState.scrollToItem(scrollIndex(it)) }
+                            if (preview) return@LaunchedEffect
                             // Lazy rows compose during layout, after this effect starts; allow the requester to attach.
                             repeat(10) {
                                 if (runCatching { firstItem.requestFocus(FocusDirection.Enter) }.getOrDefault(false)) { placedRow = restoreRow; return@LaunchedEffect }
@@ -333,7 +338,7 @@ fun HomeContent(
                                             .border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large) else Modifier),
                                             contentAlignment = if (deck) Alignment.BottomStart else Alignment.TopStart) {
                                           CompositionLocalProvider(LocalRowStyle provides style,
-                                            LocalRowHasFocus provides hasFocus,
+                                            LocalRowHasFocus provides (hasFocus || preview && row.key == restoreRow),
                                             LocalArtworkScale provides (geometry?.artworkScale ?: 1f)) {
                                             val rowMenu: () -> Unit = { if (canEditRows) menuRow = row }
                                             val rowTarget = rowTargets[row.key] ?: restoreTarget

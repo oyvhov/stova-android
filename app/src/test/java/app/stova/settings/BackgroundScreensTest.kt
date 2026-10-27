@@ -31,7 +31,7 @@ class BackgroundScreensTest {
  @Test fun backgroundControls() {
   compose.setContent {StovaTheme {Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
    .padding(48.dp).verticalScroll(rememberScrollState())) {
-   AppearanceSettingsContent(AppearancePrefs(),category=AppearanceCategory.BACKGROUND,includePreview=false) {}
+   AppearanceSettingsContent(AppearancePrefs(),category=AppearanceCategory.BACKGROUND) {}
   }}}
   compose.saveScreen("background-filter-controls")
  }

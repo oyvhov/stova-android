@@ -40,7 +40,8 @@ Reglar som før: modulært (ingen arbeid når noko er av eller ikkje sett opp), 
   brytar, 10 eitt namn per stad, 11 eige Smarthus-ikon, 12 dialogjustering, 13 NO-A → «Alle», skjul TBA,
   ingen duplikat i Watch Next, 14 statusprikken inn i ikonet.
 - [ ] 4. (6) Større funn: 4 profilval med kunst og logo, 5 appfliser med farge frå ikonet og jamt
-  rutenett, 8 ekte førehandsvisingar i Tema/Kort.
+  rutenett, 8 ekte førehandsvisingar i Tema/Kort (8 ferdig 2026-10-27: den ekte Heim i lite format
+  ved tittelen på kvar Utsjånad-side, `HomeMiniature`).
 - [ ] 5. (2) Rader etter tid på døgnet, med val under Utsjånad → Heim og hero.
 - [ ] 6. (3) Fart: mål kaldstart, første ramme på Heim og Smarthus med `scripts/Measure-Stova.ps1`;
   rett dei største; ny Baseline Profile.
