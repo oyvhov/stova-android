@@ -450,7 +450,8 @@ class AppScreensTest {
         val weather = HaEntity("weather.demo", "cloudy", buildJsonObject { put("temperature", 4) }, 0, 0)
         val price = HaEntity("sensor.demo_price", "135", buildJsonObject { put("unit_of_measurement", "øre") }, 0, 0)
         val locale = Locale.forLanguageTag("nn")
-        renderMediaHome(chips = listOf(
+        // The one-row deck, so the second row stays below the screen.
+        renderMediaHome(appearance = AppearancePrefs(homeRows = HomeRows.ONE), chips = listOf(
             chipText(CardConfig("weather", CardType.WEATHER, weather.id, onHome = true), weather, locale),
             chipText(CardConfig("price", CardType.ENERGY_PRICE, price.id, onHome = true), price, locale),
         ))

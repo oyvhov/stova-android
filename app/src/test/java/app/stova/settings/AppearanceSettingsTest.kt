@@ -108,7 +108,7 @@ class AppearanceSettingsTest {
     }
 
     @Test fun homePresentationAndPositionAreVisibleAndChangeOnlyTheirOwnPreference() {
-        var prefs by mutableStateOf(AppearancePrefs())
+        var prefs by mutableStateOf(AppearancePrefs(homeRows = HomeRows.ONE))
         compose.setContent { StovaTheme {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 AppearanceSettingsContent(prefs, category = AppearanceCategory.HERO, includePreview = false) { prefs = it }

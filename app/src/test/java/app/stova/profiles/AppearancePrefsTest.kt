@@ -22,8 +22,13 @@ class AppearancePrefsTest {
         assertEquals(Accent.LIME, old.accent)
         assertEquals(ClockMode.H24, old.clock)
         assertEquals(RowSpacing.NORMAL, old.rowSpacing)
-        assertEquals(HomeRows.ONE, old.homeRows)
+        // The scrolling view with its parallax hero is the default (user, 2026-10-27).
+        assertEquals(HomeRows.SCROLLING, old.homeRows)
         assertEquals(HomeRowInset.LOW, old.homeRowInset)
+    }
+
+    @Test fun aSavedOneRowHomeStaysOneRow() {
+        assertEquals(HomeRows.ONE, Json.decodeFromString<AppearancePrefs>("""{"homeRows":"ONE"}""").homeRows)
     }
 
     @Test fun sixSizesRoundTripAndExistingExplicitChoicesArePreserved() {

@@ -34,7 +34,7 @@ class HomeDeckTest {
         HomeRowUi.Media(HomeRowKey.continueWatching("a"), account, MediaRowKind.CONTINUE,
             listOf(MediaItem("film", "a", ItemType.MOVIE, "Film")), false),
     )
-    private fun render(prefs: AppearancePrefs = AppearancePrefs(), third: Boolean = false, fontScale: Float = 1f, home: HomePrefs = HomePrefs(),
+    private fun render(prefs: AppearancePrefs = AppearancePrefs(homeRows = HomeRows.ONE), third: Boolean = false, fontScale: Float = 1f, home: HomePrefs = HomePrefs(),
         currentPrefs: () -> AppearancePrefs = { prefs }, initial: HomeRowKey = HomeRowKey.APPS,
         target: FocusedTarget? = null, duplicate: Boolean = false, longSource: Boolean = false) {
         val data = if (third) rows + (rows[1] as HomeRowUi.Media).copy(key = HomeRowKey.latestMovies("a"),
@@ -97,7 +97,7 @@ class HomeDeckTest {
     }
 
     @Test fun heroOffStillKeepsTheSingleRowAtTheBottom() {
-        render(AppearancePrefs(heroSize = HeroSize.OFF))
+        render(AppearancePrefs(homeRows = HomeRows.ONE, heroSize = HeroSize.OFF))
         compose.onNodeWithText("Spotlight").assertDoesNotExist()
         val app = compose.onNode(hasContentDescription("Min app") and hasClickAction()).assertIsDisplayed()
         val bottom = compose.onRoot().fetchSemanticsNode().boundsInRoot.bottom
@@ -105,7 +105,7 @@ class HomeDeckTest {
     }
 
     @Test fun liveModeChangesKeepTheSameVisibleFocusedRow() {
-        var prefs by mutableStateOf(AppearancePrefs())
+        var prefs by mutableStateOf(AppearancePrefs(homeRows = HomeRows.ONE))
         render(third = true, currentPrefs = { prefs })
         compose.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.DirectionDown) }
         compose.onNodeWithContentDescription("Tredje").assertIsFocused().assertIsDisplayed()

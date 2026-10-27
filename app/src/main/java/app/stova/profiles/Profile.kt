@@ -89,7 +89,8 @@ data class AppearancePrefs(
     val showNewSeason: Boolean = true,
     val clockSize: ClockSize = ClockSize.NORMAL,
     val clockStyle: ClockStyle = ClockStyle.STANDARD,
-    val homeRows: HomeRows = HomeRows.ONE,
+    // The scrolling view, where the hero rolls away in parallax. Saved profiles keep their choice.
+    val homeRows: HomeRows = HomeRows.SCROLLING,
     val homeRowInset: HomeRowInset = HomeRowInset.LOW,
     // Null inherits the older preset, preserving existing profiles exactly.
     val appTileBackgroundOpacity: Int? = null,

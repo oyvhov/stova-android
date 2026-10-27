@@ -34,13 +34,22 @@ class HomeScrollTest {
     private val rows = listOf(row(HomeRowKey.continueWatching("a"), "Fyrste"), row(HomeRowKey.latestMovies("a"), "Andre"),
         row(HomeRowKey.latestSeries("a"), "Tredje"))
 
-    private fun render(focused: FocusedTarget? = null) = compose.setContent {
+    private fun render(focused: FocusedTarget? = null,
+        appearance: app.stova.profiles.AppearancePrefs = app.stova.profiles.AppearancePrefs(homeRows = app.stova.profiles.HomeRows.SCROLLING)) = compose.setContent {
         val context = LocalContext.current
-        StovaTheme(reduceMotion = true, appearance = app.stova.profiles.AppearancePrefs(homeRows = app.stova.profiles.HomeRows.SCROLLING)) {
+        StovaTheme(reduceMotion = true, appearance = appearance) {
             HomeContent(rows, focused, rows.first().key, AppArtCache(context), PackageManagerAppCatalog(context, emptySet()),
                 {}, {}, {}, {}, topBar = { app.stova.core.ui.StovaButton("Toppen", {}) },
                 spotlight = SpotlightEntry(MediaItem("hero", "a", ItemType.MOVIE, "Heroen"), account, false))
         }
+    }
+
+    @Test fun aNewProfileOpensTheScrollingViewSoTheHeroRollsAway() {
+        render(appearance = app.stova.profiles.AppearancePrefs())
+        compose.onNodeWithText("Heroen").assertIsDisplayed()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Heroen").assertIsNotDisplayed()
     }
 
     @Test fun startRowTakesFocusWhenRowsFirstAppear() {
