@@ -7,7 +7,7 @@ import kotlinx.serialization.json.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 
-data class AuthResult(val token: String, val userId: String, val userName: String)
+data class AuthResult(val token: String, val userId: String, val userName: String, val imageTag: String? = null)
 data class QuickConnectCode(val code: String, val secret: String)
 class MediaAuth(private val http: OkHttpClient, private val identity: suspend () -> ClientIdentity) {
  constructor(http: OkHttpClient, identity: ClientIdentity) : this(http, { identity })
@@ -19,7 +19,8 @@ class MediaAuth(private val http: OkHttpClient, private val identity: suspend ()
  }
  private fun auth(body: String): AuthResult {
   val obj=Json.parseToJsonElement(body).jsonObject
-  return AuthResult(obj.text("AccessToken") ?: error("token"),obj.obj("User").text("Id") ?: error("user id"),obj.obj("User").text("Name").orEmpty())
+  val user=obj.obj("User")
+  return AuthResult(obj.text("AccessToken") ?: error("token"),user.text("Id") ?: error("user id"),user.text("Name").orEmpty(),user.text("PrimaryImageTag"))
  }
  suspend fun signIn(server: ServerInfo,user: String,password: String) = auth(request(server,"Users/AuthenticateByName",buildJsonObject { put("Username",user);put("Pw",password) }))
  suspend fun quickConnectEnabled(server: ServerInfo): Boolean = server.kind==ServerKind.JELLYFIN && request(server,"QuickConnect/Enabled").trim().equals("true",true)

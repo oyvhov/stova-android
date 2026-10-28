@@ -18,6 +18,7 @@ fun titleSearchCandidates(kind: ServerKind, userId: String, query: String): List
  "IncludeItemTypes=Movie,Series&Recursive=true&ImageTypes=Backdrop&SearchTerm=${URLEncoder.encode(query.trim(),"UTF-8")}&SortBy=SortName&$ITEM_FIELDS&Limit=60")
 
 fun libraryViewsPath(userId: String) = "Users/${URLEncoder.encode(userId,"UTF-8")}/Views"
+fun userPath(userId: String) = "Users/${URLEncoder.encode(userId,"UTF-8")}"
 
 fun backgroundCandidates(kind: ServerKind, userId: String, source: SpotlightSource,
     libraryId: String?, query: String? = null, ids: List<String>? = null): List<String> {

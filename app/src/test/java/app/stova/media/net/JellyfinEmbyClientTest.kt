@@ -31,6 +31,13 @@ class JellyfinEmbyClientTest {
         assertEquals("$base/Items/film/Images/Primary?maxWidth=640&tag=t1", libraries.first().image)
         assertNull(libraries.last().image)
     }
+    @Test fun readsTheTagOfTheUsersPicture() = runTest {
+        server.enqueue(MockResponse().setBody("""{"Id":"u","Name":"n","PrimaryImageTag":"t9"}"""))
+        assertEquals("t9", client().userImageTag())
+        assertEquals("/Users/u", server.takeRequest().path)
+        server.enqueue(MockResponse().setBody("""{"Id":"u","Name":"n"}"""))
+        assertNull(client(ServerKind.EMBY).userImageTag())
+    }
     @Test fun fallsBackOn404() = runTest {
         server.enqueue(MockResponse().setResponseCode(404)); server.enqueue(MockResponse().setBody("""{"Items":[]}"""))
         assertEquals(emptyList<MediaItem>(), client().resume())

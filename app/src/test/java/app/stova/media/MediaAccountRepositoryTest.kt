@@ -33,6 +33,17 @@ class MediaAccountRepositoryTest {
         assertEquals(listOf("first", "replacement"), seen)
         assertTrue(r.imageCredentials("other-profile").first().isEmpty())
     }
+    @Test fun aProfileWearsThePictureOfItsFirstAccountWithOne() = runTest {
+        val r = repo()
+        val emby = r.add("p", srv.copy(kind = ServerKind.EMBY, id = "e", name = "Arkiv"), AuthResult("t", "u2", "n", "e1"))
+        val jellyfin = r.add("p", srv, AuthResult("t", "u 1", "n", "j1"))
+        r.add("kid", srv, AuthResult("t", "k", "n"))
+        assertEquals(mapOf("p" to "http://jf:8096/UserImage?userId=u%201&tag=j1&maxWidth=360"), r.pictures.first())
+        r.setImageTag(jellyfin.id, null)
+        assertEquals(mapOf("p" to "http://jf:8096/Users/u2/Images/Primary?tag=e1&maxWidth=360"), r.pictures.first())
+        r.remove(emby.id)
+        assertTrue("a removed account leaves no picture behind", r.pictures.first().isEmpty())
+    }
     @Test fun tokenNeverInFile() = runTest {
         repo().add("p", srv, AuthResult("hemmeleg-token", "u", "n")); assertFalse(tmp.root.resolve("a.json").readText().contains("hemmeleg-token")) }
 }

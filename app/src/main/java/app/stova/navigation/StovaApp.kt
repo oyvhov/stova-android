@@ -58,17 +58,20 @@ fun StovaApp(container: AppContainer) {
     val profile by container.session.active.collectAsStateWithLifecycle()
     val active = profile
     val date = app.stova.core.theme.currentSeasonDate()
+    val pictures by remember(container) { container.mediaAccounts.pictures }.collectAsStateWithLifecycle(initialValue = emptyMap())
     StovaTheme(
         reduceMotion = active?.appearance?.reduceMotion ?: false,
         appearance = active?.appearance ?: app.stova.profiles.AppearancePrefs(),
         date = date,
     ) {
+        androidx.compose.runtime.CompositionLocalProvider(app.stova.profiles.LocalProfilePictures provides pictures) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             if (active == null) {
                 Box(Modifier.fillMaxSize().testTag("screen-gate")) { ProfileGate(container.session, container.profiles) }
             } else {
                 MainShell(container, active)
             }
+        }
         }
     }
 }

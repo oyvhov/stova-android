@@ -10,6 +10,11 @@ import kotlinx.coroutines.sync.withLock
 import java.util.UUID
 import okhttp3.HttpUrl.Companion.toHttpUrl
 @Serializable data class MediaAccountsFile(val accounts: List<MediaAccount> = emptyList())
+/** The user's picture from the profile's first account that has one, Jellyfin before Emby, as Home's rows are ordered. */
+fun profilePictures(accounts: List<MediaAccount>): Map<String,String> =
+ accounts.sortedWith(compareBy({ it.kind },{ it.serverName })).groupBy { it.profileId }.mapNotNull { (profile,list) ->
+  list.firstNotNullOfOrNull { a -> a.imageTag?.let { ImageUrls.user(a.baseUrl,a.kind,a.userId,it) } }?.let { profile to it }
+ }.toMap()
 object MediaSecrets { fun tokenKey(accountId: String) = "media/$accountId/token" }
 class MediaAccountRepository(private val store: JsonFileStore<MediaAccountsFile>, private val secrets: SecretStore, private val newId: () -> String = { UUID.randomUUID().toString() }) {
  private val mutex=Mutex()
@@ -21,9 +26,12 @@ class MediaAccountRepository(private val store: JsonFileStore<MediaAccountsFile>
   }.toMap()
  }.distinctUntilChanged()
  fun forProfile(profileId: String): Flow<List<MediaAccount>> = all.map { accounts -> accounts.filter { it.profileId==profileId } }
+ /** Each profile's picture by profile id; a profile without one keeps its letter. */
+ val pictures: Flow<Map<String,String>> = all.map(::profilePictures).distinctUntilChanged()
+ suspend fun setImageTag(accountId: String, tag: String?) { store.update { it.copy(accounts=it.accounts.map { a -> if(a.id==accountId) a.copy(imageTag=tag) else a }) } }
  suspend fun add(profileId: String, server: ServerInfo, auth: AuthResult): MediaAccount = mutex.withLock {
   val old=store.current().accounts.firstOrNull { it.profileId==profileId && it.serverId==server.id && it.userId==auth.userId }
-  val account=MediaAccount(old?.id ?: newId(),profileId,server.kind,server.id,server.name,server.baseUrl,auth.userId,auth.userName)
+  val account=MediaAccount(old?.id ?: newId(),profileId,server.kind,server.id,server.name,server.baseUrl,auth.userId,auth.userName,imageTag=auth.imageTag)
   secrets.write(MediaSecrets.tokenKey(account.id),auth.token)
   store.update { it.copy(accounts=it.accounts.filterNot { it.id==account.id }+account) }; credentialRevision.value++; account
  }

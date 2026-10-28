@@ -18,6 +18,8 @@ interface MediaServerClient {
  suspend fun items(ids: List<String>): List<MediaItem> = emptyList()
  suspend fun spotlight(source: app.stova.profiles.SpotlightSource): List<MediaItem> = latest(Endpoint.SPOTLIGHT)
  suspend fun searchTitles(query: String): List<MediaItem> = emptyList()
+ /** The tag of the user's own picture, or null when they have none. */
+ suspend fun userImageTag(): String? = null
  suspend fun backgroundLibraries(): List<BackgroundLibrary> = emptyList()
  suspend fun backgrounds(source: SpotlightSource, libraryId: String?, query: String? = null, ids: List<String>? = null): List<MediaItem> =
   if(libraryId!=null) emptyList() else when { ids!=null->items(ids);query!=null->searchTitles(query);else->spotlight(source) }
@@ -29,6 +31,12 @@ class JellyfinEmbyClient(private val account: MediaAccount, private val token: S
  override suspend fun items(ids: List<String>) = if(ids.isEmpty()) emptyList() else load(idsCandidates(account.kind,account.userId,ids))
  override suspend fun spotlight(source: app.stova.profiles.SpotlightSource) = load(spotlightCandidates(account.kind,account.userId,source))
  override suspend fun searchTitles(query: String) = load(titleSearchCandidates(account.kind,account.userId,query))
+ override suspend fun userImageTag(): String? {
+  val header=authHeader(account.kind,identity,token)
+  val body=http.fetch(Request.Builder().url("${account.baseUrl}/${userPath(account.userId)}").header(header.first,header.second).build())
+  // Anything but the user is an error, so a strange answer never takes a picture away.
+  return Json.parseToJsonElement(body).jsonObject.text("PrimaryImageTag")
+ }
  override suspend fun backgrounds(source: SpotlightSource,libraryId:String?,query:String?,ids:List<String>?) =
   load(backgroundCandidates(account.kind,account.userId,source,libraryId,query,ids))
    .map { if(libraryId==null) it else it.copy(backgroundLibraryIds=setOf(libraryId)) }

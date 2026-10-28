@@ -37,6 +37,7 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   /** The last attempt, and the season and accounts it was for: a new account or season is never made to wait. */
   var refreshedAt=0L;var refreshedFor: Pair<Season,List<String>>?=null
   var refreshFailed=false
+  var pictureAt=0L
   val playbackRevision=AtomicLong();var refreshedPlaybackRevision=0L
   /** Narrower hero pools (films, series, favourites) and when each is next due; shared by every entry to Home. */
   val extra=MutableStateFlow<Map<SpotlightSource,List<SpotlightEntry>>>(emptyMap());val extraDue=mutableMapOf<SpotlightSource,Long>();val extraMutex=Mutex()
@@ -238,12 +239,16 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    val spotlightDue=slot.spotlightAt==0L || now-slot.spotlightAt !in 0 until SPOTLIGHT_REFRESH_MILLIS
    // Season rows query the whole library too: once an hour, and again when the season changes.
    val seasonalDue=season!=Season.NONE && (slot.seasonalFor!=season || slot.seasonalAt==0L || now-slot.seasonalAt !in 0 until SEASONAL_REFRESH_MILLIS)
+   // The user's picture: asked for once a start and then every two hours, beside the rows and never at their cost.
+   val pictureDue=slot.pictureAt==0L || now-slot.pictureAt !in 0 until SPOTLIGHT_REFRESH_MILLIS
+   if(pictureDue) slot.pictureAt=now
    val today=Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate()
    val fetched=supervisorScope { list.map { account -> async {
     val cached=slot.rows.value.orEmpty().filter { it.account.id==account.id }.map { it.copy(offline=true) }
     val cachedSpotlight=slot.spotlight.value.filter { it.account.id==account.id }
     try {
      val client=clientFor(account) ?: throw MediaError.Unauthorized()
+     if(pictureDue) scope.launch(io) { withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(Unit) { accounts.setImageTag(account.id,client.userImageTag()) } } }
      coroutineScope {
       // Extras run beside the rows under their own limits: a slow whole-library query must never
       // turn the account's rows "Offline".

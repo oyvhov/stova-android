@@ -24,4 +24,9 @@ class MediaAuthTest {
  val code=auth.quickConnectStart(srv); assertEquals("123456",code.code)
  assertEquals(AuthResult("t","u","n"),auth.quickConnectAwait(srv,code.secret,pollMillis=1))
  repeat(3) { server.takeRequest() }; assertTrue(server.takeRequest().body.readUtf8().contains("s")) }
+ @Test fun signInKeepsTheTagOfTheUsersPicture() = kotlinx.coroutines.runBlocking {
+  server.enqueue(MockResponse().setBody("""{"AccessToken":"t","User":{"Id":"u","Name":"n","PrimaryImageTag":"pic1"}}"""))
+  val auth=MediaAuth(OkHttpClient(),ClientIdentity("d","i","v")); val srv=ServerInfo(ServerKind.JELLYFIN,"x","S","v",server.url("/").toString().trimEnd('/'))
+  assertEquals(AuthResult("t","u","n","pic1"),auth.signIn(srv,"n","pw"))
+ }
 }

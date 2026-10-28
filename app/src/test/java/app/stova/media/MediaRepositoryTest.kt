@@ -28,6 +28,36 @@ class MediaRepositoryTest {
   val r=MediaRepository(a,{ awaitCancellation() },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))
   assertEquals(listOf(item(j)),r.rows("p").first().single().items)
  }
+ @Test fun thePictureIsAskedForOnceAStartAndThenEveryTwoHours()=runTest {
+  val a=accounts();val j=add(a,ServerKind.JELLYFIN)
+  var now=1_000L;var asked=0;var tag="ny"
+  val server=object:MediaServerClient {
+   override suspend fun resume()=emptyList<MediaItem>()
+   override suspend fun nextUp()=emptyList<MediaItem>()
+   override suspend fun latest(endpoint:Endpoint)=emptyList<MediaItem>()
+   override suspend fun userImageTag():String? { asked++;return tag }
+  }
+  val r=MediaRepository(a,{ server },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler),clock={ now })
+  r.refresh("p")
+  assertEquals("ny",a.forProfile("p").first().single { it.id==j.id }.imageTag)
+  now+=REFRESH_MIN_AGE_MILLIS+1;tag="nyare";r.refresh("p")
+  assertEquals(1,asked)
+  now+=SPOTLIGHT_REFRESH_MILLIS;r.refresh("p")
+  assertEquals(2,asked);assertEquals("nyare",a.forProfile("p").first().single().imageTag)
+ }
+ @Test fun aFailedPictureQueryKeepsThePictureAndTheRows()=runTest {
+  val a=accounts();val j=add(a,ServerKind.JELLYFIN);a.setImageTag(j.id,"gammal")
+  val server=object:MediaServerClient {
+   override suspend fun resume()=listOf(item(j))
+   override suspend fun nextUp()=emptyList<MediaItem>()
+   override suspend fun latest(endpoint:Endpoint)=emptyList<MediaItem>()
+   override suspend fun userImageTag():String? = throw MediaError.Server(500)
+  }
+  val r=MediaRepository(a,{ server },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))
+  r.refresh("p")
+  assertEquals("gammal",a.forProfile("p").first().single().imageTag)
+  assertEquals(listOf(item(j)),r.rows("p").first().single().items)
+ }
  @Test fun sourcesStaySeparate()=runTest {
   val a=accounts();add(a,ServerKind.JELLYFIN);add(a,ServerKind.EMBY)
   val r=MediaRepository(a,{ client(it) },tmp.root.resolve("snapshots"),backgroundScope,UnconfinedTestDispatcher(testScheduler))
