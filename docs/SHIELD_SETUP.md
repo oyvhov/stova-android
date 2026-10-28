@@ -23,6 +23,8 @@ Bruk APK-ar med same signeringsnøkkel ved oppdatering. `install -r` bevarer app
 
 Debug-bygg har pakkenamn `app.stova.debug` og ligg ved sida av produksjonspakken `app.stova`. Kommandoane nedanfor gjeld produksjonspakken.
 
+Til ein ekte TV før den signerte releasen finst: bruk TV-bygget, `scripts/Install-Stova.ps1 -Serial <adresse> -Tv`. Det har same pakkenamn og debug-sertifikat som debug-bygget, så det installerer seg over det og tek vare på profilar og kontoar, men er bygd som ein release (R8, ikkje feilsøkbart, Baseline Profile). Debug-bygget er fleire gonger tregare på ein liten TV.
+
 ## 3. Opne Stova og lag profil
 
 Opne Stova frå applista på Shield. Lag den første profilen med namn og avatar. Den første profilen er ein vaksenprofil. Fleire profilar, PIN og barnemodus blir sette opp under Innstillingar → Profil.

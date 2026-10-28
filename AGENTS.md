@@ -48,7 +48,8 @@ Stova er som han er.
 ## Einingar og data
 
 - Prøv på ein emulator (`docs/EMULATOR.md`). Installer med `scripts/Install-Stova.ps1`, som bruker
-  `install -r`, så profilar, kontoar og innstillingar blir verande. Ikkje bruk `pm clear`,
+  `install -r`, så profilar, kontoar og innstillingar blir verande. Ekte TV-ar får `-Tv` (same pakke,
+  bygd som release; sjå `docs/SHIELD_SETUP.md`). Ikkje bruk `pm clear`,
   avinstallering eller demodata for å gjere ein test lettare på ein emulator med ekte data.
 - Ein ekte TV, eller ein emulator med nokon sine ekte data: berre når eigaren ber om det der og då.
 - Slå aldri av systemlauncheren (`pm disable-user`). Nokre einingar startar ikkje då.

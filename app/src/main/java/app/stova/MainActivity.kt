@@ -34,6 +34,9 @@ class MainActivity : ComponentActivity() {
         // A launcher never closes itself on Back; the navigation's own handler runs first.
         onBackPressedDispatcher.addCallback(this) { }
         setContent { StovaApp(container) }
+        // Stova paints its own ink under everything, so the window's would only be drawn over
+        // in every frame. The theme keeps it for the moment before the first frame.
+        window.setBackgroundDrawable(null)
     }
 
     /** Home while Stova is in front (from the remote or the Home service) goes back to Home. */

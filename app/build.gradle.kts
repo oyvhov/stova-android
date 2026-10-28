@@ -70,7 +70,19 @@ android {
                 "proguard-rules.pro",
             )
         }
+        // What the TVs run: the debug package and certificate, so it installs over the debug build
+        // and keeps profiles and accounts, but built like a release (R8, not debuggable, with the
+        // baseline profile). A debuggable Compose app is several times slower on a small TV.
+        // The debug build stays for the emulators, where run-as and the demo data need it.
+        create("tv") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-tv"
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
     }
+    sourceSets.getByName("tv").baselineProfiles.directories += "src/release/generated/baselineProfiles"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

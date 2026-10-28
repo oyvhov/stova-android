@@ -78,7 +78,9 @@ class BackdropState {
   if(moving && shown!=null) scale.animateTo(1.04f,tween(prefs.spotlightMillis.toInt(),easing=LinearEasing))
  }
  val motion=stovaMotion
- Box(modifier.fillMaxSize().background(ink)) {
+ // One layer of its own: the picture, its scrim and the ink under them are drawn again only when
+ // they change, and every other frame costs one screen of pixels instead of four on a small TV GPU.
+ Box(modifier.fillMaxSize().graphicsLayer { compositingStrategy=androidx.compose.ui.graphics.CompositingStrategy.Offscreen }.background(ink)) {
   // A dissolve, not a crossfade: the next picture fades in over the current one, which stays
   // opaque until it is covered, so a change never dips through the dark background.
   AnimatedContent(shown,modifier=Modifier.graphicsLayer { scaleX=scale.value;scaleY=scale.value },
