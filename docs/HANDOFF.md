@@ -1,3 +1,7 @@
+# Stova på Loftet-TV-en (Google TV Streamer)
+2026-10-28, brukaren: «Kan du installere på denne TVen og?» (Google TV Streamer, «Loftet Tv», Android 14 / API 34, 192.168.10.125). Para over trådlaus feilsøking med koden brukaren viste (første kode gjekk ut før paringa), kopla til `192.168.10.125:42199` og installerte debefb6 med `scripts/Install-Stova.ps1`. Stova startar og viser «Velkomen til Stova» (`.superpowers/readme/loft1_s.jpg`); brukaren set opp profilen sjølv. Første gong Stova køyrer på Google TV.
+Så «Installere Spole og»: same Spole som Shield køyrer (1.0.0-beta23, `app.reelstack`, base.apk henta frå Shield, sha256 3af39ccc…), installert og registrert for `spole://open`; ikkje opna, så Stova står framme. Elles finst NRK på TV-en, men ikkje Emby eller Jellyfin. Heim-knapp-tenesta er ikkje slått på; det gjer brukaren sjølv under Tilgjengelegheit. Porten for trådlaus feilsøking skiftar etter omstart. Same regel som Shield: installer berre når brukaren ber om det.
+
 # Vakker vising og kontroll av smarthus – idéarbeid
 2026-10-28: Brukaren snevra inn idéarbeidet til vakker vising og kontroll av smarthus. Lese eksisterande Smarthus-kode og sett lagra skjermbilete av dashbordet, lyskorta og brikkekortet.
 Forslaga utviklar romportrett, objektkontrollar, sceneførehandsvising, lysmiksing, romklima, gardiner, lydrom, energivising og roleg statusvising med tydeleg fjernkontrollbruk.
