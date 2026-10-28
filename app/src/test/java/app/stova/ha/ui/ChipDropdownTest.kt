@@ -64,8 +64,9 @@ class ChipDropdownTest {
         assertNull(quickControl(CardType.WEATHER, entity("weather.home", "rainy")))
     }
 
-    // On Home: OK on a light's chip drops a small card. Left and Right set the light, OK switches
-    // it, Down reaches the whole card in Smarthus. A chip with nothing to set opens Smarthus as before.
+    // On Home: OK on a light's chip drops a small card. Left and Right set the light and OK switches
+    // it; Smarthus has its own button, so the card has no way there. A chip with nothing to set
+    // opens Smarthus as before.
     @Test fun aChipDropsACardTheRemoteControls() {
         val sent = mutableListOf<ServiceCall>()
         val opened = mutableListOf<String>()
@@ -77,7 +78,7 @@ class ChipDropdownTest {
                 HomeStatusChips(chips, onOpenCard = { opened += it }) { chip, close ->
                     TopDropdown(close, 320.dp) {
                         ChipDropdown(chip.icon, "Stova", live, enabled = true, send = { sent += it; live = optimisticEntity(live, it); true },
-                            sendScope = scope) { close(); opened += "more:${chip.cardId}" }
+                            sendScope = scope)
                     }
                 }
             }
@@ -98,11 +99,8 @@ class ChipDropdownTest {
         compose.waitUntil(2_000) { sent.size == 2 }
         assertEquals(ServiceCall("light", "turn_off"), sent.last())
         compose.onNodeWithText("Av").assertIsDisplayed()
-
-        card.performKeyInput { pressKey(Key.DirectionDown) }
-        compose.onNode(hasText("Meir i Smarthus") and hasClickAction()).assertIsFocused().performKeyInput { pressKey(Key.DirectionCenter) }
-        assertEquals("more:lamp", opened.last())
         compose.onNodeWithText("Meir i Smarthus").assertDoesNotExist()
+        assertEquals(listOf("weather"), opened)
     }
 
     @Test fun backClosesTheCardAndAKidWithoutControlOnlyReadsIt() {
@@ -111,7 +109,7 @@ class ChipDropdownTest {
             StovaTheme(reduceMotion = true) {
                 val scope = rememberCoroutineScope()
                 HomeStatusChips(listOf(ChipContent(CardType.LIGHT, "", R.string.ha_on, cardId = "lamp")), onOpenCard = {}) { _, close ->
-                    TopDropdown(close, 320.dp) { ChipDropdown(CardType.LIGHT, "Stova", lamp, enabled = false, send = { sent += it; true }, sendScope = scope) {} }
+                    TopDropdown(close, 320.dp) { ChipDropdown(CardType.LIGHT, "Stova", lamp, enabled = false, send = { sent += it; true }, sendScope = scope) }
                 }
             }
         }
@@ -122,6 +120,6 @@ class ChipDropdownTest {
         assertEquals(emptyList<ServiceCall>(), sent)
         compose.onNodeWithText("50 %").assertIsDisplayed()
         card.performKeyInput { pressKey(Key.Back) }
-        compose.onNodeWithText("Meir i Smarthus").assertDoesNotExist()
+        compose.onNodeWithText("50 %").assertDoesNotExist()
     }
 }

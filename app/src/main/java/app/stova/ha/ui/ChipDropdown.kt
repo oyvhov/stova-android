@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,7 +32,6 @@ import app.stova.R
 import app.stova.core.theme.stovaMotion
 import app.stova.core.ui.StovaIcons
 import app.stova.core.ui.TopDropdown
-import app.stova.core.ui.focusOutline
 import app.stova.ha.HaEntity
 import app.stova.ha.HaRepository
 import app.stova.ha.text
@@ -109,7 +107,7 @@ internal fun quickControl(type: CardType, entity: HaEntity): QuickControl? {
  * a change made just before Back still reaches the house.
  */
 @Composable
-fun ChipDropdownHost(chip: ChipContent, repository: HaRepository, profile: Profile, sendScope: CoroutineScope, onMore: () -> Unit, onDismiss: () -> Unit) {
+fun ChipDropdownHost(chip: ChipContent, repository: HaRepository, profile: Profile, sendScope: CoroutineScope, onDismiss: () -> Unit) {
     val cards by repository.homeCards.collectAsStateWithLifecycle()
     val entities by remember(repository) { repository.entities }.collectAsStateWithLifecycle(initialValue = null)
     val live = entities ?: return
@@ -117,17 +115,17 @@ fun ChipDropdownHost(chip: ChipContent, repository: HaRepository, profile: Profi
     val entity = config?.let { live[it.entityId] }
     TopDropdown(onDismiss, DropdownWidth) {
         ChipDropdown(chip.icon, config?.name ?: entity?.let(::friendlyName).orEmpty(), entity, canControl(profile),
-            send = { call -> config != null && repository.perform(call, config.entityId, profile) }, sendScope = sendScope) { onDismiss(); onMore() }
+            send = { call -> config != null && repository.perform(call, config.entityId, profile) }, sendScope = sendScope)
     }
 }
 
 /**
  * Inside the dropdown: the name and state, the value large with a slim bar Left and Right move,
- * what OK does, and the way on to the whole card. A kid without control only reads it.
+ * and what OK does. Smarthus has its own button beside the clock. A kid without control only reads it.
  */
 @Composable
 internal fun ChipDropdown(type: CardType, name: String, entity: HaEntity?, enabled: Boolean, send: suspend (ServiceCall) -> Boolean,
-    sendScope: CoroutineScope, onMore: () -> Unit) {
+    sendScope: CoroutineScope) {
     val scope = rememberCoroutineScope()
     val latestSend by rememberUpdatedState(send)
     val state = remember { PanelState(scope, entity, sendScope) { latestSend(it) } }
@@ -140,8 +138,8 @@ internal fun ChipDropdown(type: CardType, name: String, entity: HaEntity?, enabl
     val source = remember { MutableInteractionSource() }
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { withFrameNanos { }; runCatching { first.requestFocus() } }
-    val shape = MaterialTheme.shapes.medium
-    Column(Modifier.padding(horizontal = 8.dp).fillMaxWidth().focusRequester(first).focusOutline(source, shape).clip(shape)
+    // The card is the only thing in it that takes focus, so it draws no focus ring.
+    Column(Modifier.fillMaxWidth().focusRequester(first)
         .onPreviewKeyEvent { event ->
             if (event.key != Key.DirectionLeft && event.key != Key.DirectionRight) return@onPreviewKeyEvent false
             val c = control
@@ -151,7 +149,7 @@ internal fun ChipDropdown(type: CardType, name: String, entity: HaEntity?, enabl
             true
         }
         .clickable(source, indication = null, role = Role.Button) { control?.ok?.takeIf { active }?.let { state.submit(it) } }
-        .padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        .padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         val glow = if (type == CardType.LIGHT) lightGlow(shown).takeIf { it.alpha > 0f } else null
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(cardIcon(type, shown), null, Modifier.size(20.dp), tint = glow?.color ?: MaterialTheme.colorScheme.onSurfaceVariant)
@@ -178,8 +176,6 @@ internal fun ChipDropdown(type: CardType, name: String, entity: HaEntity?, enabl
             else -> control?.okLabel?.takeIf { active && control.ok != null }?.let { stringResource(R.string.ha_drop_ok, stringResource(it)) }.orEmpty()
         }, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, minLines = 1, maxLines = 1)
     }
-    HorizontalDivider(Modifier.padding(vertical = 6.dp), color = MaterialTheme.colorScheme.outlineVariant)
-    MoreRow(onMore)
 }
 
 /** A slim bar with the level filled; the fill scales rather than resizes, so it only moves in a graphics layer. */
@@ -194,18 +190,6 @@ private fun LevelBar(fraction: Float, fill: androidx.compose.ui.graphics.Color, 
             Box(Modifier.fillMaxSize().graphicsLayer { scaleX = shown; transformOrigin = TransformOrigin(0f, .5f) }.background(fill))
         }
         Icon(StovaIcons.ChevronRight, null, Modifier.size(16.dp).graphicsLayer { alpha = if (showArrows) 1f else 0f }, tint = arrow)
-    }
-}
-
-@Composable
-private fun MoreRow(onClick: () -> Unit) {
-    val source = remember { MutableInteractionSource() }
-    val shape = MaterialTheme.shapes.medium
-    Row(Modifier.padding(horizontal = 8.dp).fillMaxWidth().heightIn(min = 44.dp).focusOutline(source, shape).clip(shape)
-        .clickable(source, indication = null, role = Role.Button, onClick = onClick).padding(horizontal = 12.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.ha_drop_more), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
-        Icon(StovaIcons.ChevronRight, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

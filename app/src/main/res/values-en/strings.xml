@@ -256,7 +256,6 @@
     <string name="ha_v2_empty_hint">Bring together lights, temperature and the little things that make your home.</string>
     <string name="ha_v2_pending">Pending …</string>
     <string name="ha_v2_failed">The change failed. Try again.</string>
-    <string name="ha_drop_more">More in Smart home</string>
     <string name="ha_drop_ok">OK · %1$s</string>
     <string name="ha_v2_done">Done</string>
     <string name="ha_v2_remote_hint">Arrows: navigate · Hold OK: more controls · Menu: customise</string>

@@ -256,7 +256,6 @@
     <string name="ha_v2_empty_hint">Samle lys, temperatur og dei små tinga som gjer heimen din.</string>
     <string name="ha_v2_pending">Ventar …</string>
     <string name="ha_v2_failed">Endringa lukkast ikkje. Prøv igjen.</string>
-    <string name="ha_drop_more">Meir i Smarthus</string>
     <string name="ha_drop_ok">OK · %1$s</string>
     <string name="ha_v2_done">Utført</string>
     <string name="ha_v2_remote_hint">Piler: naviger · Hald OK: fleire val · Meny: tilpass</string>

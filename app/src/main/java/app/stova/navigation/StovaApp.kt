@@ -204,8 +204,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                                         val openCard: (String) -> Unit = {id->smartHomeCardId=id;origin=TransformOrigin.Center;current=Destination.SMART_HOME}
                                         app.stova.ha.ui.HomeStatusChips(chips,onOpenCard=openCard) { chip, close ->
                                             // The app's scope, so a change made just before Back still reaches the house.
-                                            app.stova.ha.ui.ChipDropdownHost(chip, container.haRepository, profile, container.appScope,
-                                                onMore = { chip.cardId?.let(openCard) }, onDismiss = close)
+                                            app.stova.ha.ui.ChipDropdownHost(chip, container.haRepository, profile, container.appScope, onDismiss = close)
                                         }
                                     },
                                 )
