@@ -1,3 +1,9 @@
+# Vakker vising og kontroll av smarthus – idéarbeid
+2026-10-28: Brukaren snevra inn idéarbeidet til vakker vising og kontroll av smarthus. Lese eksisterande Smarthus-kode og sett lagra skjermbilete av dashbordet, lyskorta og brikkekortet.
+Forslaga utviklar romportrett, objektkontrollar, sceneførehandsvising, lysmiksing, romklima, gardiner, lydrom, energivising og roleg statusvising med tydeleg fjernkontrollbruk.
+Dette er konsept til vurdering; ingen implementering er bestilt eller påbyrja, og gjeldande planar er uendra. HA-dokumentasjon for lys, scenar, klima og gardiner er kontrollert.
+Ingen appkode, ekte einingar eller profilar er endra. Nye konsept og yting er ikkje testa; ingen bygg, installering eller publisering. Ingen opne spørsmål.
+
 # Idéarbeid på tvers av prosjekta
 2026-10-28: Brukaren bad om ville, konkrete Stova-idear og at alle prosjekta vart sjekka. Gått gjennom alle 22 registrerte Codex-prosjekt på prosjektnivå og fleire lokale prosjekt (mellom anna Heimspenn, Næpene, Dayboost, FotballEM og Siemens-verktøya).
 Idégrunnlag: levande husmodell (Husriss/Speks/Tunet), portalar mellom barneuniversa, fysisk mysterium i huset, privat TV-kanal, kinopremiere, slektshistorie, galleri, husreprise og samspel over fleire skjermar.
