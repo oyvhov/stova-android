@@ -5,16 +5,11 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothManager
 import android.content.pm.PackageManager
 import android.content.Context
-import android.hardware.display.DisplayManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import android.os.Build
-import android.os.Environment
-import android.os.StatFs
 import android.os.SystemClock
-import android.view.Display
-import java.net.Inet4Address
 
 /** What the device reports right now, read once each time the Settings icon's menu opens. */
 data class SystemStatus(
@@ -24,39 +19,32 @@ data class SystemStatus(
     val network: NetworkStatus,
     /** Null when Android does not let Stova read it. */
     val bluetooth: BluetoothStatus?,
-    val display: DisplayStatus?,
-    val storage: StorageStatus?,
     /** Stova's Home-button service is on, so it can open Android's power menu. */
     val powerMenu: Boolean,
 )
 
+/** Only whether and how the device is connected; the menu shows it with an icon. */
 sealed interface NetworkStatus {
     data object Offline : NetworkStatus
     /** [level] 0..4. */
-    data class Wifi(val level: Int, val band: WifiBand?, val ip: String?) : NetworkStatus
-    data class Ethernet(val ip: String?) : NetworkStatus
-}
-
-enum class WifiBand { GHZ_24, GHZ_5, GHZ_6;
-    companion object {
-        fun of(mhz: Int): WifiBand? = when (mhz) {
-            in 2400..2500 -> GHZ_24
-            in 4900..5899 -> GHZ_5
-            in 5900..7125 -> GHZ_6
-            else -> null
-        }
-    }
+    data class Wifi(val level: Int) : NetworkStatus
+    data object Ethernet : NetworkStatus
 }
 
 data class BluetoothStatus(val on: Boolean, val paired: Int?)
-data class DisplayStatus(val width: Int, val height: Int, val hz: Int)
-data class StorageStatus(val free: Long, val total: Long)
 
 /** Five steps between -100 and -55 dBm, as Android's own Wi-Fi bars. */
 internal fun signalLevel(rssi: Int, levels: Int = 5): Int = when {
     rssi <= -100 -> 0
     rssi >= -55 -> levels - 1
     else -> ((rssi + 100) * (levels - 1) / 45f).toInt()
+}
+
+/** How many of the Wi-Fi icon's three arcs a [signalLevel] lights; a connection always lights one. */
+internal fun wifiArcs(level: Int): Int = when {
+    level >= 3 -> 3
+    level == 2 -> 2
+    else -> 1
 }
 
 /** Reads only Android's own reports; call it off the main thread. Nothing here asks the network. */
@@ -70,25 +58,19 @@ fun readSystemStatus(context: Context): SystemStatus {
         uptimeMinutes = SystemClock.elapsedRealtime() / 60_000,
         network = runCatching { network(device) }.getOrDefault(NetworkStatus.Offline),
         bluetooth = runCatching { bluetooth(device) }.getOrNull(),
-        display = runCatching { display(device) }.getOrNull(),
-        storage = runCatching { StatFs(Environment.getDataDirectory().path).let { StorageStatus(it.availableBytes, it.totalBytes) } }.getOrNull(),
         powerMenu = app.stova.homebutton.HomeButtonStatus.serviceEnabled(device),
     )
 }
 
-@Suppress("DEPRECATION") // connectionInfo is the only way to read signal and band on Android 11.
+@Suppress("DEPRECATION") // connectionInfo is the only way to read the signal on Android 11.
 private fun network(context: Context): NetworkStatus {
     val connectivity = context.getSystemService(ConnectivityManager::class.java)
     val active = connectivity.activeNetwork ?: return NetworkStatus.Offline
     val caps = connectivity.getNetworkCapabilities(active) ?: return NetworkStatus.Offline
-    val ip = connectivity.getLinkProperties(active)?.linkAddresses?.map { it.address }
-        ?.firstOrNull { it is Inet4Address && !it.isLoopbackAddress }?.hostAddress
     return when {
-        caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> NetworkStatus.Ethernet(ip)
-        caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
-            val info = context.getSystemService(WifiManager::class.java)?.connectionInfo
-            NetworkStatus.Wifi(info?.rssi?.let { signalLevel(it) } ?: 0, info?.frequency?.let(WifiBand::of), ip)
-        }
+        caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> NetworkStatus.Ethernet
+        caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ->
+            NetworkStatus.Wifi(context.getSystemService(WifiManager::class.java)?.connectionInfo?.rssi?.let { signalLevel(it) } ?: 0)
         else -> NetworkStatus.Offline
     }
 }
@@ -104,9 +86,4 @@ private fun bluetooth(context: Context): BluetoothStatus? {
     if (!allowed) return null
     val on = adapter.isEnabled
     return BluetoothStatus(on, if (on) adapter.bondedDevices.size else null)
-}
-
-private fun display(context: Context): DisplayStatus? {
-    val mode = context.getSystemService(DisplayManager::class.java)?.getDisplay(Display.DEFAULT_DISPLAY)?.mode ?: return null
-    return DisplayStatus(mode.physicalWidth, mode.physicalHeight, kotlin.math.round(mode.refreshRate).toInt())
 }

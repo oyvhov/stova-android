@@ -11,7 +11,7 @@ Ein flat og rask Android TV-launcher for NVIDIA Shield. Stova viser filmar og se
 - **Snøggmeny:** hald OK på Innstillingar-ikonet for nettverk, Bluetooth, bilete og lyd, lagring og omstart, med ekte status frå TV-en.
 - **Appmeny:** hald OK på ein app for å opne, flytte eller skjule han, byte ikon eller fjerne han frå favorittane.
 - **Snarvegar:** bibliotek frå Jellyfin og Emby, med biletet dei har der, og scenar og skript frå Home Assistant kan liggje i favorittrada saman med appane. Eit bibliotek opnar seg i Spole, ein scene startar med eitt trykk.
-- **Smarthus:** Home Assistant-kort for vêr, straumpris, lys, mediaspelarar og varmepumpe, og statusbrikker i toppfeltet om du vil.
+- **Smarthus:** Home Assistant-kort for vêr, straumpris, lys, mediaspelarar og varmepumpe, og statusbrikker i toppfeltet om du vil. Trykk OK på ei brikke for lys, musikk eller varmepumpe, så fell eit lite kort ned der Venstre og Høgre skrur lysstyrke, volum eller temperatur.
 - **Profilar:** eigne val for kvar profil, PIN og barnemodus.
 - **Heim-knappen:** Stova kan opne seg når du trykkjer på Heim, medan systemlauncheren framleis er tilgjengeleg.
 

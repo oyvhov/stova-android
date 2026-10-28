@@ -200,7 +200,14 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                                     onSmartHome = if(household?.haBaseUrl!=null) {{smartHomeCardId=null;current=Destination.SMART_HOME}} else null,
                                     // Android's own settings are for adults only, as Settings is.
                                     systemMenu = if (profile.kid) null else rememberSystemMenu(),
-                                    leading = { app.stova.ha.ui.HomeStatusChips(chips,onOpenCard={id->smartHomeCardId=id;origin=TransformOrigin.Center;current=Destination.SMART_HOME}) },
+                                    leading = {
+                                        val openCard: (String) -> Unit = {id->smartHomeCardId=id;origin=TransformOrigin.Center;current=Destination.SMART_HOME}
+                                        app.stova.ha.ui.HomeStatusChips(chips,onOpenCard=openCard) { chip, close ->
+                                            // The app's scope, so a change made just before Back still reaches the house.
+                                            app.stova.ha.ui.ChipDropdownHost(chip, container.haRepository, profile, container.appScope,
+                                                onMore = { chip.cardId?.let(openCard) }, onDismiss = close)
+                                        }
+                                    },
                                 )
                             },
                         )

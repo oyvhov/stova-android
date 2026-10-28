@@ -145,6 +145,26 @@ object StovaIcons {
         moveTo(9.9f, 16.9f); arcTo(3f, 3f, 0f, false, true, 14.1f, 16.9f)
         moveTo(12f, 20f); lineTo(12.01f, 20f)
     } }
+    /** [Wifi] with only its lowest [arcs] of three lit; the dot always. Drawn over a faint [Wifi] for strength. */
+    fun wifiArcs(arcs: Int): ImageVector = wifiArcIcons[arcs.coerceIn(0, 3)]
+    private val wifiArcIcons by lazy {
+        (0..3).map { n -> icon("wifi-$n") {
+            if (n >= 3) { moveTo(4.2f, 11.2f); arcTo(11f, 11f, 0f, false, true, 19.8f, 11.2f) }
+            if (n >= 2) { moveTo(7.1f, 14.1f); arcTo(7f, 7f, 0f, false, true, 16.9f, 14.1f) }
+            if (n >= 1) { moveTo(9.9f, 16.9f); arcTo(3f, 3f, 0f, false, true, 14.1f, 16.9f) }
+            moveTo(12f, 20f); lineTo(12.01f, 20f)
+        } }
+    }
+    val WifiOff by lazy { icon("wifi-off") {
+        moveTo(4.2f, 11.2f); arcTo(11f, 11f, 0f, false, true, 19.8f, 11.2f)
+        moveTo(7.1f, 14.1f); arcTo(7f, 7f, 0f, false, true, 16.9f, 14.1f)
+        moveTo(12f, 20f); lineTo(12.01f, 20f)
+        moveTo(3f, 3f); lineTo(21f, 21f)
+    } }
+    val Ethernet by lazy { icon("ethernet") {
+        moveTo(9f, 20f); lineTo(15f, 20f); lineTo(18f, 17f); lineTo(21f, 17f); lineTo(21f, 5f); lineTo(3f, 5f); lineTo(3f, 17f); lineTo(6f, 17f); close()
+        moveTo(7f, 9f); lineTo(7f, 10f); moveTo(10.3f, 9f); lineTo(10.3f, 10f); moveTo(13.7f, 9f); lineTo(13.7f, 10f); moveTo(17f, 9f); lineTo(17f, 10f)
+    } }
     val Bluetooth by lazy { icon("bluetooth") {
         moveTo(7f, 7f); lineTo(17f, 16f); lineTo(12f, 21f); lineTo(12f, 3f); lineTo(17f, 8f); lineTo(7f, 17f)
     } }

@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.semantics.Role
@@ -51,12 +54,19 @@ private fun chipDisplay(config:CardConfig,entity:HaEntity?,locale:Locale):ChipCo
     return ChipContent(config.type,text,symbol=symbol,glow=glow)
 }
 
-@Composable fun HomeStatusChips(chips:List<ChipContent>,onOpenCard:((String)->Unit)?=null) {
+/**
+ * Up to three chips beside the clock. A light, a player, a thermostat or a switch drops [dropdown]
+ * under itself when pressed; any other chip opens its card in Smarthus with [onOpenCard].
+ */
+@Composable fun HomeStatusChips(chips:List<ChipContent>,onOpenCard:((String)->Unit)?=null,
+    dropdown:(@Composable (ChipContent,()->Unit)->Unit)?=null) {
+    var open by remember {mutableStateOf<String?>(null)}
     Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
         chips.take(3).forEach {chip->
             val source=remember(chip.cardId) {MutableInteractionSource()}
-            val action=if(onOpenCard!=null && chip.cardId!=null) Modifier.focusOutline(source,MaterialTheme.shapes.medium)
-                .clickable(source,indication=null,role=Role.Button) {onOpenCard(chip.cardId)} else Modifier
+            val drops=dropdown!=null && chip.cardId!=null && chip.icon in QuickTypes
+            val action=if((onOpenCard!=null || drops) && chip.cardId!=null) Modifier.focusOutline(source,MaterialTheme.shapes.medium)
+                .clickable(source,indication=null,role=Role.Button) {if(drops) open=chip.cardId else onOpenCard?.invoke(chip.cardId)} else Modifier
             val lit=chip.glow?.takeIf {it.alpha>0f}
             val surface=MaterialTheme.colorScheme.surface
             val fill=lit?.let {it.color.copy(alpha=it.alpha).compositeOver(surface)} ?: surface
@@ -70,6 +80,8 @@ private fun chipDisplay(config:CardConfig,entity:HaEntity?,locale:Locale):ChipCo
                 verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                 Icon(icon,null,Modifier.size(16.dp),tint=lit?.color ?: MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(chip.textResource?.let {stringResource(it)} ?: chip.text,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurface,maxLines=1,overflow=TextOverflow.Ellipsis)
+                // Anchored to the chip, so the card drops from right under it.
+                if(drops && open==chip.cardId) dropdown!!(chip) {open=null}
             }
         }
     }

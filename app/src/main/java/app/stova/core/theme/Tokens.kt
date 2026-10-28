@@ -53,6 +53,16 @@ object StovaFocus {
     val Lift = 2.dp
 }
 
+/**
+ * The cards that drop from the top bar: the mood's surface, a little see-through so the artwork
+ * behind still shows, and never blurred (no glass).
+ */
+object StovaDropdown {
+    const val SurfaceAlpha = 0.88f
+    /** The arcs a Wi-Fi icon does not have lit, under the ones it has. */
+    const val UnlitAlpha = 0.3f
+}
+
 /** A title under a card: full strength on the focused card or while its row is idle, dimmed beside focus. */
 fun cardTitleAlpha(focused: Boolean, rowHasFocus: Boolean): Float =
     if (focused || !rowHasFocus) 1f else StovaFocus.DimmedTitle

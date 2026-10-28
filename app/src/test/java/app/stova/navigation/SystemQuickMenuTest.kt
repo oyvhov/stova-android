@@ -25,10 +25,8 @@ class SystemQuickMenuTest {
     @get:Rule val compose = createComposeRule()
     private val status = SystemStatus(
         device = "SHIELD Android TV", android = "11", uptimeMinutes = 3 * 1440 + 4 * 60,
-        network = NetworkStatus.Wifi(level = 4, band = WifiBand.GHZ_5, ip = "192.168.10.182"),
+        network = NetworkStatus.Wifi(level = 4),
         bluetooth = BluetoothStatus(on = true, paired = 3),
-        display = DisplayStatus(3840, 2160, 60),
-        storage = StorageStatus(free = 9_800_000_000, total = 16_000_000_000),
         powerMenu = true,
     )
     private val done = mutableListOf<SystemAction>()
@@ -52,11 +50,19 @@ class SystemQuickMenuTest {
         settingsIcon.performTouchInput { longClick() }
         compose.onNodeWithText("SHIELD Android TV").assertIsDisplayed()
         compose.onNodeWithText("Android 11 · på i 3 d 4 t").assertIsDisplayed()
-        compose.onNodeWithText("Wi-Fi · sterkt signal · 5 GHz · 192.168.10.182").assertIsDisplayed()
         compose.onNodeWithText("På · 3 einingar para").assertIsDisplayed()
-        compose.onNodeWithText("3840 × 2160 · 60 Hz").assertIsDisplayed()
-        compose.onNodeWithText("ledig av", substring = true).assertIsDisplayed()
         assertEquals("a long press is not a press", 0, settings)
+    }
+
+    // «Fjerne bilete og lys, lagring, ipadresse og 5ghz og godt signal (den skal heller vise med
+    // ikonet om den er tilkobla)»: the network row says it with its icon alone.
+    @Test fun theNetworkIconSaysWhetherItIsConnectedAndNothingElseIsListed() {
+        render()
+        settingsIcon.performTouchInput { longClick() }
+        compose.onNode(hasContentDescription("Wi-Fi"), useUnmergedTree = true).assertExists()
+        for (gone in listOf("Bilete og lyd", "Lagring", "192.168", "GHz", "signal"))
+            compose.onNodeWithText(gone, substring = true).assertDoesNotExist()
+        assertEquals(listOf(1, 1, 2, 3, 3), (0..4).map(::wifiArcs))
     }
 
     // On the Shield: «lukker seg før eg får trykt på noko og trykker på første val». The hold that
@@ -85,7 +91,6 @@ class SystemQuickMenuTest {
         settingsIcon.performKeyInput { pressKey(Key.Menu) }
         row("Nettverk").assertIsFocused()
         val rows = listOf("Nettverk" to SystemAction.NETWORK, "Bluetooth" to SystemAction.BLUETOOTH,
-            "Bilete og lyd" to SystemAction.DISPLAY, "Lagring" to SystemAction.STORAGE,
             "Start på nytt" to SystemAction.RESTART, "Alle Android-innstillingar" to SystemAction.ALL_SETTINGS)
         rows.forEach { (label, action) ->
             settingsIcon.performKeyInput { pressKey(Key.Menu) }
@@ -115,10 +120,16 @@ class SystemQuickMenuTest {
     }
 
     @Test fun cableAndUnknownBluetoothAreShownAsTheyAre() {
-        render(status.copy(network = NetworkStatus.Ethernet("10.0.0.5"), bluetooth = null))
+        render(status.copy(network = NetworkStatus.Ethernet, bluetooth = null))
         settingsIcon.performTouchInput { longClick() }
-        compose.onNodeWithText("Kabel · 10.0.0.5").assertIsDisplayed()
+        compose.onNode(hasContentDescription("Kabel"), useUnmergedTree = true).assertExists()
         row("Bluetooth").assertIsDisplayed()
+    }
+
+    @Test fun offlineShowsTheCrossedOutIcon() {
+        render(status.copy(network = NetworkStatus.Offline))
+        settingsIcon.performTouchInput { longClick() }
+        compose.onNode(hasContentDescription("Ikkje tilkopla"), useUnmergedTree = true).assertExists()
     }
 
     @Test fun withoutAMenuHoldingIsAnOrdinaryPressAsBefore() {
@@ -132,9 +143,5 @@ class SystemQuickMenuTest {
         assertEquals(4, signalLevel(-50))
         assertEquals(2, signalLevel(-75))
         assertEquals(0, signalLevel(-95))
-        assertEquals(WifiBand.GHZ_24, WifiBand.of(2437))
-        assertEquals(WifiBand.GHZ_5, WifiBand.of(5180))
-        assertEquals(WifiBand.GHZ_6, WifiBand.of(5975))
-        assertEquals(null, WifiBand.of(0))
     }
 }
