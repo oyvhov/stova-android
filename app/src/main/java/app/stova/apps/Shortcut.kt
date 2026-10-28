@@ -4,10 +4,11 @@ import kotlinx.serialization.Serializable
 
 /**
  * What Home shows for a favourite that is not an app: a library's image, a scene's Home Assistant
- * icon. Saved when it is added, so Home needs no network for it.
+ * icon. Saved when it is added, so Home needs no network for it. [chosenIcon] is one the adult
+ * picked in Stova; it wins over [icon], which follows Home Assistant.
  */
 @Serializable
-data class Shortcut(val label: String, val image: String? = null, val icon: String? = null)
+data class Shortcut(val label: String, val image: String? = null, val icon: String? = null, val chosenIcon: String? = null)
 
 /**
  * A favourite that is not an app: a media library, or a Home Assistant scene or script. Its key

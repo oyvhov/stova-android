@@ -36,4 +36,13 @@ class HaIconFontTest {
         assertEquals("script", HaIconFont.defaultFor("script.god_natt").substringAfter(':').substringBefore('-'))
         assertEquals("mdi:palette", HaIconFont.defaultFor("scene.kino"))
     }
+
+    // The picker reads the whole list while it is open, and every icon it suggests is in it.
+    @Test fun thePickerHasEveryIconAndItsSuggestions() {
+        val all = HaIconFont.all(::open)
+        assertEquals(7448, all.size)
+        assertEquals(HaIconEntry("cat", 0xF011B), all.single { it.name == "cat" })
+        val names = all.mapTo(mutableSetOf()) { it.name }
+        assertEquals(emptyList<String>(), SuggestedHaIcons.filterNot { it in names })
+    }
 }

@@ -82,4 +82,24 @@ class ShortcutTest {
         assertEquals(listOf(a.key), prefs.favorites)
         assertTrue(prefs.shortcuts.isEmpty())
     }
+
+    // An icon picked in Stova wins over the one Home Assistant has, and a fresh list keeps it.
+    @Test fun aChosenIconOutlivesHomeAssistantsOwn() = runTest(UnconfinedTestDispatcher()) {
+        val profiles = profiles()
+        val id = profiles.create("A", AvatarColor.LIME, false).id
+        val repo = AppRepository(FakeAppCatalog(listOf(a)), profiles, backgroundScope, UnconfinedTestDispatcher(testScheduler))
+        repo.addShortcut(id, scene, Shortcut("Kino", icon = "mdi:movie-open"))
+        repo.setShortcutIcon(id, scene, "mdi:cat")
+        repo.setShortcutIcon(id, library, "mdi:cat")
+        repo.refreshShortcuts(id, mapOf(scene to Shortcut("Kino", icon = "mdi:filmstrip")))
+        var prefs = profiles.file.first().profiles.first().apps
+        assertEquals(Shortcut("Kino", icon = "mdi:filmstrip", chosenIcon = "mdi:cat"), prefs.shortcuts[scene])
+        assertFalse(library in prefs.shortcuts)
+        fun shown() = (favoriteTiles(prefs, emptyList(), emptyList(), haReady = true, kid = false).single() as FavoriteTile.Scene).icon
+        assertEquals("mdi:cat", shown())
+
+        repo.setShortcutIcon(id, scene, null)
+        prefs = profiles.file.first().profiles.first().apps
+        assertEquals("mdi:filmstrip", shown())
+    }
 }

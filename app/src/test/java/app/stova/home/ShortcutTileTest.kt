@@ -60,6 +60,7 @@ class ShortcutTileTest {
         compose.onNodeWithText("Bibliotek · i favorittane").assertIsDisplayed()
         compose.onNodeWithText("Fjern frå favorittar").assertIsDisplayed()
         compose.onNodeWithText("Opne").assertIsDisplayed()
+        compose.onNodeWithText("Endre ikon").assertDoesNotExist()
         assertEquals(listOf<FavoriteTile>(library), menu)
     }
 
@@ -67,6 +68,26 @@ class ShortcutTileTest {
         compose.setContent { StovaTheme(reduceMotion = true) { ShortcutActionsMenu(scene, {}, {}, {}, {}) } }
         compose.onNodeWithText("Smarthus · i favorittane").assertIsDisplayed()
         compose.onNodeWithText("Køyr").assertIsDisplayed()
+    }
+
+    // A favourite scene changes its icon on a page of its own, as an app does; one that is not a
+    // favourite has no saved icon to change.
+    @Test fun aFavouriteScenePanelChangesItsIcon() {
+        var picked = 0
+        var reset = 0
+        compose.setContent {
+            StovaTheme(reduceMotion = true) { ShortcutActionsMenu(scene, {}, {}, {}, {}, onPickIcon = { picked++ }, onResetIcon = { reset++ }) }
+        }
+        compose.onNodeWithText("Endre ikon").performClick()
+        compose.onNodeWithText("Vel ikon").performClick()
+        compose.onNodeWithText("Bruk ikonet frå Home Assistant").performClick()
+        assertEquals(1 to 1, picked to reset)
+    }
+
+    @Test fun aSceneThatIsNoFavouriteHasNoIconToChange() {
+        compose.setContent { StovaTheme(reduceMotion = true) { ShortcutActionsMenu(scene, {}, {}, {}, {}, favorite = false) } }
+        compose.onNodeWithText("Køyr").assertIsDisplayed()
+        compose.onNodeWithText("Endre ikon").assertDoesNotExist()
     }
 
     // A scene tile draws Home Assistant's own icon for it, from the bundled icon font, and carries

@@ -62,13 +62,20 @@ class AppRepository(
             shortcuts = prefs.shortcuts + (key to shortcut))
     }
 
-    /** Renames saved shortcuts from a fresh list; adds none that were not chosen. */
+    /** Renames saved shortcuts from a fresh list; adds none that were not chosen, and keeps an icon picked in Stova. */
     suspend fun refreshShortcuts(profileId: String, fresh: Map<String, Shortcut>) {
+        fun Shortcut.updated(key: String) = fresh[key]?.copy(chosenIcon = chosenIcon) ?: this
         val changed = profiles.current().profiles.firstOrNull { it.id == profileId }?.apps?.shortcuts.orEmpty()
-            .any { (key, saved) -> fresh[key]?.let { it != saved } == true }
+            .any { (key, saved) -> saved.updated(key) != saved }
         if (changed) updatePrefs(profileId) { prefs ->
-            prefs.copy(shortcuts = prefs.shortcuts.mapValues { (key, saved) -> fresh[key] ?: saved })
+            prefs.copy(shortcuts = prefs.shortcuts.mapValues { (key, saved) -> saved.updated(key) })
         }
+    }
+
+    /** The icon an adult picked for a favourite scene, or null to follow Home Assistant again. */
+    suspend fun setShortcutIcon(profileId: String, key: String, icon: String?) = updatePrefs(profileId) { prefs ->
+        val saved = prefs.shortcuts[key] ?: return@updatePrefs prefs
+        prefs.copy(shortcuts = prefs.shortcuts + (key to saved.copy(chosenIcon = icon)))
     }
 
     suspend fun moveFavorite(profileId: String, key: String, delta: Int) = updatePrefs(profileId) { prefs ->

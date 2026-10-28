@@ -64,6 +64,9 @@
     <string name="shortcut_run">Run</string>
     <string name="shortcut_ran">%1$s started</string>
     <string name="shortcut_failed">Could not start %1$s</string>
+    <string name="ha_icon_search">Search by English name, such as cat</string>
+    <string name="ha_icon_pick">Choose icon</string>
+    <string name="ha_icon_from_ha">Use the icon from Home Assistant</string>
     <string name="spole_update_for_libraries">Opened Spole. Update Spole to go straight to the library.</string>
     <string name="apps_libraries">Libraries</string>
     <string name="apps_scenes">Scenes and scripts</string>

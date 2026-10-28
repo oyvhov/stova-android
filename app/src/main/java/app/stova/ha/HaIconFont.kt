@@ -28,7 +28,8 @@ import kotlinx.coroutines.withContext
 /**
  * Home Assistant's own icons, the Material Design Icons it draws with (Apache 2.0, licence in
  * `assets/licenses`). The font loads only when a tile draws an icon, and the name list in
- * `assets/mdi/names.txt` is read only for the names asked for; only those are kept.
+ * `assets/mdi/names.txt` is read only for the names asked for; only those are kept. The icon
+ * picker alone reads it whole, while it is open.
  */
 object HaIconFont {
     val family by lazy { FontFamily(Font(R.font.material_design_icons)) }
@@ -45,6 +46,13 @@ object HaIconFont {
         val code = names().bufferedReader().useLines { lookup(it, name) }
         known[name] = code ?: -1
         return code
+    }
+
+    /** Every icon in the list, for the picker. */
+    fun all(names: () -> InputStream): List<HaIconEntry> = names().bufferedReader().useLines { lines ->
+        lines.filterNot { it.startsWith('#') }.mapNotNull { line ->
+            line.substringAfter(' ').trim().toIntOrNull(16)?.let { HaIconEntry(line.substringBefore(' '), it) }
+        }.toList()
     }
 
     /** The list is sorted, so the search stops at the first name past [name]. */
@@ -68,9 +76,19 @@ fun HaIcon(icon: String?, fallback: ImageVector, size: Dp, tint: Color, modifier
     }
     val glyph = code
     if (glyph == null) Icon(fallback, contentDescription = null, modifier = modifier.size(size), tint = tint)
-    else Box(modifier.size(size).testTag("ha-icon"), contentAlignment = Alignment.Center) {
+    else HaGlyph(glyph, size, tint, modifier.testTag("ha-icon"))
+}
+
+/** One icon as Home Assistant names it, such as `cat`, with its glyph in the font. */
+data class HaIconEntry(val name: String, val code: Int) {
+    val icon get() = "mdi:$name"
+}
+
+@Composable
+internal fun HaGlyph(code: Int, size: Dp, tint: Color, modifier: Modifier = Modifier) {
+    Box(modifier.size(size), contentAlignment = Alignment.Center) {
         val fontSize = with(LocalDensity.current) { size.toSp() }
-        Text(String(Character.toChars(glyph)), color = tint, style = TextStyle(fontFamily = HaIconFont.family, fontSize = fontSize,
+        Text(String(Character.toChars(code)), color = tint, style = TextStyle(fontFamily = HaIconFont.family, fontSize = fontSize,
             lineHeight = fontSize, lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both)))
     }
 }

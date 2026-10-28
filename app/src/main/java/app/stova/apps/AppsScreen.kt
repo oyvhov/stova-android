@@ -111,7 +111,11 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
         }
         if (scenes.isNotEmpty()) {
             header(R.string.apps_scenes)
-            items(scenes, key = { "ha:${it.key}" }) { tile -> ShortcutTile(tile, { openShortcut(tile) }, { shortcutMenu = tile }) }
+            items(scenes, key = { "ha:${it.key}" }) { fresh ->
+                // A favourite shows the icon picked for it here too.
+                val tile = profile.apps.shortcuts[fresh.key]?.chosenIcon?.let { fresh.copy(icon = it) } ?: fresh
+                ShortcutTile(tile, { openShortcut(tile) }, { shortcutMenu = tile })
+            }
         }
         if (arranged.hidden.isNotEmpty()) {
             item(key = "hidden-header", span = { GridItemSpan(maxLineSpan) }) {
