@@ -1,3 +1,10 @@
+# Gjennomgang av Stova på Shield og Loftet TV
+2026-10-29: Gjennomgått åtte hovudområde på begge ekte TV-ar; rapport i `docs/verification/2026-10-29-tv-audit.md`, 57 originale skjermbilete med notat i det lokale galleriet `.superpowers/audit-2026-10-29/index.html`.
+Viktigast: Loftet har gjentekne lange rammetider også ved siderulling (p95 97 ms); Shield 19 ms. Påviste visingsproblem: lys viser 0 % og 100 % samtidig, ikonførehandsvising klipt på begge; fleire konkrete forslag til fokus, menyar, kontoar og smarthuskontrollar.
+Ingen implementering er påbyrja, ingen brukarval/kontoar/kort er endra, og ingen avspeling eller smarthuskommando er køyrd. Bygga er ulike trass same versjonsnamn. Årsak til Loftet-rykk er ikkje fastsett med Perfetto; full avspeling, PIN, barneprofil og feilscenario er ikkje testa.
+Heim-knapp-tenesta var aktiv på begge; begge vart sette tilbake til Heim. Etter eiga bestilling vart Loftet TV sett i dvale med KEYCODE_SLEEP og stadfesta Asleep/skjerm OFF; ikkje vekt att. Shield står på Heim.
+Dokumentkontroll og lokale biletreferansar kontrollerte; ingen bygg/installering/push. Ingen spørsmål blokkerer rapporten; vidare retting krev ei ny bestilling.
+
 # Val for HA-brikkene på Heim, og modusane på klimakortet blir lagra
 2026-10-28, brukaren om brikkene i toppfeltet: «Korleis kan eg bestemme korleis dei små Pillene … ser ut? … Kvifor er det begrensa til 3 piller? Kunne eg feks ha valgt å plassere dei til venstre», så «Ja» til forslaget: berre ikon eller ikon og verdi per brikke, ved klokka eller til venstre, og fleire enn tre når dei er små.
 Kvar brikke: `CardConfig.chipStyle` (`ICON_AND_VALUE`, `ICON_ONLY`). Kortmenyen i Smarthus har «Brikke på heim» for kort som alt er på Heim (stil og «Skjul frå heim»); «Vis på heim» blir verande for dei andre. Ei brikke med berre ikon er rund og gir verdien til TalkBack.
