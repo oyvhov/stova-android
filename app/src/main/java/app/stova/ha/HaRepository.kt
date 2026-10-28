@@ -44,7 +44,7 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
             ?: registry.value.takeIf { it.entities.isNotEmpty() }
     }
     val cards: StateFlow<List<CardConfig>> = session.active.map { it?.dashboard.orEmpty() }.stateIn(scope, SharingStarted.Eagerly, emptyList())
-    val homeCards: StateFlow<List<CardConfig>> = cards.map { it.filter(CardConfig::onHome).take(3) }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+    val homeCards: StateFlow<List<CardConfig>> = cards.map(::homeChipCards).stateIn(scope, SharingStarted.Eagerly, emptyList())
     private val focusedCards=mutableMapOf<String,String>()
     private val writes = HaSnapshotWriter(cache, scope)
     suspend fun flush() = writes.flush()
@@ -72,7 +72,7 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
             var previousProfileId: String? = null
             combine(session.active, dashboardVisible) { profile, dashboard ->
                 val selected = profile?.dashboard.orEmpty()
-                Triple(profile?.id, selected, if (dashboard) selected else if (profile?.appearance?.showHaChips == true) selected.filter { it.onHome }.take(3) else emptyList())
+                Triple(profile?.id, selected, if (dashboard) selected else if (profile?.appearance?.showHaChips == true) homeChipCards(selected) else emptyList())
             }.distinctUntilChanged().collectLatest { (profileId, cards, visible) ->
                 val ids = cards.map(CardConfig::entityId).toSet()
                 val watched = visible.map(CardConfig::entityId).toSet()
@@ -119,18 +119,36 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
             list.toMutableList().apply {add(target,removeAt(from))}
         }
     }
+    /** A card goes to Home with its value, or as its icon alone when only that fits; false when neither does. */
     suspend fun setOnHome(cardId: String, on: Boolean): Boolean {
         var accepted = false
         edit { list ->
             val card = list.find { it.id == cardId }
-            accepted = card != null && (!on || card.onHome || list.count { it.onHome } < 3)
-            if (accepted) list.map { if (it.id == cardId) it.copy(onHome = on) else it } else list
+            fun placed(style: ChipStyle) = list.map { if (it.id == cardId) it.copy(onHome = on, chipStyle = style) else it }
+            val next = when {
+                card == null -> null
+                !on || card.onHome -> placed(card.chipStyle)
+                else -> listOf(card.chipStyle, ChipStyle.ICON_ONLY).distinct().map(::placed).firstOrNull(::fitsOnHome)
+            }
+            accepted = next != null
+            next ?: list
+        }
+        return accepted
+    }
+    /** False when the pill would grow past the room left beside the others. */
+    suspend fun setChipStyle(cardId: String, style: ChipStyle): Boolean {
+        var accepted = false
+        edit { list ->
+            val card = list.find { it.id == cardId }
+            val next = list.map { if (it.id == cardId) it.copy(chipStyle = style) else it }
+            accepted = card != null && (style.room <= card.chipStyle.room || fitsOnHome(next))
+            if (accepted) next else list
         }
         return accepted
     }
     suspend fun setWide(cardId: String, wide: Boolean) = edit { it.map { c -> if (c.id == cardId) c.copy(wide = wide,size=if(wide) CardSize.M else CardSize.S) else c } }
-    suspend fun configure(cardId:String,size:CardSize,name:String?,icon:String?,favorite:Boolean) = edit { list ->
-        list.map { if(it.id==cardId) it.copy(wide=false,size=size,name=name?.trim()?.take(80)?.takeIf(String::isNotBlank),icon=icon,favorite=favorite) else it }
+    suspend fun configure(cardId:String,size:CardSize,name:String?,icon:String?,favorite:Boolean,hiddenModes:Set<String>) = edit { list ->
+        list.map { if(it.id==cardId) it.copy(wide=false,size=size,name=name?.trim()?.take(80)?.takeIf(String::isNotBlank),icon=icon,favorite=favorite,hiddenModes=hiddenModes) else it }
     }
     fun dismissFeedback() {mutableFeedback.value=null}
     suspend fun perform(call: ServiceCall, entityId: String, profile: Profile): Boolean {

@@ -99,6 +99,29 @@ class HaRepositoryTest {
         assertEquals(ids.last(), repo.cards.value[2].id); assertTrue(repo.cards.value[2].wide)
         repo.remove(ids[0]); runCurrent(); assertEquals(3, repo.cards.value.size)
     }
+    @Test fun iconOnlyPillsLeaveRoomForMoreOnHome() = runTest {
+        val p = profiles(); val s = ProfileSession(p, backgroundScope); val repo = HaRepository(FakeHaConnection(), s, p, backgroundScope)
+        s.enter(p.create("A", AvatarColor.LIME, false).id); runCurrent()
+        repeat(7) { repo.add(HaEntity("sensor.$it", "1", JsonObject(emptyMap()),0,0), CardType.SENSOR); runCurrent() }
+        val ids = repo.cards.value.map { it.id }
+        ids.take(3).forEach { assertTrue(repo.setOnHome(it,true)); runCurrent() }
+        assertTrue(repo.setChipStyle(ids[0], ChipStyle.ICON_ONLY)); runCurrent()
+        // One pill's worth of room left: the fourth card comes as its icon alone, not refused.
+        assertTrue(repo.setOnHome(ids[3],true)); runCurrent()
+        assertEquals(ChipStyle.ICON_ONLY, repo.cards.value[3].chipStyle)
+        assertFalse("its value no longer fits", repo.setChipStyle(ids[3], ChipStyle.ICON_AND_VALUE))
+        assertTrue(repo.setChipStyle(ids[1], ChipStyle.ICON_ONLY)); runCurrent()
+        assertTrue(repo.setChipStyle(ids[2], ChipStyle.ICON_ONLY)); runCurrent()
+        // Four icons leave room for one more pill with its value.
+        assertTrue(repo.setOnHome(ids[4],true)); runCurrent()
+        assertEquals(ChipStyle.ICON_AND_VALUE, repo.cards.value[4].chipStyle)
+        assertFalse(repo.setOnHome(ids[5],true))
+        assertTrue(repo.setChipStyle(ids[4], ChipStyle.ICON_ONLY)); runCurrent()
+        assertTrue(repo.setOnHome(ids[5],true)); runCurrent()
+        assertFalse("six icons fill the room", repo.setOnHome(ids[6],true))
+        assertEquals(ids.take(6), repo.homeCards.value.map { it.id })
+        assertEquals(repo.cards.value, p.current().profiles.single().dashboard)
+    }
     @Test fun kidPerformIsNoop() = runTest {
         val p = profiles(); val s = ProfileSession(p, backgroundScope); val socket = FakeHaConnection(); val repo = HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) }
         val kid = Profile("k","K",AvatarColor.ROSE,kid=true)
@@ -124,9 +147,10 @@ class HaRepositoryTest {
         s.enter(p.create("A",AvatarColor.LIME,false).id);runCurrent()
         repo.add(HaEntity("light.a","off",JsonObject(emptyMap()),0,0),CardType.LIGHT);runCurrent()
         val id=repo.cards.value.single().id
-        repo.configure(id,CardSize.L,"  Leselys  ","sun",true);runCurrent()
+        repo.configure(id,CardSize.L,"  Leselys  ","sun",true,setOf("cool"));runCurrent()
         val card=repo.cards.value.single()
         assertEquals(CardSize.L,card.size);assertEquals("Leselys",card.name);assertEquals("sun",card.icon);assertTrue(card.favorite)
+        assertEquals("the modes chosen on the card's Modes page are kept",setOf("cool"),card.hiddenModes)
         assertEquals(card,p.current().profiles.single().dashboard.single())
     }
     @Test fun successfulToggleWaitsForServerAndClearsPending() = runTest {

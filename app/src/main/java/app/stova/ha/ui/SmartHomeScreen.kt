@@ -42,7 +42,8 @@ import kotlinx.coroutines.launch
         onMove={card,delta->scope.launch {container.haRepository.move(card.id,delta)}},
         onHome={card->container.haRepository.setOnHome(card.id,!card.onHome)},
         onRemove={card->scope.launch {container.haRepository.remove(card.id)}},
-        onConfigure={card->scope.launch {container.haRepository.configure(card.id,card.size,card.name,card.icon,card.favorite)}},
+        onConfigure={card->scope.launch {container.haRepository.configure(card.id,card.size,card.name,card.icon,card.favorite,card.hiddenModes)}},
+        onChipStyle={card,style->container.haRepository.setChipStyle(card.id,style)},
         registry=registry,pending=pending,feedback=feedback,connection=container.haSocket,completed=completed,overlayOpen=dialog!=null || adding,
         initialFocusId=firstFocus,onCardFocused={container.haRepository.rememberFocus(profile.id,it)})
     if(adding && !profile.kid) StovaDialog({adding=false}) {

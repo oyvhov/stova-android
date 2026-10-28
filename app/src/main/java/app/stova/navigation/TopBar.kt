@@ -86,7 +86,8 @@ fun TopBar(
         val rowScope = this
         val decorated = appearance.seasonalDecor != app.stova.profiles.SeasonalDecor.OFF
         if (decorated) app.stova.home.SeasonalMark(appearance.season())
-        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { if (appearance.showHaChips) leading(rowScope) }
+        val chipsLeft = appearance.chipPlacement == app.stova.profiles.ChipPlacement.LEFT
+        Box(Modifier.weight(1f), contentAlignment = if (chipsLeft) Alignment.CenterStart else Alignment.CenterEnd) { if (appearance.showHaChips) leading(rowScope) }
         if (decorated && appearance.showCountdown && androidx.compose.ui.platform.LocalDensity.current.fontScale < 1.5f)
             app.stova.home.SeasonalCountdown(appearance.season())
         Clock(Modifier.padding(end = 16.dp))

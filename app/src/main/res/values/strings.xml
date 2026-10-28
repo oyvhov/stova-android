@@ -225,7 +225,10 @@
     <string name="ha_narrow">Smal</string>
     <string name="ha_show_home">Vis på heim</string>
     <string name="ha_hide_home">Skjul frå heim</string>
-    <string name="ha_home_limit">Maks tre kort på heim</string>
+    <string name="ha_home_limit">Ikkje plass til meir på heim. Gjer ei brikke til berre ikon, eller skjul ei.</string>
+    <string name="ha_home_pill">Brikke på heim</string>
+    <string name="ha_chip_icon_and_value">Ikon og verdi</string>
+    <string name="ha_chip_icon_only">Berre ikon</string>
     <string name="ha_remove">Fjern</string>
     <string name="spotlight_new_season">Ny sesong</string>
     <!-- Smarthus v2 -->
@@ -555,6 +558,9 @@
     <string name="clock_style_side">Dato ved sida</string>
     <string name="custom_show_date">Vis dato</string>
     <string name="custom_show_chips">Vis HA-brikker</string>
+    <string name="custom_chip_placement">Plassering av HA-brikker</string>
+    <string name="chip_placement_clock">Ved klokka</string>
+    <string name="chip_placement_left">Til venstre</string>
     <string name="custom_show_countdown">Vis julenedteljing</string>
     <string name="custom_show_smart_home">Vis Smarthus-knapp</string>
     <string name="custom_show_profile">Vis profilbilete</string>

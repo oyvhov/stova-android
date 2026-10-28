@@ -225,7 +225,10 @@
     <string name="ha_narrow">Narrow</string>
     <string name="ha_show_home">Show on home</string>
     <string name="ha_hide_home">Hide from home</string>
-    <string name="ha_home_limit">At most three cards on home</string>
+    <string name="ha_home_limit">No more room on home. Make a chip icon only, or hide one.</string>
+    <string name="ha_home_pill">Chip on home</string>
+    <string name="ha_chip_icon_and_value">Icon and value</string>
+    <string name="ha_chip_icon_only">Icon only</string>
     <string name="ha_remove">Remove</string>
     <string name="spotlight_new_season">New season</string>
     <!-- Smarthus v2 -->
@@ -555,6 +558,9 @@
     <string name="clock_style_side">Date alongside</string>
     <string name="custom_show_date">Show date</string>
     <string name="custom_show_chips">Show HA chips</string>
+    <string name="custom_chip_placement">HA chip placement</string>
+    <string name="chip_placement_clock">By the clock</string>
+    <string name="chip_placement_left">On the left</string>
     <string name="custom_show_countdown">Show Christmas countdown</string>
     <string name="custom_show_smart_home">Show Smart home button</string>
     <string name="custom_show_profile">Show profile picture</string>

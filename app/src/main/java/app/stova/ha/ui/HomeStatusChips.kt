@@ -31,9 +31,12 @@ import kotlin.math.round
 import kotlinx.serialization.json.*
 
 /** Numeric text stays pure; translatable states are resolved from Android resources at render time. */
-data class ChipContent(val icon:CardType,val text:String,@param:StringRes val textResource:Int?=null,val symbol:ImageVector?=null,val glow:LightGlow?=null,val cardId:String?=null)
+data class ChipContent(val icon:CardType,val text:String,@param:StringRes val textResource:Int?=null,val symbol:ImageVector?=null,val glow:LightGlow?=null,val cardId:String?=null,
+    /** The icon alone, with the value left to TalkBack. */
+    val iconOnly:Boolean=false)
 
-fun chipText(config:CardConfig,entity:HaEntity?,locale:Locale):ChipContent=chipDisplay(config,entity,locale).copy(cardId=config.id)
+fun chipText(config:CardConfig,entity:HaEntity?,locale:Locale):ChipContent=
+    chipDisplay(config,entity,locale).copy(cardId=config.id,iconOnly=config.chipStyle==ChipStyle.ICON_ONLY)
 private fun chipDisplay(config:CardConfig,entity:HaEntity?,locale:Locale):ChipContent {
     val state=stateText(entity)
     val symbol=cardIcon(config.type,entity,config.icon)
@@ -41,6 +44,9 @@ private fun chipDisplay(config:CardConfig,entity:HaEntity?,locale:Locale):ChipCo
     if(state==StateText.Unavailable || entity==null) return ChipContent(config.type,"–",symbol=symbol)
     val text=when(config.type) {
         CardType.WEATHER -> entity.attributes.number("temperature")?.let {formatNumber(round(it),locale)+"°"} ?: "–"
+        // The room's temperature, as on the card; Home Assistant's own word for the mode ("heat") never.
+        CardType.CLIMATE -> entity.attributes.number("current_temperature")?.let {formatNumber(it,locale)+"°"}
+            ?: return ChipContent(config.type,"",climateMode(entity.state),symbol)
         CardType.MEDIA_PLAYER -> entity.attributes["media_title"]?.jsonPrimitive?.contentOrNull?.let {
             if(it.codePointCount(0,it.length)>24) it.substring(0,it.offsetByCodePoints(0,23))+"…" else it
         } ?: "–"
@@ -54,15 +60,20 @@ private fun chipDisplay(config:CardConfig,entity:HaEntity?,locale:Locale):ChipCo
     return ChipContent(config.type,text,symbol=symbol,glow=glow)
 }
 
+private fun climateMode(mode:String)=when(mode) {
+    "heat"->R.string.ha_v2_heat;"cool"->R.string.ha_v2_cool;"auto","heat_cool"->R.string.ha_v2_auto;"off"->R.string.ha_off
+    "dry"->R.string.ha_action_dry;"fan_only"->R.string.ha_action_fan_mode;else->R.string.ha_action_mode
+}
+
 /**
- * Up to three chips beside the clock. A light, a player, a thermostat or a switch drops [dropdown]
+ * The pills in the top bar, as many as fit its room (see [withinHomeRoom]). A light, a player, a thermostat or a switch drops [dropdown]
  * under itself when pressed; any other chip opens its card in Smarthus with [onOpenCard].
  */
 @Composable fun HomeStatusChips(chips:List<ChipContent>,onOpenCard:((String)->Unit)?=null,
     dropdown:(@Composable (ChipContent,()->Unit)->Unit)?=null) {
     var open by remember {mutableStateOf<String?>(null)}
     Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
-        chips.take(3).forEach {chip->
+        withinHomeRoom(chips) {if(it.iconOnly) ChipStyle.ICON_ONLY.room else ChipStyle.ICON_AND_VALUE.room}.forEach {chip->
             val source=remember(chip.cardId) {MutableInteractionSource()}
             val drops=dropdown!=null && chip.cardId!=null && chip.icon in QuickTypes
             val action=if((onOpenCard!=null || drops) && chip.cardId!=null) Modifier.focusOutline(source,MaterialTheme.shapes.medium)
@@ -76,10 +87,12 @@ private fun chipDisplay(config:CardConfig,entity:HaEntity?,locale:Locale):ChipCo
                 CardType.MEDIA_PLAYER -> StovaIcons.Play;CardType.SCENE -> StovaIcons.Home
                 CardType.CAMERA -> StovaIcons.Camera;else -> StovaIcons.Sensor
             }
-            Row(Modifier.weight(1f,fill=false).then(action).background(fill,MaterialTheme.shapes.medium).padding(horizontal=10.dp,vertical=6.dp),
+            val label=chip.textResource?.let {stringResource(it)} ?: chip.text
+            // Alone, the icon sits in a round pill as tall as the others.
+            Row(Modifier.weight(1f,fill=false).then(action).background(fill,MaterialTheme.shapes.medium).padding(horizontal=if(chip.iconOnly) 6.dp else 10.dp,vertical=6.dp),
                 verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                Icon(icon,null,Modifier.size(16.dp),tint=lit?.color ?: MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(chip.textResource?.let {stringResource(it)} ?: chip.text,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurface,maxLines=1,overflow=TextOverflow.Ellipsis)
+                Icon(icon,label.takeIf {chip.iconOnly},Modifier.size(16.dp),tint=lit?.color ?: MaterialTheme.colorScheme.onSurfaceVariant)
+                if(!chip.iconOnly) Text(label,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurface,maxLines=1,overflow=TextOverflow.Ellipsis)
                 // Anchored to the chip, so the card drops from right under it.
                 if(drops && open==chip.cardId) dropdown!!(chip) {open=null}
             }

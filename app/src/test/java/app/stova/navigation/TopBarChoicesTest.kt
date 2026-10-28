@@ -34,6 +34,17 @@ class TopBarChoicesTest {
         compose.onNodeWithText("Byt profil").assertDoesNotExist()
         compose.onNodeWithText("Innstillingar").assertExists()
     }
+    @Test fun pillsSitByTheClockOrFromTheLeft() {
+        var p by mutableStateOf(AppearancePrefs())
+        compose.setContent { StovaTheme(appearance=p) {
+            TopBar(Profile("p","Demo",AvatarColor.LIME),{},{},onSmartHome={},leading={ Text("HA-test") })
+        } }
+        val width=compose.onRoot().fetchSemanticsNode().boundsInRoot.width
+        fun left()=compose.onNodeWithText("HA-test").fetchSemanticsNode().boundsInRoot.left
+        org.junit.Assert.assertTrue("by the clock: ${left()} of $width",left()>width/2)
+        compose.runOnIdle { p=p.copy(chipPlacement=ChipPlacement.LEFT) }
+        org.junit.Assert.assertTrue("from the left: ${left()} of $width",left()<width/4)
+    }
     @Test fun dateCanBeShownWhenClockIsHiddenAndLargeClockGrows() {
         var p by mutableStateOf(AppearancePrefs(clock=ClockMode.HIDDEN,showDate=true))
         compose.setContent { StovaTheme(appearance=p) { app.stova.core.ui.Clock(clock={0L}) } }

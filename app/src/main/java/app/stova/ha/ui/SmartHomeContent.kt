@@ -48,6 +48,7 @@ import kotlin.math.ceil
     images:HaImageSource?=null,onAdd:()->Unit={},onPerform:(ServiceCall,String)->Unit={_,_->},
     onDialog:(CardDialog)->Unit={},onMove:(CardConfig,Int)->Unit={_,_->},onWide:(CardConfig)->Unit={},
     onHome:suspend (CardConfig)->Boolean={true},onRemove:(CardConfig)->Unit={},
+    onChipStyle:suspend (CardConfig,ChipStyle)->Boolean={_,_->true},
     onConfigure:(CardConfig)->Unit={},registry:HaRegistry=HaRegistry(),pending:Set<String> = emptySet(),
     feedback:HaFeedback?=null,connection:HaConnection?=null,completed:Set<String> = emptySet(),
     initialFocusId:String?=null,onCardFocused:(String)->Unit={},overlayOpen:Boolean=false,
@@ -294,7 +295,7 @@ import kotlin.math.ceil
     cards.find {it.id==menuId}?.takeUnless {profile.kid}?.let {card ->
         val attrs=entities[card.entityId]?.attributes.takeIf {card.type==CardType.CLIMATE}
         CardMenu(card,card.name ?: entities[card.entityId]?.let(::friendlyName) ?: card.entityId,
-            onMove=onMove,onConfigure=onConfigure,onHome=onHome,onRemove=onRemove,
+            onMove=onMove,onConfigure=onConfigure,onHome=onHome,onChipStyle=onChipStyle,onRemove=onRemove,
             hvacModes=attrs?.strings("hvac_modes").orEmpty(),presets=attrs?.strings("preset_modes").orEmpty(),
             onDismiss={menuId=null})
     }

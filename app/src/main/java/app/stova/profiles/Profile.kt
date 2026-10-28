@@ -82,6 +82,7 @@ data class AppearancePrefs(
     val backgroundMotion: Boolean = false,
     val showDate: Boolean = false,
     val showHaChips: Boolean = true,
+    val chipPlacement: ChipPlacement = ChipPlacement.CLOCK,
     val showCountdown: Boolean = true,
     val showSmartHomeButton: Boolean = true,
     val showProfile: Boolean = true,
@@ -132,6 +133,8 @@ fun FocusEffect.resolved(): FocusEffect = if (this == FocusEffect.RING) FocusEff
 @Serializable enum class SpotlightSource { LIBRARY, MOVIES, SERIES, FAVORITES }
 @Serializable enum class HeroTitle { LOGO, TITLE }
 @Serializable enum class ClockSize { NORMAL, LARGE }
+/** Where Home's smart-home pills sit: up against the clock, or from the left edge. */
+@Serializable enum class ChipPlacement { CLOCK, LEFT }
 /** Standard is the clock as it always was; Thin and Side always carry the weekday and date. */
 @Serializable enum class ClockStyle { STANDARD, THIN, SIDE }
 @Serializable enum class HomeRows { ONE, TWO, SCROLLING }

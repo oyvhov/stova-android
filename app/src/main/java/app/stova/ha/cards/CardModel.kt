@@ -11,6 +11,10 @@ import app.stova.ha.text
 
 @Serializable enum class CardType { LIGHT, TOGGLE, CLIMATE, SENSOR, WEATHER, ENERGY_PRICE, MEDIA_PLAYER, SCENE, CAMERA, COVER, LOCK }
 @Serializable enum class CardSize(val columns: Int, val rows: Int) { S(1,1), M(2,1), L(2,2) }
+/** How a card's pill on Home looks. The icon alone takes half the room of the icon and its value. */
+@Serializable enum class ChipStyle(val room: Int) { ICON_AND_VALUE(2), ICON_ONLY(1) }
+/** Room for pills in Home's top bar: three with their value, six icons, or a mix of the two. */
+const val HOME_CHIP_ROOM = 6
 @Serializable data class CardConfig(
     val id: String, val type: CardType, val entityId: String,
     // Read legacy JSON and keep constructor compatibility. All new layout and edits use size.
@@ -19,7 +23,17 @@ import app.stova.ha.text
     val name: String? = null, val icon: String? = null, val favorite: Boolean = false,
     /** Climate modes and presets left out of this card's panel, by Home Assistant name. */
     val hiddenModes: Set<String> = emptySet(),
+    val chipStyle: ChipStyle = ChipStyle.ICON_AND_VALUE,
 )
+
+/** The first [items] that fit in Home's top bar, in order; the next one that would not fit ends the list. */
+fun <T> withinHomeRoom(items: List<T>, room: (T) -> Int): List<T> {
+    var used = 0
+    return items.takeWhile { item -> (used + room(item) <= HOME_CHIP_ROOM).also { fits -> if (fits) used += room(item) } }
+}
+/** The cards that get a pill on Home, in dashboard order. */
+fun homeChipCards(cards: List<CardConfig>): List<CardConfig> = withinHomeRoom(cards.filter { it.onHome }) { it.chipStyle.room }
+fun fitsOnHome(cards: List<CardConfig>): Boolean = cards.filter { it.onHome }.sumOf { it.chipStyle.room } <= HOME_CHIP_ROOM
 data class DashboardSection(val room: String?, val favorites: Boolean, val cards: List<CardConfig>)
 @Serializable enum class DashboardGrouping { NONE, ROOM }
 @Serializable enum class DashboardDensity(val minimumWidth: Int) { COMPACT(152), BALANCED(200), AIRY(252) }

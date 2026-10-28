@@ -127,6 +127,8 @@ fun AppearanceSettingsContent(
         // The thin and side clocks always carry the date.
         if (p.clockStyle == ClockStyle.STANDARD) Toggle(R.string.custom_show_date, p.showDate) { onChange(p.copy(showDate = it)) }
         Toggle(R.string.custom_show_chips, p.showHaChips) { onChange(p.copy(showHaChips = it)) }
+        if (p.showHaChips) Choice(R.string.custom_chip_placement, p.chipPlacement, ChipPlacement.entries,
+            listOf(R.string.chip_placement_clock, R.string.chip_placement_left)) { onChange(p.copy(chipPlacement = it)) }
         Toggle(R.string.custom_show_countdown, p.showCountdown) { onChange(p.copy(showCountdown = it)) }
         Toggle(R.string.custom_show_smart_home, p.showSmartHomeButton) { onChange(p.copy(showSmartHomeButton = it)) }
         Toggle(R.string.custom_show_profile, p.showProfile) { onChange(p.copy(showProfile = it)) }

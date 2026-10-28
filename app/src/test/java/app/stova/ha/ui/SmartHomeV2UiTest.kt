@@ -45,6 +45,30 @@ class SmartHomeV2UiTest {
         compose.onNodeWithText("Kjøling").performClick()
         assertEquals(setOf("heat_8_15"),cards.single().hiddenModes)
     }
+    @Test fun aCardOnHomeChoosesHowItsPillLooksOrLeavesHome() {
+        var styled:ChipStyle?=null;var home:CardConfig?=null
+        compose.setContent { StovaTheme(reduceMotion=true) { SmartHomeContent(adult,
+            listOf(CardConfig("a",CardType.SENSOR,"sensor.a",onHome=true)),emptyMap(),HaStatus.CONNECTED,
+            onHome={home=it;true},onChipStyle={_,style->styled=style;true}) } }
+        compose.onRoot().performKeyInput {pressKey(Key.Menu)}
+        compose.onNodeWithText("Vis på heim").assertDoesNotExist()
+        compose.onNodeWithText("Brikke på heim").performClick()
+        compose.onNodeWithText("Berre ikon").performClick()
+        compose.waitUntil(5_000) {styled!=null};assertEquals(ChipStyle.ICON_ONLY,styled)
+        compose.onRoot().performKeyInput {pressKey(Key.Menu)}
+        compose.onNodeWithText("Brikke på heim").performClick()
+        compose.onNodeWithText("Skjul frå heim").performClick()
+        compose.waitUntil(5_000) {home!=null};assertEquals("a",home!!.id)
+    }
+    @Test fun aPillThatWouldNotFitSaysWhatToDo() {
+        compose.setContent { StovaTheme(reduceMotion=true) { SmartHomeContent(adult,
+            listOf(CardConfig("a",CardType.SENSOR,"sensor.a",onHome=true,chipStyle=ChipStyle.ICON_ONLY)),emptyMap(),HaStatus.CONNECTED,
+            onChipStyle={_,_->false}) } }
+        compose.onRoot().performKeyInput {pressKey(Key.Menu)}
+        compose.onNodeWithText("Brikke på heim").performClick()
+        compose.onNodeWithText("Ikon og verdi").performClick()
+        compose.onNodeWithText("Ikkje plass til meir på heim. Gjer ei brikke til berre ikon, eller skjul ei.").assertExists()
+    }
     @Test fun otherCardsHaveNoModesPage() {
         compose.setContent { StovaTheme(reduceMotion=true) { SmartHomeContent(adult,
             listOf(CardConfig("a",CardType.SENSOR,"sensor.a")),emptyMap(),HaStatus.CONNECTED) } }

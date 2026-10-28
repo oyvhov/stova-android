@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 /** Long OK on a card: the panel from the right, with size, move, name and icon as pages of their own. */
 @Composable internal fun CardMenu(card:CardConfig,label:String,onMove:(CardConfig,Int)->Unit,onConfigure:(CardConfig)->Unit,
     onHome:suspend (CardConfig)->Boolean,onRemove:(CardConfig)->Unit,onDismiss:()->Unit,
+    onChipStyle:suspend (CardConfig,ChipStyle)->Boolean={_,_->true},
     hvacModes:List<String> = emptyList(),presets:List<String> = emptyList()) {
     var name by remember(card.id) {mutableStateOf(card.name ?: label)}
     var limit by remember {mutableStateOf(false)}
@@ -25,6 +26,7 @@ import kotlinx.coroutines.launch
     val scope=rememberCoroutineScope()
     fun save(updated:CardConfig) {onConfigure(updated);onDismiss()}
     val sizeLabel={size:CardSize -> when(size) {CardSize.S->R.string.ha_v2_size_s;CardSize.M->R.string.ha_v2_size_m;CardSize.L->R.string.ha_v2_size_l}}
+    val styleLabel={style:ChipStyle -> when(style) {ChipStyle.ICON_AND_VALUE->R.string.ha_chip_icon_and_value;ChipStyle.ICON_ONLY->R.string.ha_chip_icon_only}}
     StovaSheet(onDismiss) {pages ->
         when(pages.current) {
             null -> {
@@ -33,8 +35,10 @@ import kotlinx.coroutines.launch
                     value=stringResource(sizeLabel(card.size)).substringBefore(" "),opensPage=true)
                 if(modes.isNotEmpty()) SheetAction(stringResource(R.string.ha_v2_modes),StovaIcons.Toggle,{pages.open("modes")},
                     Modifier.focusRequester(pages.opener("modes")),value=stringResource(R.string.ha_v2_modes_count,modes.count {it !in hidden},modes.size),opensPage=true)
-                SheetAction(stringResource(if(card.onHome) R.string.ha_hide_home else R.string.ha_show_home),StovaIcons.Home,
-                    {scope.launch {if(onHome(card)) onDismiss() else limit=true}})
+                // On Home already: the pill's own page, with how it looks and the way off Home.
+                if(card.onHome) SheetAction(stringResource(R.string.ha_home_pill),StovaIcons.Home,{limit=false;pages.open("pill")},
+                    Modifier.focusRequester(pages.opener("pill")),value=stringResource(styleLabel(card.chipStyle)),opensPage=true)
+                else SheetAction(stringResource(R.string.ha_show_home),StovaIcons.Home,{scope.launch {if(onHome(card)) onDismiss() else limit=true}})
                 if(limit) Text(stringResource(R.string.ha_home_limit),Modifier.padding(horizontal=14.dp),color=MaterialTheme.colorScheme.onSurfaceVariant)
                 SheetAction(stringResource(R.string.ha_move),StovaIcons.Focus,{pages.open("move")},Modifier.focusRequester(pages.opener("move")),opensPage=true)
                 SheetAction(stringResource(R.string.ha_v2_rename),StovaIcons.Edit,{pages.open("name")},Modifier.focusRequester(pages.opener("name")),opensPage=true)
@@ -55,6 +59,15 @@ import kotlinx.coroutines.launch
                         when(mode) {"heat"->StovaIcons.Sun;"cool"->StovaIcons.Snow;"auto","heat_cool"->StovaIcons.Home;else->StovaIcons.Toggle},
                         {hidden=if(mode in hidden) hidden-mode else hidden+mode;onConfigure(card.copy(hiddenModes=hidden))},chosen=mode !in hidden)
                 }
+            }
+            "pill" -> {
+                SheetHeader(stringResource(R.string.ha_home_pill),label,StovaIcons.Home)
+                ChipStyle.entries.forEach {style ->
+                    SheetAction(stringResource(styleLabel(style)),if(style==ChipStyle.ICON_ONLY) cardIcon(card.type,override=card.icon) else StovaIcons.Rows,
+                        {scope.launch {if(onChipStyle(card,style)) onDismiss() else limit=true}},chosen=card.chipStyle==style)
+                }
+                if(limit) Text(stringResource(R.string.ha_home_limit),Modifier.padding(horizontal=14.dp),color=MaterialTheme.colorScheme.onSurfaceVariant)
+                SheetAction(stringResource(R.string.ha_hide_home),StovaIcons.Hide,{scope.launch {onHome(card);onDismiss()}})
             }
             "move" -> {
                 SheetHeader(stringResource(R.string.ha_move),label,StovaIcons.Focus)

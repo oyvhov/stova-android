@@ -22,7 +22,7 @@ internal fun homeChipContents(
     entities: Flow<Map<String, HaEntity>>,
     locale: Locale,
 ): Flow<List<ChipContent>> = combine(cards, entities) { selected, live ->
-    selected.take(3).map { chipText(it, live[it.entityId], locale) }
+    selected.map { chipText(it, live[it.entityId], locale) }
 }.distinctUntilChanged()
 
 /** Collection belongs to the slot, so HA events cannot invalidate the media rows. */

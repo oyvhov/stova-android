@@ -29,6 +29,12 @@ class HomeStatusChipsUiTest {
         compose.onNodeWithText("2").assertExists();compose.onNodeWithText("3").assertDoesNotExist()
         compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Focused)).assertCountEquals(0)
     }
+    @Test fun iconOnlyPillsShowNoTextNameTheirValueAndSixFit() {
+        compose.setContent {StovaTheme {HomeStatusChips(List(7) {ChipContent(CardType.CLIMATE,"2$it°",iconOnly=true)})}}
+        compose.onNodeWithText("20°").assertDoesNotExist()
+        compose.onNodeWithContentDescription("20°").assertExists()
+        compose.onNodeWithContentDescription("25°").assertExists();compose.onNodeWithContentDescription("26°").assertDoesNotExist()
+    }
     @Test fun onOffComesFromTranslatedResources() {
         val entity=HaEntity("light.x","on",JsonObject(emptyMap()),0,0)
         compose.setContent {StovaTheme {HomeStatusChips(listOf(chipText(CardConfig("1",CardType.LIGHT,entity.id),entity,Locale.forLanguageTag("nn"))))}}

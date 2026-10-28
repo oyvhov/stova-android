@@ -97,7 +97,7 @@ class SmartHomeScreenTest {
         compose.onNodeWithText("Rediger").performClick()
         compose.onNodeWithText("sensor.3").performScrollTo().performClick()
         compose.onNodeWithText("Vis på heim").performClick()
-        compose.onNodeWithText("Maks tre kort på heim").assertExists()
+        compose.onNodeWithText("Ikkje plass til meir på heim. Gjer ei brikke til berre ikon, eller skjul ei.").assertExists()
     }
     // "Utført" and "lukkast ikkje" fade out with their own words instead of vanishing.
     @Test fun feedbackFadesOutInsteadOfVanishing() {
