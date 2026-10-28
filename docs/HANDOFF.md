@@ -1,3 +1,9 @@
+# Idéarbeid på tvers av prosjekta
+2026-10-28: Brukaren bad om ville, konkrete Stova-idear og at alle prosjekta vart sjekka. Gått gjennom alle 22 registrerte Codex-prosjekt på prosjektnivå og fleire lokale prosjekt (mellom anna Heimspenn, Næpene, Dayboost, FotballEM og Siemens-verktøya).
+Idégrunnlag: levande husmodell (Husriss/Speks/Tunet), portalar mellom barneuniversa, fysisk mysterium i huset, privat TV-kanal, kinopremiere, slektshistorie, galleri, husreprise og samspel over fleire skjermar.
+Dette er forslag til vurdering, inga bestilling på implementering; gjeldande planar er ikkje endra. Ingen funksjon er påbyrja og ingen appkode er endra.
+Lese dokumentasjon og eit eksisterande Shield-bilete; nye integrasjonar, yting og brukaroppleving er ikkje prøvde. Ingen bygg, testar, installering, styring av einingar eller publisering. Ingen avklaringar blokkerer idéleveransen.
+
 # Brikkekortet utan «Meir i Smarthus»
 2026-10-28, brukaren: «Ta vekk meir i smarthus. Eg har allerede knapp for det». Raden og strengen er borte; kortet er berre kontrollen (Venstre/Høgre, OK), og Tilbake lukkar. Så «Treng ikkje fokusring rundt popupen»: kontrollen er det einaste som tek fokus i kortet og teiknar ingen fokusring. Smarthus-knappen i toppfeltet er vegen til heile kortet. Shield har 43bd965 (med raden) til dette blir installert.
 
