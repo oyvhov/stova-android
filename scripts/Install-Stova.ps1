@@ -8,12 +8,14 @@ param(
     [string]$Serial = 'emulator-5580',
     [switch]$Demo,
     [switch]$Build,
-    [switch]$Tv
+    [switch]$Tv,
+    [switch]$NoLaunch
 )
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/StovaSdk.ps1"
 Assert-NotSpole $Serial
 if ($Tv -and $Demo) { throw 'Demodata finst berre i debug-bygget.' }
+if ($NoLaunch -and $Demo) { throw 'Vel anten -NoLaunch eller -Demo.' }
 $apk = Join-Path $StovaRoot $(if ($Tv) { 'app/build/outputs/apk/tv/app-tv.apk' } else { 'app/build/outputs/apk/debug/app-debug.apk' })
 if ($Build -or -not (Test-Path $apk)) {
     & "$PSScriptRoot/gradle.ps1" $(if ($Tv) { 'assembleTv' } else { 'assembleDebug' })
@@ -21,6 +23,7 @@ if ($Build -or -not (Test-Path $apk)) {
 }
 & $Adb -s $Serial install -r $apk
 if ($LASTEXITCODE) { throw "Kunne ikkje installere på $Serial." }
+if ($NoLaunch) { Write-Output "Stova er installert på $Serial utan å opne appen."; exit 0 }
 
 if ($Demo) {
     & $Adb -s $Serial logcat -c

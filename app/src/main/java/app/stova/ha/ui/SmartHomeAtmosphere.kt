@@ -8,11 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import app.stova.core.theme.HaTokens
-import coil3.compose.AsyncImage
 
 /**
  * A quiet surface belonging to the house. Only its own weather adds a restrained sky tint;

@@ -34,4 +34,6 @@
     <string name="ha_preset_comfort">Comfort</string>
     <string name="ha_preset_sleep">Sleep</string>
     <string name="ha_weather_low">Low %1$s°</string>
+    <string name="ha_panel_choice_hint">Arrows: choose · OK: confirm</string>
+    <string name="ha_panel_browse_hint">Arrows: explore · Back: close</string>
 </resources>

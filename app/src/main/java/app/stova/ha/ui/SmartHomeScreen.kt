@@ -46,9 +46,7 @@ import kotlinx.coroutines.launch
         onChipStyle={card,style->container.haRepository.setChipStyle(card.id,style)},
         registry=registry,pending=pending,feedback=feedback,connection=container.haSocket,completed=completed,overlayOpen=dialog!=null || adding,
         initialFocusId=firstFocus,onCardFocused={container.haRepository.rememberFocus(profile.id,it)})
-    if(adding && !profile.kid) StovaDialog({adding=false}) {
-        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(StovaLayout.TvSafeEdge)) {AddCardFlow(container) {adding=false}}
-    }
+    if(adding && !profile.kid) AddCardDialog(container) {adding=false}
     CardDialogHost(dialog,entities,container.haSocket,images,!canControl(profile),{call,id->scope.launch {container.haRepository.perform(call,id,profile)}},{dialog=null},room=dialog?.let {registry.entities[it.entityId]?.room},
         name=cards.find {it.entityId==dialog?.entityId}?.name,send={call,id->container.haRepository.perform(call,id,profile)})
 }

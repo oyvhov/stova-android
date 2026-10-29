@@ -40,6 +40,13 @@ Skriptet nektar om det alt finst eigne profilar.
 Utan `-Demo` installerer skriptet berre APK-en og opnar Stova. Profilar, kontoar og innstillingar
 blir verande. Med `-Build` byggjer det APK-en på nytt først.
 
+`-NoLaunch` installerer utan å opne hovudappen. Debug-aktiviteten `app.stova.ha.ControlPreviewActivity`
+viser kontrollerte smarthusdata utan kontoar, lagring eller verkelege tenestekall, og nektar å køyre på ekte TV.
+Start med `adb -s emulator-5580 shell am start -n app.stova.debug/app.stova.ha.ControlPreviewActivity --es screen climate`.
+`screen` kan vere `dashboard`, `empty`, `rooms`, `light`, `climate`, `media_player`, `weather` eller `sensor`.
+`LargeControlPreviewActivity` bruker skriftstorleik 2.0, også inne i dialogvindauga.
+`--ez reduceMotion true` slår av rørsle i prøva. Ingen av desse endrar systeminnstillingar eller profilen.
+
 ## Ekte tenester
 
 Hopp over `-Demo` og legg til kontoane i Stova: Innstillingar → Smarthus og kontoar. Jellyfin og

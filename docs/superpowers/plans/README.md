@@ -8,11 +8,12 @@ avkryssingsboksar i dei er inga bestilling.
 
 | Plan | Står att |
 |---|---|
-| [Rett TV-funn og smarthuspopup-ar](2026-10-29-tv-audit-fixes.md) | Steg 1–6 |
 | [Snarvegar i favorittrada: bibliotek og Home Assistant](2026-10-27-shortcut-tiles.md) | Spole-lenkja (eiga grein i Spole-repoet) |
 | [Eineståande launcher: finpuss, Heim etter tid, fart og huset](2026-10-26-outstanding-launcher.md) | Steg 2–9. I steg 4 er punkt 8 (snøggmenyen på Innstillingar) gjort. |
 
 ## Historikk
+
+- 2026-10-29: [Rett TV-funn og smarthuspopup-ar](2026-10-29-tv-audit-fixes.md), fullført og prøvd på emulator, Shield og Loftet. Sjå [verifisering og avvik](../../verification/2026-10-29-tv-audit-fixes.md).
 
 Dei fem første planane bygde Stova. Opne boksar i dei er utsette steg på Shield, signering og
 release, eller manuelle sjekklister som seinare planar har dekt.

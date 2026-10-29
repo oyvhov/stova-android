@@ -4,6 +4,7 @@ import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -26,16 +27,32 @@ internal fun suggestedType(item: HaCatalogItem): CardType? = cardTypesFor(item.e
     it in setOf(CardType.LIGHT, CardType.CLIMATE, CardType.MEDIA_PLAYER, CardType.TOGGLE, CardType.COVER, CardType.WEATHER, CardType.ENERGY_PRICE)
 }
 
+/** Shared with the enclosing dialog, which receives Back before its content does. */
+@Stable class RoomSetupState internal constructor() {
+    internal val pages=SheetPages()
+    internal var busy=false
+    internal fun back():Boolean = if(busy) true else pages.back()
+}
+
 @Composable internal fun RoomSetupContent(catalog: List<HaCatalogItem>, existing: Set<String>, busy: Boolean, failed: Boolean,
-    onAdd: (List<HaCatalogItem>) -> Unit, onBrowse: () -> Unit, onClose: () -> Unit) {
-    var room by remember { mutableStateOf<String?>(null) }
+    onAdd: (List<HaCatalogItem>) -> Unit, onBrowse: () -> Unit, onClose: () -> Unit,
+    state:RoomSetupState=remember {RoomSetupState()}) {
+    val room=state.pages.current
+    SideEffect {state.busy=busy}
     var selected by remember { mutableStateOf(emptySet<String>()) }
     val rooms = remember(catalog, existing) { catalog.mapNotNull { it.room?.takeIf(String::isNotBlank) }.distinct()
         .filter { roomSuggestions(catalog, it, existing).isNotEmpty() }.sortedWith(String.CASE_INSENSITIVE_ORDER) }
     val candidates = remember(catalog, room, existing) { room?.let { roomSuggestions(catalog, it, existing) }.orEmpty() }
     val first = remember { FocusRequester() }
-    LaunchedEffect(room, rooms) { withFrameNanos { }; runCatching { first.requestFocus() } }
-    fun back() { if (!busy) room = null }
+    val list=rememberLazyListState()
+    LaunchedEffect(room, rooms) {
+        val returning=state.pages.returning;state.pages.returning=null
+        list.scrollToItem(if(room==null && returning!=null) rooms.indexOf(returning).coerceAtLeast(0) else 0)
+        withFrameNanos { }
+        val restored=room==null && returning!=null && runCatching {state.pages.opener(returning).requestFocus()}.getOrDefault(false)
+        if(!restored) runCatching {first.requestFocus()}
+    }
+    fun back() { state.back() }
     Column(Modifier.fillMaxSize().onPreviewKeyEvent { event ->
         if (room != null && event.key in setOf(Key.Back,Key.Escape)) {
             if (event.type == KeyEventType.KeyUp) back()
@@ -46,13 +63,13 @@ internal fun suggestedType(item: HaCatalogItem): CardType? = cardTypesFor(item.e
             subtitle=room ?: stringResource(R.string.ha_room_intro))
         if (room != null) Text(stringResource(R.string.ha_room_review_hint),style=MaterialTheme.typography.bodyMedium,
             color=MaterialTheme.colorScheme.onSurfaceVariant)
-        LazyColumn(Modifier.weight(1f).fillMaxWidth().focusRequester(first).focusGroup(),
+        LazyColumn(Modifier.weight(1f).fillMaxWidth().focusRequester(first).focusGroup(),state=list,
             verticalArrangement=Arrangement.spacedBy(8.dp)) {
             if (room == null) {
                 items(rooms,key={it}) { name ->
                     SheetAction(name,StovaIcons.Home,{
-                        room=name;selected=roomSuggestions(catalog,name,existing).map {it.entity.id}.toSet()
-                    },value=stringResource(R.string.ha_room_count,roomSuggestions(catalog,name,existing).size),opensPage=true)
+                        state.pages.open(name);selected=roomSuggestions(catalog,name,existing).map {it.entity.id}.toSet()
+                    },Modifier.focusRequester(state.pages.opener(name)),value=stringResource(R.string.ha_room_count,roomSuggestions(catalog,name,existing).size),opensPage=true)
                 }
                 if(rooms.isEmpty()) item {Text(stringResource(R.string.ha_room_none),style=MaterialTheme.typography.bodyLarge)}
                 item {SheetAction(stringResource(R.string.ha_room_browse),StovaIcons.Apps,onBrowse,opensPage=true)}

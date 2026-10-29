@@ -20,7 +20,7 @@ import kotlin.math.roundToInt
 
 @Composable internal fun DeviceControls(dialog:CardDialog,entity:HaEntity?,socket:HaConnection,locked:Boolean,
     send:suspend (ServiceCall,String)->Boolean,sendScope:kotlinx.coroutines.CoroutineScope?=null,
-    pages:SheetPages=remember {SheetPages()}) {
+    pages:SheetPages=remember {SheetPages()},onStatus:(String?)->Unit={}) {
     val scope=rememberCoroutineScope()
     val latestSend by rememberUpdatedState(send)
     val latestEntity by rememberUpdatedState(entity)
@@ -29,7 +29,8 @@ import kotlin.math.roundToInt
         if(latestLocked || stateText(latestEntity)==StateText.Unavailable || dialog.entityId.startsWith("alarm_control_panel.")) false
         else latestSend(call,dialog.entityId)
     }}
-    SideEffect {state.live=entity}
+    val feedback=when {state.pending->stringResource(R.string.ha_v2_pending);state.failed->stringResource(R.string.ha_v2_failed);else->null}
+    SideEffect {state.live=entity;onStatus(feedback)}
     DisposableEffect(state) {onDispose {state.close()}}
     val shown=state.shown
     if(shown==null) {CardValue(stringResource(R.string.ha_unavailable));return}
@@ -75,10 +76,6 @@ import kotlin.math.roundToInt
         }
         else -> CardValue(entityStateLabel(shown))
     }
-    // One line is always kept for the status, so sending a change never grows the panel.
-    Text(when {state.pending->stringResource(R.string.ha_v2_pending);state.failed->stringResource(R.string.ha_v2_failed);else->""},
-        style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant,
-        minLines=1,maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     when(dialog) {
         is CardDialog.Brightness -> {
             val modes=attrs.strings("supported_color_modes")

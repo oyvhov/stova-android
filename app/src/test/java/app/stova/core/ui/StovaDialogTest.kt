@@ -140,4 +140,16 @@ class StovaDialogTest {
         compose.waitForIdle()
         assertEquals(1, dismissed)
     }
+
+    @Test fun aPanelThatDisallowsBackCannotBeDismissedWithTheRemote() {
+        compose.setContent {StovaTheme(reduceMotion=true) {
+            StovaDialog({dismissed++},androidx.compose.ui.window.DialogProperties(dismissOnBackPress=false)) {
+                val first=remember {FocusRequester()}
+                LaunchedEffect(Unit) {first.requestFocus()}
+                StovaButton("Vent",{},Modifier.focusRequester(first))
+            }
+        }}
+        compose.onNodeWithText("Vent").performKeyInput {pressKey(androidx.compose.ui.input.key.Key.Back)}
+        assertEquals(0,dismissed)
+    }
 }

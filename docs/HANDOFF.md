@@ -1,3 +1,11 @@
+# TV-funn retta og nye smarthuspopup-ar på begge TV-ar
+2026-10-29: M2/M1/A1/A2/S1/S2/K1/K2/K3/U1/P1/Y2 er fullførte. Plan `2026-10-29-tv-audit-fixes.md`; resultat og avvik i `docs/verification/2026-10-29-tv-audit-fixes.md`. Ingen påbyrja implementering står att i denne bestillinga.
+Matte kontrollpanel med fast namn/rom og botn, store verdiar, volum først, eigne modus-/kjeldesider og fokusretur. Romvalet deler no Tilbake-handtering med dialogen; fysisk Loftet: kortforslag → same rom fokusert → uendra dashbord.
+Sluttkontroll: 43 relevante testar grøne, før det 36 panel/transport/design-testar grøne; fullrunde og den eine oppdaterte appmenytesten er presist førte i rapporten. Debug/TV-bygg og lint grøne (0 feil). Emulator-5580 prøvd med originale bilete, langt OK og skrift 2,0.
+Spole M1: `720979c` og dokumentasjon `a995546` i C:\JellyBin\reelstack-android, 73 testar grøne; signert beta26/163 installert på begge. Eitt Tilbake frå eksterne filmdetaljar går til same Stova-kort, fysisk prøvd på begge.
+Testavvik: agenten logga feilaktig ut Midttunet på Loftet, så gjenoppretta Øyvind via Quick Connect og kontrollerte konto, bilete, framdrift og retur; lokal konto-ID er ny. Tidleg HA-fråkopling forsvann ved ny inngang/installering; begge henta ferske data til slutt, årsaka er ikkje fastsett. Ingen ekte smarthuskommando eller filmavspeling; desse og barneprofil/TalkBack er ikkje fysisk verifiserte.
+Siste Stova-APK er hashkontrollert på begge, Heim-tenesta er aktiv og begge TV-ar er tilbake i dvale (Asleep/skjerm OFF). Lokalt biletegalleri: `.superpowers/audit-fixes-2026-10-29/index.html`. Ingen push/publisering. Ingen spørsmål blokkerer.
+
 # Gjennomgang av Stova på Shield og Loftet TV
 2026-10-29: Gjennomgått åtte hovudområde på begge ekte TV-ar; rapport i `docs/verification/2026-10-29-tv-audit.md`, 57 originale skjermbilete med notat i det lokale galleriet `.superpowers/audit-2026-10-29/index.html`.
 Viktigast: Loftet har gjentekne lange rammetider også ved siderulling (p95 97 ms); Shield 19 ms. Påviste visingsproblem: lys viser 0 % og 100 % samtidig, ikonførehandsvising klipt på begge; fleire konkrete forslag til fokus, menyar, kontoar og smarthuskontrollar.

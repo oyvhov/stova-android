@@ -42,12 +42,23 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
     COVERS(R.string.ha_group_covers,CardType.COVER), LOCKS(R.string.ha_group_locks,CardType.LOCK)
 }
 
-@Composable fun AddCardFlow(container:AppContainer,onDone:()->Unit) {
+@Composable fun AddCardDialog(container:AppContainer,onDone:()->Unit) {
     val cards by container.haRepository.cards.collectAsStateWithLifecycle()
-    AddCardFlow(container.haSocket,{entity,type->container.haRepository.add(entity,type)},onDone,cards.map {it.entityId}.toSet(),container.haRepository::loadRegistry)
+    AddCardDialog(container.haSocket,{entity,type->container.haRepository.add(entity,type)},onDone,cards.map {it.entityId}.toSet(),container.haRepository::loadRegistry)
 }
 
-@Composable fun AddCardFlow(connection:HaConnection,onAdd:suspend (HaEntity,CardType)->Unit,onDone:()->Unit,existing:Set<String> = emptySet(),registryLoader:suspend ()->HaRegistry? = { connection.registry() },roomFirst:Boolean=true) {
+@Composable internal fun AddCardDialog(connection:HaConnection,onAdd:suspend (HaEntity,CardType)->Unit,onDone:()->Unit,
+    existing:Set<String> = emptySet(),registryLoader:suspend ()->HaRegistry? = {connection.registry()}) {
+    val rooms=remember {RoomSetupState()}
+    StovaDialog(onDone,onBack=rooms::back) {
+        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(app.stova.core.theme.StovaLayout.TvSafeEdge)) {
+            AddCardFlow(connection,onAdd,onDone,existing,registryLoader,roomState=rooms)
+        }
+    }
+}
+
+@Composable fun AddCardFlow(connection:HaConnection,onAdd:suspend (HaEntity,CardType)->Unit,onDone:()->Unit,existing:Set<String> = emptySet(),registryLoader:suspend ()->HaRegistry? = { connection.registry() },roomFirst:Boolean=true,
+    roomState:RoomSetupState=remember {RoomSetupState()}) {
     androidx.lifecycle.compose.LifecycleResumeEffect(connection) {
         connection.hold()
         onPauseOrDispose { connection.release() }
@@ -99,7 +110,7 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
                     finally {adding=false}
                 }
             }
-        },onBrowse={rooms=false},onClose=onDone)
+        },onBrowse={rooms=false},onClose=onDone,state=roomState)
         return
     }
     val filtered=remember(catalog,query,group,showAll) {catalog.filter { item ->

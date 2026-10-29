@@ -38,7 +38,7 @@ class HaVerificationActivity:ComponentActivity() {
         val mode=intent.getStringExtra("mode") ?: "inspect"
         setContent {StovaTheme {
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-                profile?.let {p -> if(mode=="picker") Box(Modifier.fillMaxSize().padding(48.dp)) {AddCardFlow(container) {finish()}}
+                profile?.let {p -> if(mode=="picker") AddCardDialog(container) {finish()}
                     else SmartHomeScreen(container,p)
                 }
             }

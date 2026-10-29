@@ -146,7 +146,7 @@ class AppsScreenTest {
         assertTrue(tmp.root.resolve("p.json").readText().contains(banan.key))
     }
 
-    @Test fun openingHoldCannotChooseFavoriteButTheNextOkCan() {
+    @Test fun openingHoldCannotLaunchTheAppButTheNextOkCan() {
         val profiles = profiles()
         val adult = runBlocking { profiles.create("A", AvatarColor.LIME, false) }
         val catalog = FakeAppCatalog(listOf(banan))
@@ -163,12 +163,13 @@ class AppsScreenTest {
         }
         ok(android.view.KeyEvent.ACTION_DOWN, repeat = 4)
         ok(android.view.KeyEvent.ACTION_UP)
-        compose.onNodeWithText("Legg til i favorittar").assertIsDisplayed()
+        compose.onNodeWithText("Opne").assertIsDisplayed()
         assertTrue(runBlocking { profiles.current().profiles.first().apps.favorites.isEmpty() })
         assertTrue(catalog.launched.isEmpty())
         ok(android.view.KeyEvent.ACTION_DOWN)
         ok(android.view.KeyEvent.ACTION_UP)
-        compose.waitUntil(5_000) { runBlocking { profiles.current().profiles.first().apps.favorites == listOf(banan.key) } }
+        compose.waitUntil(5_000) { catalog.launched == listOf(banan) }
+        assertTrue(runBlocking { profiles.current().profiles.first().apps.favorites.isEmpty() })
         compose.onNodeWithText("Legg til i favorittar").assertDoesNotExist()
     }
 

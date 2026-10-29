@@ -108,7 +108,7 @@ private fun StovaOverlay(
         AnimatedVisibility(visible, enter = fadeIn(motion.enter()), exit = fadeOut(motion.exit()), label = "dialog") {
             Box(Modifier.fillMaxSize().onPreviewKeyEvent { event ->
                 // A panel with pages answers Back itself, one page at a time, before the window sees it.
-                if (event.key in backKeys) {
+                if (properties.dismissOnBackPress && event.key in backKeys) {
                     if (event.type == KeyEventType.KeyUp && !back()) close()
                     true
                 } else false

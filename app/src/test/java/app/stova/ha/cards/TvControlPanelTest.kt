@@ -61,4 +61,29 @@ class TvControlPanelTest {
         compose.onNodeWithText("Radio").assertDoesNotExist()
         assertTrue(calls.isEmpty())
     }
+
+    @Test fun bothClimateChoicesFitAboveTheFixedFooterAtNormalTextSize() {
+        panel(CardDialog.Climate("climate.a"),"heat","""{"current_temperature":23.5,"temperature":21,"hvac_modes":["off","heat"],"preset_modes":["none","quiet"]}""")
+        val presets=compose.onNode(hasText("Førehandsval") and hasClickAction()).getUnclippedBoundsInRoot()
+        val footer=compose.onNodeWithText("Lukk").getUnclippedBoundsInRoot()
+        assertTrue("preset choice is hidden below the footer",presets.bottom<=footer.top)
+    }
+
+    @Test fun energySummaryCanBeReachedByRemoteWhileCloseStaysVisible() {
+        panel(CardDialog.Graph("sensor.price",true),"0.84","""{"unit_of_measurement":"kr/kWh","today":[0.7,0.8,1.2,0.9]}""")
+        compose.onNodeWithTag("price-summary").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        compose.onNodeWithTag("price-summary").assertIsFocused().assertIsDisplayed()
+        compose.onNodeWithText("Lukk").assertIsDisplayed()
+        assertTrue(calls.isEmpty())
+    }
+
+    @Test @Config(fontScale=2f) fun largeTextCanReadTheRoomThenReachTheTargetWithDown() {
+        panel(CardDialog.Climate("climate.a"),"heat","""{"current_temperature":23.5,"temperature":21,"hvac_modes":["off","heat"],"preset_modes":["none","quiet"]}""")
+        compose.onNode(hasText("Romtemperatur") and isFocusable()).assertIsFocused().assertIsDisplayed()
+            .performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithTag("slider-temperature").assertIsFocused()
+        compose.onNodeWithText("Eining").assertIsDisplayed()
+        compose.onNodeWithText("Lukk").assertIsDisplayed()
+        assertTrue(calls.isEmpty())
+    }
 }

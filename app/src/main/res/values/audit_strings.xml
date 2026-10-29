@@ -34,4 +34,6 @@
     <string name="ha_preset_comfort">Komfort</string>
     <string name="ha_preset_sleep">Natt</string>
     <string name="ha_weather_low">Låg %1$s°</string>
+    <string name="ha_panel_choice_hint">Piltastar: vel · OK: stadfest</string>
+    <string name="ha_panel_browse_hint">Piltastar: utforsk · Tilbake: lukk</string>
 </resources>

@@ -17,7 +17,8 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 | Smarthus-skjermen | `ha/ui/SmartHomeScreen.kt` | Livssyklus, datakopling og kontrollpanel |
 | Smarthus-layout | `ha/ui/SmartHomeContent.kt` | Kontrollerte kort, fokus og grupper |
 | Smarthus-geometri og val | `ha/cards/CardPacking.kt`, `ha/cards/CardFocusNavigation.kt`, `ha/ui/DashboardLayoutDialog.kt` | Same dynamiske pakking for teikning/piler, profillagra tettleik og gruppering |
-| Legg til Smarthus-kort | `ha/ui/AddCardFlow.kt` | Einingskatalog, filtrering og fokus mellom søk, kategoriar og einingar |
+| Legg til Smarthus-kort | `ha/ui/AddCardFlow.kt`, `ha/ui/RoomSetupContent.kt` | `AddCardDialog` deler romnavigasjonen med innhaldet: Tilbake går frå kortforslaga til det fokuserte rommet, så ut. Rom først, gjennomgått utval før lagring; full einingskatalog via «Finn éi eining» |
+| Smarthus-kontrollpanel | `ha/cards/CardDialogs.kt`, `DeviceControls.kt`, `DeviceControlPages.kt`, `PanelSlider.kt` | Fast namn/rom og botn, rullbart innhald, korrekt hovudverdi og eigne modus-/kjeldesider med fokusretur |
 | Innstillingar | `settings/SettingsScreen.kt`, `settings/SettingsLayout.kt`, `settings/SettingsNavigation.kt` | Datakopling, fokus mellom meny/innhald og fast overskrift; seksjonane med merke og ei forklarande line |
 | Heim i lite format | `settings/HomeMiniature.kt`, `home/HomeContent.kt` (`LocalHomePreview`), `core/ui/FocusOutline.kt` (`LocalDrawnFocus`) | Den ekte Heim med utkastet, skalert med tettleiken, ved sida av tittelen på kvar Utsjånad-side; tek aldri fokus og teiknar startkortet som fokusert |
 | Ikonprøve | `settings/AppIconPreview.kt` | Verkelege appar med utkastet til utsjånad under Ikon |
@@ -48,8 +49,8 @@ namna i globale val og radval; overskriftsstorleik har ei eiga liste. `artworkDi
 formatproporsjonane, også i Appar-rutenettet. Watch Next avgrensar undertittelen til kunstbreidda.
 `RowStyle.cardTitles` lèt ei rad ha eigne namn under korta (null følgjer profilen); `showsCardTitles`
 blir lese av kort, Watch Next og radgeometrien. Appar-sida følgjer alltid profilvalet. Heim har ingen radteljar.
-Toppfeltet har ingen Appar-knapp: Appar ligg i menyen i Innstillingar (ved Android), og `MainShell`
-sender Tilbake frå Appar dit når sida vart opna derifrå. Sesongmerket står ved venstre kant.
+Favorittrada sluttar med «Alle appar». Appar finst også i menyen i Innstillingar (ved Android), og
+`MainShell` sender Tilbake til sida som opna Appar. Toppfeltet har ingen Appar-knapp. Sesongmerket står ved venstre kant.
 «Rullande oversikt» opnar med heroen over første rad (same geometri som éi rad). `HomeScrollShift`
 gir bakgrunnen rulleframdrifta; berre `graphicsLayer`/teikning les ho. Innstillingsseksjonane lenkjer
 ikkje til kvarandre; berre undersider (t.d. ein annan profil sin utsjånad) kan lenkje vidare.
@@ -125,6 +126,16 @@ hopp. Eitt rullejobb eig overgangen; nye piler kan snu eller velje neste logiske
 (media, appar, rader, Smarthus-kort) går gjennom `StovaSheet`: eit panel frå høgre kant i full høgd med kunst, store
 hovudhandlingar og rolege `SheetAction`-rader. Undersider (`SheetPages`) byter innhald i same panel; Tilbake går ei side
 om gongen og fokuserer rada som opna sida. Begge deler same vindauge og same OK-vakt (`StovaOverlay`).
+Appmenyen bruker kompakt kunst og «Opne» først; mediemenyen bruker framdrift for «Hald fram» og attståande minutt.
+Smarthus har si eiga mørke flate med diskret vêrtoning, utan filmkunst. Fokuserte Heim-brikker viser einingsnamnet.
+Dei store kontrollpanela bevarer namn og Lukk/Tilbake medan berre innhaldet rullar. Lysstyrke, måltemperatur og
+volum får første fokus; modus, førehandsval, lyskvalitet og kjelder er eigne `SheetPages`.
+Lys som er av har 0 % i begge kontrollstorleikane; ukjend lysstyrke på eit påslått lys blir ikkje dikta opp.
+TV-kjelde i mediaspelaren viser volum og kjeldeval, utan transportknappar. Andre kjelder følgjer `supported_features`.
+Klima skil romtemperatur frå måltemperatur; kjende førehandsval blir omsette, medan tenesta får originalnamna.
+Vêrprognosen er ei horisontal rad som kan fokuserast og rullast med fjernkontrollen.
+Ikonførehandsvisinga står i overskriftsfeltet ved vanleg tekststorleik. Mediekontoflyten erstattar kontooversikta
+og Home Assistant-oppsettet medan ho er open. ADB-oppsettet for Heim-knappen ligg under «Avansert oppsett».
 Felles fokus er svakt løft, 2,5 % forstørring på kunst og 1,5 % på kontrollar, og lysare flate.
 Fokus teiknar ingen skugge eller glød; transparent kunst får inga ekstra flate.
 Gamalt standardval `RING` blir lese som `LIFT`; ei synleg ramme krev valet `OUTLINE` eller

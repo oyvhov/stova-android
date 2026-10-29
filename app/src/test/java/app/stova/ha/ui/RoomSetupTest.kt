@@ -57,4 +57,20 @@ class RoomSetupTest {
         compose.waitUntil(5_000) {done==1}
         assertEquals(listOf("light.a"),added);assertEquals(0,socket.calls)
     }
+
+    @Test fun backFromRoomReviewReturnsToTheSelectedRoomBeforeClosingTheDialog() {
+        var closed=0
+        val socket=FakeHaConnection().apply {
+            allStates=listOf("light.a","light.b").map {HaEntity(it,"on",JsonObject(emptyMap()),0,0)}
+            registryValue=HaRegistry(mapOf("light.a" to HaEntityInfo("Lampa A","Arkja"),"light.b" to HaEntityInfo("Lampa B","Loftet")))
+        }
+        compose.setContent {StovaTheme(reduceMotion=true) {AddCardDialog(socket,{_,_->fail("Back must not add a card")},{closed++})}}
+        compose.waitUntil(5_000) {compose.onAllNodesWithText("Vel rom").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNode(hasText("Loftet") and hasClickAction()).performClick()
+        compose.onNodeWithText("Lampa B").assertIsDisplayed().performKeyInput {pressKey(Key.Back)}
+        assertEquals("First Back must stay in the dialog",0,closed)
+        compose.onNode(hasText("Loftet") and hasClickAction()).assertIsFocused().performKeyInput {pressKey(Key.Back)}
+        assertEquals(1,closed)
+        assertEquals(0,socket.calls)
+    }
 }

@@ -2,6 +2,8 @@ package app.stova.ha.cards
 
 import androidx.compose.runtime.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
@@ -10,12 +12,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.ha.HaEntity
 import app.stova.ha.text
 import app.stova.core.theme.StovaColors
+import app.stova.core.ui.focusOutline
 import java.time.*
 
 @Composable fun EnergyPriceCard(entity:HaEntity,zone:ZoneId=ZoneId.systemDefault()) {
@@ -28,7 +33,7 @@ import java.time.*
 }
 
 @Composable fun PriceChart(entity:HaEntity,tomorrow:Boolean=false,modifier:Modifier=Modifier,
-    quarters:Boolean=false,detailed:Boolean=true,zone:ZoneId=ZoneId.systemDefault()) {
+    quarters:Boolean=false,detailed:Boolean=true,zone:ZoneId=ZoneId.systemDefault(),focusDetails:Boolean=false) {
     val now by rememberResumedNow(60_000)
     val date=Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
     val points=remember(entity,tomorrow,quarters,zone,date) {
@@ -38,7 +43,7 @@ import java.time.*
     if(points.isEmpty()) {CardDetail(stringResource(if(tomorrow) R.string.ha_v2_no_tomorrow else R.string.ha_no_history));return}
     val locale=LocalConfiguration.current.locales[0]
     val unit=entity.attributes.text("unit_of_measurement").orEmpty()
-    val accent=MaterialTheme.colorScheme.primary
+    val accent=MaterialTheme.colorScheme.onSurface
     val lowest=points.minBy {it.value};val highest=points.maxBy {it.value}
     val day=if(tomorrow) date.plusDays(1) else date
     val begin=day.atStartOfDay(zone).toInstant().toEpochMilli()
@@ -76,9 +81,12 @@ import java.time.*
                 }
             }
         }
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
-            Column {CardDetail(stringResource(R.string.ha_v2_cheapest,priceWindow(lowest,zone,quarters)));CardDetail("${formatNumber(lowest.value,locale)} $unit")}
-            Column {CardDetail(stringResource(R.string.ha_v2_dearest,priceWindow(highest,zone,quarters)));CardDetail("${formatNumber(highest.value,locale)} $unit")}
+        val focus=remember {MutableInteractionSource()}
+        Row(Modifier.fillMaxWidth().then(if(focusDetails) Modifier.testTag("price-summary").semantics(mergeDescendants=true) {}
+            .focusOutline(focus,MaterialTheme.shapes.medium).focusable(interactionSource=focus).padding(8.dp) else Modifier),
+            horizontalArrangement=Arrangement.spacedBy(24.dp)) {
+            Column(Modifier.weight(1f)) {CardDetail(stringResource(R.string.ha_v2_cheapest,priceWindow(lowest,zone,quarters)));CardDetail("${formatNumber(lowest.value,locale)} $unit")}
+            Column(Modifier.weight(1f),horizontalAlignment=androidx.compose.ui.Alignment.End) {CardDetail(stringResource(R.string.ha_v2_dearest,priceWindow(highest,zone,quarters)));CardDetail("${formatNumber(highest.value,locale)} $unit")}
         }
     }
 }

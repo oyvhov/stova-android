@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.ui.*
@@ -24,7 +26,11 @@ internal fun lightLevel(entity:HaEntity):Double? = if(entity.state=="off") 0.0 e
     entity.attributes.number("brightness")?.let {(it/255*100).roundToInt().coerceIn(0,100).toDouble()}
 
 @Composable internal fun PanelReading(icon:ImageVector,label:String,value:String,detail:String?=null) {
-    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(20.dp)) {
+    val source=remember {MutableInteractionSource()}
+    // Large text scrolls the reading and control separately. It must remain reachable with Up.
+    val readingFocus=if(LocalDensity.current.fontScale>=1.5f) Modifier.semantics(mergeDescendants=true) {}
+        .focusOutline(source,MaterialTheme.shapes.medium).focusable(interactionSource=source) else Modifier
+    Row(Modifier.fillMaxWidth().then(readingFocus),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(20.dp)) {
         Icon(icon,null,Modifier.size(56.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
         Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(2.dp)) {
             Text(label,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
