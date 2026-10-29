@@ -1,4 +1,8 @@
 <resources>
     <string name="item_resume">Hald fram</string>
     <string name="item_resume_remaining">Hald fram · %1$d min att</string>
+    <string name="account_add_media">Legg til mediekonto</string>
+    <string name="account_add_media_hint">Vel Jellyfin- eller Emby-tenaren din, eller skriv adressa.</string>
+    <string name="account_sign_out_named">Logg ut av %1$s</string>
+    <string name="hb_advanced">Avansert oppsett</string>
 </resources>

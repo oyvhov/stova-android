@@ -66,14 +66,25 @@ fun HomeButtonSettings(container: AppContainer) {
             StovaButton(stringResource(R.string.hb_crash_reset), { scope.launch { CrashGuard.reset(container.crashGuard) } }, RowInset, primary = true)
         }
     }
-    SettingsGroup(stringResource(R.string.hb_adb_title)) {
+    AdvancedHomeButtonSettings(context.packageName)
+}
+
+/** Optional shell setup lives in a separate panel, below the everyday Home controls. */
+@Composable internal fun AdvancedHomeButtonSettings(packageName: String) {
+    var open by remember { mutableStateOf(false) }
+    StovaButton(stringResource(R.string.hb_advanced), { open = true }, modifier = RowInset, quiet = true)
+    if (open) app.stova.core.ui.StovaSheet({open=false}) {
+        app.stova.core.ui.SheetHeader(stringResource(R.string.hb_advanced), icon=app.stova.core.ui.StovaIcons.Gear)
+        SettingsGroup(stringResource(R.string.hb_adb_title)) {
         Text(
-            stringResource(R.string.hb_adb_body, context.packageName),
+            stringResource(R.string.hb_adb_body, packageName),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = RowInset,
         )
         Text(stringResource(R.string.hb_warning), style = MaterialTheme.typography.bodyMedium, color = StovaColors.Caution, modifier = RowInset)
+        }
+        StovaButton(stringResource(R.string.ha_close),{open=false})
     }
 }
 

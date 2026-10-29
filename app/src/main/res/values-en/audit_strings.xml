@@ -1,4 +1,8 @@
 <resources>
     <string name="item_resume">Resume</string>
     <string name="item_resume_remaining">Resume · %1$d min left</string>
+    <string name="account_add_media">Add media account</string>
+    <string name="account_add_media_hint">Choose your Jellyfin or Emby server, or enter its address.</string>
+    <string name="account_sign_out_named">Sign out of %1$s</string>
+    <string name="hb_advanced">Advanced setup</string>
 </resources>

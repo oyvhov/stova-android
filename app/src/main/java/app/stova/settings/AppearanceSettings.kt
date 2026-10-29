@@ -86,7 +86,11 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
     val start by (home?.initialFocus ?: noStart).collectAsStateWithLifecycle()
     val household by container.household.data.collectAsStateWithLifecycle(initialValue = null)
     val smartHome = household?.haBaseUrl != null
-    val miniature: @Composable (AppearanceCategory) -> Unit = {
+    val miniature: @Composable (AppearanceCategory) -> Unit = { category ->
+        if (category == AppearanceCategory.ICONS) androidx.compose.foundation.layout.Box(
+            Modifier.width(app.stova.core.theme.StovaLayout.SettingsPreviewWidth)) {
+            AppIconPreview(draft,(previewApps.favorites + previewApps.all).distinctBy { it.key },container.appArt,profile.apps.iconOverrides)
+        } else {
         // Chips are asked for only when Home Assistant is set up.
         app.stova.home.HomeChips(container.haRepository.takeIf { smartHome }) { chips ->
             androidx.compose.runtime.key(profile.id, draft.backgroundFilter, draft.backgroundSource, draft.fixedBackground, draft.spotlightSource) {
@@ -94,10 +98,9 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
                     Modifier.width(app.stova.core.theme.StovaLayout.SettingsPreviewWidth), smartHome, chips)
             }
         }
+        }
     }
     AppearanceMenu(scrollable = scrollable, preview = miniature) { category, firstControl ->
-        if (category == AppearanceCategory.ICONS) AppIconPreview(draft,
-            (previewApps.favorites + previewApps.all).distinctBy { it.key }, container.appArt, profile.apps.iconOverrides)
         contents(category, firstControl)
     }
     if(pickingLibraries) BackgroundLibraryPicker(draft.backgroundFilter.libraries,{container.media.backgroundLibraries(profile.id)},

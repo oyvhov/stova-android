@@ -47,11 +47,14 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
     var section by rememberSaveable { mutableStateOf(SettingsSection.APPEARANCE) }
     val context = androidx.compose.ui.platform.LocalContext.current
     SettingsLayout(section.merged, { section = it }, onOpenApps) { shown, _ ->
-        if (shown != SettingsSection.APPEARANCE) PageHeader(stringResource(shown.pageTitle), shown.icon,
+        if (shown != SettingsSection.APPEARANCE && shown != SettingsSection.SMART_HOME) PageHeader(stringResource(shown.pageTitle), shown.icon,
             subtitle = stringResource(shown.hint), tint = shown.tone)
         when (shown) {
             SettingsSection.PROFILE -> ProfileSettings(container, profile)
-            SettingsSection.SMART_HOME -> { app.stova.ha.ui.HaSettings(container); AccountsSettings(profile, container) }
+            SettingsSection.SMART_HOME -> AccountsSettings(profile, container, overview = {
+                PageHeader(stringResource(shown.pageTitle), shown.icon, subtitle = stringResource(shown.hint), tint = shown.tone)
+                app.stova.ha.ui.HaSettings(container)
+            })
             SettingsSection.HOME_BUTTON -> {
                 HomeButtonSettings(container)
                 AboutSettings()

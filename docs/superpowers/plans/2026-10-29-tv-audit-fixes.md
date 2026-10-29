@@ -6,7 +6,7 @@ Utgangspunkt: `docs/verification/2026-10-29-tv-audit.md` og skjermbileta frå be
 Ingen installasjon på ekte TV er bestilt. Loftet skal halde fram med å sove.
 
 - [x] 1. M2/A1/A2: framdrift i mediemenyen, Alle appar frå favorittrada, kompakt appmeny med Opne først. Test etikett, fokus og callback før implementering.
-- [ ] 2. U1/P1/Y2: heil ikonprøve ved inngang, eiga mediekontoflyt og teknisk Heim-oppsett under Avansert. Test fokus/vising før implementering.
+- [x] 2. U1/P1/Y2: heil ikonprøve ved inngang, eiga mediekontoflyt og teknisk Heim-oppsett under Avansert. Test fokus/vising før implementering.
 - [ ] 3. S1/S2: rombasert start med gjennomgått utval før lagring, roleg sjølvstendig Smarthus-bakgrunn og namn på fokuserte brikker. Test romfilter, eksisterande kort og tomtilstand.
 - [ ] 4. K1/K2/K3 og popupdesign: fast tittel/botn, stor korrekt hovudverdi, presise klimaetikettar, volum først og eigne kjeldeval, kompakt vêr/straum. Bevar lesemodus, stadfesting av lås/port, sending og fokusretur. Test med D-pad og kontrollerte data.
 - [ ] 5. M1: retur frå eksternt opna filmdetaljar i Spole til launcheren, med vern av vanleg Spole-navigasjon og nested detaljar. Test i Spole-repoet etter reglane der.

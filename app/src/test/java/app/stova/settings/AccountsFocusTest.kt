@@ -50,8 +50,9 @@ class AccountsFocusTest {
             StovaTheme(reduceMotion = true) {
                 SettingsLayout(selected, { selected = it }) { section, _ ->
                     if (section == SettingsSection.SMART_HOME) {
-                        HaSettingsContent(HaStatus.NOT_CONFIGURED, null, emptyList(), {}, {}, { _, _ -> })
-                        AccountsContent(emptyList(), onSignOut = {}) { done ->
+                        AccountsContent(emptyList(), onSignOut = {}, overview = {
+                            HaSettingsContent(HaStatus.NOT_CONFIGURED, null, emptyList(), {}, {}, { _, _ -> })
+                        }) { done ->
                             AddAccountContent("p", accounts, ServerProbe(client), MediaAuth(client, ClientIdentity("d", "i", "v")), emptyFlow(), done)
                         }
                     } else StovaButton("${section.name} 0", {})
@@ -77,6 +78,8 @@ class AccountsFocusTest {
         render()
         openSignIn()
         compose.onNodeWithText("Skriv adresse").assertIsFocused()
+        compose.onNodeWithText("Kople til").assertDoesNotExist()
+        compose.onNodeWithText("Legg til mediekonto").assertIsDisplayed()
         tab("Smarthus og kontoar").assertIsSelected()
 
         press(Key.DirectionCenter)
