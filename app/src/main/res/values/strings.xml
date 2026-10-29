@@ -690,4 +690,6 @@
         <item quantity="one">%1$d eining para</item>
         <item quantity="other">%1$d einingar para</item>
     </plurals>
+    <string name="row_favorites">Favorittane dine</string>
+    <string name="row_most_played">Det du ser mest</string>
 </resources>

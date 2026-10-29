@@ -11,6 +11,8 @@ class HomeRowKeyTest {
     @Test fun keysHaveStableWireNames() {
         assertEquals("continue:j1", j.value); assertEquals("latest_movies:j1", m.value)
         assertEquals("latest_series:j1", HomeRowKey.latestSeries("j1").value)
+        assertEquals("favorites:j1", HomeRowKey.favorites("j1").value)
+        assertEquals("most_played:j1", HomeRowKey.mostPlayed("j1").value)
         assertEquals("apps", HomeRowKey.APPS.value); assertEquals("watch_next", HomeRowKey.WATCH_NEXT.value)
     }
 

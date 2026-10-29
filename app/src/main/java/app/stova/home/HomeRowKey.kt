@@ -14,6 +14,8 @@ value class HomeRowKey(val value: String) {
         fun continueWatching(accountId: String) = HomeRowKey("continue:$accountId")
         fun latestMovies(accountId: String) = HomeRowKey("latest_movies:$accountId")
         fun latestSeries(accountId: String) = HomeRowKey("latest_series:$accountId")
+        fun favorites(accountId: String) = HomeRowKey("favorites:$accountId")
+        fun mostPlayed(accountId: String) = HomeRowKey("most_played:$accountId")
     }
 }
 

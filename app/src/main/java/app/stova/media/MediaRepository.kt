@@ -31,11 +31,12 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
  private data class BackgroundPoolKey(val source:SpotlightSource,val filter:BackgroundFilter,val accounts:List<String>)
  private class Slot(val store: JsonFileStore<MediaSnapshot>) {
   var season: Season = Season.NONE
+  var kid: Boolean = false
   val mutex=Mutex();val rows=MutableStateFlow<List<HomeRowUi.Media>?>(null)
   val spotlight=MutableStateFlow<List<SpotlightEntry>>(emptyList());var spotlightAt=0L
   var seasonalAt=0L;var seasonalFor: Season = Season.NONE
   /** The last attempt, and the season and accounts it was for: a new account or season is never made to wait. */
-  var refreshedAt=0L;var refreshedFor: Pair<Season,List<String>>?=null
+  var refreshedAt=0L;var refreshedFor: Triple<Season,List<String>,Boolean>?=null
   var refreshFailed=false
   var pictureAt=0L
   val playbackRevision=AtomicLong();var refreshedPlaybackRevision=0L
@@ -59,13 +60,16 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    }
   };return slot
  }
- fun rows(profileId:String, season: Season = Season.NONE): Flow<List<HomeRowUi.Media>> = flow {
+ fun rows(profileId:String, season: Season = Season.NONE, kid:Boolean=false): Flow<List<HomeRowUi.Media>> = flow {
   val slot=loaded(profileId)
   slot.season=season
-  emit(visible(slot.rows.value.orEmpty(),accounts.forProfile(profileId).first()).filter { it.kind.season == Season.NONE || it.kind.season == season })
+  slot.kid=kid
+  fun selected(rows:List<HomeRowUi.Media>,active:List<MediaAccount>) = orderedRows(visible(rows,active)
+   .filter { (kid || !it.kind.kidsOnly) && (it.kind.season==Season.NONE || it.kind.season==season) },kid)
+  emit(selected(slot.rows.value.orEmpty(),accounts.forProfile(profileId).first()))
   // Off the main thread: parsing and the snapshot write must never stall the screen.
   val refresh=scope.launch(io) { refresh(profileId) }
-  try { emitAll(combine(slot.rows.filterNotNull(),accounts.forProfile(profileId)) { rows,active -> visible(rows,active).filter { it.kind.season == Season.NONE || it.kind.season == season } }) }
+  try { emitAll(combine(slot.rows.filterNotNull(),accounts.forProfile(profileId)) { rows,active -> selected(rows,active) }) }
   finally { refresh.cancel() }
  }.distinctUntilChanged()
  /** The hero's titles; served from the snapshot at once, refreshed alongside the rows. */
@@ -220,6 +224,16 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   val valid=active.filterNot { it.needsSignIn }.associateBy { it.id }
   return rows.mapNotNull { row -> valid[row.account.id]?.let { row.copy(account=it) } }.filter { it.items.isNotEmpty() }
  }
+ private fun orderedRows(rows:List<HomeRowUi.Media>,kid:Boolean): List<HomeRowUi.Media> = if(!kid) rows else rows.sortedBy { row ->
+  when(row.kind) {
+   MediaRowKind.CONTINUE -> 0
+   MediaRowKind.FAVORITES -> 1
+   MediaRowKind.HALLOWEEN,MediaRowKind.CHRISTMAS -> 2
+   MediaRowKind.MOST_PLAYED -> 3
+   MediaRowKind.LATEST_MOVIES -> 4
+   MediaRowKind.LATEST_SERIES -> 5
+  }
+ }
  private suspend fun <T> orElse(fallback: T,block: suspend () -> T): T = try { block() } catch(e: CancellationException) { throw e } catch(_: Exception) { fallback }
  /** Spole may change progress even when opened on its own home. Keep invalidation profile-scoped. */
  fun playbackOpened(profileId:String) { slot(profileId).playbackRevision.incrementAndGet() }
@@ -227,8 +241,9 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
   val slot=loaded(profileId)
   slot.mutex.withLock {
    val season=slot.season
+   val kid=slot.kid
    val list=accounts.forProfile(profileId).first().filterNot { it.needsSignIn }.sortedWith(compareBy({it.kind},{it.serverName}))
-   val now=clock();val key=season to list.map { it.id }
+   val now=clock();val key=Triple(season,list.map { it.id },kid)
    val playbackRevision=slot.playbackRevision.get()
    // A trip to the player can change progress before the ordinary five-minute interval expires.
    val refreshAge=if(slot.refreshFailed) minOf(minAgeMillis,FAILED_REFRESH_RETRY_MILLIS) else minAgeMillis
@@ -244,12 +259,23 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    if(pictureDue) slot.pictureAt=now
    val today=Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate()
    val fetched=supervisorScope { list.map { account -> async {
-    val cached=slot.rows.value.orEmpty().filter { it.account.id==account.id }.map { it.copy(offline=true) }
+    val cached=slot.rows.value.orEmpty().filter { it.account.id==account.id && (kid || !it.kind.kidsOnly) }.map { it.copy(offline=true) }
     val cachedSpotlight=slot.spotlight.value.filter { it.account.id==account.id }
     try {
      val client=clientFor(account) ?: throw MediaError.Unauthorized()
      if(pictureDue) scope.launch(io) { withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(Unit) { accounts.setImageTag(account.id,client.userImageTag()) } } }
      coroutineScope {
+      // Each optional row has its own failure boundary, including 401 and timeouts.
+      val kidsRows=async {
+       if(!kid) emptyList() else listOf(
+        Triple(Endpoint.FAVORITES,MediaRowKind.FAVORITES,HomeRowKey.favorites(account.id)),
+        Triple(Endpoint.MOST_PLAYED,MediaRowKind.MOST_PLAYED,HomeRowKey.mostPlayed(account.id))
+       ).map { (endpoint,kind,key) -> async {
+        withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(null) {
+         HomeRowUi.Media(key,account,kind,client.latest(endpoint).take(20),false)
+        } } ?: cached.firstOrNull { it.kind==kind }
+       } }.awaitAll().filterNotNull()
+      }
       // Extras run beside the rows under their own limits: a slow whole-library query must never
       // turn the account's rows "Offline".
       val seasonalRows=async {
@@ -280,7 +306,7 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
         HomeRowUi.Media(HomeRowKey.latestSeries(account.id),account,MediaRowKind.LATEST_SERIES,series.await(),false))
       }
       val spotlight=spotlightJob.await();val (seasonal,seasonalOk)=seasonalRows.await()
-      Fetched(((core ?: cached.filter { it.kind.season==Season.NONE })+seasonal).filter { it.items.isNotEmpty() },
+      Fetched(((core ?: cached.filter { it.kind.season==Season.NONE && !it.kind.kidsOnly })+seasonal+kidsRows.await()).filter { it.items.isNotEmpty() },
        spotlight ?: cachedSpotlight,spotlight!=null,seasonalOk,rowsOk=core!=null)
      }
     } catch(_: MediaError.Unauthorized) { accounts.markNeedsSignIn(account.id);Fetched(emptyList(),emptyList(),true) }
@@ -288,7 +314,7 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
       catch(_: Exception) { Fetched(cached,cachedSpotlight,false,rowsOk=false) }
    } }.awaitAll() }
    val active=accounts.forProfile(profileId).first()
-   val current=visible(fetched.flatMap { it.rows },active)
+   val current=orderedRows(visible(fetched.flatMap { it.rows },active),kid)
    val valid=active.filterNot { it.needsSignIn }.mapTo(mutableSetOf()) { it.id }
    val spotlight=fetched.flatMap { it.spotlight }.filter { it.account.id in valid }.sortedByDescending { it.newSeason }
    if(spotlightDue && fetched.all { it.spotlightOk }) slot.spotlightAt=now

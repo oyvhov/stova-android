@@ -29,9 +29,12 @@ fun backgroundCandidates(kind: ServerKind, userId: String, source: SpotlightSour
  val selected=ids?.let { "&Ids="+it.joinToString(",") { id->URLEncoder.encode(id,"UTF-8") } }.orEmpty()
  return libraryCandidates(kind,userId,"IncludeItemTypes=$types&Recursive=true&ImageTypes=Backdrop$parent$favorites$search$selected&SortBy=${if(query==null) "Random" else "SortName"}&$ITEM_FIELDS&Limit=120")
 }
-enum class Endpoint { RESUME, NEXT_UP, LATEST_MOVIES, LATEST_SERIES, SPOTLIGHT, NEW_SEASONS, HALLOWEEN_TAG, HALLOWEEN_GENRE, CHRISTMAS_TAG }
-const val ITEM_FIELDS = "Fields=Overview,ProductionYear,RunTimeTicks,OfficialRating,CommunityRating,CriticRating,Genres,ParentId,SeriesId&EnableUserData=true&EnableImageTypes=Primary,Backdrop,Logo,Thumb&ImageTypeLimit=1"
+enum class Endpoint { RESUME, NEXT_UP, LATEST_MOVIES, LATEST_SERIES, SPOTLIGHT, NEW_SEASONS, HALLOWEEN_TAG, HALLOWEEN_GENRE, CHRISTMAS_TAG, FAVORITES, MOST_PLAYED }
+const val ITEM_FIELDS = "Fields=Overview,ProductionYear,RunTimeTicks,OfficialRating,CommunityRating,CriticRating,Genres,ParentId,SeriesId,DateCreated&EnableUserData=true&EnableImageTypes=Primary,Backdrop,Logo,Thumb&ImageTypeLimit=1"
 const val ITEM_QUERY = "$ITEM_FIELDS&Limit=20"
+/** Small playback records, paged to include every episode before ranking series. Art is fetched for the winners only. */
+fun mostPlayedCandidates(kind: ServerKind, userId: String, startIndex: Int): List<String> = libraryCandidates(kind,userId,
+ "IncludeItemTypes=Movie,Episode&Recursive=true&Filters=IsPlayed&SortBy=SortName&SortOrder=Ascending&Fields=SeriesId&EnableUserData=true&EnableImages=false&EnableTotalRecordCount=true&StartIndex=$startIndex&Limit=200")
 /** Several known items in one request, such as the series behind new seasons. */
 fun idsCandidates(kind: ServerKind, userId: String, ids: List<String>): List<String> {
  val u=URLEncoder.encode(userId,"UTF-8");val list=ids.joinToString(",") { URLEncoder.encode(it,"UTF-8") }
@@ -40,9 +43,11 @@ fun idsCandidates(kind: ServerKind, userId: String, ids: List<String>): List<Str
 }
 fun endpointCandidates(kind: ServerKind, endpoint: Endpoint, userId: String): List<String> {
  val u=URLEncoder.encode(userId,"UTF-8")
+ if(endpoint==Endpoint.MOST_PLAYED) return mostPlayedCandidates(kind,userId,0)
  if(endpoint==Endpoint.NEXT_UP) return listOf("Shows/NextUp?UserId=$u&$ITEM_QUERY")
  // The whole library, not a shelf: films and series with art for the spotlight, and the newest seasons.
  val library=when(endpoint) {
+  Endpoint.FAVORITES -> "IncludeItemTypes=Movie,Series&Recursive=true&Filters=IsFavorite&SortBy=DatePlayed,DateCreated&SortOrder=Descending&$ITEM_QUERY"
   Endpoint.HALLOWEEN_TAG -> "IncludeItemTypes=Movie,Series&Recursive=true&Tags=halloween&$ITEM_QUERY"
   Endpoint.HALLOWEEN_GENRE -> "IncludeItemTypes=Movie,Series&Recursive=true&Genres=Horror%7CSkrekk&$ITEM_QUERY"
   Endpoint.CHRISTMAS_TAG -> "IncludeItemTypes=Movie,Series&Recursive=true&Tags=christmas&$ITEM_QUERY"

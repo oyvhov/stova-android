@@ -1,17 +1,21 @@
 package app.stova.media.net
 import app.stova.media.model.*
 import kotlinx.serialization.json.*
+import java.time.Clock
+import java.time.Duration
+import java.time.Instant
+import java.time.OffsetDateTime
 internal fun JsonObject.field(name: String): JsonElement? = entries.firstOrNull { it.key.equals(name, true) }?.value
 internal fun JsonObject.text(name: String): String? = (field(name) as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf { it.isNotEmpty() }
 internal fun JsonObject.obj(name: String) = field(name) as? JsonObject ?: JsonObject(emptyMap())
 private fun JsonObject.firstTag(name: String) = (field(name) as? JsonArray)?.firstOrNull()?.jsonPrimitive?.contentOrNull
 object ItemParser {
- fun parseList(body: String, account: MediaAccount): List<MediaItem> {
+ fun parseList(body: String, account: MediaAccount, clock: Clock = Clock.systemUTC()): List<MediaItem> {
   val root = Json.parseToJsonElement(body)
   val items = root as? JsonArray ?: (root as? JsonObject)?.field("Items") as? JsonArray ?: return emptyList()
-  return items.mapNotNull { (it as? JsonObject)?.let { obj -> parseItem(obj, account) } }
+  return items.mapNotNull { (it as? JsonObject)?.let { obj -> parseItem(obj, account, clock) } }
  }
- fun parseItem(obj: JsonObject, account: MediaAccount): MediaItem? {
+ fun parseItem(obj: JsonObject, account: MediaAccount, clock: Clock = Clock.systemUTC()): MediaItem? {
   val id=obj.text("Id") ?: return null; val title=obj.text("Name") ?: return null
   val type=when(obj.text("Type")?.lowercase()) { "movie" -> ItemType.MOVIE; "series" -> ItemType.SERIES; "season" -> ItemType.SEASON; "episode" -> ItemType.EPISODE; else -> ItemType.OTHER }
   val tags=obj.obj("ImageTags"); val base=account.baseUrl
@@ -34,6 +38,15 @@ object ItemParser {
    ItemArt(backdropId?.let { parent -> backdropTag?.let { ImageUrls.backdrop(base,parent,it) } },logo,poster,wide),
    obj.text("PremiereDate")?.take(10),
    (obj.field("Genres") as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank) } ?: emptyList(),
-   obj.obj("UserData").text("IsFavorite")?.toBooleanStrictOrNull() ?: false)
+   obj.obj("UserData").text("IsFavorite")?.toBooleanStrictOrNull() ?: false,
+   isNew = isNew(obj, type, clock.instant()))
+ }
+ private fun isNew(obj: JsonObject, type: ItemType, now: Instant): Boolean {
+  // A grouped series' creation date says nothing about its unseen episodes. Do not guess.
+  if(type != ItemType.MOVIE && type != ItemType.EPISODE) return false
+  if(obj.obj("UserData").text("Played")?.toBooleanStrictOrNull() != false) return false
+  val created = obj.text("DateCreated")?.let { runCatching { OffsetDateTime.parse(it).toInstant() }.getOrNull() } ?: return false
+  val age = Duration.between(created, now)
+  return !age.isNegative && age <= Duration.ofDays(14)
  }
 }

@@ -9,4 +9,5 @@ import kotlinx.serialization.Serializable
 @Serializable data class ItemArt(val backdrop: String? = null, val logo: String? = null, val poster: String? = null, val wide: String? = null)
 @Serializable data class MediaItem(val id: String, val accountId: String, val type: ItemType, val title: String, val seriesName: String? = null, val seriesId: String? = null, val season: Int? = null, val episode: Int? = null, val year: Int? = null, val runtimeMinutes: Int? = null, val overview: String? = null, val ratings: Ratings = Ratings(), val progress: Float? = null, val art: ItemArt = ItemArt(), val premiered: String? = null, val genres: List<String> = emptyList(), val favorite: Boolean = false,
     /** Proven by a recursive ParentId query, never inferred from an immediate parent folder. */
-    val backgroundLibraryIds: Set<String> = emptySet())
+    val backgroundLibraryIds: Set<String> = emptySet(),
+    val isNew: Boolean = false)

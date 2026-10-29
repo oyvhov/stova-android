@@ -86,6 +86,21 @@ rad- og tittel-id-ar som nøklar.
 Buffer er alltid avgrensa til rett profil, konto eller HA-tilkopling. Utlogging og ny tilkopling
 må ugyldiggjere relevant tilstand. Ingen test skal ringje ekte tenester utan eit uttrykkeleg integrasjonssteg.
 
+`MediaRowSource` gir `Profile.kid` til mediarepoet. Berre barneprofilar hentar `FAVORITES` og
+`MOST_PLAYED`, med eigne feilgrenser og same profil-snapshot som kjerneradene. Radrekkjefølgja er
+Hald fram, Favorittane dine, eventuell sesongrad, Det du ser mest, Nye filmar og Nye seriar;
+apprada og profilen sine radval fungerer som før. Byte av barnemodus startar mediekjelda på nytt
+og ugyldiggjer femminuttsbufferen. Vaksne skjuler også gamle barnerader frå snapshoten utan nye kall.
+
+Favorittar bruker `Filters=IsFavorite`, sist sett og så nyast lagt til, høgst 20 filmar/seriar.
+`PlaybackRanking` summerer `UserData.PlayCount` frå alle sidene med sette episodar per `SeriesId`,
+og tel filmar kvar for seg. Berre dei 20 øvste titlane får metadata og kunst via eitt ID-oppslag;
+seriekortet er serien sjølv. Teljingane kjem i små postar utan bilete, under tilleggsrada si
+20-sekundsgrense. Jellyfin prøver moderne sti først og brukarstien ved 404; Emby bruker brukarstien.
+`MediaItem.isNew` kjem frå `DateCreated` og uttrykkeleg `UserData.Played=false` for film/episode
+dei siste 14 dagane, med innsetjbar `Clock` i parser og klient. Grupperte seriar har `false`:
+svaret stadfestar ikkje opprettingsdatoen til dei usette episodane. Gamle snapshot får `false`.
+
 Bakgrunn/hero har `AppearancePrefs.backgroundFilter`: alle bibliotek (`null`) og maks 15 år
 som standard. Eit tomt biblioteksett betyr ingen titlar. Referansar inneheld konto-ID og
 bibliotek-ID. Klienten spør `Users/{id}/Views` og bruker éin rekursiv `ParentId`-førespurnad

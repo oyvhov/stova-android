@@ -5,6 +5,7 @@ import app.stova.media.BackgroundLibrary
 import app.stova.profiles.BackgroundLibraryRef
 import app.stova.profiles.SpotlightSource
 import kotlinx.serialization.json.*
+import java.time.Clock
 interface MediaServerClient {
  suspend fun resume(): List<MediaItem>
  suspend fun nextUp(): List<MediaItem>
@@ -24,10 +25,16 @@ interface MediaServerClient {
  suspend fun backgrounds(source: SpotlightSource, libraryId: String?, query: String? = null, ids: List<String>? = null): List<MediaItem> =
   if(libraryId!=null) emptyList() else when { ids!=null->items(ids);query!=null->searchTitles(query);else->spotlight(source) }
 }
-class JellyfinEmbyClient(private val account: MediaAccount, private val token: String, private val http: OkHttpClient, private val identity: ClientIdentity): MediaServerClient {
+class JellyfinEmbyClient(private val account: MediaAccount, private val token: String, private val http: OkHttpClient, private val identity: ClientIdentity,
+ private val clock: Clock = Clock.systemUTC()): MediaServerClient {
  override suspend fun resume() = latest(Endpoint.RESUME)
  override suspend fun nextUp() = latest(Endpoint.NEXT_UP)
- override suspend fun latest(endpoint: Endpoint) = load(endpointCandidates(account.kind,endpoint,account.userId))
+ override suspend fun latest(endpoint: Endpoint): List<MediaItem> = when(endpoint) {
+  Endpoint.MOST_PLAYED -> mostPlayed()
+  Endpoint.FAVORITES -> load(endpointCandidates(account.kind,endpoint,account.userId))
+   .filter { it.type==ItemType.MOVIE || it.type==ItemType.SERIES }.distinctBy { it.id }.take(20)
+  else -> load(endpointCandidates(account.kind,endpoint,account.userId))
+ }
  override suspend fun items(ids: List<String>) = if(ids.isEmpty()) emptyList() else load(idsCandidates(account.kind,account.userId,ids))
  override suspend fun spotlight(source: app.stova.profiles.SpotlightSource) = load(spotlightCandidates(account.kind,account.userId,source))
  override suspend fun searchTitles(query: String) = load(titleSearchCandidates(account.kind,account.userId,query))
@@ -54,10 +61,26 @@ class JellyfinEmbyClient(private val account: MediaAccount, private val token: S
    BackgroundLibrary(BackgroundLibraryRef(account.id,id),name,"${account.serverName} · ${account.userName}",image)
   }
  }
- private suspend fun load(candidates: List<String>): List<MediaItem> {
+ private suspend fun mostPlayed(): List<MediaItem> {
+  val ranking = PlaybackRanking()
+  var start = 0
+  while(true) {
+   val page = playbackPage(fetch(mostPlayedCandidates(account.kind,account.userId,start)))
+   if(page.items.isEmpty()) break
+   // A server ignoring StartIndex must not loop forever or multiply the same episode's count.
+   check(ranking.add(page.items)) { "Playback page did not advance" }
+   start += page.items.size
+   if(page.total != null && start >= page.total) break
+  }
+  val ids = ranking.topIds(20)
+  val byId = items(ids).filter { it.type==ItemType.MOVIE || it.type==ItemType.SERIES }.associateBy { it.id }
+  return ids.mapNotNull { byId[it] }
+ }
+ private suspend fun load(candidates: List<String>): List<MediaItem> = ItemParser.parseList(fetch(candidates),account,clock)
+ private suspend fun fetch(candidates: List<String>): String {
   val header=authHeader(account.kind,identity,token)
   for(path in candidates) {
-   try { return ItemParser.parseList(http.fetch(Request.Builder().url("${account.baseUrl}/$path").header(header.first,header.second).build()),account) }
+   try { return http.fetch(Request.Builder().url("${account.baseUrl}/$path").header(header.first,header.second).build()) }
    catch(e: MediaError.Server) { if(e.code!=404) throw e }
   }
   throw MediaError.Server(404)

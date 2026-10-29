@@ -47,10 +47,10 @@ class HomeViewModel(
 ) : ViewModel() {
     private val calendarDate = MutableStateFlow(java.time.LocalDate.now())
     fun setCalendarDate(date: java.time.LocalDate) { calendarDate.value = date }
-    // Only a profile or effective season change restarts media, never an unrelated appearance edit.
+    // Profile, kid mode and effective season change the media queries; unrelated appearance edits do not.
     private val seasonalProfile = combine(session.active, calendarDate) { profile, date ->
         profile?.copy(appearance = profile.appearance.seasonal(date))
-    }.distinctUntilChangedBy { it?.id to it?.appearance?.season() }
+    }.distinctUntilChangedBy { Triple(it?.id, it?.appearance?.season(), it?.kid) }
     private val focusedState = MutableStateFlow<FocusedTarget?>(null)
     val focused: StateFlow<FocusedTarget?> = focusedState
     private val focusedRow = MutableStateFlow<HomeRowKey?>(null)

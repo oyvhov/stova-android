@@ -42,6 +42,27 @@ class HomeViewModelTest {
     @Before fun main() = Dispatchers.setMain(UnconfinedTestDispatcher())
     @After fun reset() = Dispatchers.resetMain()
 
+    @Test fun changingKidModeRestartsMediaWithTheNewProfileFlag() = runTest(UnconfinedTestDispatcher()) {
+        val repo = ProfileRepository(JsonFileStore(tmp.root.resolve("kid-mode.json"), ProfilesFile.serializer(),
+            ProfilesFile(), UnconfinedTestDispatcher(testScheduler)))
+        val id = repo.create("A", AvatarColor.LIME, false).id
+        val session = ProfileSession(repo, backgroundScope).also { it.enter(id) }
+        val modes = mutableListOf<Boolean>()
+        val source = object : HomeRowSource {
+            override val followsSeason = true
+            override fun rows(profile: Profile) = flowOf(emptyList<HomeRowUi>()).also { modes += profile.kid }
+        }
+        HomeViewModel(session, listOf(source))
+        advanceTimeBy(SEASON_SETTLE_MILLIS + 1)
+        assertEquals(listOf(false), modes)
+        repo.update(id) { it.copy(kid = true) }
+        advanceTimeBy(SEASON_SETTLE_MILLIS + 1)
+        assertEquals(listOf(false, true), modes)
+        repo.update(id) { it.copy(kid = false) }
+        advanceTimeBy(SEASON_SETTLE_MILLIS + 1)
+        assertEquals(listOf(false, true, false), modes)
+    }
+
     @Test fun backgroundFilterChangeClearsTheOldHeroWhileTheNewQueryIsWaiting() = runTest(UnconfinedTestDispatcher()) {
         val repo=ProfileRepository(JsonFileStore(tmp.root.resolve("filter.json"),ProfilesFile.serializer(),ProfilesFile(),UnconfinedTestDispatcher(testScheduler)))
         val id=repo.create("A",AvatarColor.LIME,false).id

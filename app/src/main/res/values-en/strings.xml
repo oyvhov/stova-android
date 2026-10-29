@@ -690,4 +690,6 @@
         <item quantity="one">%1$d device paired</item>
         <item quantity="other">%1$d devices paired</item>
     </plurals>
+    <string name="row_favorites">Your favourites</string>
+    <string name="row_most_played">What you watch most</string>
 </resources>

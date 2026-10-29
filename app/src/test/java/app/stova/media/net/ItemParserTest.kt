@@ -3,6 +3,30 @@ import app.stova.media.model.*
 import org.junit.Test
 import org.junit.Assert.*
 class ItemParserTest {
+    @Test fun recentlyAddedUnwatchedMoviesCarryNewFlagAndRequestCreationDate() {
+        val created = "2026-10-29T11:59:00Z"
+        val item = ItemParser.parseList("""[{"Id":"new","Name":"Ny","Type":"Movie","DateCreated":"$created","UserData":{"Played":false}}]""", acc, clock).single()
+        assertTrue(item.isNew)
+        assertTrue(ITEM_FIELDS.substringBefore('&').split(',').contains("DateCreated"))
+    }
+    private val clock = java.time.Clock.fixed(java.time.Instant.parse("2026-10-29T12:00:00Z"), java.time.ZoneOffset.UTC)
+    @Test fun newFlagUsesCreationTimeNotPremiereAndRequiresKnownUnwatchedMovieOrEpisode() {
+        fun item(type: String = "Movie", date: String? = "2026-10-15T12:00:00.0000000Z", user: String = "{\"Played\":false}") =
+            ItemParser.parseList("""[{"Id":"i","Name":"Tittel","Type":"$type","DateCreated":${date?.let { "\"$it\"" } ?: "null"},"PremiereDate":"2026-10-29T12:00:00Z","UserData":$user}]""", acc, clock).single()
+        for (type in listOf("Movie", "Episode")) {
+            assertTrue(item(type).isNew)
+            assertTrue(item(type, "2026-10-15T14:00:00+02:00").isNew)
+            assertFalse(item(type, "2026-10-15T11:59:59.999Z").isNew)
+            assertFalse(item(type, "2026-10-29T12:00:00.001Z").isNew)
+            assertFalse(item(type, "invalid").isNew)
+            assertFalse(item(type, null).isNew)
+            assertFalse(item(type, user = "{\"Played\":true}").isNew)
+            assertFalse(item(type, user = "{}").isNew)
+        }
+        assertFalse(item("Series", user = "{\"Played\":false,\"UnplayedItemCount\":3}").isNew)
+        assertFalse(item("Season").isNew)
+        assertFalse(item("Other").isNew)
+    }
     private val acc = MediaAccount("a1", "p", ServerKind.JELLYFIN, "srv", "Heim", "http://jf:8096", "u1", "oyvind")
     private fun res(n: String) = javaClass.getResource("/media/$n")!!.readText()
     @Test fun episodeInheritsSeriesArtAndCardUsesSeriesArt() {
