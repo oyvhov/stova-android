@@ -50,8 +50,10 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
 
 @Composable
 internal fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, iconOverrides: Map<String, IconOverride>, onLongClick: (InstalledApp) -> Unit, returnFocus: FocusRequester?,
-    onShortcut: (FavoriteTile) -> Unit = {}, onShortcutLongClick: (FavoriteTile) -> Unit = {}, onFocused: (String) -> Unit) {
-    val index = row.tiles.indexOfFirst { it.label == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
+    onShortcut: (FavoriteTile) -> Unit = {}, onShortcutLongClick: (FavoriteTile) -> Unit = {}, onOpenApps: () -> Unit = {}, onFocused: (String) -> Unit) {
+    val allApps = stringResource(R.string.apps_all)
+    val index = if ((restore as? FocusedTarget.App)?.label == allApps) row.tiles.size
+        else row.tiles.indexOfFirst { it.label == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     Column {
         if (LocalRowStyle.current.showTitle) RowHeader(stringResource(if (row.favorites) R.string.row_favorite_apps else R.string.row_apps)) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
@@ -66,6 +68,18 @@ internal fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog,
                     if (tile is FavoriteTile.App) AppTile(tile.app, art, onClick = { catalog.launch(tile.app) }, onLongClick = { onLongClick(tile.app) },
                         modifier = modifier, iconOverride = iconOverrides[tile.key])
                     else ShortcutTile(tile, onClick = { onShortcut(tile) }, onLongClick = { onShortcutLongClick(tile) }, modifier = modifier)
+                }
+            }
+            item(key = "stova:all-apps") {
+                val modifier = (if (index == row.tiles.size && focus != null) Modifier.focusRequester(focus) else Modifier)
+                    .then(if (index == row.tiles.size && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier)
+                    .onFocusChanged { if (it.isFocused) onFocused(allApps) }
+                TileFrame(allApps, 0, onOpenApps, onOpenApps, modifier) { spec ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        androidx.compose.material3.Icon(app.stova.core.ui.StovaIcons.Apps, null, Modifier.size(32.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (!spec.captions) Text(allApps, style = MaterialTheme.typography.titleSmall)
+                    }
                 }
             }
         }

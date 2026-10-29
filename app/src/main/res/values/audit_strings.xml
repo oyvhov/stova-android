@@ -1,0 +1,4 @@
+<resources>
+    <string name="item_resume">Hald fram</string>
+    <string name="item_resume_remaining">Hald fram · %1$d min att</string>
+</resources>

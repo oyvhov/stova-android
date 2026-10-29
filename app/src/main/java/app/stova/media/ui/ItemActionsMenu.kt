@@ -27,7 +27,16 @@ import coil3.request.ImageRequest
             val art = item.art.backdrop ?: item.art.wide
             SheetHeader(if (episode) item.seriesName ?: item.title else item.title, itemLine(item), StovaIcons.Play,
                 art = art?.let { url -> { SheetArt(url) } })
-            StovaButton(stringResource(R.string.item_play), onPlay, Modifier.fillMaxWidth(), primary = true, icon = StovaIcons.Play)
+            val resuming = item.progress?.let { it.isFinite() && it > 0f && it < 1f } == true
+            val remaining = if (resuming) item.runtimeMinutes?.takeIf { it > 0 }?.let {
+                kotlin.math.ceil(it * (1.0 - item.progress!!.toDouble())).toInt().coerceAtLeast(1)
+            } else null
+            val playLabel = when {
+                remaining != null -> stringResource(R.string.item_resume_remaining, remaining)
+                resuming -> stringResource(R.string.item_resume)
+                else -> stringResource(R.string.item_play)
+            }
+            StovaButton(playLabel, onPlay, Modifier.fillMaxWidth(), primary = true, icon = StovaIcons.Play)
             StovaButton(stringResource(R.string.item_details), onDetails, Modifier.fillMaxWidth(), icon = StovaIcons.Info)
         }
         rowActions(pages)

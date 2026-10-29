@@ -1,0 +1,4 @@
+<resources>
+    <string name="item_resume">Resume</string>
+    <string name="item_resume_remaining">Resume · %1$d min left</string>
+</resources>

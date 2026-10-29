@@ -97,11 +97,14 @@ fun StovaSheet(onDismissRequest: () -> Unit, content: @Composable ColumnScope.(S
 /** Artwork across the panel, then the title and one line of detail. Without art, an icon leads. */
 @Composable
 fun SheetHeader(title: String, subtitle: String? = null, icon: ImageVector? = null,
-    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant, art: (@Composable BoxScope.() -> Unit)? = null) {
+    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant, art: (@Composable BoxScope.() -> Unit)? = null,
+    compact: Boolean = false) {
     Column(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        if (art != null) Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(MaterialTheme.shapes.large)
+        if (art != null && !compact) Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center, content = art)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            if (art != null && compact) Box(Modifier.size(64.dp).clip(MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center, content = art)
             if (art == null && icon != null) CategoryIcon(icon, tint = tint)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(title, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface,

@@ -8,6 +8,7 @@ avkryssingsboksar i dei er inga bestilling.
 
 | Plan | Står att |
 |---|---|
+| [Rett TV-funn og smarthuspopup-ar](2026-10-29-tv-audit-fixes.md) | Steg 1–6 |
 | [Snarvegar i favorittrada: bibliotek og Home Assistant](2026-10-27-shortcut-tiles.md) | Spole-lenkja (eiga grein i Spole-repoet) |
 | [Eineståande launcher: finpuss, Heim etter tid, fart og huset](2026-10-26-outstanding-launcher.md) | Steg 2–9. I steg 4 er punkt 8 (snøggmenyen på Innstillingar) gjort. |
 

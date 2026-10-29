@@ -15,8 +15,8 @@ import app.stova.core.ui.StovaIcons
 import app.stova.core.ui.StovaSheet
 
 /**
- * What an adult can do with one app, in the panel from the right. Favourite is the first and
- * largest choice; changing the icon is a page of its own. Every other choice closes the panel.
+ * Compact app identity and Open first. Removing a favourite is a secondary row;
+ * changing the icon is a page of its own. Every other choice closes the panel.
  */
 @Composable
 fun AppActionsMenu(
@@ -37,11 +37,11 @@ fun AppActionsMenu(
     StovaSheet(onDismiss) { pages ->
         when (pages.current) {
             null -> {
-                SheetHeader(app.label, stringResource(if (favorite) R.string.sheet_app_favorite else R.string.sheet_app), StovaIcons.Apps, art = art)
+                SheetHeader(app.label, stringResource(if (favorite) R.string.sheet_app_favorite else R.string.sheet_app), StovaIcons.Apps, art = art, compact = true)
                 val full = Modifier.fillMaxWidth()
-                StovaButton(stringResource(if (favorite) R.string.app_remove_favorite else R.string.app_add_favorite),
-                    { onToggleFavorite(); onDismiss() }, full, primary = true, icon = StovaIcons.Star)
-                if (onOpen != null) StovaButton(stringResource(R.string.sheet_open), { onOpen(); onDismiss() }, full, icon = StovaIcons.Play)
+                if (onOpen != null) StovaButton(stringResource(R.string.sheet_open), { onOpen(); onDismiss() }, full, primary = true, icon = StovaIcons.Play)
+                if (!favorite) StovaButton(stringResource(R.string.app_add_favorite),
+                    { onToggleFavorite(); onDismiss() }, full, primary = onOpen == null, icon = StovaIcons.Star)
                 if (favorite) {
                     SheetAction(stringResource(R.string.app_move_left), StovaIcons.ChevronLeft, { onMove(-1); onDismiss() })
                     SheetAction(stringResource(R.string.app_move_right), StovaIcons.ChevronRight, { onMove(+1); onDismiss() })
@@ -50,6 +50,8 @@ fun AppActionsMenu(
                     { onToggleHidden(); onDismiss() })
                 SheetAction(stringResource(R.string.icon_change), StovaIcons.Palette, { pages.open(ICON_PAGE) },
                     Modifier.focusRequester(pages.opener(ICON_PAGE)), opensPage = true)
+                if (favorite) SheetAction(stringResource(R.string.app_remove_favorite), StovaIcons.Star,
+                    { onToggleFavorite(); onDismiss() })
                 SheetAction(stringResource(R.string.app_info), StovaIcons.Info, { onAppInfo(); onDismiss() })
             }
             ICON_PAGE -> {
