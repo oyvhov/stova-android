@@ -14,4 +14,24 @@
     <string name="ha_room_browse">Finn éi eining</string>
     <string name="ha_room_none">Ingen nye romkort funne. Du kan søkje etter ei eining sjølv.</string>
     <string name="ha_room_failed">Nokre kort vart ikkje lagra. Prøv dei att.</string>
+    <string name="ha_panel_remote_hint">↑↓ Vel kontroll · ←→ Juster</string>
+    <string name="ha_room_temperature">Romtemperatur</string>
+    <string name="ha_room_temperature_value">Romtemperatur %1$s°</string>
+    <string name="ha_device_state">Tilstand</string>
+    <string name="ha_choose_level">Vel nivå</string>
+    <string name="ha_choose_temperature">Vel temperatur</string>
+    <string name="ha_light_colour">Farge og kvittone</string>
+    <string name="ha_white_tone">Kvittone</string>
+    <string name="ha_colour">Farge</string>
+    <string name="ha_climate_operation">Drift</string>
+    <string name="ha_climate_presets">Førehandsval</string>
+    <string name="ha_media_source">Kjelde</string>
+    <string name="ha_preset_normal">Normal</string>
+    <string name="ha_preset_quiet">Stille</string>
+    <string name="ha_preset_powerful">Kraftig</string>
+    <string name="ha_preset_eco">Økonomi</string>
+    <string name="ha_preset_away">Borte</string>
+    <string name="ha_preset_comfort">Komfort</string>
+    <string name="ha_preset_sleep">Natt</string>
+    <string name="ha_weather_low">Låg %1$s°</string>
 </resources>

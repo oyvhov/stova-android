@@ -117,27 +117,37 @@ class ControlPanelTest {
     }
     @Test fun lightShowsOnlySupportedTemperatureAndColourControls() {
         panel(CardDialog.Brightness("light.a"),entity("light.a",attrs="""{"brightness":128,"supported_color_modes":["color_temp","hs"],"min_color_temp_kelvin":2000,"max_color_temp_kelvin":6000}"""))
+        compose.onNodeWithText("Farge og kvittone").performClick()
         compose.onNodeWithText("Varm").performClick()
         assertEquals(2700.0,calls.single().data.number("color_temp_kelvin")!!,0.0)
+        compose.onNodeWithText("Farge og kvittone").assertIsFocused().performClick()
         compose.onNodeWithText("Blå").assertExists()
     }
     @Test fun climateSupportsModesAndPresets() {
         panel(CardDialog.Climate("climate.a"),entity("climate.a","heat","""{"temperature":21.5,"hvac_modes":["heat","cool","auto","off"],"preset_modes":["eco"]}"""))
+        compose.onNodeWithText("Drift").performClick()
         compose.onNodeWithText("Kjøling").performClick()
         assertEquals("cool",calls.single().data["hvac_mode"].toString().trim('"'))
-        compose.onNodeWithText("eco").assertExists()
+        compose.onNodeWithText("Førehandsval").performClick()
+        compose.onNodeWithText("Økonomi").assertExists()
     }
     @Test fun aHeatPumpShowsOnlyTheModesChosenForItsCard() {
         val pump=entity("climate.a","heat","""{"temperature":21.5,"hvac_modes":["off","heat","cool","dry","fan_only"],"preset_modes":["none","heat_8_15"]}""")
         panel(CardDialog.Climate(pump.id,hiddenModes=setOf("cool","dry","fan_only","heat_8_15")),pump)
-        listOf("Varme","Av","none").forEach {compose.onNode(hasText(it) and hasClickAction()).assertExists()}
+        compose.onNodeWithText("Drift").performClick()
+        listOf("Varme","Av").forEach {compose.onNode(hasText(it) and hasClickAction()).assertExists()}
         listOf("Kjøling","Avfukting","Vifte","heat_8_15").forEach {compose.onNode(hasText(it) and hasClickAction()).assertDoesNotExist()}
+        compose.onNodeWithText("Tilbake").performClick()
+        compose.onNodeWithText("Førehandsval").performClick()
+        compose.onNodeWithText("Normal").assertExists()
+        compose.onNodeWithText("heat_8_15").assertDoesNotExist()
     }
     @Test fun mediaPanelHasTransportVolumeAndSupportedSource() {
-        panel(CardDialog.Controls("media_player.a",CardType.MEDIA_PLAYER),entity("media_player.a","playing","""{"volume_level":0.5,"source_list":["TV","Radio"]}"""))
+        panel(CardDialog.Controls("media_player.a",CardType.MEDIA_PLAYER),entity("media_player.a","playing","""{"volume_level":0.5,"supported_features":2101,"source_list":["TV","Radio"]}"""))
         compose.onNodeWithText("Førre spor").performClick()
         assertEquals("media_previous_track",calls.single().service)
         compose.onNodeWithTag("slider-volume").assertExists()
+        compose.onNodeWithText("Kjelde").performClick()
         compose.onNodeWithText("Radio").assertExists()
     }
     @Test fun readOnlyPanelHasValuesButNoEnabledControls() {

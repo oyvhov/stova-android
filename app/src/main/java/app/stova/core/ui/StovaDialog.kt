@@ -47,12 +47,13 @@ import app.stova.core.theme.stovaMotion
 fun StovaDialog(
     onDismissRequest: () -> Unit,
     properties: DialogProperties = DialogProperties(),
+    onBack: () -> Boolean = { false },
     content: @Composable () -> Unit,
 ) {
     val motion = stovaMotion
     StovaOverlay(onDismissRequest, properties, Alignment.Center,
         enter = scaleIn(motion.enter(), initialScale = PANEL_FROM),
-        exit = scaleOut(motion.exit(), targetScale = PANEL_TO)) { content() }
+        exit = scaleOut(motion.exit(), targetScale = PANEL_TO), onBack = onBack) { content() }
 }
 
 /**
@@ -107,7 +108,7 @@ private fun StovaOverlay(
         AnimatedVisibility(visible, enter = fadeIn(motion.enter()), exit = fadeOut(motion.exit()), label = "dialog") {
             Box(Modifier.fillMaxSize().onPreviewKeyEvent { event ->
                 // A panel with pages answers Back itself, one page at a time, before the window sees it.
-                if (sideScrim && event.key in backKeys) {
+                if (event.key in backKeys) {
                     if (event.type == KeyEventType.KeyUp && !back()) close()
                     true
                 } else false

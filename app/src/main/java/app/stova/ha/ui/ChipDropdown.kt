@@ -77,13 +77,13 @@ internal fun quickControl(type: CardType, entity: HaEntity): QuickControl? {
     return when (type) {
         CardType.LIGHT -> {
             val dimmable = attrs.number("brightness") != null || attrs.strings("supported_color_modes").any { it != "onoff" }
-            val percent = ((attrs.number("brightness") ?: 255.0) / 255 * 100).roundToInt().coerceIn(1, 100).toDouble()
+            val percent = lightLevel(entity)
             // All the way down is off, so Right from off turns the light on dimmed.
             QuickControl(R.string.ha_brightness, if (!dimmable) null else if (on) percent else 0.0, ok = switch, okLabel = switchLabel,
                 set = { if (it <= 0.0) ServiceCall("light", "turn_off") else brightnessCall(it.roundToInt()) })
         }
         CardType.MEDIA_PLAYER -> QuickControl(R.string.ha_action_volume, attrs.number("volume_level")?.let { (it * 100).roundToInt().toDouble() },
-            step = 2.0, ok = ServiceCall("media_player", "media_play_pause").takeIf { entity.state in setOf("playing", "paused") },
+            step = 2.0, ok = ServiceCall("media_player", "media_play_pause").takeIf { entity.state in setOf("playing", "paused") && !attrs.text("source").equals("TV",true) },
             okLabel = if (entity.state == "playing") R.string.ha_pause else R.string.ha_play,
             set = { ServiceCall("media_player", "volume_set", buildJsonObject { put("volume_level", it / 100) }) })
         CardType.CLIMATE -> {
@@ -162,6 +162,7 @@ internal fun ChipDropdown(type: CardType, name: String, entity: HaEntity?, enabl
         }
         if (control != null && value != null) {
             val locale = LocalConfiguration.current.locales[0]
+            Text(stringResource(control.label),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
             Text(when {
                 control.degrees -> formatNumber(value, locale) + "°"
                 type == CardType.LIGHT && value <= 0.0 -> stringResource(R.string.ha_off)
@@ -169,6 +170,10 @@ internal fun ChipDropdown(type: CardType, name: String, entity: HaEntity?, enabl
             }, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
             val fraction = ((value - control.range.start) / (control.range.endInclusive - control.range.start).coerceAtLeast(0.001)).toFloat().coerceIn(0f, 1f)
             LevelBar(fraction, glow?.color ?: MaterialTheme.colorScheme.primary, showArrows = active)
+            if(type==CardType.CLIMATE) shown.attributes.number("current_temperature")?.let {
+                Text(stringResource(R.string.ha_room_temperature_value,formatNumber(it,locale)),style=MaterialTheme.typography.bodySmall,
+                    color=MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         // One line is always kept, so a change never makes the card jump.
         Text(when {

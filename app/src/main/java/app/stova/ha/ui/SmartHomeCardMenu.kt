@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
                 SheetHeader(stringResource(R.string.ha_v2_modes),label,StovaIcons.Toggle)
                 // Modes by their Home Assistant meaning; presets by the name the device gives them.
                 modes.forEach {mode ->
-                    SheetAction(if(mode in hvacModes) modeLabel(mode) else mode,
+                    SheetAction(if(mode in hvacModes) modeLabel(mode) else presetLabel(mode),
                         when(mode) {"heat"->StovaIcons.Sun;"cool"->StovaIcons.Snow;"auto","heat_cool"->StovaIcons.Home;else->StovaIcons.Toggle},
                         {hidden=if(mode in hidden) hidden-mode else hidden+mode;onConfigure(card.copy(hiddenModes=hidden))},chosen=mode !in hidden)
                 }

@@ -14,6 +14,12 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import app.stova.core.ui.SheetPages
 import app.stova.R
 import app.stova.core.ui.StovaButton
 import app.stova.core.ui.StovaDialog
@@ -51,33 +57,55 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
     val sendScope=rememberCoroutineScope()
     if(dialog==null) return
     val entity=entities[dialog.entityId]
-    val energyGraph=dialog is CardDialog.Graph && dialog.today
-    StovaDialog(onDismiss) {
+    val pages=remember(dialog) {SheetPages()}
+    val first=remember(dialog) {FocusRequester()}
+    val close=remember(dialog) {FocusRequester()}
+    StovaDialog(onDismiss,onBack=pages::back) {
         val windowHeight=with(LocalDensity.current) {LocalWindowInfo.current.containerSize.height.toDp()}
-        // The panel never shrinks while it is open: a shorter state keeps the height it has had.
-        val tallest=remember(dialog) {IntArray(1)}
+        val scroll=rememberScrollState()
+        LaunchedEffect(pages.current) {
+            scroll.scrollTo(0)
+            withFrameNanos { }
+            val returning=pages.returning;pages.returning=null
+            val restored=returning!=null && runCatching {pages.opener(returning).requestFocus()}.getOrDefault(false)
+            if(!restored && !runCatching {first.requestFocus(FocusDirection.Enter)}.getOrDefault(false)) runCatching {close.requestFocus()}
+        }
+        // Name and footer never scroll. A stable frame also keeps pending/error states from jumping.
         val frame=if(dialog is CardDialog.Camera) Modifier.fillMaxSize() else Modifier
-            .width(if(energyGraph) 640.dp else 480.dp)
-            .layout {measurable,constraints ->
-                val placeable=measurable.measure(constraints.copy(minHeight=tallest[0].coerceIn(constraints.minHeight,constraints.maxHeight)))
-                tallest[0]=maxOf(tallest[0],placeable.height)
-                layout(placeable.width,placeable.height) {placeable.place(0,0)}
+            .widthIn(max=640.dp).fillMaxWidth()
+            .height((windowHeight-72.dp).coerceIn(160.dp,440.dp))
+        Column(frame.background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.extraLarge).padding(24.dp),
+            verticalArrangement=Arrangement.spacedBy(14.dp)) {
+            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(2.dp)) {
+                    Text(name ?: entity?.let(::friendlyName) ?: dialog.entityId,style=MaterialTheme.typography.headlineSmall,
+                        maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    room?.takeIf {it.isNotBlank()}?.let {CardDetail(it)}
+                }
+                if(locked || dialog.entityId.startsWith("alarm_control_panel.")) CardDetail(stringResource(R.string.ha_action_read_only))
             }
-            .heightIn(max=(windowHeight-96.dp).coerceAtLeast(160.dp))
-            .background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).verticalScroll(rememberScrollState())
-        Column(frame.padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            Text(name ?: entity?.let(::friendlyName) ?: dialog.entityId,style=MaterialTheme.typography.titleLarge)
-            room?.takeIf {it.isNotBlank()}?.let {CardDetail(it)}
-            if(locked || dialog.entityId.startsWith("alarm_control_panel.")) CardDetail(stringResource(R.string.ha_action_read_only))
+            HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+            @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+            CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides app.stova.core.ui.ScrollOnlyWhenHidden) {
+            Column(Modifier.weight(1f).fillMaxWidth().focusRequester(first).focusGroup()
+                .then(if(dialog is CardDialog.Camera) Modifier else Modifier.verticalScroll(scroll)),
+                verticalArrangement=Arrangement.spacedBy(12.dp)) {
             when(dialog) {
                 is CardDialog.Graph -> HistoryPanel(dialog,entity,socket)
                 is CardDialog.Camera -> {
                     CardDetail(stringResource(R.string.ha_v2_fullscreen))
                     HaImage("/api/camera_proxy/${dialog.entityId}",images,Modifier.weight(1f).fillMaxWidth(),2_000)
                 }
-                else -> DeviceControls(dialog,entity,socket,locked,send,sendScope)
+                else -> DeviceControls(dialog,entity,socket,locked,send,sendScope,pages)
             }
-            StovaButton(stringResource(R.string.ha_close),onDismiss)
+            }
+            }
+            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+                Text(stringResource(R.string.ha_panel_remote_hint),Modifier.weight(1f),style=MaterialTheme.typography.labelMedium,
+                    color=MaterialTheme.colorScheme.onSurfaceVariant)
+                StovaButton(stringResource(if(pages.current==null) R.string.ha_close else R.string.custom_back),
+                    {if(!pages.back()) onDismiss()},Modifier.focusRequester(close),compact=true,quiet=true)
+            }
         }
     }
 }

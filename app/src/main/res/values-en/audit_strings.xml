@@ -14,4 +14,24 @@
     <string name="ha_room_browse">Find a device</string>
     <string name="ha_room_none">No new room cards found. You can search for a device yourself.</string>
     <string name="ha_room_failed">Some cards could not be saved. Try them again.</string>
+    <string name="ha_panel_remote_hint">↑↓ Choose control · ←→ Adjust</string>
+    <string name="ha_room_temperature">Room temperature</string>
+    <string name="ha_room_temperature_value">Room temperature %1$s°</string>
+    <string name="ha_device_state">State</string>
+    <string name="ha_choose_level">Choose a level</string>
+    <string name="ha_choose_temperature">Choose temperature</string>
+    <string name="ha_light_colour">Colour and white tone</string>
+    <string name="ha_white_tone">White tone</string>
+    <string name="ha_colour">Colour</string>
+    <string name="ha_climate_operation">Operation</string>
+    <string name="ha_climate_presets">Preset</string>
+    <string name="ha_media_source">Source</string>
+    <string name="ha_preset_normal">Normal</string>
+    <string name="ha_preset_quiet">Quiet</string>
+    <string name="ha_preset_powerful">Powerful</string>
+    <string name="ha_preset_eco">Eco</string>
+    <string name="ha_preset_away">Away</string>
+    <string name="ha_preset_comfort">Comfort</string>
+    <string name="ha_preset_sleep">Sleep</string>
+    <string name="ha_weather_low">Low %1$s°</string>
 </resources>

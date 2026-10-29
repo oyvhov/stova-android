@@ -32,12 +32,12 @@ import app.stova.core.ui.focusOutline
                 }
                 true
             } else false
-        }.focusable(interactionSource=source).padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+        }.focusable(interactionSource=source).padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
             Text(label,style=MaterialTheme.typography.labelLarge)
-            Text(display,style=MaterialTheme.typography.titleMedium)
+            Text(display,style=MaterialTheme.typography.titleLarge)
         }
         LinearProgressIndicator(progress={((value-range.start)/(range.endInclusive-range.start).coerceAtLeast(0.001)).toFloat().coerceIn(0f,1f)},
-            modifier=Modifier.fillMaxWidth().height(4.dp),color=MaterialTheme.colorScheme.primary,trackColor=MaterialTheme.colorScheme.outlineVariant,drawStopIndicator={})
+            modifier=Modifier.fillMaxWidth().height(6.dp),color=if(enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,trackColor=MaterialTheme.colorScheme.outlineVariant,drawStopIndicator={})
     }
 }

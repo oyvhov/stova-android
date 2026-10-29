@@ -11,12 +11,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.ui.StovaButton
+import app.stova.core.ui.SheetAction
+import app.stova.core.ui.SheetPages
+import app.stova.core.ui.StovaIcons
 import app.stova.ha.*
 import kotlinx.serialization.json.*
 import kotlin.math.roundToInt
 
 @Composable internal fun DeviceControls(dialog:CardDialog,entity:HaEntity?,socket:HaConnection,locked:Boolean,
-    send:suspend (ServiceCall,String)->Boolean,sendScope:kotlinx.coroutines.CoroutineScope?=null) {
+    send:suspend (ServiceCall,String)->Boolean,sendScope:kotlinx.coroutines.CoroutineScope?=null,
+    pages:SheetPages=remember {SheetPages()}) {
     val scope=rememberCoroutineScope()
     val latestSend by rememberUpdatedState(send)
     val latestEntity by rememberUpdatedState(entity)
@@ -52,9 +56,23 @@ import kotlin.math.roundToInt
         }),{confirm=null;if(enabled) state.submit(confirmation)},enabled=enabled)
         return
     }
+    if(pages.current!=null) {
+        DeviceChoices(pages,dialog,shown,enabled) {call->act(call)}
+        return
+    }
     when(dialog) {
-        is CardDialog.Brightness -> CardValue(stringResource(R.string.ha_percent,((attrs.number("brightness") ?: 0.0)/255*100).roundToInt()))
-        is CardDialog.Climate -> CardValue(attrs.number("current_temperature")?.let {formatNumber(it,locale)} ?: entityStateLabel(shown),stringResource(R.string.ha_celsius))
+        is CardDialog.Brightness -> PanelReading(StovaIcons.Light,stringResource(R.string.ha_brightness),
+            if(shown.state=="off") stringResource(R.string.ha_off) else lightLevel(shown)?.let {stringResource(R.string.ha_percent,it.toInt())} ?: stringResource(R.string.ha_dash))
+        is CardDialog.Climate -> PanelReading(StovaIcons.Climate,stringResource(R.string.ha_room_temperature),
+            attrs.number("current_temperature")?.let {formatNumber(it,locale)+"°"} ?: stringResource(R.string.ha_dash))
+        is CardDialog.Controls -> when(dialog.type) {
+            CardType.MEDIA_PLAYER -> PanelReading(StovaIcons.Speaker,stringResource(R.string.ha_action_volume),
+                attrs.number("volume_level")?.let {stringResource(R.string.ha_percent,(it*100).roundToInt())} ?: stringResource(R.string.ha_dash),
+                attrs.text("media_title") ?: attrs.text("source"))
+            CardType.WEATHER -> PanelReading(weatherIcon(shown.state),entityStateLabel(shown),
+                attrs.number("temperature")?.let {formatNumber(it,locale)+"°"} ?: stringResource(R.string.ha_dash))
+            else -> PanelReading(cardIcon(dialog.type,shown),stringResource(R.string.ha_device_state),entityStateLabel(shown))
+        }
         else -> CardValue(entityStateLabel(shown))
     }
     // One line is always kept for the status, so sending a change never grows the panel.
@@ -65,38 +83,31 @@ import kotlin.math.roundToInt
         is CardDialog.Brightness -> {
             val modes=attrs.strings("supported_color_modes")
             if(attrs.number("brightness")!=null || modes.any {it!="onoff"}) {
-                val value=((attrs.number("brightness") ?: 255.0)/255*100).roundToInt().coerceIn(1,100).toDouble()
-                PanelSlider("brightness",stringResource(R.string.ha_brightness),value,stringResource(R.string.ha_percent,value.toInt()),1.0..100.0,enabled) {act(brightnessCall(it.toInt()),true)}
+                val level=lightLevel(shown)
+                PanelSlider("brightness",stringResource(R.string.ha_brightness),level ?: 0.0,
+                    level?.let {stringResource(R.string.ha_percent,it.toInt())} ?: stringResource(R.string.ha_choose_level),0.0..100.0,enabled) {
+                    act(if(it<=0) ServiceCall("light","turn_off") else brightnessCall(it.toInt()),true)
+                }
             }
             FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                StovaButton(stringResource(if(shown.state=="on") R.string.ha_action_turn_off else R.string.ha_action_turn_on),{act(ServiceCall("light",if(shown.state=="on") "turn_off" else "turn_on"))},enabled=enabled)
-                if("color_temp" in modes) listOf(R.string.ha_action_warm to 2700,R.string.ha_v2_neutral_white to 4000,R.string.ha_action_cold to 6000).forEach {(label,kelvin) ->
-                    StovaButton(stringResource(label),{act(ServiceCall("light","turn_on",buildJsonObject {
-                        val min=attrs.number("min_color_temp_kelvin")?.toInt() ?: 2000
-                        val max=(attrs.number("max_color_temp_kelvin")?.toInt() ?: 6500).coerceAtLeast(min)
-                        put("color_temp_kelvin",kelvin.coerceIn(min,max))
-                    }))},enabled=enabled)
-                }
-                if(modes.any {it in setOf("hs","rgb","rgbw","rgbww","xy")}) listOf(R.string.ha_action_red to 0,R.string.ha_action_green to 120,R.string.ha_action_blue to 240).forEach {(label,hue) ->
-                    StovaButton(stringResource(label),{act(ServiceCall("light","turn_on",buildJsonObject {putJsonArray("hs_color") {add(hue);add(80)}}))},enabled=enabled)
-                }
+                StovaButton(stringResource(if(shown.state=="on") R.string.ha_action_turn_off else R.string.ha_action_turn_on),{act(ServiceCall("light",if(shown.state=="on") "turn_off" else "turn_on"))},enabled=enabled,primary=true)
             }
+            if(modes.any {it in setOf("color_temp","hs","rgb","rgbw","rgbww","xy")})
+                ControlPageLink(pages,"light",stringResource(R.string.ha_light_colour),StovaIcons.Palette)
         }
         is CardDialog.Climate -> {
             val min=attrs.number("min_temp") ?: 5.0
             val max=(attrs.number("max_temp") ?: 35.0).coerceAtLeast(min)
             val value=(attrs.number("temperature") ?: min).coerceIn(min,max)
-            PanelSlider("temperature",stringResource(R.string.ha_target),value,formatNumber(value,locale)+"°",min..max,enabled,0.5,false) {
+            PanelSlider("temperature",stringResource(R.string.ha_target),value,
+                attrs.number("temperature")?.let {formatNumber(it,locale)+"°"} ?: stringResource(R.string.ha_choose_temperature),min..max,enabled,0.5,false) {
                 act(ServiceCall("climate","set_temperature",buildJsonObject {put("temperature",it)}),true)
             }
-            FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                attrs.strings("hvac_modes").filter {it !in dialog.hiddenModes}.forEach {mode ->
-                    StovaButton(modeLabel(mode),{act(ServiceCall("climate","set_hvac_mode",buildJsonObject {put("hvac_mode",mode)}))},enabled=enabled,primary=shown.state==mode)
-                }
-                attrs.strings("preset_modes").filter {it !in dialog.hiddenModes}.forEach {preset ->
-                    StovaButton(preset,{act(ServiceCall("climate","set_preset_mode",buildJsonObject {put("preset_mode",preset)}))},enabled=enabled,primary=attrs.text("preset_mode")==preset)
-                }
-            }
+            if(attrs.strings("hvac_modes").any {it !in dialog.hiddenModes})
+                ControlPageLink(pages,"hvac",stringResource(R.string.ha_climate_operation),StovaIcons.Climate,modeLabel(shown.state))
+            if(attrs.strings("preset_modes").any {it !in dialog.hiddenModes})
+                ControlPageLink(pages,"presets",stringResource(R.string.ha_climate_presets),StovaIcons.Rows,
+                    attrs.text("preset_mode")?.let {presetLabel(it)})
         }
         is CardDialog.Cover -> {
             val features=(attrs.number("supported_features") ?: 0.0).toInt()
@@ -121,18 +132,20 @@ import kotlin.math.roundToInt
         }
         is CardDialog.Controls -> when(dialog.type) {
             CardType.MEDIA_PLAYER -> {
-                CardDetail(attrs.text("media_title").orEmpty())
-                FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                    listOf(R.string.ha_action_previous to "media_previous_track",(if(shown.state=="playing") R.string.ha_pause else R.string.ha_play) to "media_play_pause",R.string.ha_v2_next to "media_next_track").forEach {(label,service) ->
-                        StovaButton(stringResource(label),{act(ServiceCall("media_player",service))},enabled=enabled)
-                    }
-                }
+                val features=(attrs.number("supported_features") ?: 0.0).toInt()
                 attrs.number("volume_level")?.let {volume ->
-                    PanelSlider("volume",stringResource(R.string.ha_action_volume),volume*100,stringResource(R.string.ha_percent,(volume*100).toInt()),0.0..100.0,enabled) {
+                    PanelSlider("volume",stringResource(R.string.ha_action_volume),volume*100,stringResource(R.string.ha_percent,(volume*100).roundToInt()),0.0..100.0,
+                        enabled && (attrs.number("supported_features")==null || features and 4!=0)) {
                         act(ServiceCall("media_player","volume_set",buildJsonObject {put("volume_level",it/100)}),true)
                     }
                 }
-                ChoiceButtons(attrs.strings("source_list"),enabled,attrs.text("source")) {act(ServiceCall("media_player","select_source",buildJsonObject {put("source",it)}))}
+                if(!attrs.text("source").equals("TV",true)) FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                    if(features and 16!=0) StovaButton(stringResource(R.string.ha_action_previous),{act(ServiceCall("media_player","media_previous_track"))},enabled=enabled)
+                    if((shown.state=="playing" && features and 1!=0) || (shown.state=="paused" && features and 16384!=0))
+                        StovaButton(stringResource(if(shown.state=="playing") R.string.ha_pause else R.string.ha_play),{act(ServiceCall("media_player","media_play_pause"))},enabled=enabled)
+                    if(features and 32!=0) StovaButton(stringResource(R.string.ha_v2_next),{act(ServiceCall("media_player","media_next_track"))},enabled=enabled)
+                }
+                if(attrs.strings("source_list").isNotEmpty()) ControlPageLink(pages,"sources",stringResource(R.string.ha_media_source),StovaIcons.Rows,attrs.text("source"))
             }
             CardType.TOGGLE -> {
                 val domain=shown.id.substringBefore('.')
@@ -166,12 +179,6 @@ import kotlin.math.roundToInt
 
 internal fun JsonObject.strings(key:String)=(get(key) as? JsonArray).orEmpty().mapNotNull {(it as? JsonPrimitive)?.contentOrNull}
 
-@Composable private fun ChoiceButtons(values:List<String>,enabled:Boolean,selected:String?,onSelect:(String)->Unit) {
-    FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-        values.forEach {value->StovaButton(value,{onSelect(value)},enabled=enabled,primary=value==selected)}
-    }
-}
-
 @Composable internal fun modeLabel(mode:String)=stringResource(when(mode) {
     "heat"->R.string.ha_v2_heat;"cool"->R.string.ha_v2_cool;"auto","heat_cool"->R.string.ha_v2_auto;"off"->R.string.ha_off
     "dry"->R.string.ha_action_dry;"fan_only"->R.string.ha_action_fan_mode;else->R.string.ha_action_mode
@@ -189,8 +196,5 @@ internal fun JsonObject.strings(key:String)=(get(key) as? JsonArray).orEmpty().m
     val forecast=if(hourly) hours else days
     if(forecast.isEmpty()) CardDetail(stringResource(R.string.ha_v2_forecast_missing))
     val locale=LocalConfiguration.current.locales[0]
-    forecast.forEach {day ->
-        CardDetail(java.time.Instant.ofEpochMilli(day.time).atZone(socket.timeZone).format(java.time.format.DateTimeFormatter.ofPattern(if(hourly) "EEE HH:mm" else "EEE dd.MM",locale)))
-        CardValue(formatNumber(day.high,locale)+"°",day.low?.let {formatNumber(it,locale)+"°"})
-    }
+    ForecastTimeline(forecast,hourly,socket.timeZone,locale)
 }
