@@ -1,3 +1,10 @@
+# Loftet: berre Shield-favorittane og smarthus for Loftet
+2026-10-29: Fullført einingsoppsett etter presiseringane: berre sju favorittappar frå Shield, og smarthuskort berre for HA-rommet Loftet. Rapport: `docs/verification/2026-10-29-loftet-oppsett.md`.
+Loftet har Spole, NRK TV, YouTube, Spotify, Wholphin, YouTube Kids og TV 2 Play i same favorittrekkje; pakkelista er nøyaktig desse pluss Stova. Den første, for vide kopieringa er rydda bort: 25 andre brukarappar avinstallerte og tre valfrie systemappar fjerna for brukar 0. NRK/TV 2 var arkiverte og er gjenoppretta.
+Heim har same kortoppsett/fokus/sesongstil, med appane sine eigne bilete. Sju Loftet-kort i kompakt rutenett; lys, golvvarme og Nest på Heim. Duplikat av Nest fjerna frå dashbordet, ingen HA-eining sletta eller styrt.
+Kontrollert ekte skjermbilete, favorittrekkje, ekte startaktivitet for alle sju, golvvarmepanel/Tilbake og langt OK med `hold:1500`. Ingen appkode endra; ingen ny Gradle-runde. Innlogging/avspeling i nye tredjepartsappar er ikkje testa.
+Shield-oppsettet er uendra. Begge einingar er i dvale, Heim-tenestene er aktive og ingen installering står i kø. Ingen påbyrja arbeid eller blokkerande spørsmål. Bilete: `.superpowers/loft-sync-2026-10-29/`. Ingen push/publisering.
+
 # TV-funn retta og nye smarthuspopup-ar på begge TV-ar
 2026-10-29: M2/M1/A1/A2/S1/S2/K1/K2/K3/U1/P1/Y2 er fullførte. Plan `2026-10-29-tv-audit-fixes.md`; resultat og avvik i `docs/verification/2026-10-29-tv-audit-fixes.md`. Ingen påbyrja implementering står att i denne bestillinga.
 Matte kontrollpanel med fast namn/rom og botn, store verdiar, volum først, eigne modus-/kjeldesider og fokusretur. Romvalet deler no Tilbake-handtering med dialogen; fysisk Loftet: kortforslag → same rom fokusert → uendra dashbord.
