@@ -47,7 +47,7 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
     AddCardFlow(container.haSocket,{entity,type->container.haRepository.add(entity,type)},onDone,cards.map {it.entityId}.toSet(),container.haRepository::loadRegistry)
 }
 
-@Composable fun AddCardFlow(connection:HaConnection,onAdd:suspend (HaEntity,CardType)->Unit,onDone:()->Unit,existing:Set<String> = emptySet(),registryLoader:suspend ()->HaRegistry? = { connection.registry() }) {
+@Composable fun AddCardFlow(connection:HaConnection,onAdd:suspend (HaEntity,CardType)->Unit,onDone:()->Unit,existing:Set<String> = emptySet(),registryLoader:suspend ()->HaRegistry? = { connection.registry() },roomFirst:Boolean=true) {
     androidx.lifecycle.compose.LifecycleResumeEffect(connection) {
         connection.hold()
         onPauseOrDispose { connection.release() }
@@ -64,6 +64,9 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
     var showAll by remember { mutableStateOf(false) }
     var choosing by remember { mutableStateOf<HaEntity?>(null) }
     var adding by remember { mutableStateOf(false) }
+    var rooms by remember { mutableStateOf(roomFirst) }
+    var addFailed by remember { mutableStateOf(false) }
+    var addedHere by remember { mutableStateOf(emptySet<String>()) }
     val scope=rememberCoroutineScope()
     LaunchedEffect(connection,status,retry) {
         if(status!=HaStatus.CONNECTED) {loading=status==HaStatus.CONNECTING;return@LaunchedEffect}
@@ -80,6 +83,24 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
         if(adding || entity.id in existing) return
         adding=true
         scope.launch { try {onAdd(entity,type);onDone()} finally {adding=false} }
+    }
+    if(rooms && !loading && !failed && status==HaStatus.CONNECTED) {
+        RoomSetupContent(catalog,existing+addedHere,adding,addFailed,onAdd={items->
+            if(!adding) {
+                adding=true;addFailed=false
+                scope.launch {
+                    try {
+                        items.filter {it.entity.id !in existing && it.entity.id !in addedHere}.forEach {item ->
+                            onAdd(item.entity,suggestedType(item)!!)
+                            addedHere=addedHere+item.entity.id
+                        }
+                        onDone()
+                    } catch(e:CancellationException) {throw e} catch(_:Exception) {addFailed=true}
+                    finally {adding=false}
+                }
+            }
+        },onBrowse={rooms=false},onClose=onDone)
+        return
     }
     val filtered=remember(catalog,query,group,showAll) {catalog.filter { item ->
         (showAll || !item.hidden) && (group.type==null || group.type in cardTypesFor(item.entity)) &&

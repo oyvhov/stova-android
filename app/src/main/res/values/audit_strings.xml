@@ -5,4 +5,13 @@
     <string name="account_add_media_hint">Vel Jellyfin- eller Emby-tenaren din, eller skriv adressa.</string>
     <string name="account_sign_out_named">Logg ut av %1$s</string>
     <string name="hb_advanced">Avansert oppsett</string>
+    <string name="ha_room_choose">Vel rom</string>
+    <string name="ha_room_intro">Lag ei oversikt med lys, klima og lyd frå eitt rom.</string>
+    <string name="ha_room_review">Kort til rommet</string>
+    <string name="ha_room_review_hint">Fjern dei du ikkje vil ha. Dette legg berre til kort; ingen einingar blir styrte.</string>
+    <string name="ha_room_count">%1$d kort</string>
+    <string name="ha_room_add">Legg til %1$d kort</string>
+    <string name="ha_room_browse">Finn éi eining</string>
+    <string name="ha_room_none">Ingen nye romkort funne. Du kan søkje etter ei eining sjølv.</string>
+    <string name="ha_room_failed">Nokre kort vart ikkje lagra. Prøv dei att.</string>
 </resources>

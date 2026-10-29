@@ -5,4 +5,13 @@
     <string name="account_add_media_hint">Choose your Jellyfin or Emby server, or enter its address.</string>
     <string name="account_sign_out_named">Sign out of %1$s</string>
     <string name="hb_advanced">Advanced setup</string>
+    <string name="ha_room_choose">Choose a room</string>
+    <string name="ha_room_intro">Create an overview with lights, climate and audio from one room.</string>
+    <string name="ha_room_review">Cards for this room</string>
+    <string name="ha_room_review_hint">Remove any you do not want. This only adds cards; no devices are controlled.</string>
+    <string name="ha_room_count">%1$d cards</string>
+    <string name="ha_room_add">Add %1$d cards</string>
+    <string name="ha_room_browse">Find a device</string>
+    <string name="ha_room_none">No new room cards found. You can search for a device yourself.</string>
+    <string name="ha_room_failed">Some cards could not be saved. Try them again.</string>
 </resources>

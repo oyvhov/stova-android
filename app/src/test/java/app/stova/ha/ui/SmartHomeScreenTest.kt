@@ -86,7 +86,7 @@ class SmartHomeScreenTest {
     @Test fun addCardFlowGroupsAndAdds() {
         val socket=FakeHaConnection().apply { allStates=listOf(HaEntity("light.stove","on",StovaJson.parseToJsonElement("""{"friendly_name":"Stove"}""").jsonObject,0,0),HaEntity("sensor.ute","4",JsonObject(emptyMap()),0,0)) }
         var added:Pair<HaEntity,CardType>?=null
-        compose.setContent { StovaTheme { AddCardFlow(socket,{e,type->added=e to type},{}) } }
+        compose.setContent { StovaTheme { AddCardFlow(socket,{e,type->added=e to type},{},roomFirst=false) } }
         compose.waitUntil(5_000) { compose.onAllNodesWithText("Lys").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Lys").performClick();compose.onNodeWithText("Stove").performClick()
         compose.waitUntil(5_000) { added!=null };assertEquals(CardType.LIGHT,added!!.second)

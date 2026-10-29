@@ -12,6 +12,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.Role
 import app.stova.core.ui.focusOutline
 import androidx.compose.ui.Alignment
@@ -33,10 +37,11 @@ import kotlinx.serialization.json.*
 /** Numeric text stays pure; translatable states are resolved from Android resources at render time. */
 data class ChipContent(val icon:CardType,val text:String,@param:StringRes val textResource:Int?=null,val symbol:ImageVector?=null,val glow:LightGlow?=null,val cardId:String?=null,
     /** The icon alone, with the value left to TalkBack. */
-    val iconOnly:Boolean=false)
+    val iconOnly:Boolean=false,val name:String?=null)
 
 fun chipText(config:CardConfig,entity:HaEntity?,locale:Locale):ChipContent=
-    chipDisplay(config,entity,locale).copy(cardId=config.id,iconOnly=config.chipStyle==ChipStyle.ICON_ONLY)
+    chipDisplay(config,entity,locale).copy(cardId=config.id,iconOnly=config.chipStyle==ChipStyle.ICON_ONLY,
+        name=config.name ?: entity?.let(::friendlyName) ?: config.entityId)
 private fun chipDisplay(config:CardConfig,entity:HaEntity?,locale:Locale):ChipContent {
     val state=stateText(entity)
     val symbol=cardIcon(config.type,entity,config.icon)
@@ -75,6 +80,7 @@ private fun climateMode(mode:String)=when(mode) {
     Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
         withinHomeRoom(chips) {if(it.iconOnly) ChipStyle.ICON_ONLY.room else ChipStyle.ICON_AND_VALUE.room}.forEach {chip->
             val source=remember(chip.cardId) {MutableInteractionSource()}
+            val focused by source.collectIsFocusedAsState()
             val drops=dropdown!=null && chip.cardId!=null && chip.icon in QuickTypes
             val action=if((onOpenCard!=null || drops) && chip.cardId!=null) Modifier.focusOutline(source,MaterialTheme.shapes.medium)
                 .clickable(source,indication=null,role=Role.Button) {if(drops) open=chip.cardId else onOpenCard?.invoke(chip.cardId)} else Modifier
@@ -89,12 +95,21 @@ private fun climateMode(mode:String)=when(mode) {
             }
             val label=chip.textResource?.let {stringResource(it)} ?: chip.text
             // Alone, the icon sits in a round pill as tall as the others.
-            Row(Modifier.weight(1f,fill=false).then(action).background(fill,MaterialTheme.shapes.medium).padding(horizontal=if(chip.iconOnly) 6.dp else 10.dp,vertical=6.dp),
+            Box(Modifier.weight(1f,fill=false)) {
+            Row(Modifier.then(action).semantics {chip.name?.let {contentDescription="$it, $label"}}
+                .background(fill,MaterialTheme.shapes.medium).padding(horizontal=if(chip.iconOnly) 6.dp else 10.dp,vertical=6.dp),
                 verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                 Icon(icon,label.takeIf {chip.iconOnly},Modifier.size(16.dp),tint=lit?.color ?: MaterialTheme.colorScheme.onSurfaceVariant)
                 if(!chip.iconOnly) Text(label,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurface,maxLines=1,overflow=TextOverflow.Ellipsis)
                 // Anchored to the chip, so the card drops from right under it.
                 if(drops && open==chip.cardId) dropdown!!(chip) {open=null}
+            }
+            if(focused && open!=chip.cardId) chip.name?.let {name->
+                Box(Modifier.matchParentSize().clearAndSetSemantics {}) {
+                    Text(name,Modifier.align(Alignment.TopCenter).offset(y=36.dp).wrapContentWidth(unbounded=true).widthIn(max=240.dp),
+                        style=MaterialTheme.typography.titleSmall,color=MaterialTheme.colorScheme.onSurface,maxLines=1,overflow=TextOverflow.Ellipsis)
+                }
+            }
             }
         }
     }

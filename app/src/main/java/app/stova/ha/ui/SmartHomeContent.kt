@@ -71,6 +71,11 @@ import kotlin.math.ceil
     var lightsToTurnOff by remember {mutableStateOf<List<String>?>(null)}
     val summaryFocus=remember {FocusRequester()}
     val headerFocus=remember {FocusRequester()}
+    LaunchedEffect(cards.isEmpty(),covered,status) {
+        if(cards.isEmpty() && !covered && !profile.kid && status!=HaStatus.NOT_CONFIGURED) {
+            withFrameNanos { };runCatching {headerFocus.requestFocus(FocusDirection.Enter)}
+        }
+    }
     var editHeld by remember {mutableStateOf(false)}
     var editBackDown by remember {mutableStateOf(false)}
     var editConsumed by remember {mutableStateOf(false)}
@@ -200,7 +205,7 @@ import kotlin.math.ceil
                 iconModifier=Modifier.testTag("page-icon-smart-home"),metadata={HaStatusLabel(status)})
             DashboardSummary(cards,entities,canControl(profile),summaryFocus,Modifier.weight(1f)) {lightsToTurnOff=it}
             if(!profile.kid && status!=HaStatus.NOT_CONFIGURED) {
-                StovaButton(stringResource(R.string.ha_layout), { restoreId=focusedId; layoutOpen=true },
+                if(cards.isNotEmpty()) StovaButton(stringResource(R.string.ha_layout), { restoreId=focusedId; layoutOpen=true },
                     icon=StovaIcons.Rows,compact=true,quiet=true)
                 if(cards.isNotEmpty()) StovaButton(stringResource(if(editing) R.string.ha_done else R.string.ha_edit),
                     {editing=!editing;restoreId=focusedId ?: firstId},icon=if(editing) StovaIcons.Check else StovaIcons.Edit,compact=true,quiet=!editing)

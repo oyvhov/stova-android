@@ -15,16 +15,13 @@ import app.stova.core.theme.HaTokens
 import coil3.compose.AsyncImage
 
 /**
- * The room behind the cards: Home's last picture, held still and dimmed far down, under the sky of
- * the dashboard's own weather card. It reuses what is already decoded and asks nothing of any service.
+ * A quiet surface belonging to the house. Only its own weather adds a restrained sky tint;
+ * movie artwork is never loaded here, even when Home passes its previous backdrop.
  */
 @Composable
 internal fun SmartHomeAtmosphere(backdrop: String?, weather: String?, modifier: Modifier = Modifier) {
     val ink = MaterialTheme.colorScheme.background
     Box(modifier.fillMaxSize().background(ink).clearAndSetSemantics { }) {
-        if (backdrop != null) AsyncImage(backdrop, null, Modifier.fillMaxSize().testTag("smarthome-backdrop:$backdrop"),
-            contentScale = ContentScale.Crop)
-        Box(Modifier.fillMaxSize().background(ink.copy(alpha = if (backdrop != null) .84f else 1f)))
         val sky = weather?.let(HaTokens::sky)
         Box(Modifier.fillMaxSize().testTag("smarthome-sky:${weather ?: "none"}").background(Brush.verticalGradient(
             if (sky != null) listOf(sky.copy(alpha = .2f), sky.copy(alpha = .06f), Color.Transparent)

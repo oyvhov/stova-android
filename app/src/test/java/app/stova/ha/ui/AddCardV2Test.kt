@@ -26,7 +26,7 @@ class AddCardV2Test {
             HaEntity("light.entity_$index","on",buildJsonObject {put("friendly_name","Eining %02d".format(index))},0,0)
         }}
         val fixture=PickerFixture(socket)
-        compose.setContent {StovaTheme(reduceMotion=true) {AddCardFlow(socket,{_,_->fixture.additions++},{fixture.completions++},existing=existing)}}
+        compose.setContent {StovaTheme(reduceMotion=true) {AddCardFlow(socket,{_,_->fixture.additions++},{fixture.completions++},existing=existing,roomFirst=false)}}
         compose.waitUntil(5_000) {compose.onAllNodesWithText("Eining 00").fetchSemanticsNodes().isNotEmpty()}
         return fixture
     }
@@ -113,7 +113,7 @@ class AddCardV2Test {
                 return socket.states()
             }
         }
-        compose.setContent {StovaTheme(reduceMotion=true) {AddCardFlow(connection,{_,_->fixture.additions++},{fixture.completions++})}}
+        compose.setContent {StovaTheme(reduceMotion=true) {AddCardFlow(connection,{_,_->fixture.additions++},{fixture.completions++},roomFirst=false)}}
         compose.waitUntil(5_000) {compose.onAllNodesWithText("Prøv igjen").fetchSemanticsNodes().isNotEmpty()}
         focusScrolledCameraCategory()
         compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
@@ -131,7 +131,7 @@ class AddCardV2Test {
     }
     @Test fun waitsForConnectionAndReloadsAfterReconnect() {
         val socket=FakeHaConnection().apply {status.value=HaStatus.CONNECTING;allStates=listOf(light("light.Lampe"))}
-        compose.setContent {StovaTheme {AddCardFlow(socket,{_,_->},{})}}
+        compose.setContent {StovaTheme {AddCardFlow(socket,{_,_->},{},roomFirst=false)}}
         compose.onNodeWithContentDescription("Koplar til …").assertExists()
         compose.onNodeWithText("Koplar til …").assertDoesNotExist();assertEquals(0,socket.stateRequests)
         // The picker needs live states, so it holds the connection while shown.
@@ -150,7 +150,7 @@ class AddCardV2Test {
             allStates=listOf(light("light.Lampe"),light("light.Diagnose"))
             registryValue=HaRegistry(mapOf("light.Lampe" to HaEntityInfo(room="Stove"),"light.Diagnose" to HaEntityInfo(room="Gang",hidden=true)))
         }
-        compose.setContent {StovaTheme {AddCardFlow(socket,{_,_->},{},existing=setOf("light.Lampe"))}}
+        compose.setContent {StovaTheme {AddCardFlow(socket,{_,_->},{},existing=setOf("light.Lampe"),roomFirst=false)}}
         compose.waitUntil(5_000) {compose.onAllNodesWithText("Stove").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithText("Lagt til").assertExists();compose.onNodeWithText("Diagnose").assertDoesNotExist()
         compose.onNodeWithText("Vis alle").performClick();compose.onNodeWithText("Diagnose").assertExists()
