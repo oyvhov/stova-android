@@ -85,6 +85,18 @@ for profilen. Til dømes kan ei statusbrikke stå før Smarthus og Innstillingar
 Einings- og UI-testane køyrer i Robolectric og treng ingen emulator. Sjå [CONTRIBUTING.md](../CONTRIBUTING.md).
 Med `-Pstova.screens=true` teiknar skjermtestane også bilete til `app/build/screens`.
 
+## Pip i 3D på emulatoren
+
+Pip (Heim for barneprofilen) blir teikna i 3D med Filament, som treng OpenGL ES 3. Emulatoren gir berre ES 2
+med programvare-GPU-en, og då teiknar Stova Pip flatt. For å sjå han i 3D: start emulatoren med
+skjermkortet til PC-en og ES 3 slått på (`-gpu host -feature GLESDynamicVersion`).
+`Start-StovaEmulator.ps1` slår på `GLESDynamicVersion`.
+
+I debug-bygget kan desse filene i `files/` (med `run-as app.stova.debug`) prøve Pip-verda utan ein eigen
+barnekonto: `debug-kids-home` viser Pip-verda for den aktive profilen, `debug-kids-season` med til
+dømes `CHRISTMAS` eller `MAY_17` vel sesongen, og `debug-kids-time` med til dømes `13:00` vel tida på
+døgeret. Fila blir lesen når Stova startar.
+
 ## Fleire emulatorar og feil
 
 - `-Name` og `-Port` lagar og startar ein emulator til, til dømes

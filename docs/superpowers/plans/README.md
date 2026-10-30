@@ -13,6 +13,7 @@ avkryssingsboksar i dei er inga bestilling.
 
 ## Historikk
 
+- 2026-10-29: [Pip-verda: Heim for barneprofilen](2026-10-29-kids-home.md), fullført med barnebibliotek; prøvd på emulator og Loftet, ikkje på Shield.
 - 2026-10-29: [Rett TV-funn og smarthuspopup-ar](2026-10-29-tv-audit-fixes.md), fullført og prøvd på emulator, Shield og Loftet. Sjå [verifisering og avvik](../../verification/2026-10-29-tv-audit-fixes.md).
 
 Dei fem første planane bygde Stova. Opne boksar i dei er utsette steg på Shield, signering og

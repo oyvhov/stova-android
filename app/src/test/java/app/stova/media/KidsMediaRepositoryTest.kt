@@ -162,4 +162,38 @@ class KidsMediaRepositoryTest {
             } finally { scope.cancel() }
         }
     }
+
+    @Test fun aChildsBorrowedLibrariesGiveTheirRowsButNeverTheGrownUpsPicture() = runTest {
+        val accounts = accounts()
+        val adult = accounts.add("grown", ServerInfo(ServerKind.JELLYFIN, "s", "Server", "v", "http://demo.invalid"), AuthResult("token", "u", "Øyvind", "pic"))
+        accounts.shareLibraries("p", setOf(BackgroundLibraryRef(adult.id, "barnefilmar")))
+        val shared = accounts.forProfile("p").first().single()
+        var pictures = 0
+        val repo = MediaRepository(accounts, { account -> object : MediaServerClient by client(account) {
+            override suspend fun userImageTag(): String? { pictures++; return "pic" }
+        } }, tmp.root.resolve("snapshots"), backgroundScope, UnconfinedTestDispatcher(testScheduler))
+        rows(repo); repo.refresh("p")
+        assertTrue(rows(repo).isNotEmpty())
+        assertTrue(rows(repo).all { it.account.id == shared.id })
+        assertEquals("no request for a picture the child never wears", 0, pictures)
+        assertTrue(accounts.pictures.first().keys.none { it == "p" })
+    }
+
+    @Test fun aChildMayBorrowOnlyFromGrownUpsAccountsEachServerUserOnce() = runTest {
+        val accounts = accounts()
+        val server = ServerInfo(ServerKind.JELLYFIN, "s", "Server", "v", "http://demo.invalid")
+        val adult = accounts.add("grown", server, AuthResult("token", "u", "Øyvind"))
+        accounts.add("other-grown", server, AuthResult("token", "u", "Øyvind"))
+        add(accounts) // the child's own sign-in
+        accounts.shareLibraries("p", setOf(BackgroundLibraryRef(adult.id, "barnefilmar")))
+        val asked = mutableListOf<String>()
+        val repo = MediaRepository(accounts, { account -> object : MediaServerClient by client(account) {
+            override suspend fun backgroundLibraries(): List<BackgroundLibrary> { asked += account.profileId
+                return listOf(BackgroundLibrary(BackgroundLibraryRef(account.id, "barnefilmar"), "Barnefilmar", account.serverName)) }
+        } }, tmp.root.resolve("snapshots"), backgroundScope, UnconfinedTestDispatcher(testScheduler))
+        val catalog = repo.lendableLibraries("p")
+        assertEquals(listOf(BackgroundLibraryRef(adult.id, "barnefilmar")), catalog.libraries.map { it.ref })
+        assertEquals("one question per server user, never the child's own or borrowed accounts", listOf("grown"), asked)
+        assertTrue(catalog.hasAccounts)
+    }
 }

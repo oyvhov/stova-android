@@ -99,8 +99,13 @@ class AppContainer(
         }
     }
 
+    // A child's borrowed account asks inside each chosen library only (MediaAccount.libraries).
     val media = app.stova.media.MediaRepository(mediaAccounts, { account ->
-        mediaAccounts.token(account.id)?.let { app.stova.media.net.JellyfinEmbyClient(account, it, mediaHttp, identity.await()) }
+        mediaAccounts.token(account.id)?.let { token ->
+            val device = identity.await()
+            fun client(parent: String? = null) = app.stova.media.net.JellyfinEmbyClient(account, token, mediaHttp, device, parentId = parent)
+            if (account.libraries.isEmpty()) client() else app.stova.media.net.LibrariesClient(account.libraries.associateWith { client(it) })
+        }
     }, File(appContext.filesDir, "snapshots"), appScope)
 
     val watchNext = app.stova.watchnext.WatchNextReader(appContext.contentResolver, {

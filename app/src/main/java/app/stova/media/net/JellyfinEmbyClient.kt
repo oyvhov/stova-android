@@ -25,8 +25,9 @@ interface MediaServerClient {
  suspend fun backgrounds(source: SpotlightSource, libraryId: String?, query: String? = null, ids: List<String>? = null): List<MediaItem> =
   if(libraryId!=null) emptyList() else when { ids!=null->items(ids);query!=null->searchTitles(query);else->spotlight(source) }
 }
+/** With [parentId], every row is asked for inside that one library, as a child's borrowed account is. */
 class JellyfinEmbyClient(private val account: MediaAccount, private val token: String, private val http: OkHttpClient, private val identity: ClientIdentity,
- private val clock: Clock = Clock.systemUTC()): MediaServerClient {
+ private val clock: Clock = Clock.systemUTC(), private val parentId: String? = null): MediaServerClient {
  override suspend fun resume() = latest(Endpoint.RESUME)
  override suspend fun nextUp() = latest(Endpoint.NEXT_UP)
  override suspend fun latest(endpoint: Endpoint): List<MediaItem> = when(endpoint) {
@@ -79,7 +80,10 @@ class JellyfinEmbyClient(private val account: MediaAccount, private val token: S
  private suspend fun load(candidates: List<String>): List<MediaItem> = ItemParser.parseList(fetch(candidates),account,clock)
  private suspend fun fetch(candidates: List<String>): String {
   val header=authHeader(account.kind,identity,token)
-  for(path in candidates) {
+  for(candidate in candidates) {
+   // Known titles came from inside the library already, and a query for another library keeps its own.
+   val path=if(parentId==null || "Ids=" in candidate || "ParentId=" in candidate) candidate
+    else "$candidate&ParentId=${java.net.URLEncoder.encode(parentId,"UTF-8")}"
    try { return http.fetch(Request.Builder().url("${account.baseUrl}/$path").header(header.first,header.second).build()) }
    catch(e: MediaError.Server) { if(e.code!=404) throw e }
   }

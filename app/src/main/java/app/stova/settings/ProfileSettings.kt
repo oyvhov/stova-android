@@ -1,5 +1,6 @@
 package app.stova.settings
 
+import app.stova.kids.stepBedtime
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -150,6 +151,27 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
         SettingsGroup(stringResource(R.string.profile_kid)) {
             SettingsNavRow(stringResource(R.string.kid_apps), onClick = onKidApps)
             SettingsNavRow(stringResource(R.string.settings_accounts), onClick = onAccounts)
+            // Libraries borrowed from a grown-up's account on this TV: the child's rows come from these alone.
+            val libraries by remember(other.id) { container.mediaAccounts.sharedLibraries(other.id) }.collectAsStateWithLifecycle(initialValue = emptySet())
+            var pickingLibraries by remember(other.id) { mutableStateOf(false) }
+            SettingsNavRow(stringResource(R.string.kids_libraries), value = librarySelectionLabel(libraries)) { pickingLibraries = true }
+            if (pickingLibraries) BackgroundLibraryPicker(libraries, { container.media.lendableLibraries(other.id) },
+                { chosen -> scope.launch { container.mediaAccounts.shareLibraries(other.id, chosen.orEmpty()) }; pickingLibraries = false },
+                { pickingLibraries = false }, forChild = true)
+        }
+        // Pip on the child's Home: whether he is there, whether he reads aloud, bedtime and the background.
+        var pip by remember(other.id) { mutableStateOf(other.pip) }
+        fun save(next: app.stova.kids.PipPrefs) { pip = next; scope.launch { container.profiles.update(other.id) { it.copy(pip = next) } } }
+        val on = stringResource(R.string.appearance_on); val off = stringResource(R.string.appearance_off)
+        SettingsGroup(stringResource(R.string.kids_pip_group)) {
+            app.stova.core.ui.SettingsChoiceRow(stringResource(R.string.kids_pip_show), if (pip.shown) on else off) { save(pip.copy(shown = !pip.shown)) }
+            app.stova.core.ui.SettingsChoiceRow(stringResource(R.string.kids_pip_read), if (pip.readAloud) on else off) { save(pip.copy(readAloud = !pip.readAloud)) }
+            app.stova.core.ui.SettingsChoiceRow(stringResource(R.string.kids_bedtime),
+                pip.bedtime?.let { java.time.LocalTime.of(it / 60, it % 60).toString() } ?: stringResource(R.string.kids_bedtime_off)) { step -> save(pip.stepBedtime(step)) }
+            app.stova.core.ui.SettingsChoiceRow(stringResource(R.string.kids_background), stringResource(
+                if (pip.background == app.stova.kids.KidsBackground.ART) R.string.kids_background_art else R.string.kids_background_world)) {
+                save(pip.copy(background = if (pip.background == app.stova.kids.KidsBackground.ART) app.stova.kids.KidsBackground.WORLD else app.stova.kids.KidsBackground.ART))
+            }
         }
     }
     SettingsGroup(stringResource(R.string.settings_profile)) {

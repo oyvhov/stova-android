@@ -18,6 +18,8 @@ data class Profile(
     val home: HomePrefs = HomePrefs(),
     val appearance: AppearancePrefs = AppearancePrefs(),
     val smartHome: app.stova.ha.cards.DashboardPrefs = app.stova.ha.cards.DashboardPrefs(),
+    /** Pip on a child's Home: reading names aloud, and bedtime. */
+    val pip: app.stova.kids.PipPrefs = app.stova.kids.PipPrefs(),
 )
 
 /** App keys are `"<package>/<activity>"`. */

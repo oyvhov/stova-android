@@ -102,6 +102,10 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         }
     }
     val context = androidx.compose.ui.platform.LocalContext.current
+    // A child's profile gets Pip's world. Debug builds can show it for any profile, so the
+    // emulator gets real posters without a child's own account (see docs/EMULATOR.md).
+    val debugPipWorld = remember(context) { app.stova.BuildConfig.DEBUG && java.io.File(context.filesDir, "debug-kids-home").exists() }
+    val pipWorld = profile.kid || debugPipWorld
     val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season(), it.appearance.spotlightSource,it.appearance.backgroundFilter) } }
     val date = app.stova.core.theme.LocalSeasonDate.current
     LaunchedEffect(home, date) { home.setCalendarDate(date) }
@@ -159,7 +163,17 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                 val toned = destination == Destination.HOME || destination == Destination.SMART_HOME
                 androidx.compose.runtime.CompositionLocalProvider(app.stova.core.theme.LocalArtTone provides artTone.takeIf { toned }) {
                 when (destination) {
-                    Destination.HOME -> {
+                    Destination.HOME -> if (pipWorld) {
+                        // A child's Home: Pip's world, or the films' own artwork behind the same rows.
+                        val art = profile.pip.background == app.stova.kids.KidsBackground.ART
+                        if (art) {
+                            val spotlight by home.spotlight.collectAsStateWithLifecycle()
+                            app.stova.background.ProfileBackdrop(profile.id, profile.appearance, spotlight, null, state = backdrop)
+                        }
+                        app.stova.kids.KidsHomeScreen(home, profile, container.appArt, container.appCatalog,
+                            onRefresh = { container.media.refresh(profile.id) }, onPlaybackOpened = { container.media.playbackOpened(profile.id) },
+                            onProfile = switchProfile, world = !art)
+                    } else {
                         // Collected only on Home: the spotlight's rotation ticks while Home is on screen, nowhere else.
                         val spotlight by home.spotlight.collectAsStateWithLifecycle()
                         val fixedFlow = remember(profile.id, profile.appearance.fixedBackground, profile.appearance.backgroundSource,profile.appearance.backgroundFilter) {

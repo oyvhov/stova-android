@@ -3,7 +3,10 @@ import kotlinx.serialization.Serializable
 @Serializable enum class ServerKind { JELLYFIN, EMBY }
 @Serializable data class MediaAccount(val id: String, val profileId: String, val kind: ServerKind, val serverId: String, val serverName: String, val baseUrl: String, val userId: String, val userName: String, val needsSignIn: Boolean = false,
     /** The server's tag for the user's own picture; null when they have none. */
-    val imageTag: String? = null)
+    val imageTag: String? = null,
+    /** A child's account borrowed from a grown-up's on this TV: that account's sign-in, inside [libraries] only. */
+    val sharedFrom: String? = null,
+    val libraries: List<String> = emptyList())
 @Serializable enum class ItemType { MOVIE, SERIES, SEASON, EPISODE, OTHER }
 @Serializable data class Ratings(val community: Double? = null, val criticPercent: Int? = null, val official: String? = null)
 @Serializable data class ItemArt(val backdrop: String? = null, val logo: String? = null, val poster: String? = null, val wide: String? = null)

@@ -47,6 +47,9 @@ android {
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Pip's 3D renderer is native: the TVs are ARM (the Shield 64-bit, some Google TVs 32-bit)
+        // and the emulator x86. Nothing else is packed.
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86") }
     }
 
     buildTypes {
@@ -139,6 +142,10 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("io.coil-kt.coil3:coil-compose:3.4.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
+    // Pip, the robot on a child's Home, in real 3D: Google's renderer and its glTF loader.
+    implementation("com.google.android.filament:filament-android:1.75.1")
+    implementation("com.google.android.filament:gltfio-android:1.75.1")
+    implementation("com.google.android.filament:filament-utils-android:1.75.1")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     val composeBom = platform("androidx.compose:compose-bom:2026.06.00")
 

@@ -36,7 +36,8 @@ if ((& $Adb devices) -match "^$serial\s+device") {
         if ($LASTEXITCODE) { throw "avdmanager kunne ikkje lage $Name." }
     }
     New-Item -ItemType Directory -Force $StovaLogs | Out-Null
-    $arguments = @('-avd', $Name, '-port', "$Port", '-no-snapshot-save', '-no-boot-anim', '-gpu', 'auto')
+    # GLESDynamicVersion gives OpenGL ES 3 where the GPU can, which Pip's 3D needs (docs/EMULATOR.md).
+    $arguments = @('-avd', $Name, '-port', "$Port", '-no-snapshot-save', '-no-boot-anim', '-gpu', 'auto', '-feature', 'GLESDynamicVersion')
     if (-not $EmulatorWindow) { $arguments += '-no-window' }
     $start = @{
         FilePath = $EmulatorTool; ArgumentList = $arguments

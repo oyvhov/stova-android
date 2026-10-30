@@ -44,6 +44,37 @@ class MediaAccountRepositoryTest {
         r.remove(emby.id)
         assertTrue("a removed account leaves no picture behind", r.pictures.first().isEmpty())
     }
+    private fun ref(account: MediaAccount, library: String) = app.stova.profiles.BackgroundLibraryRef(account.id, library)
+    @Test fun aChildBorrowsAGrownUpsAccountForTheChosenLibrariesOnly() = runTest {
+        val r = repo(); val adult = r.add("p", srv, AuthResult("t", "u", "Øyvind", "pic"))
+        r.shareLibraries("kid", setOf(ref(adult, "barnefilmar"), ref(adult, "barneseriar")))
+        val shared = r.forProfile("kid").first().single()
+        assertEquals(adult.id, shared.sharedFrom)
+        assertEquals(listOf("barnefilmar", "barneseriar"), shared.libraries)
+        assertEquals("the grown-up's sign-in, never a copy", "t", r.token(shared.id))
+        assertNull(secrets.read(MediaSecrets.tokenKey(shared.id)))
+        assertEquals(setOf(ref(adult, "barnefilmar"), ref(adult, "barneseriar")), r.sharedLibraries("kid").first())
+        assertFalse("the child never wears the grown-up's picture", "kid" in r.pictures.first())
+        r.shareLibraries("kid", setOf(ref(adult, "barnefilmar")))
+        assertEquals(listOf(shared.id to listOf("barnefilmar")), r.forProfile("kid").first().map { it.id to it.libraries })
+        r.shareLibraries("kid", emptySet())
+        assertTrue(r.forProfile("kid").first().isEmpty())
+        assertEquals("t", r.token(adult.id))
+    }
+    @Test fun theBorrowedLibrariesGoWithTheGrownUpsAccountAndComeBackWithItsSignIn() = runTest {
+        val r = repo(); val adult = r.add("p", srv, AuthResult("t", "u", "Øyvind"))
+        r.shareLibraries("kid", setOf(ref(adult, "barnefilmar")))
+        val shared = r.forProfile("kid").first().single()
+        r.markNeedsSignIn(shared.id)
+        r.add("p", srv, AuthResult("t2", "u", "Øyvind"))
+        assertFalse(r.forProfile("kid").first().single().needsSignIn)
+        assertEquals("t2", r.token(shared.id))
+        r.remove(adult.id)
+        assertTrue(r.forProfile("kid").first().isEmpty())
+        val again = r.add("p", srv, AuthResult("t3", "u", "Øyvind")); r.shareLibraries("kid", setOf(ref(again, "barnefilmar")))
+        r.shareLibraries("other", setOf(ref(r.forProfile("kid").first().single(), "barnefilmar")))
+        assertTrue("a borrowed account is never lent on", r.forProfile("other").first().isEmpty())
+    }
     @Test fun tokenNeverInFile() = runTest {
         repo().add("p", srv, AuthResult("hemmeleg-token", "u", "n")); assertFalse(tmp.root.resolve("a.json").readText().contains("hemmeleg-token")) }
 }

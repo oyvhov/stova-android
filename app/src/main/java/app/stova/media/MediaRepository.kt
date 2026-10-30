@@ -146,8 +146,11 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    }
   } }
 
- suspend fun backgroundLibraries(profileId:String):BackgroundLibraryCatalog = supervisorScope {
-  val all=accounts.forProfile(profileId).first()
+ suspend fun backgroundLibraries(profileId:String):BackgroundLibraryCatalog = libraryCatalog(accounts.forProfile(profileId).first())
+ /** What a child may borrow: the libraries of the grown-ups' own accounts on this TV, each server user asked once. */
+ suspend fun lendableLibraries(profileId:String):BackgroundLibraryCatalog =
+  libraryCatalog(accounts.all.first().filter { it.profileId!=profileId && it.sharedFrom==null }.distinctBy { it.serverId to it.userId })
+ private suspend fun libraryCatalog(all:List<MediaAccount>):BackgroundLibraryCatalog = supervisorScope {
   val active=all.filterNot { it.needsSignIn }
   val results=active.map { account->async {
    account to withTimeoutOrNull(10_000) { orElse(null) { clientFor(account)?.backgroundLibraries() } }
@@ -263,7 +266,8 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
     val cachedSpotlight=slot.spotlight.value.filter { it.account.id==account.id }
     try {
      val client=clientFor(account) ?: throw MediaError.Unauthorized()
-     if(pictureDue) scope.launch(io) { withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(Unit) { accounts.setImageTag(account.id,client.userImageTag()) } } }
+     // A borrowed account is the grown-up's user: the child keeps their own letter, so nobody asks.
+     if(pictureDue && account.sharedFrom==null) scope.launch(io) { withTimeoutOrNull(EXTRA_TIMEOUT_MILLIS) { orElse(Unit) { accounts.setImageTag(account.id,client.userImageTag()) } } }
      coroutineScope {
       // Each optional row has its own failure boundary, including 401 and timeouts.
       val kidsRows=async {

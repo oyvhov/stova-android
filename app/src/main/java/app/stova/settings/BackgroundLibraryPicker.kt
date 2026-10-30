@@ -20,10 +20,11 @@ import app.stova.media.BackgroundLibraryCatalog
 import app.stova.profiles.BackgroundLibraryRef
 import kotlinx.coroutines.CancellationException
 
+/** [forChild]: a child's libraries, chosen one by one from the grown-ups' accounts; "all" is no choice there. */
 @Composable
 internal fun BackgroundLibraryPicker(selected:Set<BackgroundLibraryRef>?,load:suspend ()->BackgroundLibraryCatalog,
-    onSave:(Set<BackgroundLibraryRef>?)->Unit,onDismiss:()->Unit) {
-    var draft by remember { mutableStateOf(selected) }
+    onSave:(Set<BackgroundLibraryRef>?)->Unit,onDismiss:()->Unit,forChild:Boolean=false) {
+    var draft by remember { mutableStateOf(if(forChild) selected.orEmpty() else selected) }
     var catalog by remember { mutableStateOf<BackgroundLibraryCatalog?>(null) }
     var failed by remember { mutableStateOf(false) }
     var retry by remember { mutableIntStateOf(0) }
@@ -39,10 +40,11 @@ internal fun BackgroundLibraryPicker(selected:Set<BackgroundLibraryRef>?,load:su
       CompositionLocalProvider(LocalDensity provides density) {
         Column(Modifier.widthIn(max=680.dp).fillMaxWidth().heightIn(max=440.dp)
             .background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            PageHeader(stringResource(R.string.background_libraries),StovaIcons.Rows)
+            PageHeader(stringResource(if(forChild) R.string.kids_libraries else R.string.background_libraries),StovaIcons.Rows)
+            if(forChild) Text(stringResource(R.string.kids_libraries_note),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                StovaButton(stringResource(R.string.background_libraries_all),{draft=null},Modifier.focusRequester(first),compact=true,quiet=true)
-                StovaButton(stringResource(R.string.background_libraries_clear),{draft=emptySet()},compact=true,quiet=true)
+                if(!forChild) StovaButton(stringResource(R.string.background_libraries_all),{draft=null},Modifier.focusRequester(first),compact=true,quiet=true)
+                StovaButton(stringResource(R.string.background_libraries_clear),{draft=emptySet()},if(forChild) Modifier.focusRequester(first) else Modifier,compact=true,quiet=true)
             }
             LaunchedEffect(Unit) {first.requestFocus()}
             LazyColumn(Modifier.weight(1f,fill=false),verticalArrangement=Arrangement.spacedBy(4.dp)) {
@@ -52,7 +54,7 @@ internal fun BackgroundLibraryPicker(selected:Set<BackgroundLibraryRef>?,load:su
                     failed -> item {Text(stringResource(R.string.custom_library_failed));StovaButton(stringResource(R.string.custom_retry),::retryLoad,compact=true)}
                     state==null -> item {Text(stringResource(R.string.custom_library_loading))}
                     else -> {
-                        if(!state.hasAccounts) item {Text(stringResource(R.string.background_no_accounts))}
+                        if(!state.hasAccounts) item {Text(stringResource(if(forChild) R.string.kids_libraries_no_accounts else R.string.background_no_accounts))}
                         else if(state.libraries.isEmpty() && state.failedAccounts.isEmpty()) item {Text(stringResource(R.string.background_no_libraries))}
                         if(state.failedAccounts.isNotEmpty()) item {
                             Text(stringResource(R.string.background_libraries_failed,state.failedAccounts.joinToString(", ")),color=MaterialTheme.colorScheme.onSurfaceVariant)

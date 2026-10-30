@@ -268,12 +268,14 @@ class SettingsScreenTest {
         assertEquals(emptyMap<app.stova.home.HomeRowKey, app.stova.profiles.RowStyle>(), profile("A").home.rowFormats)
     }
 
+    // A child's Home is Pip's world: no way into Settings, only the profile to switch back.
     @Test fun kidSeesOnlySwitchProfile() {
         runBlocking {
             container.profiles.create("A", AvatarColor.LIME, false)
             container.session.enter(container.profiles.create("K", AvatarColor.ROSE, true).id)
         }
-        openSettings()
+        rule.waitUntil(5_000) { rule.onAllNodes(androidx.compose.ui.test.hasTestTag("kids-home")).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Innstillingar").assertDoesNotExist()
         rule.onNodeWithText("Heim og utsjånad").assertDoesNotExist()
         assertEquals(1, rule.onAllNodesWithText("Byt profil").fetchSemanticsNodes().size) // the one button
     }
@@ -295,6 +297,23 @@ class SettingsScreenTest {
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Banan").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("Banan").performClick()
         rule.waitUntil(5_000) { "demo.banan/demo.banan.Main" in profile("K").apps.kidAllowed }
+    }
+
+    // A child's Home can borrow libraries from a grown-up's account: chosen one by one, never "all".
+    @Test fun aChildsLibrariesAreChosenFromTheGrownUpsAccounts() {
+        runBlocking {
+            container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id)
+            container.profiles.create("K", AvatarColor.ROSE, true)
+        }
+        openSettings()
+        tab("Profilar").performClick()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("K").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("K").performScrollTo().performClick()
+        rule.onNodeWithText("Barnebibliotek").performScrollTo()
+        rule.onNodeWithText("Ingen bibliotek valde").assertExists()
+        rule.onNodeWithText("Barnebibliotek").performClick()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Logg inn med Jellyfin eller Emby på ein vaksen profil først.").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Alle bibliotek").assertDoesNotExist()
     }
 
     // Review Important 6: a new PIN must be typed twice before it is saved.

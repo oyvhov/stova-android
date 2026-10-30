@@ -12,7 +12,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 @Serializable data class MediaAccountsFile(val accounts: List<MediaAccount> = emptyList())
 /** The user's picture from the profile's first account that has one, Jellyfin before Emby, as Home's rows are ordered. */
 fun profilePictures(accounts: List<MediaAccount>): Map<String,String> =
- accounts.sortedWith(compareBy({ it.kind },{ it.serverName })).groupBy { it.profileId }.mapNotNull { (profile,list) ->
+ accounts.filter { it.sharedFrom==null }.sortedWith(compareBy({ it.kind },{ it.serverName })).groupBy { it.profileId }.mapNotNull { (profile,list) ->
   list.firstNotNullOfOrNull { a -> a.imageTag?.let { ImageUrls.user(a.baseUrl,a.kind,a.userId,it) } }?.let { profile to it }
  }.toMap()
 object MediaSecrets { fun tokenKey(accountId: String) = "media/$accountId/token" }
@@ -30,14 +30,39 @@ class MediaAccountRepository(private val store: JsonFileStore<MediaAccountsFile>
  val pictures: Flow<Map<String,String>> = all.map(::profilePictures).distinctUntilChanged()
  suspend fun setImageTag(accountId: String, tag: String?) { store.update { it.copy(accounts=it.accounts.map { a -> if(a.id==accountId) a.copy(imageTag=tag) else a }) } }
  suspend fun add(profileId: String, server: ServerInfo, auth: AuthResult): MediaAccount = mutex.withLock {
-  val old=store.current().accounts.firstOrNull { it.profileId==profileId && it.serverId==server.id && it.userId==auth.userId }
+  val old=store.current().accounts.firstOrNull { it.profileId==profileId && it.serverId==server.id && it.userId==auth.userId && it.sharedFrom==null }
   val account=MediaAccount(old?.id ?: newId(),profileId,server.kind,server.id,server.name,server.baseUrl,auth.userId,auth.userName,imageTag=auth.imageTag)
   secrets.write(MediaSecrets.tokenKey(account.id),auth.token)
-  store.update { it.copy(accounts=it.accounts.filterNot { it.id==account.id }+account) }; credentialRevision.value++; account
+  // A new sign-in also mends the children's libraries borrowed from this account.
+  store.update { it.copy(accounts=it.accounts.filterNot { it.id==account.id }.map { a -> if(a.sharedFrom==account.id) a.copy(needsSignIn=false) else a }+account) }
+  credentialRevision.value++; account
  }
- suspend fun token(accountId: String) = secrets.read(MediaSecrets.tokenKey(accountId))
+ /** A borrowed account signs in with the grown-up's token, which is stored once, under that account. */
+ suspend fun token(accountId: String) = secrets.read(MediaSecrets.tokenKey(store.current().accounts.firstOrNull { it.id==accountId }?.sharedFrom ?: accountId))
+ /** The libraries a child borrows from grown-ups' accounts on this TV. */
+ fun sharedLibraries(profileId: String): Flow<Set<app.stova.profiles.BackgroundLibraryRef>> = forProfile(profileId).map { accounts ->
+  accounts.flatMap { a -> a.sharedFrom?.let { from -> a.libraries.map { app.stova.profiles.BackgroundLibraryRef(from,it) } }.orEmpty() }.toSet()
+ }.distinctUntilChanged()
+ /**
+  * Lends a child the chosen libraries: one borrowed account per grown-up's account, which keeps its id as the
+  * choice changes, so the child's rows and their snapshot stay. A borrowed account is never lent on.
+  */
+ suspend fun shareLibraries(profileId: String, libraries: Set<app.stova.profiles.BackgroundLibraryRef>) = mutex.withLock {
+  store.update { file ->
+   val sources=file.accounts.filter { it.sharedFrom==null && it.profileId!=profileId }.associateBy { it.id }
+   val chosen=libraries.groupBy { it.accountId }.filterKeys { it in sources }
+   val kept=file.accounts.filterNot { it.profileId==profileId && it.sharedFrom!=null }
+   val lent=chosen.map { (from,refs) ->
+    val source=sources.getValue(from)
+    val old=file.accounts.firstOrNull { it.profileId==profileId && it.sharedFrom==from }
+    source.copy(id=old?.id ?: newId(),profileId=profileId,imageTag=null,sharedFrom=from,libraries=refs.map { it.libraryId }.distinct().sorted())
+   }
+   file.copy(accounts=kept+lent)
+  }
+  credentialRevision.value++
+ }
  suspend fun markNeedsSignIn(accountId: String) { store.update { it.copy(accounts=it.accounts.map { a -> if(a.id==accountId) a.copy(needsSignIn=true) else a }) } }
  suspend fun remove(accountId: String) = mutex.withLock { removeLocked(accountId) }
- private suspend fun removeLocked(id: String) { store.update { it.copy(accounts=it.accounts.filterNot { a -> a.id==id }) }; secrets.delete(MediaSecrets.tokenKey(id)) }
+ private suspend fun removeLocked(id: String) { store.update { it.copy(accounts=it.accounts.filterNot { a -> a.id==id || a.sharedFrom==id }) }; secrets.delete(MediaSecrets.tokenKey(id)) }
  suspend fun removeForProfile(profileId: String) = mutex.withLock { store.current().accounts.filter { it.profileId==profileId }.forEach { removeLocked(it.id) } }
 }
