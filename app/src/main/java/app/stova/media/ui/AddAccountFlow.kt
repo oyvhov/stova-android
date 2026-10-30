@@ -21,14 +21,30 @@ import kotlinx.coroutines.flow.Flow
 private enum class SignInStep { DISCOVER, ADDRESS, PASSWORD, QUICK, DONE }
 @Composable fun AddAccountFlow(profileId: String,container: AppContainer,onDone: () -> Unit) {
  val discovery=remember(container) { container.lanDiscovery.discover() }
- AddAccountContent(profileId,container.mediaAccounts,container.serverProbe,container.mediaAuth,discovery,onDone)
+ // Spole approves the code when it can: started for a result, so Spole can see that Stova asks.
+ val context=androidx.compose.ui.platform.LocalContext.current
+ val spole=remember(context) { SpoleHandoff(context).approvalPackage() }
+ val profiles by container.profiles.file.collectAsState(null)
+ val forChild=profiles?.profiles?.firstOrNull { it.id==profileId }?.kid==true
+ var pending by remember { mutableStateOf<((SpoleApproval) -> Unit)?>(null) }
+ val launcher=androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
+  pending?.invoke(SpoleContract.approval(result.resultCode,result.data));pending=null
+ }
+ val approver=spole?.let { pkg -> SpoleApprover { server,code,done ->
+  pending=done
+  try { launcher.launch(SpoleContract.approveIntent(pkg,server,code.code,forChild)) }
+  catch(_: android.content.ActivityNotFoundException) { pending=null;done(SpoleApproval.FAILED) }
+ } }
+ AddAccountContent(profileId,container.mediaAccounts,container.serverProbe,container.mediaAuth,discovery,onDone,approver)
 }
 /** Dependency seam also used by the flow tests; no application graph is needed to sign in. */
-@Composable internal fun AddAccountContent(profileId: String,accounts: MediaAccountRepository,probe: ServerProbe,auth: MediaAuth,discovery: Flow<DiscoveredServer>,onDone: () -> Unit) {
+@Composable internal fun AddAccountContent(profileId: String,accounts: MediaAccountRepository,probe: ServerProbe,auth: MediaAuth,discovery: Flow<DiscoveredServer>,onDone: () -> Unit,
+ spole: SpoleApprover?=null) {
  var step by remember { mutableStateOf(SignInStep.DISCOVER) }
  var address by remember { mutableStateOf("") };var user by remember { mutableStateOf("") };var password by remember { mutableStateOf("") }
  var server by remember { mutableStateOf<ServerInfo?>(null) };var code by remember { mutableStateOf<QuickConnectCode?>(null) }
  var busy by remember { mutableStateOf(false) };var error by remember { mutableStateOf<Int?>(null) }
+ var approving by remember { mutableStateOf(false) };var approved by remember { mutableStateOf(false) }
  val found=remember { mutableStateListOf<DiscoveredServer>() }; val scope=rememberCoroutineScope()
  // Each step replaces the control that was pressed. Focus waits on the section's tab meanwhile and then
  // enters the new step; left alone, Compose hands it to the first tab and Settings leaves Smarthus.
@@ -83,6 +99,24 @@ private enum class SignInStep { DISCOVER, ADDRESS, PASSWORD, QUICK, DONE }
    SignInStep.QUICK -> {
     Text(code?.code.orEmpty(),style=MaterialTheme.typography.displaySmall)
     Text(stringResource(R.string.quick_connect_approve))
+    val info=server;val quick=code
+    if(spole!=null && info!=null && quick!=null && !approved) StovaButton(stringResource(R.string.spole_approve),{
+     if(approving) return@StovaButton
+     approving=true;error=null
+     // Focus waits on the section's tab while Spole is in front: this button may be gone when Stova comes
+     // back, and Compose would then give focus to the first tab, which selects another section.
+     tab?.requestFocus()
+     spole.approve(info,quick) { answer -> approving=false;park()
+      when(answer) {
+       SpoleApproval.APPROVED -> approved=true
+       SpoleApproval.NOT_SIGNED_IN -> error=R.string.spole_not_signed_in
+       SpoleApproval.FAILED -> error=R.string.spole_approve_failed
+       SpoleApproval.DECLINED -> Unit
+      }
+     }
+    },primary=true)
+    // The code is approved; the wait for the server to hand over the sign-in goes on as before.
+    if(approved) Text(stringResource(R.string.spole_approved))
     StovaButton(stringResource(R.string.use_password),{ go(SignInStep.PASSWORD);code=null;error=null })
     // Retrying clears the error and with it this button.
     if(error!=null) StovaButton(stringResource(R.string.account_retry),{ server?.let { park();connect(it.baseUrl) } })

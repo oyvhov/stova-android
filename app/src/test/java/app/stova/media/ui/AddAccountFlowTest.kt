@@ -23,8 +23,8 @@ class AddAccountFlowTest {
  @get:Rule val server=MockWebServer()
  @get:Rule val tmp=TemporaryFolder()
  private fun repo()=MediaAccountRepository(JsonFileStore(tmp.root.resolve("accounts.json"),MediaAccountsFile.serializer(),MediaAccountsFile()),InMemorySecretStore())
- private fun start(r: MediaAccountRepository) {
-  compose.setContent { StovaTheme { AddAccountContent("p",r,ServerProbe(OkHttpClient()),MediaAuth(OkHttpClient(),ClientIdentity("d","i","v")),emptyFlow(),{}) } }
+ private fun start(r: MediaAccountRepository,spole: SpoleApprover?=null) {
+  compose.setContent { StovaTheme { AddAccountContent("p",r,ServerProbe(OkHttpClient()),MediaAuth(OkHttpClient(),ClientIdentity("d","i","v")),emptyFlow(),{},spole) } }
   compose.onNodeWithText("Skriv adresse").performClick()
   compose.onNodeWithText("Serveradresse").performTextInput(server.url("/").toString())
   compose.onNodeWithText("Neste").performClick()
@@ -49,5 +49,30 @@ class AddAccountFlowTest {
   server.enqueue(MockResponse().setBody("""{"ProductName":"Emby","Id":"s"}"""));server.enqueue(MockResponse().setResponseCode(401))
   start(repo());awaitText("Logg inn");compose.onNodeWithText("Logg inn").performClick();awaitText("Feil brukarnamn eller passord")
   compose.onNodeWithText("Feil brukarnamn eller passord").assertIsDisplayed()
+ }
+ // Spole is signed in already: it approves the code Stova shows, so nobody types it on another device.
+ @Test fun spoleApprovesTheCodeWhenItIsThere() {
+  server.enqueue(MockResponse().setBody("""{"ProductName":"Jellyfin","Id":"srv-1"}""")); server.enqueue(MockResponse().setBody("true"))
+  server.enqueue(MockResponse().setBody("""{"Code":"123456","Secret":"s"}"""))
+  repeat(5) { server.enqueue(MockResponse().setBody("""{"Authenticated":false}""")) }
+  var asked: Pair<String,String>? = null
+  val spole=SpoleApprover { info,code,done -> asked=info.id to code.code; done(SpoleApproval.APPROVED) }
+  start(repo(),spole);awaitText("Godkjenn med Spole")
+  compose.onNodeWithText("Godkjenn med Spole").performClick()
+  awaitText("Godkjent i Spole. Loggar inn …")
+  assertEquals("srv-1" to "123456",asked)
+ }
+ @Test fun spoleWithoutThatServerSaysSo() {
+  server.enqueue(MockResponse().setBody("""{"ProductName":"Jellyfin","Id":"srv-1"}""")); server.enqueue(MockResponse().setBody("true"))
+  server.enqueue(MockResponse().setBody("""{"Code":"123456","Secret":"s"}"""))
+  repeat(5) { server.enqueue(MockResponse().setBody("""{"Authenticated":false}""")) }
+  start(repo(),SpoleApprover { _,_,done -> done(SpoleApproval.NOT_SIGNED_IN) });awaitText("Godkjenn med Spole")
+  compose.onNodeWithText("Godkjenn med Spole").performClick()
+  awaitText("Spole er ikkje logga inn på denne serveren.")
+ }
+ @Test fun withoutSpoleThereIsNoSpoleButton() {
+  server.enqueue(MockResponse().setBody("""{"ProductName":"Jellyfin","Id":"s"}""")); server.enqueue(MockResponse().setBody("true"))
+  server.enqueue(MockResponse().setBody("""{"Code":"123456","Secret":"s"}""")); server.enqueue(MockResponse().setBody("""{"Authenticated":false}"""))
+  start(repo());awaitText("123456");compose.onNodeWithText("Godkjenn med Spole").assertDoesNotExist()
  }
 }

@@ -8,11 +8,12 @@ avkryssingsboksar i dei er inga bestilling.
 
 | Plan | Står att |
 |---|---|
-| [Snarvegar i favorittrada: bibliotek og Home Assistant](2026-10-27-shortcut-tiles.md) | Spole-lenkja (eiga grein i Spole-repoet) |
 | [Eineståande launcher: finpuss, Heim etter tid, fart og huset](2026-10-26-outstanding-launcher.md) | Steg 2–9. I steg 4 er punkt 8 (snøggmenyen på Innstillingar) gjort. |
 
 ## Historikk
 
+- 2026-10-30: [Stova og Spole: logg inn éin gong, framdrift og bibliotekfliser](2026-10-30-spole-bridge.md), fullført; Spole-delen på greina `launcher-bridge`.
+- 2026-10-27: [Snarvegar i favorittrada](2026-10-27-shortcut-tiles.md), fullført; Spole-lenkja kom i Spole beta26 og er prøvd på Loftet.
 - 2026-10-29: [Pip-verda: Heim for barneprofilen](2026-10-29-kids-home.md), fullført med barnebibliotek; prøvd på emulator og Loftet, ikkje på Shield.
 - 2026-10-29: [Rett TV-funn og smarthuspopup-ar](2026-10-29-tv-audit-fixes.md), fullført og prøvd på emulator, Shield og Loftet. Sjå [verifisering og avvik](../../verification/2026-10-29-tv-audit-fixes.md).
 

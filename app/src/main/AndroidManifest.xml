@@ -68,6 +68,15 @@
             </intent-filter>
         </activity>
 
+        <!-- Spole says where a film stopped (media/SpolePlayback.kt); exported so Spole can reach it. -->
+        <receiver
+            android:name=".media.SpolePlaybackReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="app.reelstack.action.PLAYBACK_PROGRESS" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".homebutton.HomeButtonService"
             android:exported="true"

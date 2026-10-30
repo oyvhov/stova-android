@@ -680,6 +680,10 @@
     <string name="kids_row_movies">Filmar</string>
     <string name="kids_row_series">Seriar</string>
     <string name="kids_new">Nytt!</string>
+    <string name="spole_approve">Godkjenn med Spole</string>
+    <string name="spole_approved">Godkjent i Spole. Loggar inn …</string>
+    <string name="spole_not_signed_in">Spole er ikkje logga inn på denne serveren.</string>
+    <string name="spole_approve_failed">Spole kunne ikkje godkjenne koden. Prøv igjen, eller godkjenn han på ei anna eining.</string>
     <string name="kids_libraries">Barnebibliotek</string>
     <string name="kids_libraries_note">Barnet ser berre biblioteka du vel her, med kontoen til den vaksne. Avspeling går i Spole som før.</string>
     <string name="kids_libraries_no_accounts">Logg inn med Jellyfin eller Emby på ein vaksen profil først.</string>

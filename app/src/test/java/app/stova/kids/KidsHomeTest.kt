@@ -122,6 +122,27 @@ class KidsHomeTest {
         assertTrue("the new first row starts in the sky band, below the header: ${card.top}", card.top >= 150.dp)
     }
 
+    // Back from Spole the title just watched goes first in Continue; the card in focus moves with it and stays in sight.
+    @Test fun theCardInFocusStaysInSightWhenItMovesToTheFrontOfItsRow() {
+        val films = (1..8).map { MediaItem("m$it", "a", ItemType.MOVIE, "Film $it", progress = 0.3f) }
+        fun continuing(items: List<MediaItem>) = listOf(HomeRowUi.Media(HomeRowKey.continueWatching("a"), account, MediaRowKind.CONTINUE, items, false))
+        val current = androidx.compose.runtime.mutableStateOf<List<HomeRowUi>>(continuing(films))
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            val input = androidx.compose.ui.platform.LocalInputModeManager.current
+            androidx.compose.runtime.SideEffect { input.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
+            KidsHomeContent(child, current.value, null, halloween, LocalTime.NOON, onPlay = {}, onApp = {}, onProfile = {})
+        } }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.onRoot().performKeyInput { repeat(5) { pressKey(Key.DirectionRight) } }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.onNodeWithContentDescription("Film 6").assertIsFocused()
+        current.value = continuing(listOf(films[5]) + films.filterNot { it.id == "m6" })
+        compose.mainClock.advanceTimeBy(2_000)
+        compose.onNodeWithContentDescription("Film 6").assertIsFocused()
+        val card = compose.onNodeWithContentDescription("Film 6").getUnclippedBoundsInRoot()
+        assertTrue("the card is on screen, not scrolled away to the left: ${card.left}", card.left >= 0.dp)
+    }
+
     @Test fun afterBedtimePipSleepsAndSaysGoodnight() {
         show(rows, LocalTime.of(20, 0), child.copy(pip = PipPrefs(bedtime = 19 * 60)))
         compose.mainClock.advanceTimeBy(1_000)

@@ -36,6 +36,27 @@ class HomeFocusNavigationTest {
         } }
     }
 
+    // Back from Spole the title just watched goes first in Continue; the row follows the card in focus.
+    @Test fun theCardInFocusStaysInSightWhenItMovesToTheFrontOfItsRow() {
+        val account=MediaAccount("a","p",ServerKind.JELLYFIN,"s","Demo","https://demo.invalid","u","U")
+        val films=(1..8).map { MediaItem("m$it","a",ItemType.MOVIE,"Film $it",progress=0.3f) }
+        fun rows(items:List<MediaItem>)=listOf(HomeRowUi.Media(HomeRowKey.continueWatching("a"),account,MediaRowKind.CONTINUE,items,false))
+        val current=androidx.compose.runtime.mutableStateOf(rows(films))
+        compose.setContent { StovaTheme(reduceMotion=true) {
+            val context=LocalContext.current
+            HomeContent(current.value,null,HomeRowKey.continueWatching("a"),AppArtCache(context),PackageManagerAppCatalog(context,emptySet()),{},{},{},{},
+                topBar={TopBar(Profile("p","A",AvatarColor.LIME),{},{},onSmartHome={})})
+        } }
+        compose.onNodeWithContentDescription("Film 1").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onRoot().performKeyInput { repeat(5) { pressKey(Key.DirectionRight) } }
+        compose.onNodeWithContentDescription("Film 6").assertIsFocused()
+        current.value=rows(listOf(films[5])+films.filterNot { it.id=="m6" })
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Film 6").assertIsFocused()
+        val card=compose.onNodeWithContentDescription("Film 6").getUnclippedBoundsInRoot()
+        org.junit.Assert.assertTrue("the card is on screen: ${card.left}",card.left>=androidx.compose.ui.unit.Dp(0f))
+    }
+
     @Test fun downFromEveryTopIconReachesAppsAndUpReturnsToThatIcon() {
         render(apps=true)
         for(label in listOf("Smarthus","Innstillingar","Byt profil")) {

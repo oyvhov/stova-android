@@ -30,6 +30,14 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
     onFocus: (FocusedTarget) -> Unit, onClick: (FocusedTarget.Media) -> Unit, onLongClick: (FocusedTarget.Media) -> Unit, returnFocus: FocusRequester?) {
     val index = row.items.indexOfFirst { it.id == (restore as? FocusedTarget.Media)?.item?.id }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
+    // Back from Spole the title just watched goes first: when the order changes, the row follows the card in
+    // focus, which a lazy row would otherwise leave out of sight while keeping its first visible card.
+    var focusedId by remember { mutableStateOf<String?>(null) }
+    val ids = row.items.map { it.id }
+    LaunchedEffect(ids) {
+        val at = ids.indexOf(focusedId ?: return@LaunchedEffect)
+        if (at >= 0 && state.layoutInfo.visibleItemsInfo.none { it.index == at && it.offset >= 0 }) state.scrollToItem(at)
+    }
     Column {
         if (LocalRowStyle.current.showTitle) MediaRowHeader(row) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
         LazyRow(Modifier.focusRestorer(), state = state,
@@ -39,7 +47,7 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
                 val target = FocusedTarget.Media(item, row.account)
                 DrawnFocus(i == index && focus != null) {
                     MediaCard(item, row.kind == MediaRowKind.LATEST_MOVIES && app.stova.core.theme.LocalAppearance.current.movieStyle == app.stova.profiles.MovieStyle.POSTER,
-                        { onClick(target) }, { onLongClick(target) }, { onFocus(target) },
+                        { onClick(target) }, { onLongClick(target) }, { focusedId = item.id; onFocus(target) },
                         (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
                             .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier))
                 }

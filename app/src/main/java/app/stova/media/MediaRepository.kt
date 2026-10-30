@@ -26,6 +26,10 @@ const val SEASONAL_REFRESH_MILLIS = 60 * 60 * 1000L
 const val REFRESH_MIN_AGE_MILLIS = 5 * 60 * 1000L
 /** Failed rows can recover on the next visit without hammering an unreachable server. */
 const val FAILED_REFRESH_RETRY_MILLIS = 30_000L
+/** How long what Spole said about a stopped film outranks the server's answers, which may not have it yet. */
+const val PLAYBACK_HOLD_MILLIS = 2 * 60 * 1000L
+/** Spole reports the stop to the server too; by then it has usually arrived. */
+const val PLAYBACK_REFRESH_DELAY_MILLIS = 4_000L
 
 class MediaRepository(private val accounts: MediaAccountRepository,private val clientFor: suspend (MediaAccount) -> MediaServerClient?,private val snapshotDir: File,private val scope: CoroutineScope,private val io: CoroutineDispatcher=Dispatchers.IO,private val clock: () -> Long=System::currentTimeMillis) {
  private data class BackgroundPoolKey(val source:SpotlightSource,val filter:BackgroundFilter,val accounts:List<String>)
@@ -47,6 +51,10 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
  }
  private class Fetched(val rows: List<HomeRowUi.Media>,val spotlight: List<SpotlightEntry>,val spotlightOk: Boolean,val seasonalOk: Boolean=true,val rowsOk:Boolean=true)
  private val slots=ConcurrentHashMap<String,Slot>()
+ /** Spole's latest word per user and title, when it came and in what order (see [applyPlayback]). */
+ private class Heard(val report:SpolePlayback,val at:Long,val order:Long)
+ private val playback=ConcurrentHashMap<String,Heard>()
+ private val heard=AtomicLong()
  private fun slot(id: String): Slot { require(id.matches(Regex("[A-Za-z0-9_-]{1,128}"))); return slots.getOrPut(id) { Slot(JsonFileStore(File(snapshotDir,"$id.json"),MediaSnapshot.serializer(),MediaSnapshot(),io)) } }
  private suspend fun loaded(id:String): Slot {
   val slot=slot(id)
@@ -237,6 +245,47 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    MediaRowKind.LATEST_SERIES -> 5
   }
  }
+ /**
+  * Spole has just stopped a film or an episode: every profile with that user sees it at once, it outranks
+  * the server's answers for [PLAYBACK_HOLD_MILLIS], and the server is asked again shortly.
+  */
+ fun applyPlayback(report:SpolePlayback) {
+  val now=clock()
+  playback["${report.kind}/${report.userId}/${report.itemId}"]=Heard(report,now,heard.incrementAndGet())
+  playback.entries.removeIf { now-it.value.at !in 0 until PLAYBACK_HOLD_MILLIS }
+  for((profileId,slot) in slots) {
+   val rows=slot.rows.value ?: continue
+   val patched=withPlayback(rows,now)
+   if(patched==rows) continue
+   slot.rows.value=patched
+   slot.playbackRevision.incrementAndGet()
+   scope.launch(io) {
+    slot.store.update { it.copy(rows=patched.map { row -> SnapshotRow(row.key,row.account.id,row.kind,row.items) }) }
+    delay(PLAYBACK_REFRESH_DELAY_MILLIS);refresh(profileId,0)
+   }
+  }
+ }
+ private fun withPlayback(rows:List<HomeRowUi.Media>,now:Long):List<HomeRowUi.Media> =
+  playback.values.filter { now-it.at in 0 until PLAYBACK_HOLD_MILLIS }.sortedBy { it.order }.fold(rows) { out,it -> withPlayback(out,it.report) }
+ /** The title's progress everywhere; seen to the end it leaves Continue, well started it goes first there. */
+ private fun withPlayback(rows:List<HomeRowUi.Media>,report:SpolePlayback):List<HomeRowUi.Media> {
+  fun mine(row:HomeRowUi.Media)=row.account.kind==report.kind && row.account.userId==report.userId
+  val known=rows.filter(::mine).flatMap { it.items }.firstOrNull { it.id==report.itemId } ?: return rows
+  val progress=if(report.finished) null else report.progress
+  var out=rows.map { row -> if(!mine(row)) row else row.copy(items=row.items.map { if(it.id==report.itemId) it.copy(progress=progress) else it }) }
+  for(account in out.filter(::mine).map { it.account }.distinctBy { it.id }) {
+   val at=out.indexOfFirst { it.account.id==account.id && it.kind==MediaRowKind.CONTINUE }
+   val others=out.getOrNull(at)?.items.orEmpty().filterNot { it.id==report.itemId }
+   val items=when {
+    report.finished -> others
+    (progress ?: 0f) >= 0.05f -> listOf(known.copy(accountId=account.id,progress=progress))+others
+    else -> continue // Barely started: the server keeps no place for it either.
+   }
+   val row=HomeRowUi.Media(HomeRowKey.continueWatching(account.id),account,MediaRowKind.CONTINUE,items,out.getOrNull(at)?.offline ?: false)
+   out=if(at>=0) out.toMutableList().also { it[at]=row } else out.toMutableList().also { list -> list.add(list.indexOfFirst { it.account.id==account.id },row) }
+  }
+  return out.filter { it.items.isNotEmpty() }
+ }
  private suspend fun <T> orElse(fallback: T,block: suspend () -> T): T = try { block() } catch(e: CancellationException) { throw e } catch(_: Exception) { fallback }
  /** Spole may change progress even when opened on its own home. Keep invalidation profile-scoped. */
  fun playbackOpened(profileId:String) { slot(profileId).playbackRevision.incrementAndGet() }
@@ -318,7 +367,7 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
       catch(_: Exception) { Fetched(cached,cachedSpotlight,false,rowsOk=false) }
    } }.awaitAll() }
    val active=accounts.forProfile(profileId).first()
-   val current=orderedRows(visible(fetched.flatMap { it.rows },active),kid)
+   val current=orderedRows(withPlayback(visible(fetched.flatMap { it.rows },active),now),kid)
    val valid=active.filterNot { it.needsSignIn }.mapTo(mutableSetOf()) { it.id }
    val spotlight=fetched.flatMap { it.spotlight }.filter { it.account.id in valid }.sortedByDescending { it.newSeason }
    if(spotlightDue && fetched.all { it.spotlightOk }) slot.spotlightAt=now

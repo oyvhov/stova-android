@@ -680,6 +680,10 @@
     <string name="kids_row_movies">Films</string>
     <string name="kids_row_series">Series</string>
     <string name="kids_new">New!</string>
+    <string name="spole_approve">Approve with Spole</string>
+    <string name="spole_approved">Approved in Spole. Signing in …</string>
+    <string name="spole_not_signed_in">Spole is not signed in to this server.</string>
+    <string name="spole_approve_failed">Spole could not approve the code. Try again, or approve it on another device.</string>
     <string name="kids_libraries">Children\'s libraries</string>
     <string name="kids_libraries_note">The child sees only the libraries you choose here, through the grown-up\'s account. Playback stays in Spole.</string>
     <string name="kids_libraries_no_accounts">Sign in to Jellyfin or Emby on a grown-up\'s profile first.</string>

@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -337,11 +338,11 @@ private fun KidsRow(row: HomeRowUi, art: AppArtCache?, first: Boolean, focused: 
                 is HomeRowUi.Media -> itemsIndexed(row.items, key = { _, item -> item.id }) { i, item ->
                     val title = item.seriesName?.takeIf { item.type == ItemType.EPISODE } ?: item.title
                     KidsCard(PosterWidth, PosterHeight, title, { onPlay(FocusedTarget.Media(item, row.account)) }, { onFocused(title, label, item.isNew) }, onMoved,
-                        if (i == 0) Modifier.focusRequester(start) else Modifier) { Poster(item) }
+                        if (i == 0) Modifier.focusRequester(start) else Modifier, place = i) { Poster(item) }
                 }
                 is HomeRowUi.Apps -> itemsIndexed(row.tiles.filterIsInstance<FavoriteTile.App>(), key = { _, tile -> tile.key }) { i, tile ->
                     KidsCard(AppWidth, AppHeight, tile.app.label, { onApp(tile.app) }, { onFocused(tile.app.label, label, false) }, onMoved,
-                        if (i == 0) Modifier.focusRequester(start) else Modifier) { AppArt(tile.app, art) }
+                        if (i == 0) Modifier.focusRequester(start) else Modifier, place = i) { AppArt(tile.app, art) }
                 }
                 is HomeRowUi.WatchNext -> Unit
             }
@@ -368,11 +369,22 @@ private fun rowLook(row: HomeRowUi): Pair<ImageVector, String> = when (row) {
 /** A card the size of a child's attention: it grows and gets a white frame in focus, and tells Pip where it is. */
 @Composable
 private fun KidsCard(width: Dp, height: Dp, title: String, onClick: () -> Unit, onFocused: () -> Unit, onMoved: (Rect) -> Unit,
-    modifier: Modifier, content: @Composable BoxScope.() -> Unit) {
+    modifier: Modifier, place: Int = 0, content: @Composable BoxScope.() -> Unit) {
     var focused by remember { mutableStateOf(false) }
+    // A card in focus that changes place (back from Spole, the title just watched goes first) is brought
+    // back into sight, and Pip with it; the row keeps its scroll by the first card it shows otherwise.
+    val sight = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
+    val density = LocalDensity.current
+    LaunchedEffect(place) {
+        if (!focused) return@LaunchedEffect
+        // With the TV's safe edge either side, as the row's own padding leaves it.
+        val edge = with(density) { StovaLayout.TvSafeEdge.toPx() }
+        sight.bringIntoView(Rect(-edge, 0f, with(density) { width.toPx() } + edge, with(density) { height.toPx() }))
+    }
     val scale by animateFloatAsState(if (focused) 1.09f else 1f, spring(dampingRatio = 0.6f, stiffness = 380f), label = "card")
     val source = remember { MutableInteractionSource() }
     Box(modifier.size(width, height)
+        .bringIntoViewRequester(sight)
         .onFocusChanged { focused = it.isFocused }
         .onGloballyPositioned { if (focused) onMoved(scaledBounds(it.boundsInRoot(), 1.09f)) }
         .graphicsLayer { scaleX = scale; scaleY = scale }
