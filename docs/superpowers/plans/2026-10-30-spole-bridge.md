@@ -41,8 +41,8 @@ Begge sider skriv namna under, så dei må endrast saman.
 - [x] 3. Spole: `LauncherApproveActivity` (kontrakten over), med kontoval, PIN og feil på nynorsk.
 - [x] 4. Spole: framdriftsmeldinga frå `JellyfinPlayerModel.report` ved stopp og når spelaren går i bakgrunnen.
 - [x] 5. Bygg (Stova-TV-bygg, signert Spole-release lokalt), installer på Loftet med `install -r` og prøv
-  alle tre punkta. Ikkje Shield. Framdrift er prøvd med ekte avspeling på emulator-5580, ikkje på Loftet
-  (nokon slo av TV-en der midt i testen).
+  alle tre punkta. Ikkje Shield. Framdrift er prøvd med ekte avspeling på emulator-5580, og 2026-10-31 på
+  Loftet òg (Toy Story 5 i Pip-verda: stopp i Spole → fremst i «Hald fram» med ny framdrift).
 - [x] 7. Funne på Loftet: Tilbake frå eit bibliotek Stova opna, gjekk til biblioteksida i Spole. No går siste
   Tilbake frå rota av biblioteket til Stova, som frå tittel-detaljar (`atLauncherLibraryRoot`).
 - [x] 6. HANDOFF, ARCHITECTURE og Spole-dokumentasjonen.

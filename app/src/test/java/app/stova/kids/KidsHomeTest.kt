@@ -7,6 +7,8 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
+import androidx.compose.ui.unit.width
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
 import app.stova.core.theme.AvatarColor
@@ -141,6 +143,26 @@ class KidsHomeTest {
         compose.onNodeWithContentDescription("Film 6").assertIsFocused()
         val card = compose.onNodeWithContentDescription("Film 6").getUnclippedBoundsInRoot()
         assertTrue("the card is on screen, not scrolled away to the left: ${card.left}", card.left >= 0.dp)
+    }
+
+    // "Continue" shows a wide picture from the film, as Jellyfin does; the other rows keep their posters.
+    @Test fun continueWearsWidePicturesAndTheOtherRowsPosters() {
+        val latest = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES,
+            listOf(MediaItem("m2", "a", ItemType.MOVIE, "Flåklypa")), false)
+        show(rows + latest)
+        compose.mainClock.advanceTimeBy(1_000)
+        val going = compose.onNodeWithContentDescription("Kaptein Sabeltann").getUnclippedBoundsInRoot()
+        assertTrue("a card in Continue is wide: $going", going.width > going.height)
+        val poster = compose.onNodeWithContentDescription("Flåklypa").getUnclippedBoundsInRoot()
+        assertTrue("a card in the other rows is a poster: $poster", poster.height > poster.width)
+    }
+
+    @Test fun aWideCardTakesTheWidePictureAndFallsBackToThePoster() {
+        val both = MediaItem("m1", "a", ItemType.MOVIE, "Toy Story 5", art = ItemArt(poster = "poster", wide = "thumb"))
+        assertEquals("thumb", kidsArt(both, wide = true))
+        assertEquals("poster", kidsArt(both, wide = false))
+        assertEquals("poster", kidsArt(both.copy(art = ItemArt(poster = "poster")), wide = true))
+        assertEquals("thumb", kidsArt(both.copy(art = ItemArt(wide = "thumb")), wide = false))
     }
 
     @Test fun afterBedtimePipSleepsAndSaysGoodnight() {

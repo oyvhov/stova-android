@@ -83,6 +83,8 @@ import kotlinx.coroutines.launch
 private val SkyBand = 188.dp
 private val PosterWidth = 156.dp
 private val PosterHeight = 234.dp
+private val WideWidth = 320.dp
+private val WideHeight = 180.dp
 private val AppWidth = 252.dp
 private val AppHeight = 142.dp
 private fun pipWidth(threeD: Boolean) = if (threeD) 156.dp else 120.dp
@@ -335,10 +337,16 @@ private fun KidsRow(row: HomeRowUi, art: AppArtCache?, first: Boolean, focused: 
         LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge, vertical = 14.dp),
             horizontalArrangement = Arrangement.spacedBy(26.dp)) {
             when (row) {
-                is HomeRowUi.Media -> itemsIndexed(row.items, key = { _, item -> item.id }) { i, item ->
-                    val title = item.seriesName?.takeIf { item.type == ItemType.EPISODE } ?: item.title
-                    KidsCard(PosterWidth, PosterHeight, title, { onPlay(FocusedTarget.Media(item, row.account)) }, { onFocused(title, label, item.isNew) }, onMoved,
-                        if (i == 0) Modifier.focusRequester(start) else Modifier, place = i) { Poster(item) }
+                is HomeRowUi.Media -> {
+                    // "Continue" shows a wide picture from the film, as Jellyfin does; the other rows keep their posters.
+                    val wide = row.kind == MediaRowKind.CONTINUE
+                    val width = if (wide) WideWidth else PosterWidth
+                    val height = if (wide) WideHeight else PosterHeight
+                    itemsIndexed(row.items, key = { _, item -> item.id }) { i, item ->
+                        val title = item.seriesName?.takeIf { item.type == ItemType.EPISODE } ?: item.title
+                        KidsCard(width, height, title, { onPlay(FocusedTarget.Media(item, row.account)) }, { onFocused(title, label, item.isNew) }, onMoved,
+                            if (i == 0) Modifier.focusRequester(start) else Modifier, place = i) { Artwork(item, wide, width, height) }
+                    }
                 }
                 is HomeRowUi.Apps -> itemsIndexed(row.tiles.filterIsInstance<FavoriteTile.App>(), key = { _, tile -> tile.key }) { i, tile ->
                     KidsCard(AppWidth, AppHeight, tile.app.label, { onApp(tile.app) }, { onFocused(tile.app.label, label, false) }, onMoved,
@@ -401,13 +409,16 @@ private fun scaledBounds(bounds: Rect, scale: Float): Rect {
     return Rect(c.x - bounds.width * scale / 2, c.y - bounds.height * scale / 2, c.x + bounds.width * scale / 2, c.y + bounds.height * scale / 2)
 }
 
+/** The picture a card shows: a wide one in a wide card, a poster in the others, and the other kind when that is all there is. */
+internal fun kidsArt(item: MediaItem, wide: Boolean): String? = if (wide) item.art.wide ?: item.art.poster else item.art.poster ?: item.art.wide
+
 @Composable
-private fun BoxScope.Poster(item: MediaItem) {
+private fun BoxScope.Artwork(item: MediaItem, wide: Boolean, width: Dp, height: Dp) {
     val context = LocalContext.current
     val density = LocalDensity.current
-    val url = item.art.poster ?: item.art.wide
-    val request = remember(url) {
-        ImageRequest.Builder(context).data(url).size(with(density) { PosterWidth.roundToPx() }, with(density) { PosterHeight.roundToPx() }).build()
+    val url = kidsArt(item, wide)
+    val request = remember(url, width, height) {
+        ImageRequest.Builder(context).data(url).size(with(density) { width.roundToPx() }, with(density) { height.roundToPx() }).build()
     }
     if (url != null) AsyncImage(request, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
     else Text(item.title, Modifier.align(Alignment.Center).padding(12.dp), style = MaterialTheme.typography.titleMedium, color = KidsColors.LabelText)

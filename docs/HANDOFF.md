@@ -1,3 +1,9 @@
+# Framdrift prøvd på Loftet, og breie miniatyrbilde i «Hald fram» i Pip-verda
+2026-10-31, eigaren: «Blei ikkje du ferdig på Loftet?», «Berre jobb om du vil», «Eg ønsker egentlig miniatyrbilde» (vald: «Hald fram» i Pip-verda).
+Loftet, Pip test-profilen: Toy Story 5 frå «Hald fram» → Spole spelte frå 57:51 → pause med ein gong → Tilbake. Kortet stod fremst med ny framdrift i det Stova kom fram, fokuset følgde det, og det stod der etter svaret frå tenaren. Seinare stod Emil fremst att med lengre framdrift utan at Spole var brukt på Loftet; truleg sett på ei anna eining.
+Pip-verda: korta i «Hald fram» er no breie (320 × 180 dp) med miniatyrbiletet frå Jellyfin (`ItemArt.wide`: Thumb, elles bakgrunn; episodar med seriebiletet som på vaksen-Heim), plakaten når det ikkje finst. Dei andre radene har framleis plakatar (`kidsArt`).
+Kontroll: 917 testar (58 hoppa over), 0 feil; lint 0 feil; TV-bygget installert på Loftet og sett på skjermen. Bilete: `.superpowers/loft-progress-2026-10-31/`. Loftet er lagt til å sove att på Pip test-profilen. Shield er ikkje rørd. Ingen push.
+
 # Spole-brua: logg inn éin gong, framdrift med ein gong, bibliotek rett inn
 2026-10-31, eigaren: «2,3,4 .go». Plan `docs/superpowers/plans/2026-10-30-spole-bridge.md` (steg 1–5 og 7 gjort). Spole-delen ligg på greina `launcher-bridge` i `C:\JellyBin\reelstack-android` (committa, ikkje fletta til main).
 Gjort: «Godkjenn med Spole» i Quick Connect-steget (`SpoleApprover`), og Stova får sin eigen token. `SpolePlaybackReceiver` → `MediaRepository.applyPlayback` rettar radene med ein gong og held dei i to minutt. I Spole går siste Tilbake frå eit bibliotek til Stova. Funne undervegs og retta: fokuset hoppa til første seksjon i Innstillingar etter retur frå Spole, og kortet med fokus forsvann ut av synet når det vart flytta fremst (vaksen-Heim og Pip-verda, test for begge).
