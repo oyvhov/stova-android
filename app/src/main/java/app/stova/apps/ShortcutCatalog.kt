@@ -29,10 +29,13 @@ class ShortcutCatalog(
     val haReady: Flow<Boolean> = flowOf(false),
     val libraries: suspend (profileId: String) -> List<FavoriteTile.Library> = { emptyList() },
     val scenes: suspend () -> List<FavoriteTile.Scene> = { emptyList() },
+    /** Spole's profiles, asked only when Spole is installed. */
+    val spoleProfiles: suspend () -> List<FavoriteTile.SpoleProfile> = { emptyList() },
 )
 
 /** The name and art a shortcut keeps in the profile, so Home can draw it without asking anyone. */
-fun FavoriteTile.saved(): Shortcut = Shortcut(label, (this as? FavoriteTile.Library)?.image, (this as? FavoriteTile.Scene)?.icon)
+fun FavoriteTile.saved(): Shortcut = Shortcut(label, (this as? FavoriteTile.Library)?.image ?: (this as? FavoriteTile.SpoleProfile)?.image,
+    (this as? FavoriteTile.Scene)?.icon)
 
 /**
  * What pressing a library or scene does, on Home and on the Apps page: a library opens in Spole, a
@@ -57,6 +60,15 @@ fun rememberShortcutOpener(haConnection: HaConnection?, profile: Profile?, onPla
                 HandoffResult.OpenedWithoutLink -> {
                     opened()
                     Toast.makeText(context, R.string.spole_update_for_libraries, Toast.LENGTH_LONG).show()
+                }
+                HandoffResult.SpoleMissing -> missing()
+                HandoffResult.InvalidIds -> Toast.makeText(context, R.string.invalid_media_ids, Toast.LENGTH_SHORT).show()
+            }
+            is FavoriteTile.SpoleProfile -> when (handoff.openProfile(tile.kind, tile.userId)) {
+                HandoffResult.Opened -> opened()
+                HandoffResult.OpenedWithoutLink -> {
+                    opened()
+                    Toast.makeText(context, R.string.spole_update_for_profiles, Toast.LENGTH_LONG).show()
                 }
                 HandoffResult.SpoleMissing -> missing()
                 HandoffResult.InvalidIds -> Toast.makeText(context, R.string.invalid_media_ids, Toast.LENGTH_SHORT).show()

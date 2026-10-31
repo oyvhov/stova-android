@@ -12,6 +12,7 @@ avkryssingsboksar i dei er inga bestilling.
 
 ## Historikk
 
+- 2026-10-31: [Spole-profilar: eigen profil for Eilev og ei Spole-flis med profilbiletet](2026-10-31-spole-profiles.md), fullført; Spole-delen på greina `launcher-profiles`. Eilev-flyten er ikkje prøvd på ei eining.
 - 2026-10-30: [Stova og Spole: logg inn éin gong, framdrift og bibliotekfliser](2026-10-30-spole-bridge.md), fullført; Spole-delen på greina `launcher-bridge`.
 - 2026-10-27: [Snarvegar i favorittrada](2026-10-27-shortcut-tiles.md), fullført; Spole-lenkja kom i Spole beta26 og er prøvd på Loftet.
 - 2026-10-29: [Pip-verda: Heim for barneprofilen](2026-10-29-kids-home.md), fullført med barnebibliotek; prøvd på emulator og Loftet, ikkje på Shield.

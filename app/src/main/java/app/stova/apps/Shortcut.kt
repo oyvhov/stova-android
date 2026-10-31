@@ -25,11 +25,23 @@ sealed interface ShortcutKey {
         override val key get() = "ha:$entityId"
     }
 
+    /** A person in Spole: the account `spole://profile` opens Spole as. */
+    data class SpoleProfile(val kind: app.stova.media.model.ServerKind, val userId: String) : ShortcutKey {
+        override val key get() = "spole:${if (kind == app.stova.media.model.ServerKind.JELLYFIN) "jellyfin" else "emby"}:$userId"
+    }
+
     companion object {
         fun parse(key: String): ShortcutKey? = when {
             key.startsWith("library:") -> key.removePrefix("library:").split(':')
                 .takeIf { it.size == 2 && it.all(String::isNotBlank) }?.let { Library(it[0], it[1]) }
             key.startsWith("ha:") -> key.removePrefix("ha:").takeIf { '.' in it }?.let(::Ha)
+            key.startsWith("spole:") -> key.removePrefix("spole:").split(':').takeIf { it.size == 2 && it[1].isNotBlank() }?.let { (kind, user) ->
+                when (kind) {
+                    "jellyfin" -> SpoleProfile(app.stova.media.model.ServerKind.JELLYFIN, user)
+                    "emby" -> SpoleProfile(app.stova.media.model.ServerKind.EMBY, user)
+                    else -> null
+                }
+            }
             else -> null
         }
     }

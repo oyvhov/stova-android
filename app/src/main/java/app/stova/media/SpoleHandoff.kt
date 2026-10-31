@@ -38,6 +38,11 @@ object SpoleContract {
         data?.getStringExtra(EXTRA_ERROR) == "failed" -> SpoleApproval.FAILED
         else -> SpoleApproval.DECLINED
     }
+    /** Spole as the profile that has this account, at its Home: a tile for a person. */
+    fun profileUri(kind: ServerKind, userId: String): Uri =
+        Uri.Builder().scheme("spole").authority("profile")
+            .appendQueryParameter("kind", if (kind == ServerKind.JELLYFIN) "jellyfin" else "emby")
+            .appendQueryParameter("user", userId).build()
     /** One library view. A Spole without this link has no filter for the host, so it falls back to Spole's home. */
     fun libraryUri(kind: ServerKind, userId: String, libraryId: String): Uri =
         Uri.Builder().scheme("spole").authority("library")
@@ -75,6 +80,12 @@ class SpoleHandoff(private val context: Context) {
     fun openLibrary(account: MediaAccount, libraryId: String): HandoffResult {
         if (!SpoleContract.ID_PATTERN.matches(account.userId) || !SpoleContract.ID_PATTERN.matches(libraryId)) return HandoffResult.InvalidIds
         return send(SpoleContract.libraryUri(account.kind, account.userId, libraryId))
+    }
+
+    /** Opens Spole as one of its profiles, for a favourite profile tile. */
+    fun openProfile(kind: ServerKind, userId: String): HandoffResult {
+        if (!SpoleContract.ID_PATTERN.matches(userId)) return HandoffResult.InvalidIds
+        return send(SpoleContract.profileUri(kind, userId))
     }
 
     private fun send(link: Uri): HandoffResult {

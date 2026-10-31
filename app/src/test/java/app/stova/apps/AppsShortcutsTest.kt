@@ -44,7 +44,8 @@ class AppsShortcutsTest {
         val account = MediaAccount("acc", created.id, ServerKind.JELLYFIN, "s", "Heim", "https://demo.invalid", "u1", "U")
         val library = FavoriteTile.Library(ShortcutKey.Library("acc", "lib1").key, "Filmar", null, account, "lib1")
         val scene = FavoriteTile.Scene(ShortcutKey.Ha("scene.kino").key, "Kino", "scene.kino")
-        val shortcuts = ShortcutCatalog({ flowOf(listOf(account)) }, flowOf(true), { listOf(library) }, { listOf(scene) })
+        val eilev = FavoriteTile.SpoleProfile(ShortcutKey.SpoleProfile(ServerKind.EMBY, "eilev").key, "Eilev", "http://emby.invalid/eilev.png", ServerKind.EMBY, "eilev")
+        val shortcuts = ShortcutCatalog({ flowOf(listOf(account)) }, flowOf(true), { listOf(library) }, { listOf(scene) }, { listOf(eilev) })
         val catalog = FakeAppCatalog(listOf(app))
         val repo = AppRepository(catalog, profiles, MainScope())
         compose.setContent {
@@ -73,10 +74,28 @@ class AppsShortcutsTest {
         compose.onAllNodesWithContentDescription("Filmar").onFirst().assertIsDisplayed()
     }
 
+    // Spole's profiles are offered too: a tile per person, with their picture, opening Spole as them.
+    @Test fun aSpoleProfileIsAddedToTheFavouritesWithItsPicture() {
+        val (profiles, created) = show()
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Bibliotek").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasScrollAction()).performScrollToNode(hasContentDescription("Eilev"))
+        compose.onNodeWithText("Spole-profilar").assertExists()
+        compose.onNode(hasTestTag("spole-avatar") and hasAnyAncestor(hasContentDescription("Eilev")), useUnmergedTree = true).assertExists()
+        compose.onNodeWithContentDescription("Eilev").performTouchInput { longClick() }
+        compose.waitForIdle()
+        compose.onNodeWithText("Legg til i favorittar").performClick()
+        compose.waitForIdle()
+        val key = ShortcutKey.SpoleProfile(ServerKind.EMBY, "eilev").key
+        compose.waitUntil(5_000) { runBlocking { profiles.file.first() }.profiles.first { it.id == created.id }.apps.favorites.contains(key) }
+        assertEquals(Shortcut("Eilev", image = "http://emby.invalid/eilev.png"),
+            runBlocking { profiles.file.first() }.profiles.first { it.id == created.id }.apps.shortcuts[key])
+    }
+
     @Test fun kidsSeeOnlyApps() {
         show(kid = true)
         compose.waitForIdle()
         compose.onNodeWithText("Bibliotek").assertDoesNotExist()
         compose.onNodeWithText("Scenar og skript").assertDoesNotExist()
+        compose.onNodeWithText("Spole-profilar").assertDoesNotExist()
     }
 }

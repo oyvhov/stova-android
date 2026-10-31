@@ -69,6 +69,10 @@
     <string name="ha_icon_from_ha">Bruk ikonet frå Home Assistant</string>
     <string name="spole_update_for_libraries">Opna Spole. Oppdater Spole for å gå rett til biblioteket.</string>
     <string name="apps_libraries">Bibliotek</string>
+    <string name="apps_spole_profiles">Spole-profilar</string>
+    <string name="sheet_spole_profile">Spole-profil</string>
+    <string name="sheet_spole_profile_favorite">Spole-profil · i favorittane</string>
+    <string name="spole_update_for_profiles">Opna Spole. Oppdater Spole for å gå rett til profilen.</string>
     <string name="apps_scenes">Scenar og skript</string>
 
     <string name="settings_profile">Profil</string>

@@ -67,6 +67,15 @@ class SpoleHandoffTest {
         assertEquals(HandoffResult.OpenedWithoutLink, SpoleHandoff(recorder).openLibrary(acc, "f137a2"))
         assertNotEquals(android.content.Intent.ACTION_VIEW, recorder.started.single().action)
     }
+    @Test fun profileLinkFormat() = assertEquals("spole://profile?kind=emby&user=eilev",
+        SpoleContract.profileUri(ServerKind.EMBY, "eilev").toString())
+    @Test fun opensSpoleAsAProfile() {
+        shadowOf(context.packageManager).installPackage(PackageInfo().apply { packageName = "app.reelstack" })
+        val recorder = Recorder(emptySet())
+        assertEquals(HandoffResult.Opened, SpoleHandoff(recorder).openProfile(ServerKind.EMBY, "eilev"))
+        assertEquals("profile", recorder.started.single().data!!.host)
+        assertEquals(HandoffResult.InvalidIds, SpoleHandoff(recorder).openProfile(ServerKind.EMBY, "../x"))
+    }
     @Test fun libraryNeedsSpoleAndCleanIds() {
         assertEquals(HandoffResult.SpoleMissing, SpoleHandoff(context).openLibrary(acc, "f137a2"))
         assertEquals(HandoffResult.InvalidIds, SpoleHandoff(context).openLibrary(acc, "../x"))

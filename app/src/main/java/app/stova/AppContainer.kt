@@ -126,6 +126,7 @@ class AppContainer(
             }
         },
         scenes = { if (household.current().haBaseUrl == null) emptyList() else app.stova.ha.haShortcutScenes(haSocket, haRepository::loadRegistry) },
+        spoleProfiles = { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { app.stova.media.SpoleProfiles(context).list() } },
     )
 
     val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session, shortcuts.accounts, shortcuts.haReady), app.stova.media.MediaRowSource(media), app.stova.watchnext.WatchNextRowSource(watchNext))

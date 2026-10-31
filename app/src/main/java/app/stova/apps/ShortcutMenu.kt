@@ -42,7 +42,8 @@ fun ShortcutActionsMenu(
     onResetIcon: () -> Unit = {},
 ) {
     val scene = tile is FavoriteTile.Scene
-    val image = (tile as? FavoriteTile.Library)?.image
+    val person = tile is FavoriteTile.SpoleProfile
+    val image = (tile as? FavoriteTile.Library)?.image ?: (tile as? FavoriteTile.SpoleProfile)?.image
     val tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
     val art: (@Composable BoxScope.() -> Unit)? = when {
         image != null -> { { AsyncImage(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize()) } }
@@ -58,6 +59,8 @@ fun ShortcutActionsMenu(
                 val kind = when {
                     scene && favorite -> R.string.sheet_scene_favorite
                     scene -> R.string.sheet_scene
+                    person && favorite -> R.string.sheet_spole_profile_favorite
+                    person -> R.string.sheet_spole_profile
                     favorite -> R.string.sheet_library_favorite
                     else -> R.string.sheet_library
                 }

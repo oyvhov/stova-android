@@ -69,6 +69,10 @@
     <string name="ha_icon_from_ha">Use the icon from Home Assistant</string>
     <string name="spole_update_for_libraries">Opened Spole. Update Spole to go straight to the library.</string>
     <string name="apps_libraries">Libraries</string>
+    <string name="apps_spole_profiles">Spole profiles</string>
+    <string name="sheet_spole_profile">Spole profile</string>
+    <string name="sheet_spole_profile_favorite">Spole profile · in your favourites</string>
+    <string name="spole_update_for_profiles">Opened Spole. Update Spole to go straight to the profile.</string>
     <string name="apps_scenes">Scenes and scripts</string>
 
     <string name="settings_profile">Profile</string>

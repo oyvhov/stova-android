@@ -68,6 +68,11 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
         if (value.isNotEmpty()) apps.refreshShortcuts(profile.id, value.associate { it.key to it.saved() })
     }
 
+    val spoleProfiles by produceState(emptyList<FavoriteTile.SpoleProfile>(), offers) {
+        value = offers?.let { runCatching { it.spoleProfiles() }.getOrNull() }.orEmpty()
+        if (value.isNotEmpty()) apps.refreshShortcuts(profile.id, value.associate { it.key to it.saved() })
+    }
+
     var menuFor by remember(profile.id) { mutableStateOf<InstalledApp?>(null) }
     var shortcutMenu by remember(profile.id) { mutableStateOf<FavoriteTile?>(null) }
     var showHidden by remember { mutableStateOf(false) }
@@ -108,6 +113,10 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
         if (libraries.isNotEmpty()) {
             header(R.string.apps_libraries)
             items(libraries, key = { "lib:${it.key}" }) { tile -> ShortcutTile(tile, { openShortcut(tile) }, { shortcutMenu = tile }) }
+        }
+        if (spoleProfiles.isNotEmpty()) {
+            header(R.string.apps_spole_profiles)
+            items(spoleProfiles, key = { "spole:${it.key}" }) { tile -> ShortcutTile(tile, { openShortcut(tile) }, { shortcutMenu = tile }) }
         }
         if (scenes.isNotEmpty()) {
             header(R.string.apps_scenes)
