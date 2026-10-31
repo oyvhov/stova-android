@@ -18,7 +18,7 @@ sealed interface FavoriteTile {
 
     /** A profile in Spole, with [image] its user's picture: opens Spole as that person. */
     data class SpoleProfile(override val key: String, override val label: String, val image: String?,
-        val kind: app.stova.media.model.ServerKind, val userId: String) : FavoriteTile
+        val kind: app.stova.media.model.ServerKind, val userId: String, val kid: Boolean = false) : FavoriteTile
 
     /** [icon] is Home Assistant's own, such as `mdi:movie-open`. */
     data class Scene(override val key: String, override val label: String, val entityId: String, val icon: String? = null) : FavoriteTile

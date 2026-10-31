@@ -113,6 +113,16 @@ class AppContainer(
     }, appContext.packageName)
 
     /** Favourite libraries and scenes: local facts for Home, and lists from the servers for the Apps page. */
+    init {
+        // Spole follows the person picked here: one switch, in both apps.
+        appScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            session.picks.collect { id ->
+                val profile = profiles.current().profiles.firstOrNull { it.id == id } ?: return@collect
+                app.stova.media.SpoleProfiles(appContext).follow(profile, mediaAccounts.forProfile(id).first())
+            }
+        }
+    }
+
     val shortcuts = app.stova.apps.ShortcutCatalog(
         accounts = mediaAccounts::forProfile,
         haReady = household.data.map { it.haBaseUrl != null }.distinctUntilChanged(),

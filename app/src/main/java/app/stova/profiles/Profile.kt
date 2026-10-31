@@ -20,7 +20,13 @@ data class Profile(
     val smartHome: app.stova.ha.cards.DashboardPrefs = app.stova.ha.cards.DashboardPrefs(),
     /** Pip on a child's Home: reading names aloud, and bedtime. */
     val pip: app.stova.kids.PipPrefs = app.stova.kids.PipPrefs(),
+    /** The person in Spole who follows this profile, chosen in settings; null follows the profile's own account. */
+    val spole: SpoleLink? = null,
 )
+
+/** A profile in Spole, by the account it opens with. */
+@Serializable
+data class SpoleLink(val kind: app.stova.media.model.ServerKind, val userId: String)
 
 /** App keys are `"<package>/<activity>"`. */
 @Serializable

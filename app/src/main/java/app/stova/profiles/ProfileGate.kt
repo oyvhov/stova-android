@@ -37,7 +37,7 @@ fun ProfileGate(session: ProfileSession, repo: ProfileRepository) {
             StartDecision.CreateFirst -> FirstRun { name, avatar ->
                 scope.launch { session.enter(repo.create(name, avatar, kid = false).id) }
             }
-            is StartDecision.Enter -> LaunchedEffect(decision) { session.enter(decision.profile.id) }
+            is StartDecision.Enter -> LaunchedEffect(decision) { session.enter(decision.profile.id, picked = false) }
             is StartDecision.NeedsPin, StartDecision.Pick -> {
                 LaunchedEffect(decision) { if (decision is StartDecision.NeedsPin) pinFor = decision.profile }
                 ProfilePicker(

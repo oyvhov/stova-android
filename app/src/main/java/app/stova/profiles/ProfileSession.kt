@@ -14,6 +14,10 @@ class ProfileSession(private val repo: ProfileRepository, scope: CoroutineScope)
     private var exitAuthorizedAdultId: String? = null
     private val activeId = MutableStateFlow<String?>(null)
     private val _start = MutableStateFlow<StartDecision?>(null)
+    private val _picks = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 4)
+
+    /** A person picked by hand, not the last one entered again at a cold start: Spole follows these. */
+    val picks: kotlinx.coroutines.flow.SharedFlow<String> = _picks
 
     /** Follows the file, so an edited profile updates everywhere at once. */
     val active: StateFlow<Profile?> = combine(repo.file, activeId) { file, id ->
@@ -30,10 +34,11 @@ class ProfileSession(private val repo: ProfileRepository, scope: CoroutineScope)
     /** Only the adult whose PIN unlocked the kid can skip a second prompt in this picker. */
     fun needsPin(profile: Profile): Boolean = profile.pin != null && profile.id != exitAuthorizedAdultId
 
-    suspend fun enter(profileId: String) {
+    suspend fun enter(profileId: String, picked: Boolean = true) {
         exitAuthorizedAdultId = null
         activeId.value = profileId
         repo.rememberLast(profileId)
+        if (picked) _picks.emit(profileId)
     }
 
     fun leave(authorizedAdultId: String? = null) {

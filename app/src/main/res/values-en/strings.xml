@@ -73,6 +73,9 @@
     <string name="sheet_spole_profile">Spole profile</string>
     <string name="sheet_spole_profile_favorite">Spole profile · in your favourites</string>
     <string name="spole_update_for_profiles">Opened Spole. Update Spole to go straight to the profile.</string>
+    <string name="spole_profile">Spole profile</string>
+    <string name="spole_profile_auto">Follows the account</string>
+    <string name="spole_profile_auto_named">Follows the account · %1$s</string>
     <string name="apps_scenes">Scenes and scripts</string>
 
     <string name="settings_profile">Profile</string>

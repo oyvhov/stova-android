@@ -71,6 +71,7 @@ fun ProfileSettings(container: AppContainer, profile: Profile) {
             SettingsNavRow(stringResource(R.string.pin_change)) { pinStep = PinStep.VERIFY_FOR_CHANGE }
             SettingsNavRow(stringResource(R.string.pin_remove)) { pinStep = PinStep.VERIFY_FOR_REMOVE }
         }
+        SpoleProfileRow(container, profile)
         SettingsSwitchRow(
             stringResource(R.string.settings_start_last),
             file?.startInLastProfile ?: true,
@@ -175,6 +176,7 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
         }
     }
     SettingsGroup(stringResource(R.string.settings_profile)) {
+        SpoleProfileRow(container, other)
         SettingsNavRow(stringResource(R.string.settings_appearance)) { enterPane(); appearance = true }
         SettingsNavRow(stringResource(R.string.profile_delete)) { confirm = true }
     }
@@ -212,5 +214,35 @@ private fun EditorDialog(onDismiss: () -> Unit, content: @Composable () -> Unit)
                 .width(600.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) { content() }
+    }
+}
+
+/**
+ * Who follows this profile in Spole when it is picked here: the person with the profile's own account,
+ * or one chosen with left and right. A child chooses among Spole's children only. Shown only when Spole
+ * has profiles; a change to the profile in use takes Spole along at once.
+ */
+@Composable
+private fun SpoleProfileRow(container: AppContainer, profile: Profile) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
+    val people by androidx.compose.runtime.produceState(emptyList<app.stova.apps.FavoriteTile.SpoleProfile>(), profile.id, profile.kid) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { app.stova.media.SpoleProfiles(context).list() }
+            .filter { !profile.kid || it.kid }
+    }
+    if (people.isEmpty()) return
+    val accounts by remember(profile.id) { container.mediaAccounts.forProfile(profile.id) }.collectAsStateWithLifecycle(initialValue = emptyList())
+    val options = listOf<app.stova.profiles.SpoleLink?>(null) + people.map { app.stova.profiles.SpoleLink(it.kind, it.userId) }
+    val chosen = profile.spole?.let { link -> people.firstOrNull { it.kind == link.kind && it.userId == link.userId } }
+    val auto = app.stova.media.spoleProfileFor(profile.copy(spole = null), accounts, people)
+    val value = chosen?.label ?: auto?.let { stringResource(R.string.spole_profile_auto_named, it.label) } ?: stringResource(R.string.spole_profile_auto)
+    app.stova.core.ui.SettingsChoiceRow(stringResource(R.string.spole_profile), value) { step ->
+        val next = options[(options.indexOf(chosen?.let { app.stova.profiles.SpoleLink(it.kind, it.userId) }).coerceAtLeast(0) + step).mod(options.size)]
+        scope.launch {
+            val updated = container.profiles.update(profile.id) { it.copy(spole = next) }
+            if (container.session.active.value?.id == profile.id) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                app.stova.media.SpoleProfiles(context).follow(updated, accounts)
+            }
+        }
     }
 }

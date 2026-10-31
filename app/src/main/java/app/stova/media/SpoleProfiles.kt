@@ -18,9 +18,24 @@ fun parseSpoleProfiles(cursor: Cursor): List<FavoriteTile.SpoleProfile> {
         val kind = when (text("kind")) { "jellyfin" -> ServerKind.JELLYFIN; "emby" -> ServerKind.EMBY; else -> null } ?: continue
         val user = text("user")?.takeIf { SpoleContract.ID_PATTERN.matches(it) } ?: continue
         val name = text("name")?.takeIf { it.isNotBlank() } ?: continue
-        tiles += FavoriteTile.SpoleProfile(ShortcutKey.SpoleProfile(kind, user).key, name, text("avatar")?.takeIf { it.isNotBlank() }, kind, user)
+        tiles += FavoriteTile.SpoleProfile(ShortcutKey.SpoleProfile(kind, user).key, name, text("avatar")?.takeIf { it.isNotBlank() }, kind, user,
+            kid = text("kid") == "1")
     }
     return tiles.distinctBy { it.key }
+}
+
+/**
+ * The person in Spole who follows [profile]: the one chosen in settings, else the one with an account
+ * of the profile's own here (a borrowed account is a grown-up's, and never counts). A child in Stova
+ * goes only to a child's profile in Spole.
+ */
+fun spoleProfileFor(profile: app.stova.profiles.Profile, accounts: List<app.stova.media.model.MediaAccount>,
+    spole: List<FavoriteTile.SpoleProfile>): FavoriteTile.SpoleProfile? {
+    val chosen = profile.spole?.let { link -> spole.firstOrNull { it.kind == link.kind && it.userId == link.userId } }
+    val found = chosen ?: spole.firstOrNull { person ->
+        accounts.any { it.profileId == profile.id && it.sharedFrom == null && it.kind == person.kind && it.userId == person.userId }
+    }
+    return found?.takeIf { !profile.kid || it.kid }
 }
 
 /**
@@ -33,4 +48,21 @@ class SpoleProfiles(private val context: Context) {
             context.contentResolver.query(Uri.parse("content://$pkg.launcher/profiles"), null, null, null, null)?.use(::parseSpoleProfiles)
         }.getOrNull().orEmpty()
     }.distinctBy { it.key }
+
+    /** Switches Spole to the person with this account; Spole refuses to leave a child's profile past its PIN. */
+    fun select(kind: ServerKind, userId: String): String? = SpoleHandoff(context).installedPackages().firstNotNullOfOrNull { pkg ->
+        runCatching {
+            context.contentResolver.call(Uri.parse("content://$pkg.launcher"), "select_profile", null, android.os.Bundle().apply {
+                putString("kind", if (kind == ServerKind.JELLYFIN) "jellyfin" else "emby")
+                putString("user", userId)
+            })?.getString("result")
+        }.getOrNull()
+    }
+
+    /** Spole follows the person picked in Stova, when Spole has that person. Asks nothing without Spole. */
+    suspend fun follow(profile: app.stova.profiles.Profile, accounts: List<app.stova.media.model.MediaAccount>) {
+        if (SpoleHandoff(context).installedPackages().isEmpty()) return
+        val person = spoleProfileFor(profile, accounts, list()) ?: return
+        select(person.kind, person.userId)
+    }
 }
