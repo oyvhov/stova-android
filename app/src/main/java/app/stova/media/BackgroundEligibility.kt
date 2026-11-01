@@ -28,7 +28,9 @@ fun acceptsBackground(item: MediaItem, filter: BackgroundFilter): Boolean =
     }) && (filter.maxAge == null || backgroundRatingAge(item.ratings.official)?.let { it <= filter.maxAge } == true)
 
 fun backgroundForProfile(entry:SpotlightEntry?,profileId:String,filter:BackgroundFilter):SpotlightEntry? = entry?.takeIf {
-    it.account.profileId==profileId && it.item.accountId==it.account.id && acceptsBackground(it.item,filter)
+    // A choice of libraries names Stova's own; a title from Spole keeps only to the age.
+    it.account.profileId==profileId && it.item.accountId==it.account.id &&
+        acceptsBackground(it.item,if(it.account.viaSpole) filter.copy(libraries=null) else filter)
 }
 
 data class BackgroundLibrary(val ref: BackgroundLibraryRef, val name: String, val accountName: String, val image: String? = null)

@@ -22,6 +22,7 @@ import app.stova.profiles.Profile
 import app.stova.profiles.SpoleLink
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -113,6 +114,9 @@ class SpoleRowsTest {
         val rowsJob = launch { source.rows(eilev).collect {} }
         // Once each, only with a backdrop, in the rows' order, and within the profile's age (15 unless chosen otherwise).
         assertEquals(listOf("a", "b"), heroes.last())
+        // Home's own check lets the title through even with Stova libraries chosen for the background.
+        val chosen = app.stova.profiles.BackgroundFilter(libraries = setOf(app.stova.profiles.BackgroundLibraryRef("x", "kids")))
+        assertEquals("a", backgroundForProfile(source.spotlight(eilev, own).first().first(), "p1", chosen)?.item?.id)
         // With an account of its own the profile has Stova's hero again.
         accounts.value = listOf(MediaAccount("x", "p1", ServerKind.EMBY, "s", "Heime", "http://emby", "eilev", "Eilev"))
         assertEquals(listOf("own"), heroes.last())

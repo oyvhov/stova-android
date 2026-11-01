@@ -53,6 +53,9 @@ fun withSpolePictures(own: Map<String, String>, profiles: List<app.stova.profile
  * The account a row from Spole opens its titles with: Spole's own account for the person, by kind and
  * user. It is never stored and never asked by Stova itself, so it has no address.
  */
+/** The account behind rows Spole gave: its titles live in Spole, not in any of Stova's libraries. */
+val app.stova.media.model.MediaAccount.viaSpole: Boolean get() = serverId == "spole" && baseUrl.isEmpty()
+
 fun spoleRowAccount(profileId: String, kind: ServerKind, userId: String, server: String) = app.stova.media.model.MediaAccount(
     id = "spole-${if (kind == ServerKind.JELLYFIN) "jellyfin" else "emby"}-$userId", profileId = profileId, kind = kind,
     serverId = "spole", serverName = server, baseUrl = "", userId = userId, userName = "")
