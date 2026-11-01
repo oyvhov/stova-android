@@ -166,5 +166,11 @@ class AppContainer(
             add(coil3.network.okhttp.OkHttpNetworkFetcherFactory(callFactory = { haHttp }))
         }.build()
     }
+    /** Whether Stova is on screen; cinema mode lets the socket rest again after its calls when it is not. */
+    @Volatile var stovaVisible = false
+    val cinema = app.stova.ha.CinemaMode({ household.current().takeIf { it.haBaseUrl != null }?.cinema },
+        JsonFileStore(File(appContext.filesDir, "cinema.json"), app.stova.ha.CinemaState.serializer(), app.stova.ha.CinemaState())) { block ->
+        app.stova.ha.withCinemaConnection(haSocket, { stovaVisible }, block)
+    }
     init { appScope.launch { haAuth.restore() } }
 }

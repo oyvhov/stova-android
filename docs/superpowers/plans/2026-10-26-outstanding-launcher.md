@@ -45,8 +45,9 @@ Reglar som før: modulært (ingen arbeid når noko er av eller ikkje sett opp), 
 - [ ] 5. (2) Rader etter tid på døgnet, med val under Utsjånad → Heim og hero.
 - [ ] 6. (3) Fart: mål kaldstart, første ramme på Heim og Smarthus med `scripts/Measure-Stova.ps1`;
   rett dei største; ny Baseline Profile.
-- [ ] 7. (4) Kino-modus: oppsett under Innstillingar → Smarthus; dimming ved «Spel» til Spole,
+- [x] 7. (4) Kino-modus: oppsett under Innstillingar → Smarthus; dimming ved «Spel» til Spole,
   tilbakestilling når Stova kjem fram att. Ingenting skjer utan oppsett.
+  Gjort 2026-11-01: Spole sender spelestatus (greina `launcher-rows`), og Stova dimmar dei valde lysa og set dei tilbake (`ha/CinemaMode.kt`).
 - [ ] 8. (4) Varsel: vel sensor og kamera; lite kamerabilete i hjørnet. Over andre appar berre med
   løyvet brukaren gir sjølv.
 - [ ] 9. Full kontroll, emulatorbilete, overlevering. Shield berre med løyve.

@@ -74,6 +74,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="app.reelstack.action.PLAYBACK_PROGRESS" />
+                <action android:name="app.reelstack.action.PLAYBACK_STATE" />
             </intent-filter>
         </receiver>
 

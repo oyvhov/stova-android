@@ -70,6 +70,7 @@ fun HaSetupFlow(container: AppContainer, onDone: () -> Unit) {
 @Composable
 fun HaSettings(container: AppContainer) {
     var setup by remember { mutableStateOf(false) }
+    var pickLights by remember { mutableStateOf(false) }
     val household by container.household.data.collectAsStateWithLifecycle(initialValue = null)
     val auth by container.haAuth.state.collectAsStateWithLifecycle()
     val connection by container.haSocket.status.collectAsStateWithLifecycle()
@@ -91,6 +92,11 @@ fun HaSettings(container: AppContainer) {
             }
         }
     }
+    if (pickLights) household?.let { current ->
+        CinemaLightPicker(container.haSocket, container.haRepository::loadRegistry, current.cinema.lights,
+            { lights -> pickLights = false; scope.launch { container.household.update { it.copy(cinema = it.cinema.copy(lights = lights)) } } },
+            { pickLights = false })
+    }
     if (household == null) return
     HaSettingsContent(when {
         address == null -> HaStatus.NOT_CONFIGURED
@@ -98,12 +104,16 @@ fun HaSettings(container: AppContainer) {
         else -> connection
     }, address, profiles?.profiles.orEmpty().filter { it.kid }, { setup = true },
         onSignOut = { scope.launch { container.haAuth.signOut(); enterPane(); container.household.update { it.copy(haBaseUrl = null) }; container.haRepository.invalidateRegistry(); container.haSocket.reconfigure() } },
-        onKidControl = { kid, allowed -> scope.launch { container.profiles.update(kid.id) { it.copy(kidSmartHomeControl = allowed) } } })
+        onKidControl = { kid, allowed -> scope.launch { container.profiles.update(kid.id) { it.copy(kidSmartHomeControl = allowed) } } },
+        cinema = household?.cinema,
+        onCinema = { prefs -> scope.launch { container.household.update { it.copy(cinema = prefs) } } },
+        onPickLights = { pickLights = true })
 }
 
 @Composable
 internal fun HaSettingsContent(status: HaStatus, address: String?, kids: List<app.stova.profiles.Profile>,
-    onConfigure: () -> Unit, onSignOut: () -> Unit, onKidControl: (app.stova.profiles.Profile, Boolean) -> Unit) {
+    onConfigure: () -> Unit, onSignOut: () -> Unit, onKidControl: (app.stova.profiles.Profile, Boolean) -> Unit,
+    cinema: CinemaPrefs? = null, onCinema: (CinemaPrefs) -> Unit = {}, onPickLights: () -> Unit = {}) {
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -127,6 +137,7 @@ internal fun HaSettingsContent(status: HaStatus, address: String?, kids: List<ap
             kids.forEach { kid -> SettingsSwitchRow(stringResource(R.string.ha_kid_control, kid.name), kid.kidSmartHomeControl,
                 { allowed -> onKidControl(kid, allowed) }) }
         }
+        if (address != null && cinema != null) CinemaSettings(cinema, onCinema, onPickLights)
         if (address != null) StovaButton(stringResource(R.string.ha_sign_out), onSignOut, quiet = true, compact = true)
     }
 }

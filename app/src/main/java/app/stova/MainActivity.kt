@@ -21,9 +21,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        container.stovaVisible = true
         container.haSocket.start()
+        // Lights cinema mode dimmed come back when Stova does, whatever Spole said or missed saying.
+        container.appScope.launch { container.cinema.restore() }
     }
     override fun onStop() {
+        container.stovaVisible = false
         container.appScope.launch(Dispatchers.IO) { container.haRepository.flush() }
         container.haSocket.stop()
         super.onStop()

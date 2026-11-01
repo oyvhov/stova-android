@@ -643,6 +643,23 @@
     <string name="ha_settings_layout_hint">Choose cards, sizes and grouping on the Smart home page.</string>
     <string name="ha_settings_change">Change connection</string>
     <string name="ha_settings_permissions">Access for child profiles</string>
+    <string name="ha_cinema">Cinema mode</string>
+    <string name="ha_cinema_switch">Dim the lights while Spole plays</string>
+    <string name="ha_cinema_note">The lights go back to how they were when you pause, leave the film or come back to Stova.</string>
+    <string name="ha_cinema_lights">Lights</string>
+    <string name="ha_cinema_lights_none">None chosen</string>
+    <string name="ha_cinema_level">Level during the film</string>
+    <string name="ha_cinema_level_off">Off</string>
+    <string name="ha_cinema_level_value">%1$d %%</string>
+    <string name="ha_cinema_pick_title">Lights in cinema mode</string>
+    <string name="ha_cinema_loading">Getting the lights…</string>
+    <string name="ha_cinema_failed">Could not reach Home Assistant.</string>
+    <string name="ha_cinema_no_lights">No lights found in Home Assistant.</string>
+    <string name="ha_cinema_no_room">No room</string>
+    <plurals name="ha_cinema_lights_count">
+        <item quantity="one">%1$d light</item>
+        <item quantity="other">%1$d lights</item>
+    </plurals>
     <string name="icon_preview">Your app icons</string>
     <string name="ha_layout">Layout</string>
     <string name="ha_grouping">Grouping</string>

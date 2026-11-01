@@ -46,6 +46,7 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 | Radoverskrifter og radval | `home/RowOptions.kt`, `home/RowHeadingEditor.kt`, `home/RowLabels.kt` | Same redigering frå langt OK og Innstillingar; lagra i profilens `RowStyle` |
 | Media | `media/` | Kontoar, REST, parser, rader, diskbuffer og Spole-kontrakt |
 | Home Assistant | `ha/HaSocket.kt`, `ha/HaRepository.kt` | Transport og profil-/dashboardtilstand |
+| Kino-modus | `ha/CinemaMode.kt`, `ha/ui/CinemaSettings.kt`, `media/SpolePlayback.kt` | Av som standard (`HouseholdSettings.cinema`). Spole sender `app.reelstack.action.PLAYBACK_STATE` (`state` = playing/paused/stopped) til `SpolePlaybackReceiver` (`goAsync`). Ved «playing» blir dei valde lysa som er på og lysare enn nivået dimma (lys utan dimming og nivå 0 slår av). Kva lysa var, står i `cinema.json` før kalla. Ved pause, stopp eller når Stova kjem fram (`MainActivity.onStart`) blir dei sette tilbake, men ikkje lys som nokon har skifta for hand. `withCinemaConnection` vekkjer socketen medan Stova er i bakgrunnen og let han kvile att etterpå (`stovaVisible`). Utan oppsett, eller utan noko å setje tilbake, blir Home Assistant ikkje spurd |
 | HA-buffer | `ha/HaReadCache.kt`, `ha/HaSnapshotWriter.kt` | Delte førespurnader og sjeldne diskskrivingar |
 | Profilar og lagring | `profiles/`, `core/storage/`, `core/security/` | Profilreglar, atomisk JSON og krypterte løyndomar |
 
