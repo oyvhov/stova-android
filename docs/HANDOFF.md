@@ -1,3 +1,6 @@
+# Spole 1.0.0-beta30 er ute
+2026-11-01, eigaren: «Ja og ja» (til å gi ut Spole beta30). Release `v1.0.0-beta30` (versjonskode 167, `a277303`): rader, handlingar og spelestatus for Stova, `official`, éitt kort per serie, Emby-aldersgrense, «15 år»/«Alle», marg og stopp ved enden av TV-hyller, og inga demping av hylla. Oppdatering i appen prøvd på 5566, CI grøn. Shield og Loftet har den offentlege APK-en (167). Stova er ikkje pusha.
+
 # Testdag på Shield og Loftet: Eilev-heroen, demping, popupar, lys og yting
 2026-11-01, eigaren: «Når eg logga inn med Eilev i Stova, er det ikkje Hero med bilder??», «Resten av rada blir dempa … Ta den vekk heilt», «når eg lukker popuper, så går det svart rand over skjermen», «Du skal installere begge appene på Shield og teste alt», «Gjer full ytelsetest på begge appane», «Lag ein testplan på alt i appane».
 Testplan og resultat: `docs/verification/2026-11-01-testplan-stova-spole.md`.
