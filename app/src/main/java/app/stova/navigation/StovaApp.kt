@@ -256,8 +256,10 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                     Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId,backdrop=backdrop.shown)
                     Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile,
                         onOpenApps = { appsFromSettings = true; origin = TransformOrigin.Center; current = Destination.APPS })
-                    // A placeholder until the Discover page (Task 4), which starts at discoverStart; Back walks home as from Apps.
-                    Destination.DISCOVER -> Box(Modifier.fillMaxSize())
+                    // Opened at the title a card showed, or at the rows; Back walks the page's own steps, then home as from Apps.
+                    Destination.DISCOVER -> app.stova.discover.DiscoverScreen(container, profile,
+                        start = discoverStart?.let { app.stova.discover.DiscoverStep.Title(it.type, it.tmdbId, it) } ?: app.stova.discover.DiscoverStep.Rows,
+                        onLeave = { current = Destination.HOME })
                 }
                 }
             }

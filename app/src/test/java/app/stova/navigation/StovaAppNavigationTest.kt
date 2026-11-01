@@ -1,5 +1,13 @@
 package app.stova.navigation
 
+import android.content.ContentProvider
+import android.content.ContentValues
+import android.content.pm.PackageInfo
+import android.database.Cursor
+import android.database.MatrixCursor
+import android.net.Uri
+import android.os.Bundle
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -9,6 +17,11 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.assertWidthIsEqualTo
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.isFocused
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -20,13 +33,17 @@ import app.stova.MainActivity
 import app.stova.StovaApplication
 import app.stova.TV_QUALIFIERS
 import app.stova.core.theme.AvatarColor
+import app.stova.media.model.ServerKind
+import app.stova.profiles.SpoleLink
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowContentResolver
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
@@ -138,6 +155,49 @@ class StovaAppNavigationTest {
         rule.mainClock.autoAdvance = true
         rule.waitForIdle()
         rule.onNodeWithText("Opne Appar").assertDoesNotExist()
+    }
+
+    // The Oppdag tile at the end of Home's row opens the page; Back walks home to the tile that opened it.
+    @Test fun discoverTileOpensThePageAndBackReturnsHome() {
+        val container = (rule.activity.application as StovaApplication).container
+        // A Spole that answers Discover for the profile's person, as SpoleDiscoverTest's does.
+        shadowOf(rule.activity.packageManager).installPackage(PackageInfo().apply { packageName = "app.reelstack" })
+        ShadowContentResolver.registerProviderInternal("app.reelstack.launcher", DiscoverSpole())
+        runBlocking { container.profiles.update(container.session.active.value!!.id) { it.copy(spole = SpoleLink(ServerKind.EMBY, "eilev")) } }
+        val tile = hasContentDescription("Oppdag") and hasClickAction()
+        rule.waitUntil(10_000) { rule.onAllNodes(tile).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(hasContentDescription("Heat") and hasClickAction()).assertIsFocused()
+            .performKeyInput { pressKey(Key.DirectionRight) }
+        rule.onNode(tile).assertIsFocused().performSemanticsAction(SemanticsActions.OnClick)
+        rule.onNodeWithTag("screen-DISCOVER").assertExists()
+        // The page opens on its first card; OK on it opens the title's step, and Back takes that step away again.
+        val card = hasContentDescription("Heat") and hasClickAction()
+        rule.waitUntil(5_000) { rule.onAllNodes(card and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(card and isFocused()).performSemanticsAction(SemanticsActions.OnClick)
+        rule.waitForIdle() // the Back handlers are enabled by the recomposition the click causes
+        rule.onAllNodes(card).assertCountEquals(0)
+        rule.onNodeWithText("Heat").assertExists()
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        rule.waitUntil(5_000) { rule.onAllNodes(card and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithTag("screen-DISCOVER").assertExists()
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag("screen-HOME").assertExists()
+        rule.waitUntil(5_000) { rule.onAllNodes(tile and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    /** Spole's launcher provider answering Discover with one popular title, for a person who may ask in their own name. */
+    private class DiscoverSpole : ContentProvider() {
+        override fun onCreate() = true
+        override fun getType(uri: Uri): String? = null
+        override fun insert(uri: Uri, values: ContentValues?): Uri? = null
+        override fun delete(uri: Uri, selection: String?, args: Array<out String>?) = 0
+        override fun update(uri: Uri, values: ContentValues?, selection: String?, args: Array<out String>?) = 0
+        override fun query(uri: Uri, projection: Array<out String>?, selection: String?, args: Array<out String>?, sort: String?): Cursor? =
+            if (uri.path != "/discover") null
+            else MatrixCursor(arrayOf("row", "type", "tmdb", "title", "year", "overview", "poster", "backdrop", "status", "community", "genres")).apply {
+                addRow(arrayOf<Any?>("trending", "movie", 949, "Heat", 1995, null, null, null, 5, 8.3, "Crime"))
+                setExtras(Bundle().apply { putString("seerr", "personal") })
+            }
     }
 
     @Test fun homeIntentClosesSmartHomeAndKeepsItAvailable() {

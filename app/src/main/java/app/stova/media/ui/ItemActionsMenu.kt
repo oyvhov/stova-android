@@ -13,6 +13,7 @@ import app.stova.core.ui.SheetPages
 import app.stova.core.ui.StovaButton
 import app.stova.core.ui.StovaIcons
 import app.stova.core.ui.StovaSheet
+import app.stova.discover.discoverRef
 import app.stova.media.model.ItemType
 import app.stova.media.model.MediaItem
 import coil3.compose.AsyncImage
@@ -25,7 +26,7 @@ enum class MediaItemAction { PLAY_FROM_START, MARK_WATCHED, REMOVE_FROM_CONTINUE
  * Long OK on a film or an episode: its picture, Play and Details, what Spole can do with it ([onAction],
  * when given), then the row it sits in. «Spel frå starten» and «Fjern frå Hald fram» are offered for a
  * title part-way through; «Merk som sett» for any film or episode. Without [canPlay] (a title in Seerr,
- * not in the library) there is no Play.
+ * not in the library) there is no Play, and a Seerr card's details are Stova's own Oppdag page.
  */
 @Composable fun ItemActionsMenu(item: MediaItem, onPlay: () -> Unit, onDetails: () -> Unit, onDismiss: () -> Unit,
     rowActions: @Composable (SheetPages) -> Unit = {}, onAction: ((MediaItemAction) -> Unit)? = null, canPlay: Boolean = true) {
@@ -45,7 +46,8 @@ enum class MediaItemAction { PLAY_FROM_START, MARK_WATCHED, REMOVE_FROM_CONTINUE
                 else -> stringResource(R.string.item_play)
             }
             if (canPlay) StovaButton(playLabel, onPlay, Modifier.fillMaxWidth(), primary = true, icon = StovaIcons.Play)
-            StovaButton(stringResource(R.string.item_details), onDetails, Modifier.fillMaxWidth(), icon = StovaIcons.Info)
+            val details = if (item.discoverRef() != null) R.string.discover_card_details else R.string.item_details
+            StovaButton(stringResource(details), onDetails, Modifier.fillMaxWidth(), icon = StovaIcons.Info)
             if (onAction != null) {
                 if (resuming) app.stova.core.ui.SheetAction(stringResource(R.string.item_play_from_start), StovaIcons.Play,
                     { onAction(MediaItemAction.PLAY_FROM_START) })

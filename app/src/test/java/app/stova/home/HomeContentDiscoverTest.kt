@@ -1,5 +1,9 @@
 package app.stova.home
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.*
@@ -62,9 +66,35 @@ class HomeContentDiscoverTest {
         show()
         compose.onNode(hasContentDescription("Heat") and hasClickAction()).assertIsFocused()
             .performKeyInput { pressKey(Key.Menu) }
-        // The menu is open, without play and without what Spole does with a title in the library.
-        compose.onNodeWithText("Detaljar i Spole").assertExists()
+        // The menu is open, without play and without what Spole does with a title in the library; its
+        // details are Stova's own Oppdag page, not Spole's.
+        compose.onNodeWithText("Sjå i Oppdag").assertExists()
+        compose.onAllNodesWithText("Detaljar i Spole").assertCountEquals(0)
         compose.onAllNodesWithText("Spel").assertCountEquals(0)
         compose.onAllNodesWithText("Merk som sett").assertCountEquals(0)
+    }
+
+    // Back from the page lands where the remote was: the tile reports itself as «Alle appar» does, and Home
+    // drawn again with that target puts focus on it.
+    @Test fun focusReturnsToTheOppdagTile() {
+        var focused: FocusedTarget? = null
+        var visit by mutableIntStateOf(0)
+        compose.setContent {
+            StovaTheme(reduceMotion = true) {
+                val context = LocalContext.current
+                key(visit) {
+                    HomeContent(listOf(row), focused, HomeRowKey.DISCOVER, AppArtCache(context), PackageManagerAppCatalog(context, emptySet()),
+                        {}, { focused = it }, {}, {})
+                }
+            }
+        }
+        compose.onNode(hasContentDescription("Heat") and hasClickAction()).assertIsFocused()
+            .performKeyInput { pressKey(Key.DirectionRight) }
+        compose.onNode(hasContentDescription("Oppdag") and hasClickAction()).assertIsFocused()
+        assertEquals(FocusedTarget.App("Oppdag"), focused)
+        // Home is drawn again, as after Back from the page.
+        compose.runOnIdle { visit++ }
+        compose.onNode(hasContentDescription("Oppdag") and hasClickAction()).assertIsFocused()
+        compose.onNode(hasContentDescription("Heat") and hasClickAction()).assertIsNotFocused()
     }
 }

@@ -29,7 +29,10 @@ import kotlinx.coroutines.launch
 internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: FocusedTarget?,
     onFocus: (FocusedTarget) -> Unit, onClick: (FocusedTarget.Media) -> Unit, onLongClick: (FocusedTarget.Media) -> Unit, returnFocus: FocusRequester?,
     onOpenMore: (() -> Unit)? = null) {
-    val index = row.items.indexOfFirst { it.id == (restore as? FocusedTarget.Media)?.item?.id }.coerceAtLeast(0)
+    // The tile onwards reports itself as «Alle appar» does, so Back from the page it opened lands on it again.
+    val more = stringResource(R.string.discover_open)
+    val index = if (onOpenMore != null && (restore as? FocusedTarget.App)?.label == more) row.items.size
+        else row.items.indexOfFirst { it.id == (restore as? FocusedTarget.Media)?.item?.id }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     // Back from Spole the title just watched goes first: when the order changes, the row follows the card in
     // focus, which a lazy row would otherwise leave out of sight while keeping its first visible card.
@@ -58,10 +61,12 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
             }
             // The row ends in a way onwards, as «Alle appar» ends the apps; it takes the cards' shape.
             if (onOpenMore != null) item(key = "stova:discover") {
-                val more = stringResource(R.string.discover_open)
                 val style = LocalRowStyle.current
+                val modifier = (if (index == row.items.size && focus != null) Modifier.focusRequester(focus) else Modifier)
+                    .then(if (index == row.items.size && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier)
+                    .onFocusChanged { if (it.isFocused) { focusedId = null; onFocus(FocusedTarget.App(more)) } }
                 CompositionLocalProvider(LocalRowStyle provides style.copy(format = style.format ?: if (poster) RowFormat.POSTER else RowFormat.WIDE)) {
-                    TileFrame(more, 0, onOpenMore, onOpenMore) { spec ->
+                    TileFrame(more, 0, onOpenMore, onOpenMore, modifier) { spec ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             androidx.compose.material3.Icon(app.stova.core.ui.StovaIcons.Discover, null, Modifier.size(32.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant)
