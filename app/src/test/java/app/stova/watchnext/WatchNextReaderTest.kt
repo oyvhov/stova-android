@@ -33,14 +33,46 @@ class WatchNextReaderTest {
         assertEquals(1, shadow.getContentObservers(uri).size)
         job.cancel()
     }
-    private fun cursor(vararg rows: Array<Any?>) = MatrixCursor(arrayOf(BaseColumns._ID, "package_name", "title", "episode_title", "poster_art_uri", "intent_uri", "last_playback_position_millis", "duration_millis", "last_engagement_time_utc_millis")).apply { rows.forEach(::addRow) }
+    private fun cursor(vararg rows: Array<Any?>) = MatrixCursor(arrayOf(BaseColumns._ID, "package_name", "title", "episode_title", "poster_art_uri", "intent_uri", "last_playback_position_millis", "duration_millis", "last_engagement_time_utc_millis", "content_rating")).apply { rows.forEach(::addRow) }
     @Test fun mapsAndFilters() {
         val entries = mapWatchNext(cursor(
-            arrayOf(1L, "com.netflix.ninja", "Dark", "Ep 1", "https://x/p.jpg", "intent:#Intent;package=com.netflix.ninja;end", 600_000L, 3_000_000L, 200L),
-            arrayOf(2L, "app.reelstack", "Kystvakta", null, null, "spole://watch-next/x/y", 0L, 0L, 300L),
-            arrayOf(3L, "com.disney", "Andor", null, null, "intent:#Intent;package=com.disney;end", 0L, 0L, 100L)))
+            arrayOf(1L, "com.netflix.ninja", "Dark", "Ep 1", "https://x/p.jpg", "intent:#Intent;package=com.netflix.ninja;end", 600_000L, 3_000_000L, 200L, "com.android.tv/US_TV/US_TV_MA"),
+            arrayOf(2L, "app.reelstack", "Kystvakta", null, null, "spole://watch-next/x/y", 0L, 0L, 300L, null),
+            arrayOf(3L, "com.disney", "Andor", null, null, "intent:#Intent;package=com.disney;end", 0L, 0L, 100L, null)))
         val kept = filterWatchNext(entries, "app.stova")
         assertEquals(listOf("Dark", "Andor"), kept.map { it.title }); assertEquals(0.2f, kept[0].progress!!, 0.001f); assertNull(kept[1].progress)
+        assertEquals("com.android.tv/US_TV/US_TV_MA", kept[0].contentRating); assertNull(kept[1].contentRating)
+    }
+    @Test fun contentRatingsBecomeAges() {
+        assertEquals(13, watchNextAge("com.android.tv/US_MV/US_MV_PG13"))
+        assertEquals(18, watchNextAge("com.android.tv/US_TV/US_TV_MA/US_TV_V"))
+        assertEquals(7, watchNextAge("com.android.tv/DK_TV/DK_TV_7"))
+        assertEquals(0, watchNextAge("com.android.tv/DE_TV/DE_TV_ALL"))
+        assertEquals(18, watchNextAge("com.android.tv/DK_TV/DK_TV_7, com.android.tv/US_MV/US_MV_R"))
+        listOf(null, "", "garbage", "com.android.tv/IN_TV/IN_TV_A", "com.android.tv/DK_TV/DK_TV_7,com.android.tv/IN_TV/IN_TV_A")
+            .forEach { assertNull(it, watchNextAge(it)) }
+    }
+    @Test fun anAgeLimitKeepsOnlyTitlesRatedWithinIt() {
+        fun entry(id: Long, rating: String?) = WatchNextEntry(id, "demo.player", "T$id", null, null, "intent:#Intent;package=demo.player;end", null, id, rating)
+        val entries = listOf(entry(1, "com.android.tv/DE_TV/DE_TV_6"), entry(2, "com.android.tv/US_MV/US_MV_R"), entry(3, null))
+        assertEquals(listOf(1L), withinAge(entries, 6).map { it.id })
+        assertEquals(listOf(1L, 2L), withinAge(entries, 18).map { it.id })
+        assertEquals(listOf(1L, 2L, 3L), withinAge(entries, null).map { it.id })
+    }
+    // A 15-rated film from a grown-up's app lay on a six-year-old's Home: the profile's limit applies to the row.
+    @Test fun theRowFollowsTheProfilesAgeLimit() = runTest {
+        org.robolectric.shadows.ShadowContentResolver.registerProviderInternal(android.media.tv.TvContract.AUTHORITY, provider(rows = listOf(
+            arrayOf(1L, "demo.player", "Bluey", null, null, "intent:#Intent;package=demo.player;end", 0L, 0L, 300L, "com.android.tv/DK_TV/DK_TV_ALL"),
+            arrayOf(2L, "demo.player", "Heat", null, null, "intent:#Intent;package=demo.player;end", 0L, 0L, 200L, "com.android.tv/DK_TV/DK_TV_15"),
+            arrayOf(3L, "demo.player", "Unrated", null, null, "intent:#Intent;package=demo.player;end", 0L, 0L, 100L, null))))
+        val source = WatchNextRowSource(WatchNextReader(context.contentResolver, { true }, "app.stova"))
+        fun profile(maxAge: Int?) = app.stova.profiles.Profile("p", "Demo", app.stova.core.theme.AvatarColor.ROSE,
+            appearance = app.stova.profiles.AppearancePrefs(backgroundFilter = app.stova.profiles.BackgroundFilter(maxAge = maxAge)))
+        suspend fun titles(maxAge: Int?) = source.rows(profile(maxAge)).first()
+            .filterIsInstance<app.stova.home.HomeRowUi.WatchNext>().flatMap { it.entries }.map { it.title }
+        assertEquals(listOf("Bluey"), titles(6))
+        assertEquals(listOf("Bluey", "Heat"), titles(15))
+        assertEquals(listOf("Bluey", "Heat", "Unrated"), titles(null))
     }
     @Test fun theSameTitleIsShownOnceFromTheAppThatSawItLast() {
         fun entry(id: Long, pkg: String, title: String, at: Long, subtitle: String? = null) =
@@ -55,7 +87,8 @@ class WatchNextReaderTest {
         "intent:#Intent;component=com.bank/.Pay;end", null, 0)))
     @Test fun ownPackageAllowed() = assertEquals("com.netflix.ninja", launchIntentFor(WatchNextEntry(1, "com.netflix.ninja", "x", null, null,
         "intent:#Intent;package=com.netflix.ninja;end", null, 0))!!.`package`)
-    private fun provider(blocked: Boolean = false): android.content.ContentProvider = object : android.content.ContentProvider() {
+    private fun provider(blocked: Boolean = false, rows: List<Array<Any?>> = listOf(
+        arrayOf(1L, "demo.player", "Demo", null, null, "intent:#Intent;package=demo.player;end", 10L, 100L, 200L, null))): android.content.ContentProvider = object : android.content.ContentProvider() {
         override fun onCreate() = true
         override fun getType(uri: android.net.Uri): String? = null
         override fun insert(uri: android.net.Uri, values: android.content.ContentValues?): android.net.Uri? = null
@@ -64,7 +97,7 @@ class WatchNextReaderTest {
         override fun query(uri: android.net.Uri, projection: Array<out String>?, selection: String?, args: Array<out String>?, sort: String?): android.database.Cursor {
             assertNull(selection); assertNull(args)
             if (blocked) throw SecurityException("blocked")
-            return cursor(arrayOf(1L, "demo.player", "Demo", null, null, "intent:#Intent;package=demo.player;end", 10L, 100L, 200L))
+            return cursor(*rows.toTypedArray())
         }
     }
     @Test fun providerQueryHasNoSelection() = runTest {

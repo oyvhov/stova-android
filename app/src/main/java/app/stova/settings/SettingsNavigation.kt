@@ -42,11 +42,13 @@ internal fun SettingsNavigation(
     onEnterContent: ((SettingsSection) -> Unit)? = null,
     onCancelEntry: () -> Unit = {},
     onApps: (() -> Unit)? = null,
+    appsSelected: Boolean = false,
+    onAppsFocused: () -> Unit = {},
 ) {
     val fallbackFocus = remember { SettingsSection.entries.associateWith { FocusRequester() } }
     val tabs = sectionFocus.ifEmpty { fallbackFocus }
     val apps = remember { FocusRequester() }
-    // Apps opens its own page, so it does not select on focus. It sits just above System; null marks it.
+    // Apps opens its own page: focus shows a note about it rather than selecting a section. It sits just above System; null marks it.
     val entries: List<SettingsSection?> = settingsOrder.toMutableList<SettingsSection?>().apply {
         if (onApps != null) add(indexOf(SettingsSection.HOME_BUTTON), null)
     }
@@ -69,9 +71,9 @@ internal fun SettingsNavigation(
                     left = FocusRequester.Cancel
                     if (entry == null) right = FocusRequester.Cancel
                 }
-                if (entry == null) SectionTab(stringResource(R.string.nav_apps), stringResource(R.string.settings_rail_apps), false,
+                if (entry == null) SectionTab(stringResource(R.string.nav_apps), stringResource(R.string.settings_rail_apps), appsSelected, onAppsFocused,
                     modifier = order, icon = StovaIcons.Apps, iconTint = AvatarColor.ROSE.color, iconTag = "settings-icon-apps", onClick = onApps ?: {})
-                else SectionTab(stringResource(entry.label), stringResource(entry.railHint), entry == selected, { onSelect(entry) },
+                else SectionTab(stringResource(entry.label), stringResource(entry.railHint), entry == selected && !appsSelected, { onSelect(entry) },
                     modifier = order.onPreviewKeyEvent { event ->
                         if (event.key != Key.DirectionRight) false else {
                             if (event.type == KeyEventType.KeyDown) onEnterContent?.invoke(entry)

@@ -15,7 +15,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 
 data class WatchNextEntry(val id: Long, val packageName: String, val title: String, val subtitle: String?,
-    val posterUri: String?, val intentUri: String, val progress: Float?, val lastEngagement: Long)
+    val posterUri: String?, val intentUri: String, val progress: Float?, val lastEngagement: Long,
+    /** Android's content ratings as the app wrote them, such as `com.android.tv/US_MV/US_MV_PG13`; most apps write none. */
+    val contentRating: String? = null)
 sealed interface WatchNextResult {
     data class Available(val entries: List<WatchNextEntry>) : WatchNextResult
     data class Unavailable(val reason: Reason) : WatchNextResult
@@ -33,9 +35,33 @@ fun mapWatchNext(cursor: Cursor): List<WatchNextEntry> = buildList {
         add(WatchNextEntry(number(BaseColumns._ID), pkg, title,
             text(TvContract.WatchNextPrograms.COLUMN_EPISODE_TITLE), text(TvContract.WatchNextPrograms.COLUMN_POSTER_ART_URI), intent,
             if (position > 0 && duration > 0) (position.toFloat() / duration).coerceIn(0f, 1f) else null,
-            number(TvContract.WatchNextPrograms.COLUMN_LAST_ENGAGEMENT_TIME_UTC_MILLIS)))
+            number(TvContract.WatchNextPrograms.COLUMN_LAST_ENGAGEMENT_TIME_UTC_MILLIS),
+            text(TvContract.WatchNextPrograms.COLUMN_CONTENT_RATING)))
     }
 }
+
+/** Display ages for the rating tokens Android's systems share, as conservative as the hero's: M is 15, MA and R are 18. */
+private val ratingTokenAges = mapOf("ALL" to 0, "G" to 0, "Y" to 0, "C" to 0, "P" to 0, "Y7" to 7, "PG" to 10, "PG13" to 13,
+    "M" to 15, "AV" to 15, "MA" to 18, "R" to 18, "NC17" to 18, "X" to 18)
+
+/**
+ * The age an app's content ratings amount to. Each rating is `domain/system/system_token[/subratings]`, several
+ * are separated by commas, and the oldest wins. A token this cannot read makes the whole answer unknown.
+ */
+fun watchNextAge(contentRating: String?): Int? {
+    val ratings = contentRating.orEmpty().split(',').map { it.trim() }.filter { it.isNotEmpty() }
+    if (ratings.isEmpty()) return null
+    return ratings.maxOf { rating ->
+        val parts = rating.split('/')
+        if (parts.size < 3) return null
+        val token = parts[2].removePrefix(parts[1] + "_").uppercase(java.util.Locale.ROOT)
+        token.toIntOrNull() ?: ratingTokenAges[token] ?: return null
+    }
+}
+
+/** The profile's age limit, as the hero keeps it: with a limit, a title needs a known rating within it. */
+fun withinAge(entries: List<WatchNextEntry>, maxAge: Int?): List<WatchNextEntry> =
+    if (maxAge == null) entries else entries.filter { watchNextAge(it.contentRating)?.let { age -> age <= maxAge } == true }
 fun filterWatchNext(entries: List<WatchNextEntry>, selfPackage: String, limit: Int = 20): List<WatchNextEntry> =
     entries.filterNot { it.packageName == selfPackage || it.packageName == "app.stova" || it.packageName.startsWith("app.reelstack") }
         .sortedByDescending { it.lastEngagement }

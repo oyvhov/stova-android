@@ -1,3 +1,9 @@
+# Watch Next følgjer aldersgrensa, Appar-rute i innstillingane; Oppdag/Seerr under avklaring
+2026-11-01, eigaren: «1,5,6» (Watch Next innanfor alderen til profilen, Loftet-yting, småfiks), så «Eg ønsker egentlig implementere oppdag/Seerr inni launcheren, men Stova sitt designspråk. Lag den skikkelig bra.»
+Gjort: «Hald fram i andre appar» følgjer aldersgrensa til profilen (`watchnext/WatchNextReader.kt`: `contentRating`, `watchNextAge`, `withinAge`; `WatchNextRowSource`). Med ei grense (standard 15) blir titlar utan kjend `content_rating` skjulte, som i heroen; hintet under Bakgrunn og radinnstillingane seier det. Innstillingar: fokus på «Appar» viser `settings/AppsPane.kt` i staden for sida til førre seksjon.
+Kontroll: 951 testar (58 hoppa over), 0 feil; lint 0 feil. Ikkje installert på TV: Eilev- og Øyvind-profilane er ikkje sjekka med bygget. Merk: Øyvind si rad kan bli tom om appane ikkje skriv aldersgrense; «Utan grense» under Bakgrunn tek henne attende.
+Står att: Loftet-yting (G1: begge TV-ane teiknar i 1080p, så det er fullskjermslag/overdraw som tel), B5-reproduksjon, TV-sjekk av fiksane. Oppdag/Seerr: Spole har heile Seerr-delen (`SeerrDiscoverClient`, førespurnadsflyt, status), så Stova bør byggje på det gjennom launcher-provideren. Ventar på svar frå eigaren før design.
+
 # Spole 1.0.0-beta30 er ute
 2026-11-01, eigaren: «Ja og ja» (til å gi ut Spole beta30). Release `v1.0.0-beta30` (versjonskode 167, `a277303`): rader, handlingar og spelestatus for Stova, `official`, éitt kort per serie, Emby-aldersgrense, «15 år»/«Alle», marg og stopp ved enden av TV-hyller, og inga demping av hylla. Oppdatering i appen prøvd på 5566, CI grøn. Shield og Loftet har den offentlege APK-en (167). Stova er ikkje pusha.
 

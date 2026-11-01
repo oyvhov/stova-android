@@ -60,7 +60,8 @@ formatproporsjonane, også i Appar-rutenettet. Watch Next avgrensar undertittele
 blir lese av kort, Watch Next og radgeometrien. Appar-sida følgjer alltid profilvalet. Heim har ingen radteljar.
 Appar-sida har fire banner per rad: `LocalArtworkScale` skalerer kortstorleiken frå Heim til breidda, medan ikon held storleiken sin. Rekkjefølgja er Favorittar, Spole-profilar, Alle appar (samla og alfabetisk), Bibliotek, Scenar og skript, Skjulte appar. Bibliotek og scenar kan vere lange lister, så dei står etter appane.
 Favorittrada sluttar med «Alle appar». Appar finst også i menyen i Innstillingar (ved Android), og
-`MainShell` sender Tilbake til sida som opna Appar. Toppfeltet har ingen Appar-knapp. Sesongmerket står ved venstre kant.
+`MainShell` sender Tilbake til sida som opna Appar. Fokus på «Appar» der viser `settings/AppsPane.kt` (kva OK
+opnar, tal på favorittar og skjulte appar) i staden for sida til seksjonen som sist var vald. Toppfeltet har ingen Appar-knapp. Sesongmerket står ved venstre kant.
 «Rullande oversikt» opnar med heroen over første rad (same geometri som éi rad). `HomeScrollShift`
 gir bakgrunnen rulleframdrifta; berre `graphicsLayer`/teikning les ho. Innstillingsseksjonane lenkjer
 ikkje til kvarandre; berre undersider (t.d. ein annan profil sin utsjånad) kan lenkje vidare.
@@ -92,6 +93,8 @@ rad- og tittel-id-ar som nøklar.
 - HA-registeret blir brukt om att i seks timar. Historikk og prognosar blir delte mellom kort og panel.
 - HA-snapshot blir skrive høgst kvart minutt og forsøkt flusha ved stopp. Berre tidsstempelendringar gir inga skriving.
 - Watch Next registrerer ingen innhaldslyttar utan løyve. Klokker stoppar når skjermen ikkje er aktiv.
+- «Hald fram i andre appar» følgjer aldersgrensa til profilen slik heroen gjer: med ei grense treng ein tittel ei kjend
+  aldersgrense (`content_rating` frå appen, lesen av `watchNextAge`) innanfor henne, elles blir han skjult. Barneprofilar har ikkje rada.
 
 Buffer er alltid avgrensa til rett profil, konto eller HA-tilkopling. Utlogging og ny tilkopling
 må ugyldiggjere relevant tilstand. Ingen test skal ringje ekte tenester utan eit uttrykkeleg integrasjonssteg.

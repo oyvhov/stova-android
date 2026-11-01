@@ -223,6 +223,23 @@ class SettingsScreenTest {
         rule.onNodeWithText("Set PIN").assertExists()
     }
 
+    // Apps is a link, not a section: while its tab has focus the pane says so, not the last section's page.
+    @Test fun appsTabShowsItsOwnNoteInsteadOfTheLastSection() {
+        runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }
+        openSettings()
+        tab("Profilar").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        rule.waitForIdle()
+        rule.onNodeWithText("Set PIN").assertExists()
+        tab("Appar").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        rule.waitForIdle()
+        rule.onNodeWithText("Set PIN").assertDoesNotExist()
+        rule.onNodeWithText("0 favorittar · 0 skjulte appar").assertExists()
+        tab("Profilar").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        rule.waitForIdle()
+        rule.onNodeWithText("0 favorittar · 0 skjulte appar").assertDoesNotExist()
+        rule.onNodeWithText("Set PIN").assertExists()
+    }
+
     // Switching a section leaves a single pane in the focus tree and keeps focus on its tab.
     @Test fun sectionSwitchKeepsFocusOnTheTabWithoutLeavingOldControls() {
         runBlocking { container.session.enter(container.profiles.create("A", AvatarColor.LIME, false).id) }

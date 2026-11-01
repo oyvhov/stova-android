@@ -76,7 +76,10 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
     }
     if (!profile.kid) SettingsGroup(stringResource(R.string.row_watch_next)) {
         when (val state = watchNext) {
-            is WatchNextResult.Available -> Text(stringResource(R.string.watch_next_available), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            is WatchNextResult.Available -> {
+                Text(stringResource(R.string.watch_next_available), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                profile.appearance.backgroundFilter.maxAge?.let { Text(stringResource(R.string.watch_next_age_limit, it), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            }
             is WatchNextResult.Unavailable -> {
                 Text(stringResource(if (state.reason == WatchNextResult.Reason.NO_PERMISSION) R.string.watch_next_needs_access else R.string.watch_next_blocked), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (state.reason == WatchNextResult.Reason.NO_PERMISSION) StovaButton(stringResource(R.string.watch_next_grant), {

@@ -25,12 +25,15 @@ internal val LocalSettingsReturnedFrom = staticCompositionLocalOf<SettingsSectio
  * Two explicit focus areas: arrows never choose a neighbouring section by screen geometry.
  * Back goes one step at a time: a section opened from a card or link returns there, content
  * returns to the section list, and only the list leaves Settings. Subpages handle their own Back first.
+ * Apps is a link to its own page: while its tab has focus the pane shows [appsPane], and the
+ * chosen section's page comes back with the next tab.
  */
 @Composable
 internal fun SettingsLayout(
     selected: SettingsSection,
     onSelect: (SettingsSection) -> Unit,
     onApps: (() -> Unit)? = null,
+    appsPane: (@Composable ColumnScope.() -> Unit)? = null,
     content: @Composable ColumnScope.(SettingsSection, (SettingsSection) -> Unit) -> Unit,
 ) {
     val tabs = remember { SettingsSection.entries.associateWith { FocusRequester() } }
@@ -39,9 +42,11 @@ internal fun SettingsLayout(
     var history by remember { mutableStateOf(emptyList<SettingsSection>()) }
     var returnedFrom by remember { mutableStateOf<SettingsSection?>(null) }
     var paneFocused by remember { mutableStateOf(false) }
+    var appsShown by remember { mutableStateOf(false) }
     // Choosing a section in the list starts afresh: there is nothing to go back to.
-    fun select(section: SettingsSection) { enterSection = null; history = emptyList(); returnedFrom = null; onSelect(section) }
+    fun select(section: SettingsSection) { appsShown = false; enterSection = null; history = emptyList(); returnedFrom = null; onSelect(section) }
     fun enter(section: SettingsSection) {
+        appsShown = false
         // Cross-links can remove the currently focused control. Park focus on the stable
         // destination tab first; otherwise Compose falls back to the first tab (Profile),
         // whose onFocused selects Profile before the new pane has attached.
@@ -84,12 +89,12 @@ internal fun SettingsLayout(
 
     Row(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
         SettingsNavigation(selected, ::select, tabs, ::enter,
-            onCancelEntry = { enterSection = null }, onApps = onApps)
+            onCancelEntry = { enterSection = null }, onApps = onApps, appsSelected = appsShown, onAppsFocused = { appsShown = true })
         // Keep only the selected pane in the focus tree. An outgoing animated pane must not
         // compete for Up/Down while the user is already selecting the next section.
-        key(selected) {
+        key(selected, appsShown) {
             Column(
-                Modifier.weight(1f).fillMaxHeight().softEntrance(selected)
+                Modifier.weight(1f).fillMaxHeight().softEntrance(if (appsShown) null else selected)
                     .onFocusChanged { paneFocused = it.hasFocus }
                     .focusRequester(pane)
                     .focusProperties {
@@ -107,7 +112,7 @@ internal fun SettingsLayout(
             ) {
                 CompositionLocalProvider(LocalSettingsSectionFocus provides tabs.getValue(selected),
                     LocalSettingsPaneEntry provides { enter(selected) }, LocalSettingsReturnedFrom provides returnedFrom) {
-                    content(selected, ::follow)
+                    if (appsShown && appsPane != null) appsPane() else content(selected, ::follow)
                 }
             }
         }
