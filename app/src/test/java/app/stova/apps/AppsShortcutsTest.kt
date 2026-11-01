@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -58,7 +59,8 @@ class AppsShortcutsTest {
     // A library is added from its group on the Apps page, as an app is, and joins the favourites.
     @Test fun aLibraryIsAddedToTheFavouritesFromTheAppsPage() {
         val (profiles, created) = show()
-        compose.waitUntil(5_000) { compose.onAllNodesWithText("Bibliotek").fetchSemanticsNodes().isNotEmpty() }
+        // Libraries and scenes come after the apps, so the page is scrolled to them once they load.
+        compose.waitUntil(5_000) { runCatching { compose.onNode(hasScrollAction()).performScrollToNode(hasText("Bibliotek")) }.isSuccess }
         compose.onNode(hasScrollAction()).performScrollToNode(hasContentDescription("Kino"))
         compose.onNodeWithText("Scenar og skript").assertExists()
         compose.onNode(hasScrollAction()).performScrollToNode(hasContentDescription("Filmar"))
@@ -77,7 +79,11 @@ class AppsShortcutsTest {
     // Spole's profiles are offered too: a tile per person, with their picture, opening Spole as them.
     @Test fun aSpoleProfileIsAddedToTheFavouritesWithItsPicture() {
         val (profiles, created) = show()
-        compose.waitUntil(5_000) { compose.onAllNodesWithText("Bibliotek").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Spole-profilar").fetchSemanticsNodes().isNotEmpty() }
+        // The people come before the apps.
+        val top = { text: String -> compose.onNodeWithText(text).fetchSemanticsNode().boundsInRoot.top }
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Alle appar"))
+        assertTrue(top("Spole-profilar") < top("Alle appar"))
         compose.onNode(hasScrollAction()).performScrollToNode(hasContentDescription("Eilev"))
         compose.onNodeWithText("Spole-profilar").assertExists()
         compose.onNode(hasTestTag("spole-avatar") and hasAnyAncestor(hasContentDescription("Eilev")), useUnmergedTree = true).assertExists()

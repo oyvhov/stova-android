@@ -57,6 +57,7 @@ namna i globale val og radval; overskriftsstorleik har ei eiga liste. `artworkDi
 formatproporsjonane, også i Appar-rutenettet. Watch Next avgrensar undertittelen til kunstbreidda.
 `RowStyle.cardTitles` lèt ei rad ha eigne namn under korta (null følgjer profilen); `showsCardTitles`
 blir lese av kort, Watch Next og radgeometrien. Appar-sida følgjer alltid profilvalet. Heim har ingen radteljar.
+Appar-sida har fire banner per rad: `LocalArtworkScale` skalerer kortstorleiken frå Heim til breidda, medan ikon held storleiken sin. Rekkjefølgja er Favorittar, Spole-profilar, Alle appar (samla og alfabetisk), Bibliotek, Scenar og skript, Skjulte appar. Bibliotek og scenar kan vere lange lister, så dei står etter appane.
 Favorittrada sluttar med «Alle appar». Appar finst også i menyen i Innstillingar (ved Android), og
 `MainShell` sender Tilbake til sida som opna Appar. Toppfeltet har ingen Appar-knapp. Sesongmerket står ved venstre kant.
 «Rullande oversikt» opnar med heroen over første rad (same geometri som éi rad). `HomeScrollShift`

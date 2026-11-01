@@ -1,3 +1,9 @@
+# Appar-sida: fire per rad, Spole-profilar før appane
+2026-11-01, eigaren: «Appar sida i Stova er ikkje så bra når det er massevis av appar kan du lage inndelinga finare og kanskje med plass til 4 ikon per rad? Eg vil gjerne spoleprofilar før appar», så «Nei appar skal vere samla» og «Du kan teste på Shield».
+Gjort: banner står fire per rad uansett kortstorleik på Heim. Rekkjefølgja er Favorittar → Spole-profilar → Alle appar → Bibliotek → Scenar og skript → Skjulte. Ei inndeling av appane i grupper (Film og TV, Musikk, Spel …) vart laga og prøvd på Loftet, men teken bort att etter «appar skal vere samla».
+Kontroll: Stova 932 testar (58 hoppa over), 0 feil; lint 0 feil. TV-bygget er installert på Shield og Loftet, og Appar-sida er sett på begge. Shield står på Stova-heimen. Loftet søv på Øyvind.
+Merk (Loftet): rett etter ei ominstallering gjekk Heim-knappen til Google TV, sjølv om Heim-tenesta var bunden, og det heldt fram til Stova vart opna éin gong. Årsaka er ikkje funnen (TV-bygget loggar ikkje `StovaHome`). Ingen push.
+
 # Spole-rader for personen, handlingar på korta, og Spole beta29
 2026-11-01, eigaren: «Oppdater alt på Shield og sjekk at det fungerer som ønska», «Eg ønsker at Spole skal ligne meir på Stova på framsida», «Standard kortstil skal vere lik som i Stova», «Gi ut om du har testa», «Ta 1 og 2 først. Du kan teste på Loftet». Plan `docs/superpowers/plans/2026-11-01-spole-rows-and-actions.md`.
 Shield: Spole beta29 og Stova-TV installerte. Profilbytet er prøvd begge vegar (Stova-profilen «Eilev» med «Spole-profil» = Eilev → Spole som Eilev; Øyvind → hovudprofilen). Ein profil som fylgjer ein Spole-person får no biletet til personen (`withSpolePictures`). Eilev-profilen i Stova er laga på Shield.

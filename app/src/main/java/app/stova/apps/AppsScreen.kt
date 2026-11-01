@@ -41,9 +41,10 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 /**
- * Every app, favourites first. Adults get a menu per app; a kid only opens what is allowed. With
- * [shortcuts], an adult also sees the profile's libraries and the house's scenes, to add to the
- * favourites like an app.
+ * Every app, favourites first. With [shortcuts], an adult then sees the people in Spole; all the apps
+ * follow together, four to a row however large the cards are set; then the profile's libraries and the
+ * house's scenes, which can be long, to add to the favourites like an app. Adults get a menu per app;
+ * a kid only opens what is allowed.
  */
 @Composable
 fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog: AppCatalog,
@@ -86,10 +87,15 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
     val appearance = app.stova.core.theme.LocalAppearance.current
     val format = if (appearance.appStyle == app.stova.profiles.AppStyle.ICON)
         app.stova.profiles.RowFormat.ICON else app.stova.profiles.RowFormat.WIDE
-    val cardWidth = app.stova.home.artworkDimensions(format, appearance.cardSize).width.dp
+    val cardWidth = app.stova.home.artworkDimensions(format, appearance.cardSize).width
 
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+    // Four banners fill a row whatever card size Home uses; icons are smaller and keep theirs.
+    val columns = if (format == app.stova.profiles.RowFormat.WIDE) APPS_PER_ROW else null
+    val fit = columns?.let { (maxWidth - StovaLayout.TvSafeEdge * 2 - StovaLayout.RowGap * (it - 1)) / it / cardWidth.dp } ?: 1f
+    androidx.compose.runtime.CompositionLocalProvider(app.stova.home.LocalArtworkScale provides fit) {
     LazyVerticalGrid(
-        columns = GridCells.FixedSize(cardWidth),
+        columns = columns?.let { GridCells.Fixed(it) } ?: GridCells.FixedSize(cardWidth.dp),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(StovaLayout.TvSafeEdge),
         horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap),
@@ -106,6 +112,10 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
                 else ShortcutTile(tile, { openShortcut(tile) }, { shortcutMenu = tile })
             }
         }
+        if (spoleProfiles.isNotEmpty()) {
+            header(R.string.apps_spole_profiles)
+            items(spoleProfiles, key = { "spole:${it.key}" }) { tile -> ShortcutTile(tile, { openShortcut(tile) }, { shortcutMenu = tile }) }
+        }
         header(R.string.apps_all)
         items(arranged.all, key = { "all:${it.key}" }) { app ->
             AppTile(app, art, { catalog.launch(app) }, { onLong(app) }, iconOverride = profile.apps.iconOverrides[app.key])
@@ -113,10 +123,6 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
         if (libraries.isNotEmpty()) {
             header(R.string.apps_libraries)
             items(libraries, key = { "lib:${it.key}" }) { tile -> ShortcutTile(tile, { openShortcut(tile) }, { shortcutMenu = tile }) }
-        }
-        if (spoleProfiles.isNotEmpty()) {
-            header(R.string.apps_spole_profiles)
-            items(spoleProfiles, key = { "spole:${it.key}" }) { tile -> ShortcutTile(tile, { openShortcut(tile) }, { shortcutMenu = tile }) }
         }
         if (scenes.isNotEmpty()) {
             header(R.string.apps_scenes)
@@ -138,12 +144,17 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
         }
     }
 
+    }
+    }
+
     menuFor?.let { app ->
         AppMenuHost(app, apps, profile, art, catalog) { menuFor = null }
     }
     shortcutMenu?.let { tile -> ShortcutMenuHost(tile, apps, profile, openShortcut) { shortcutMenu = null } }
     if (spoleMissing) app.stova.media.ui.SpoleMissingDialog { spoleMissing = false }
 }
+
+private const val APPS_PER_ROW = 4
 
 /** The installed apps and the local facts that say which favourite shortcuts can show. */
 private data class AppsPage(val apps: ArrangedApps, val accounts: List<MediaAccount>, val haReady: Boolean)
@@ -154,6 +165,7 @@ private fun LazyGridScope.header(title: Int) {
             R.string.apps_favorites -> StovaIcons.Star
             R.string.apps_libraries -> StovaIcons.Rows
             R.string.apps_scenes -> StovaIcons.Sun
+            R.string.apps_spole_profiles -> StovaIcons.User
             else -> StovaIcons.Apps
         },
             Modifier.padding(top = StovaLayout.SectionTop, bottom = StovaLayout.SectionBottom))

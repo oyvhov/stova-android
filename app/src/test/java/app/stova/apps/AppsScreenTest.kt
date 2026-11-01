@@ -60,7 +60,7 @@ class AppsScreenTest {
     private val banan = InstalledApp("banan/.Main", "banan", ".Main", "Banan", true)
     private val eple = InstalledApp("eple/.Main", "eple", ".Main", "Eple", true)
 
-    @Test fun gridUsesTheSelectedArtworkSizeAndKeepsItsNeighbourGap() {
+    @Test fun bannersAreFourToARowAndIconsKeepTheSelectedSize() {
         val profiles = profiles()
         val adult = runBlocking { profiles.create("A", AvatarColor.LIME, false) }
         show(profiles, adult, FakeAppCatalog(listOf(banan, eple)))
@@ -69,7 +69,8 @@ class AppsScreenTest {
             compose.waitForIdle()
             val first = compose.onNode(hasContentDescription("Banan") and hasClickAction())
             val second = compose.onNode(hasContentDescription("Eple") and hasClickAction())
-            val width = if (style == AppStyle.ICON) size.width * 139.5f / 248f else size.width.toFloat()
+            // Four banners fill the 960 dp page between its 48 dp edges and three 16 dp gaps, whatever the size.
+            val width = if (style == AppStyle.ICON) size.width * 139.5f / 248f else (960f - 2 * 48f - 3 * 16f) / 4
             first.assertWidthIsEqualTo(width.dp)
             val a = first.getUnclippedBoundsInRoot()
             val b = second.getUnclippedBoundsInRoot()
