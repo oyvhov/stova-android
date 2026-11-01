@@ -150,6 +150,8 @@ class AppContainer(
     val spoleRows = app.stova.media.SpoleRowSource(session.active, mediaAccounts::forProfile, { profileId, link ->
         kotlinx.coroutines.withContext(Dispatchers.IO) { app.stova.media.SpoleProfiles(appContext).rows(profileId, link) }
     })
+    /** Discover: Seerr through Spole, for the page and Home's row. */
+    val discover = app.stova.discover.DiscoverRepository(app.stova.discover.SpoleDiscoverFetch(app.stova.discover.SpoleDiscover(appContext)))
     val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session, shortcuts.accounts, shortcuts.haReady), app.stova.media.MediaRowSource(media), spoleRows, app.stova.watchnext.WatchNextRowSource(watchNext))
 
 
