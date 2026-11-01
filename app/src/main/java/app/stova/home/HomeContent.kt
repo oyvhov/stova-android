@@ -357,7 +357,6 @@ fun HomeContent(
                                             .border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large) else Modifier),
                                             contentAlignment = if (deck) Alignment.BottomStart else Alignment.TopStart) {
                                           CompositionLocalProvider(LocalRowStyle provides style,
-                                            LocalRowHasFocus provides (hasFocus || preview && row.key == restoreRow),
                                             LocalArtworkScale provides (geometry?.artworkScale ?: 1f)) {
                                             val rowMenu: () -> Unit = { if (canEditRows) menuRow = row }
                                             val rowTarget = rowTargets[row.key] ?: restoreTarget

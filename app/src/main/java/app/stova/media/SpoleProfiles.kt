@@ -92,7 +92,7 @@ fun parseSpoleRows(cursor: Cursor, profileId: String): List<app.stova.home.HomeR
         items += app.stova.media.model.MediaItem(id = id, accountId = account.id, type = type, title = text("title").orEmpty(),
             seriesName = text("series"), season = int("season"), episode = int("episode"), year = int("year"),
             runtimeMinutes = int("runtime"), overview = text("overview"),
-            ratings = app.stova.media.model.Ratings(community = double("community"), criticPercent = int("critic")),
+            ratings = app.stova.media.model.Ratings(community = double("community"), criticPercent = int("critic"), official = text("official")),
             progress = double("progress")?.toFloat(),
             art = app.stova.media.model.ItemArt(backdrop = text("backdrop"), logo = text("logo"), poster = text("poster"), wide = text("wide")))
     }

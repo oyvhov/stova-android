@@ -33,6 +33,24 @@ class TvControlPanelTest {
         compose.mainClock.advanceTimeBy(400);compose.waitForIdle()
         assertEquals(listOf(brightnessCall(1)),calls)
     }
+    // On the Shield, Down from the brightness went past «Slå på» to «Farge og kvittone», and Up back
+    // to the brightness: the one button that turns the light on could not be reached.
+    @Test fun downFromTheBrightnessReachesTurnOnAndThenTheColours() {
+        panel(CardDialog.Brightness("light.a"),"off","""{"supported_color_modes":["brightness","color_temp"],"supported_features":32}""")
+        compose.onNodeWithTag("slider-brightness").assertIsFocused().performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithText("Slå på").assertIsFocused().performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithText("Farge og kvittone").assertIsFocused().performKeyInput {pressKey(Key.DirectionUp)}
+        compose.onNodeWithText("Slå på").assertIsFocused().performKeyInput {pressKey(Key.DirectionUp)}
+        compose.onNodeWithTag("slider-brightness").assertIsFocused()
+    }
+    @Test fun downFromTheVolumeLandsOnPauseAndGoesOnToTheSources() {
+        panel(CardDialog.Controls("media_player.sonos",CardType.MEDIA_PLAYER),"playing",
+            """{"supported_features":53,"volume_level":0.25,"source":"Spotify","source_list":["TV","Spotify"]}""")
+        compose.onNodeWithTag("slider-volume").assertIsFocused().performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithText("Pause").assertIsFocused().performKeyInput {pressKey(Key.DirectionDown)}
+        compose.onNodeWithText("Kjelde", substring = true).assertIsFocused().performKeyInput {pressKey(Key.DirectionUp)}
+        compose.onNodeWithText("Pause").assertIsFocused()
+    }
     @Test fun climateLabelsTheRoomAndKeepsDriftSeparateFromPresets() {
         panel(CardDialog.Climate("climate.a"),"heat","""{"current_temperature":25,"temperature":22,"hvac_modes":["off","heat"],"preset_modes":["none","quiet","powerful"],"preset_mode":"quiet"}""")
         compose.onNodeWithText("Romtemperatur").assertExists()

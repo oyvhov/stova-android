@@ -4,7 +4,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import app.stova.profiles.*
 
 val LocalRowStyle = staticCompositionLocalOf { RowStyle() }
-val LocalRowHasFocus = staticCompositionLocalOf { false }
 
 /** Whether Home has already shown its rows arriving for this profile; the shell keeps one per profile. */
 class HomeArrival { var played = false }

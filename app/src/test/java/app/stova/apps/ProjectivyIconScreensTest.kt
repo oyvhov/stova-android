@@ -18,7 +18,6 @@ import app.stova.assumeScreensEnabled
 import app.stova.saveScreen
 import app.stova.core.theme.StovaTheme
 import app.stova.profiles.AppearancePrefs
-import app.stova.home.LocalRowHasFocus
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Rule
@@ -41,17 +40,14 @@ class ProjectivyIconScreensTest {
         val fake=FakeIconPackSource().apply { packs=listOf(IconPack(ProjectivyIcons.PACKAGE,"Projectivy Icon Pack",119));filter="" }
         val art=AppArtCache(compose.activity,iconPacks=IconPackRepository(fake,tmp.root))
         val app=InstalledApp("app.reelstack/app.reelstack.MainActivity","app.reelstack","app.reelstack.MainActivity","Spole",true)
-        // The plain outline is the one effect that leaves the rest of a focused row undimmed, so the
-        // surface colours below are exact; reduced motion at the end dims again, as it always did.
+        // The surface colours below are exact: no card is dimmed beside focus, with any effect.
         var prefs by mutableStateOf(AppearancePrefs(iconPack=ProjectivyIcons.PACKAGE,appTileBackground=false,focusEffect=FocusEffect.OUTLINE))
         runBlocking { assertNotNull(art.artwork(app,prefs)) }
         var wallpaper=0;var surface=0
         compose.setContent { StovaTheme(appearance=prefs) {
             wallpaper=MaterialTheme.colorScheme.background.toArgb();surface=MaterialTheme.colorScheme.surfaceVariant.toArgb()
             Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(48.dp)) {
-                CompositionLocalProvider(LocalRowHasFocus provides true) {
-                    AppTile(app,art,{}, {},Modifier.testTag("spole"))
-                }
+                AppTile(app,art,{}, {},Modifier.testTag("spole"))
             }
         } }
         val bounds=compose.onNodeWithTag("spole").fetchSemanticsNode().boundsInRoot

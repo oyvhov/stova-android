@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -59,8 +58,9 @@ fun StovaDialog(
 /**
  * The long-press panel: it slides in from the right edge over a dimmed screen and fills the
  * height. Back first asks [onBack], which returns true when it went back a page inside the panel;
- * otherwise the panel slides out and then reports [onDismissRequest]. Same key guard as
- * [StovaDialog]: the held OK that opened it chooses nothing.
+ * otherwise the panel fades where it stands, with the screen behind it, and then reports
+ * [onDismissRequest]. Sliding out drew its dark surface across the screen as a band (the owner,
+ * 2026-11-01). Same key guard as [StovaDialog]: the held OK that opened it chooses nothing.
  */
 @Composable
 internal fun StovaSheetWindow(
@@ -71,7 +71,7 @@ internal fun StovaSheetWindow(
     val motion = stovaMotion
     StovaOverlay(onDismissRequest, DialogProperties(), Alignment.CenterEnd,
         enter = slideInHorizontally(motion.enter()) { it } + fadeIn(motion.enter()),
-        exit = slideOutHorizontally(motion.exit()) { it } + fadeOut(motion.exit()),
+        exit = fadeOut(motion.exit()),
         onBack = onBack, sideScrim = true) { content() }
 }
 

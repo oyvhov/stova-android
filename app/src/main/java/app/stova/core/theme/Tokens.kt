@@ -47,9 +47,6 @@ object StovaFocus {
     const val ArtworkScale = 1.06f
     const val ControlScale = 1.02f
     const val SurfaceAlpha = 0.16f
-    /** The rest of the row with focus, and the titles under those cards. */
-    const val DimmedArtwork = 0.70f
-    const val DimmedTitle = 0.55f
     val Lift = 2.dp
 }
 
@@ -62,10 +59,6 @@ object StovaDropdown {
     /** The arcs a Wi-Fi icon does not have lit, under the ones it has. */
     const val UnlitAlpha = 0.3f
 }
-
-/** A title under a card: full strength on the focused card or while its row is idle, dimmed beside focus. */
-fun cardTitleAlpha(focused: Boolean, rowHasFocus: Boolean): Float =
-    if (focused || !rowHasFocus) 1f else StovaFocus.DimmedTitle
 
 /** Five steps, and every corner in the app is one of them. */
 object StovaShapes {

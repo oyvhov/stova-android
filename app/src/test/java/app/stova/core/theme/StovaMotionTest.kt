@@ -36,12 +36,6 @@ class StovaMotionTest {
         for (ms in 0..400 step 10) assertTrue(anim.getValueFromNanos(ms * 1_000_000L) <= 1.06f + 1e-4f)
     }
 
-    @Test fun titlesBesideFocusStepBack() {
-        assertEquals(1f, app.stova.core.theme.cardTitleAlpha(focused = true, rowHasFocus = true), 0f)
-        assertEquals(1f, app.stova.core.theme.cardTitleAlpha(focused = false, rowHasFocus = false), 0f)
-        assertTrue(app.stova.core.theme.cardTitleAlpha(focused = false, rowHasFocus = true) < 0.6f)
-    }
-
     @Test fun fullMotionIsQuickStandardEmphasized() {
         val full = StovaMotion.tokens(reduceMotion = false)
         assertFalse(full.still)

@@ -44,10 +44,10 @@ class SpoleRowsTest {
     @get:Rule val compose = createComposeRule()
 
     private fun cursor(vararg rows: Array<Any?>) = MatrixCursor(arrayOf("row", "kind", "user", "server", "id", "type", "title", "series",
-        "season", "episode", "year", "runtime", "progress", "overview", "wide", "poster", "backdrop", "logo", "community", "critic"))
+        "season", "episode", "year", "runtime", "progress", "overview", "wide", "poster", "backdrop", "logo", "community", "critic", "official"))
         .apply { rows.forEach(::addRow) }
     private fun card(row: String, id: String, type: String = "Episode", progress: Double? = null) = arrayOf<Any?>(row, "emby", "eilev", "Heime", id,
-        type, "Pingu", "Pingu", 1, 2, 1990, 5, progress, "Pingu får besøk.", "http://emby/w/$id", "http://emby/p/$id", null, null, 7.2, null)
+        type, "Pingu", "Pingu", 1, 2, 1990, 5, progress, "Pingu får besøk.", "http://emby/w/$id", "http://emby/p/$id", null, null, 7.2, null, "A")
 
     @Test fun spolesAnswerBecomesTheRowsAnAccountWouldGive() {
         val rows = parseSpoleRows(cursor(card("latest_movies", "f1", "Movie"), card("continue", "e1", progress = .4),
@@ -62,6 +62,7 @@ class SpoleRowsTest {
         assertEquals("Pingu", item.seriesName)
         assertEquals(.4f, item.progress!!, .001f)
         assertEquals(7.2, item.ratings.community!!, .001)
+        assertEquals("A", item.ratings.official)
         assertEquals("http://emby/w/e1", item.art.wide)
         // The account opens titles in Spole as Eilev and is never asked by Stova itself.
         assertEquals(MediaAccount("spole-emby-eilev", "p1", ServerKind.EMBY, "spole", "Heime", "", "eilev", ""), watching.account)
@@ -92,6 +93,30 @@ class SpoleRowsTest {
         assertEquals(emptyList<HomeRowUi>(), seen.last())
         clock = 200_000; source.refresh("p1", force = true); assertEquals(3, asked.size)
         job.cancel()
+    }
+
+    // Eilev's Home on the Shield had a hero with no picture: the hero only knew Stova's own accounts.
+    @Test fun theHeroShowsTheTitlesFromSpolesRowsThatHaveABackdrop() = runTest(UnconfinedTestDispatcher()) {
+        val account = spoleRowAccount("p1", ServerKind.EMBY, "eilev", "Heime")
+        fun item(id: String, backdrop: String?, rated: String? = "12") = MediaItem(id, account.id, ItemType.MOVIE, id,
+            ratings = app.stova.media.model.Ratings(official = rated), art = app.stova.media.model.ItemArt(backdrop = backdrop))
+        val rows = listOf(HomeRowUi.Media(HomeRowKey.continueWatching(account.id), account, MediaRowKind.CONTINUE,
+            listOf(item("a", "http://emby/b/a"), item("plain", null)), offline = false),
+            HomeRowUi.Media(HomeRowKey.latestMovies(account.id), account, MediaRowKind.LATEST_MOVIES,
+                listOf(item("a", "http://emby/b/a"), item("b", "http://emby/b/b"), item("grown", "http://emby/b/g", "18"),
+                    item("unrated", "http://emby/b/u", null)), offline = false))
+        val accounts = MutableStateFlow(emptyList<MediaAccount>())
+        val source = SpoleRowSource(MutableStateFlow<Profile?>(eilev), { accounts }, { _, _ -> rows })
+        val own = MutableStateFlow(listOf(SpotlightEntry(item("own", "http://stova/own"), account, false)))
+        val heroes = mutableListOf<List<String>>()
+        val job = launch { source.spotlight(eilev, own).collect { heroes += it.map { e -> e.item.id } } }
+        val rowsJob = launch { source.rows(eilev).collect {} }
+        // Once each, only with a backdrop, in the rows' order, and within the profile's age (15 unless chosen otherwise).
+        assertEquals(listOf("a", "b"), heroes.last())
+        // With an account of its own the profile has Stova's hero again.
+        accounts.value = listOf(MediaAccount("x", "p1", ServerKind.EMBY, "s", "Heime", "http://emby", "eilev", "Eilev"))
+        assertEquals(listOf("own"), heroes.last())
+        job.cancel(); rowsJob.cancel()
     }
 
     @Test fun aProfileThatFollowsNobodyNeverAsks() = runTest(UnconfinedTestDispatcher()) {

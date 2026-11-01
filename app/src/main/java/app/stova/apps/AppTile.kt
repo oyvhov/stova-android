@@ -4,9 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -26,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.profiles.IconColor
@@ -51,17 +48,13 @@ import app.stova.profiles.AppStyle
 import app.stova.profiles.appBackgroundPercent
 import app.stova.profiles.RowFormat
 import app.stova.core.theme.LocalArtTone
-import app.stova.core.theme.cardTitleAlpha
-import app.stova.core.theme.stovaMotion
 import app.stova.home.LocalRowStyle
-import app.stova.home.LocalRowHasFocus
 import app.stova.home.showsCardTitles
 import app.stova.home.LocalArtworkScale
 import app.stova.home.artworkDimensions
 import app.stova.home.seasonalTile
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.StovaShapes
-import app.stova.core.ui.LocalDrawnFocus
 import app.stova.core.ui.focusOutline
 
 /** What a tile's content draws into: the artwork box and whether names sit under the tiles. */
@@ -97,16 +90,12 @@ internal fun TileFrame(
         .onKeyEvent { event ->
             if (event.type == KeyEventType.KeyUp && event.key == Key.Menu) { onLongClick(); true } else false
         }.combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick, onClick = onClick)) {
-        Box(Modifier.size(spec.width, spec.height).focusOutline(source, shape, zoom = true, dimSurfaceAlpha = prefs.appBackgroundPercent / 100f).clip(shape)
+        Box(Modifier.size(spec.width, spec.height).focusOutline(source, shape, zoom = true).clip(shape)
             .drawBehind { drawRect(tone?.surface(surface) ?: surface) }.seasonalTile(seed), contentAlignment = Alignment.Center) {
             content(spec)
         }
         if (captions) {
-            val focused by source.collectIsFocusedAsState()
-            val motion = stovaMotion
-            val strength by animateFloatAsState(cardTitleAlpha(focused || LocalDrawnFocus.current, LocalRowHasFocus.current),
-                motion.fade(motion.focusRing), label = "card-title")
-            Text(label, Modifier.padding(top = 8.dp).graphicsLayer { alpha = strength }, style = MaterialTheme.typography.titleSmall,
+            Text(label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }

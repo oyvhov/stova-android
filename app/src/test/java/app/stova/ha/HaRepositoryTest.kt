@@ -6,6 +6,7 @@ import app.stova.ha.cards.*
 import app.stova.profiles.*
 import java.io.File
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.*
 import kotlinx.serialization.json.JsonObject
 import org.junit.Assert.*
@@ -64,6 +65,32 @@ class HaRepositoryTest {
         val second=backgroundScope.async {repo.perform(brightnessCall(35),"light.ph",adult)};runCurrent()
         socket.entities.value=mapOf("light.ph" to light(89));runCurrent()
         assertTrue(second.await())
+    }
+
+    // On the Shield, OK on «Taklampe Stova» sent light.toggle and the bulb stayed dark; the panel's
+    // brightness turned it on. A light still off after the wait is asked once more, with a level.
+    @Test fun aLightThatStaysDarkIsAskedOnceMoreWithTheLevelItLastHad() = runTest {
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) }
+        val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
+        fun light(state:String,brightness:Int?=null)=HaEntity("light.tak",state,kotlinx.serialization.json.buildJsonObject {
+            brightness?.let {put("brightness",kotlinx.serialization.json.JsonPrimitive(it))}},0,0)
+        val sent=mutableListOf<Pair<String,JsonObject>>()
+        socket.service={_,service,_,data->sent+=service to data
+            if(data.containsKey("brightness_pct")) socket.entities.value=mapOf("light.tak" to light("on",54));true}
+        repo.add(light("on",54),CardType.LIGHT);runCurrent();socket.entities.value=mapOf("light.tak" to light("on",54));runCurrent()
+        socket.entities.value=mapOf("light.tak" to light("off"));runCurrent()
+        val job=backgroundScope.async {repo.perform(ServiceCall("light","toggle"),"light.tak",adult)}
+        advanceTimeBy(2_001);runCurrent()
+        assertTrue(job.await())
+        assertEquals(listOf("toggle","turn_on"),sent.map {it.first})
+        // 54 of 255 is the 21 % it had when it was last on.
+        assertEquals(21.0,(sent[1].second["brightness_pct"] as kotlinx.serialization.json.JsonPrimitive).content.toDouble(),0.0)
+        assertEquals("on",repo.entities.first()["light.tak"]?.state)
+        // A light that comes on as asked is asked once.
+        sent.clear();socket.service={_,service,_,data->sent+=service to data;socket.entities.value=mapOf("light.tak" to light(if(service=="toggle") "off" else "on",54));true}
+        socket.entities.value=mapOf("light.tak" to light("on",54));runCurrent()
+        assertTrue(repo.perform(ServiceCall("light","toggle"),"light.tak",adult))
+        assertEquals(listOf("toggle"),sent.map {it.first})
     }
 
     // Review finding 5: one registry list timing out replaced the rooms with an empty registry.

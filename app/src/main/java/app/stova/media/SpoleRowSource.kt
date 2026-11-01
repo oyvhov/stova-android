@@ -43,11 +43,26 @@ class SpoleRowSource(
     /** Asks Spole again for [profileId]'s rows; [force] skips the wait since the last answer. */
     fun refresh(profileId: String, force: Boolean = false) { requests.tryEmit(profileId to force) }
 
-    override fun rows(profile: Profile): Flow<List<HomeRowUi>> =
+    /** The Spole person whose rows [profile] shows, or null while it follows nobody or has an account of its own. */
+    private fun linkFor(profile: Profile): Flow<SpoleLink?> =
         // The profile's link can change in settings while Home runs, so it is read from the session.
         combine(active.map { current -> current?.takeIf { it.id == profile.id }?.spole ?: profile.spole.takeIf { current == null } },
             accounts(profile.id).map { it.isEmpty() }) { link, noAccounts -> link?.takeIf { noAccounts } }
             .distinctUntilChanged()
+
+    /**
+     * The hero's titles: [own], Stova's from its accounts, or for a profile whose rows come from Spole the
+     * titles in those rows that have a backdrop, under the profile's own choice of source and age. Nothing
+     * extra is asked of Spole; the titles follow the rows' last answer.
+     */
+    fun spotlight(profile: Profile, own: Flow<List<SpotlightEntry>>): Flow<List<SpotlightEntry>> =
+        linkFor(profile).flatMapLatest { link ->
+            if (link == null) own
+            else answers.map { all -> spoleSpotlight(all[profile.id].orEmpty(), profile.appearance) }.distinctUntilChanged()
+        }
+
+    override fun rows(profile: Profile): Flow<List<HomeRowUi>> =
+        linkFor(profile)
             .flatMapLatest { link ->
                 if (link == null) flowOf(emptyList())
                 else channelFlow {
@@ -65,7 +80,13 @@ class SpoleRowSource(
                 }
             }
 
-    private companion object {
+    internal companion object {
+        /** A title once, with a backdrop, in the rows' order; libraries are Stova's own, so a choice of them does not apply. */
+        fun spoleSpotlight(rows: List<HomeRowUi.Media>, look: app.stova.profiles.AppearancePrefs): List<SpotlightEntry> =
+            rows.flatMap { row -> row.items.filter { it.art.backdrop != null }.map { SpotlightEntry(it, row.account, newSeason = false) } }
+                .distinctBy { it.item.id }
+                .filter { acceptsSpotlight(it.item, look.spotlightSource) && acceptsBackground(it.item, look.backgroundFilter.copy(libraries = null)) }
+
         /** Coming back to Home within a minute shows the last answer instead of asking the server again. */
         const val MIN_AGE_MILLIS = 60_000L
     }

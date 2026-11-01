@@ -105,15 +105,18 @@ class StovaSheetTest {
         assertEquals(1, chosen)
     }
 
-    @Test fun backSlidesThePanelOutBeforeItCloses() {
+    // The owner, 2026-11-01: closing a popup drew a black band across the screen. The panel slid out
+    // to the right with its dark surface; now it fades where it stands, and only then is it gone.
+    @Test fun backFadesThePanelWhereItStandsBeforeItCloses() {
         show(reduceMotion = false)
         compose.waitForIdle()
+        val left = compose.onNodeWithText("Film").fetchSemanticsNode().boundsInRoot.left
         compose.mainClock.autoAdvance = false
         compose.runOnIdle { ShadowDialog.getLatestDialog().onBackPressed() }
-        // The slide needs layout passes, which a paused test clock does not run; the caller waits.
-        compose.mainClock.advanceTimeByFrame()
+        repeat(4) { compose.mainClock.advanceTimeByFrame() }
         assertEquals(0, dismissed)
         compose.onNodeWithText("Spel").assertExists()
+        assertEquals(left, compose.onNodeWithText("Film").fetchSemanticsNode().boundsInRoot.left, 0.5f)
         compose.mainClock.autoAdvance = true
         compose.waitForIdle()
         assertEquals(1, dismissed)

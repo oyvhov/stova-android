@@ -15,9 +15,9 @@ import app.stova.core.ui.focusOutline
 
 /** One focus stop per row. Arrows are consumed only by this row's focus target. */
 @Composable internal fun PanelSlider(id:String,label:String,value:Double,display:String,range:ClosedFloatingPointRange<Double>,
-    enabled:Boolean,step:Double=1.0,accelerate:Boolean=true,onChange:(Double)->Unit) {
+    enabled:Boolean,step:Double=1.0,accelerate:Boolean=true,modifier:Modifier=Modifier,onChange:(Double)->Unit) {
     val source=remember {MutableInteractionSource()}
-    Column(Modifier.fillMaxWidth().testTag("slider-$id").focusOutline(source,MaterialTheme.shapes.medium)
+    Column(modifier.fillMaxWidth().testTag("slider-$id").focusOutline(source,MaterialTheme.shapes.medium)
         .background(MaterialTheme.colorScheme.surfaceVariant,MaterialTheme.shapes.medium)
         .semantics {
             contentDescription=label

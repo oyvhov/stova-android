@@ -21,6 +21,8 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private val mutableEntities = MutableStateFlow<Map<String, HaEntity>>(emptyMap())
+    /** The level each light last had while on (percent), for one that stays dark when asked to come on without one. */
+    private val lastLevels = java.util.concurrent.ConcurrentHashMap<String, Int>()
     private val optimistic = MutableStateFlow<Map<String,HaEntity>>(emptyMap())
     val entities = combine(mutableEntities,optimistic) { live,predicted -> live + predicted }
         .stateIn(scope,SharingStarted.Eagerly,emptyMap())
@@ -92,10 +94,16 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
                 socket.entitySnapshots(watched).collect { selected ->
                     // A live Home snapshot is authoritative only for its own small subscription.
                     val merged = mutableEntities.value.filterKeys { it !in watched } + selected
+                    rememberLevels(selected.values)
                     mutableEntities.value = merged
                     if (cache != null) writes.offer(HaSnapshot(profileId, snapshotEntities(cards, merged),selectedRegistry(cards)))
                 }
             }
+        }
+    }
+    private fun rememberLevels(entities:Collection<HaEntity>) = entities.forEach { entity ->
+        if(entity.id.startsWith("light.") && entity.state=="on") app.stova.ha.cards.lightLevel(entity)?.takeIf { it>0 }?.let {
+            lastLevels[entity.id]=kotlin.math.round(it).toInt().coerceIn(1,100)
         }
     }
     private fun selectedRegistry(cards:List<CardConfig>) = HaRegistry(registry.value.entities.filterKeys { id->cards.any {it.entityId==id} })
@@ -165,10 +173,18 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
             if(session.active.value?.id!=profile.id) return success
             if(success && predicted!=null && predicted!=before) {
                 // Keep the pending display until the corresponding state event arrives, or a bounded timeout.
-                withTimeoutOrNull(2_000) {mutableEntities.first { live ->
+                val arrived=withTimeoutOrNull(2_000) {mutableEntities.first { live ->
                     val current=live[entityId]
                     current!=null && predictionReceived(current,predicted,call)
                 }}
+                // Some bulbs asked to come on without a level stay dark (Taklampe Stova on the Shield,
+                // 2026-11-01), while a level turns them on: ask once more, with the level it last had.
+                if(arrived==null && call.domain=="light" && predicted.state=="on" && mutableEntities.value[entityId]?.state=="off") {
+                    val level=lastLevels[entityId] ?: 100
+                    val again=try {socket.callService("light","turn_on",entityId,kotlinx.serialization.json.buildJsonObject {put("brightness_pct",kotlinx.serialization.json.JsonPrimitive(level))})}
+                        catch(e:CancellationException) {throw e} catch(_:Exception) {false}
+                    if(again) withTimeoutOrNull(2_000) {mutableEntities.first {it[entityId]?.state=="on"}}
+                }
             }
             mutableFeedback.value=if(success) HaFeedback.DONE else HaFeedback.FAILED
             if(success && entityId.substringBefore('.') in setOf("scene","script")) {

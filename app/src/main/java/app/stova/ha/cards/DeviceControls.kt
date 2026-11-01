@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -79,18 +80,25 @@ import kotlin.math.roundToInt
     when(dialog) {
         is CardDialog.Brightness -> {
             val modes=attrs.strings("supported_color_modes")
+            // The narrow button sits left of the wide rows' centre line, so the remote's Up and Down
+            // would pass it by; the route through it is set here (found on the Shield, 2026-11-01).
+            val onOff=remember {FocusRequester()}
+            val throughButton=Modifier.focusProperties {if(enabled) {down=onOff}}
             if(attrs.number("brightness")!=null || modes.any {it!="onoff"}) {
                 val level=lightLevel(shown)
                 PanelSlider("brightness",stringResource(R.string.ha_brightness),level ?: 0.0,
-                    level?.let {stringResource(R.string.ha_percent,it.toInt())} ?: stringResource(R.string.ha_choose_level),0.0..100.0,enabled) {
+                    level?.let {stringResource(R.string.ha_percent,it.toInt())} ?: stringResource(R.string.ha_choose_level),0.0..100.0,enabled,
+                    modifier=throughButton) {
                     act(if(it<=0) ServiceCall("light","turn_off") else brightnessCall(it.toInt()),true)
                 }
             }
             FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                StovaButton(stringResource(if(shown.state=="on") R.string.ha_action_turn_off else R.string.ha_action_turn_on),{act(ServiceCall("light",if(shown.state=="on") "turn_off" else "turn_on"))},enabled=enabled,primary=true)
+                StovaButton(stringResource(if(shown.state=="on") R.string.ha_action_turn_off else R.string.ha_action_turn_on),{act(ServiceCall("light",if(shown.state=="on") "turn_off" else "turn_on"))},
+                    Modifier.focusRequester(onOff),enabled=enabled,primary=true)
             }
             if(modes.any {it in setOf("color_temp","hs","rgb","rgbw","rgbww","xy")})
-                ControlPageLink(pages,"light",stringResource(R.string.ha_light_colour),StovaIcons.Palette)
+                ControlPageLink(pages,"light",stringResource(R.string.ha_light_colour),StovaIcons.Palette,
+                    modifier=Modifier.focusProperties {if(enabled) {up=onOff}})
         }
         is CardDialog.Climate -> {
             val min=attrs.number("min_temp") ?: 5.0
@@ -130,19 +138,29 @@ import kotlin.math.roundToInt
         is CardDialog.Controls -> when(dialog.type) {
             CardType.MEDIA_PLAYER -> {
                 val features=(attrs.number("supported_features") ?: 0.0).toInt()
+                val previous=features and 16!=0
+                val playPause=(shown.state=="playing" && features and 1!=0) || (shown.state=="paused" && features and 16384!=0)
+                val next=features and 32!=0
+                val buttons=!attrs.text("source").equals("TV",true) && enabled && (previous || playPause || next)
+                // As for a light: Up and Down go through the buttons, landing on play or pause where there is one.
+                val action=remember {FocusRequester()}
+                fun lands(here:Boolean)=if(here) Modifier.focusRequester(action) else Modifier
+                val lead=if(playPause) 1 else if(previous) 0 else 2
                 attrs.number("volume_level")?.let {volume ->
                     PanelSlider("volume",stringResource(R.string.ha_action_volume),volume*100,stringResource(R.string.ha_percent,(volume*100).roundToInt()),0.0..100.0,
-                        enabled && (attrs.number("supported_features")==null || features and 4!=0)) {
+                        enabled && (attrs.number("supported_features")==null || features and 4!=0),
+                        modifier=Modifier.focusProperties {if(buttons) {down=action}}) {
                         act(ServiceCall("media_player","volume_set",buildJsonObject {put("volume_level",it/100)}),true)
                     }
                 }
                 if(!attrs.text("source").equals("TV",true)) FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                    if(features and 16!=0) StovaButton(stringResource(R.string.ha_action_previous),{act(ServiceCall("media_player","media_previous_track"))},enabled=enabled)
-                    if((shown.state=="playing" && features and 1!=0) || (shown.state=="paused" && features and 16384!=0))
-                        StovaButton(stringResource(if(shown.state=="playing") R.string.ha_pause else R.string.ha_play),{act(ServiceCall("media_player","media_play_pause"))},enabled=enabled)
-                    if(features and 32!=0) StovaButton(stringResource(R.string.ha_v2_next),{act(ServiceCall("media_player","media_next_track"))},enabled=enabled)
+                    if(previous) StovaButton(stringResource(R.string.ha_action_previous),{act(ServiceCall("media_player","media_previous_track"))},lands(lead==0),enabled=enabled)
+                    if(playPause)
+                        StovaButton(stringResource(if(shown.state=="playing") R.string.ha_pause else R.string.ha_play),{act(ServiceCall("media_player","media_play_pause"))},lands(lead==1),enabled=enabled)
+                    if(next) StovaButton(stringResource(R.string.ha_v2_next),{act(ServiceCall("media_player","media_next_track"))},lands(lead==2),enabled=enabled)
                 }
-                if(attrs.strings("source_list").isNotEmpty()) ControlPageLink(pages,"sources",stringResource(R.string.ha_media_source),StovaIcons.Rows,attrs.text("source"))
+                if(attrs.strings("source_list").isNotEmpty()) ControlPageLink(pages,"sources",stringResource(R.string.ha_media_source),StovaIcons.Rows,attrs.text("source"),
+                    modifier=Modifier.focusProperties {if(buttons) {up=action}})
             }
             CardType.TOGGLE -> {
                 val domain=shown.id.substringBefore('.')

@@ -106,7 +106,9 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     // emulator gets real posters without a child's own account (see docs/EMULATOR.md).
     val debugPipWorld = remember(context) { app.stova.BuildConfig.DEBUG && java.io.File(context.filesDir, "debug-kids-home").exists() }
     val pipWorld = profile.kid || debugPipWorld
-    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) { container.media.spotlight(it.id, it.appearance.season(), it.appearance.spotlightSource,it.appearance.backgroundFilter) } }
+    val home: HomeViewModel = viewModel { HomeViewModel(container.session, container.homeSources) {
+        container.spoleRows.spotlight(it, container.media.spotlight(it.id, it.appearance.season(), it.appearance.spotlightSource,it.appearance.backgroundFilter))
+    } }
     val date = app.stova.core.theme.LocalSeasonDate.current
     LaunchedEffect(home, date) { home.setCalendarDate(date) }
     // Kids time switches the hero on the hour; nothing ticks when it is off or the app is stopped.

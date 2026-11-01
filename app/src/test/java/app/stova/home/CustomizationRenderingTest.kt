@@ -67,18 +67,13 @@ class CustomizationRenderingTest {
         compose.onNodeWithTag("default").assertWidthIsEqualTo(248.dp).assertHeightIsEqualTo(139.5.dp)
     }
 
-    @Test fun lightUpDimsOnlyUnfocusedSiblingsAndRingZoomScalesArtwork() {
+    @Test fun ringZoomScalesTheFocusedArtworkUnlessMotionIsReduced() {
         val source = MutableInteractionSource()
         var prefs by mutableStateOf(AppearancePrefs(focusEffect = FocusEffect.RING_ZOOM, seasonChoice = SeasonChoice.NONE))
-        var rowFocused by mutableStateOf(true)
-        lateinit var root: android.view.View
         compose.setContent { StovaTheme(appearance = prefs) {
-            root = LocalView.current.rootView
-            CompositionLocalProvider(LocalRowHasFocus provides rowFocused) {
-                Box(Modifier.size(160.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                    Box(Modifier.size(100.dp).focusOutline(source, MaterialTheme.shapes.medium, zoom = true)
-                        .background(MaterialTheme.colorScheme.onSurface).testTag("art"))
-                }
+            Box(Modifier.size(160.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                Box(Modifier.size(100.dp).focusOutline(source, MaterialTheme.shapes.medium, zoom = true)
+                    .background(MaterialTheme.colorScheme.onSurface).testTag("art"))
             }
         } }
         val focus = FocusInteraction.Focus()
@@ -87,46 +82,36 @@ class CustomizationRenderingTest {
         assertEquals(210f, compose.onNodeWithTag("art").fetchSemanticsNode().boundsInRoot.width, 1f)
         compose.runOnIdle { prefs = prefs.copy(reduceMotion = true) }
         compose.onNodeWithTag("art").assertWidthIsEqualTo(100.dp)
-        TestScope(UnconfinedTestDispatcher()).launch { source.emit(FocusInteraction.Unfocus(focus)) }
-        compose.runOnIdle { prefs = prefs.copy(focusEffect = FocusEffect.LIGHT_UP) }
+    }
+
+    // The owner, 2026-11-01: «Resten av rada blir dempa … Ta den vekk heilt». Only the focused card changes.
+    @Test fun theRestOfTheRowKeepsItsBrightnessWhileACardHasFocus() {
+        var effect by mutableStateOf(FocusEffect.LIFT)
+        var source by mutableStateOf(MutableInteractionSource())
+        val beside = MutableInteractionSource()
+        lateinit var root: android.view.View
+        compose.setContent { StovaTheme(appearance = AppearancePrefs(focusEffect = effect, seasonChoice = SeasonChoice.NONE)) {
+            root = LocalView.current.rootView
+            Row(Modifier.padding(40.dp), horizontalArrangement = Arrangement.spacedBy(40.dp)) {
+                Box(Modifier.size(100.dp).focusOutline(source, MaterialTheme.shapes.medium, zoom = true)
+                    .background(MaterialTheme.colorScheme.onSurface))
+                Box(Modifier.size(100.dp).focusOutline(beside, MaterialTheme.shapes.medium, zoom = true)
+                    .background(MaterialTheme.colorScheme.onSurface).testTag("beside"))
+            }
+        } }
         fun pixel(): Int {
-            compose.waitForIdle()
-            val center = compose.onNodeWithTag("art").fetchSemanticsNode().boundsInRoot.center
+            compose.waitForIdle(); compose.mainClock.advanceTimeBy(400)
+            val center = compose.onNodeWithTag("beside").fetchSemanticsNode().boundsInRoot.center
             val bitmap = android.graphics.Bitmap.createBitmap(root.width, root.height, android.graphics.Bitmap.Config.ARGB_8888)
             compose.runOnUiThread { root.draw(android.graphics.Canvas(bitmap)) }
             return bitmap.getPixel(center.x.toInt(), center.y.toInt())
         }
-        val dim = pixel()
-        compose.runOnIdle { rowFocused = false }
-        val normal = pixel()
-        assertNotEquals(normal, dim)
-    }
-
-    @Test fun theDefaultFocusDimsTheRestOfTheActiveRowToAboutSeventyPercent() {
-        val source = MutableInteractionSource()
-        var rowFocused by mutableStateOf(true)
-        lateinit var root: android.view.View
-        compose.setContent { StovaTheme(appearance = AppearancePrefs(seasonChoice = SeasonChoice.NONE)) {
-            root = LocalView.current.rootView
-            CompositionLocalProvider(LocalRowHasFocus provides rowFocused) {
-                Box(Modifier.size(160.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                    Box(Modifier.size(100.dp).focusOutline(source, MaterialTheme.shapes.medium, zoom = true)
-                        .background(MaterialTheme.colorScheme.onSurface).testTag("art"))
-                }
-            }
-        } }
-        fun luma(): Float {
-            compose.waitForIdle()
-            val center = compose.onNodeWithTag("art").fetchSemanticsNode().boundsInRoot.center
-            val bitmap = android.graphics.Bitmap.createBitmap(root.width, root.height, android.graphics.Bitmap.Config.ARGB_8888)
-            compose.runOnUiThread { root.draw(android.graphics.Canvas(bitmap)) }
-            val p = bitmap.getPixel(center.x.toInt(), center.y.toInt())
-            return (android.graphics.Color.red(p) + android.graphics.Color.green(p) + android.graphics.Color.blue(p)) / 3f
+        for (each in FocusEffect.entries) {
+            compose.runOnIdle { effect = each; source = MutableInteractionSource() }
+            val idle = pixel()
+            TestScope(UnconfinedTestDispatcher()).launch { source.emit(FocusInteraction.Focus()) }
+            assertEquals("$each: the card beside focus is drawn as before", idle, pixel())
         }
-        val beside = luma()
-        compose.runOnIdle { rowFocused = false }
-        val idle = luma()
-        assertTrue("the neighbour of the focused card is dimmed: $beside vs $idle", beside < idle * 0.8f && beside > idle * 0.6f)
     }
 
     @Test fun progressCanBeThinThickOrHidden() {

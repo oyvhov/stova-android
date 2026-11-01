@@ -41,8 +41,8 @@ internal fun lightLevel(entity:HaEntity):Double? = if(entity.state=="off") 0.0 e
     }
 }
 
-@Composable internal fun ControlPageLink(pages:SheetPages,page:String,label:String,icon:ImageVector,value:String?=null) =
-    SheetAction(label,icon,{pages.open(page)},Modifier.focusRequester(pages.opener(page)),value=value,opensPage=true)
+@Composable internal fun ControlPageLink(pages:SheetPages,page:String,label:String,icon:ImageVector,value:String?=null,modifier:Modifier=Modifier) =
+    SheetAction(label,icon,{pages.open(page)},Modifier.focusRequester(pages.opener(page)).then(modifier),value=value,opensPage=true)
 
 @Composable internal fun presetLabel(value:String):String {
     val resource=when(value) {
