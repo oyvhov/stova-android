@@ -153,7 +153,7 @@ class AppContainer(
     /** Discover: Seerr through Spole, for the page and Home's row. */
     val discover = app.stova.discover.DiscoverRepository(app.stova.discover.SpoleDiscoverFetch(app.stova.discover.SpoleDiscover(appContext)))
     val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session, shortcuts.accounts, shortcuts.haReady), app.stova.media.MediaRowSource(media), spoleRows,
-        app.stova.discover.DiscoverRowSource(discover, mediaAccounts::forProfile, appScope), app.stova.watchnext.WatchNextRowSource(watchNext))
+        app.stova.discover.DiscoverRowSource(discover, session.active, mediaAccounts::forProfile, appScope), app.stova.watchnext.WatchNextRowSource(watchNext))
 
 
     val haHttp = OkHttpClient.Builder().connectTimeout(4, TimeUnit.SECONDS).readTimeout(8, TimeUnit.SECONDS)

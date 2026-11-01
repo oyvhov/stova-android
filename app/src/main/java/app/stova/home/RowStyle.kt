@@ -14,6 +14,9 @@ val LocalArtworkScale = staticCompositionLocalOf { 1f }
 /** The row's own choice for names below its cards, or the profile's when the row has none. */
 fun RowStyle.showsCardTitles(p: AppearancePrefs): Boolean = cardTitles ?: p.showTitles
 
+/** Whether the row's header names its server. Discover has no source to name or to choose, whatever the style says. */
+fun HomeRowUi.Media.showsSource(style: RowStyle): Boolean = style.showSource && key != HomeRowKey.DISCOVER
+
 fun defaultRowFormat(key: HomeRowKey, p: AppearancePrefs): RowFormat = when {
     key == HomeRowKey.APPS && p.appStyle == AppStyle.ICON -> RowFormat.ICON
     // Discover's titles are films and series from TMDB, drawn as the new films are.

@@ -32,10 +32,11 @@ class DiscoverRowSourceTest {
     private fun title(tmdb: Int, type: DiscoverType = DiscoverType.MOVIE) = DiscoverTitle(type, tmdb, "T$tmdb", 1999, "Neo wakes.",
         "https://tmdb/p/$tmdb", "https://tmdb/b/$tmdb", SeerrStatus.AVAILABLE, 7.9, listOf("Action"))
 
-    /** Spole as the repository sees it: [answer] answers Discover's rows, every ask is counted, and nothing else is asked. */
+    /** Spole as the repository sees it: [answer] answers Discover's rows, every ask is counted with its person, and nothing else is asked. */
     private class RowsFetch(private val answer: suspend () -> DiscoverAnswer?) : DiscoverFetch {
-        var rowsAsked = 0
-        override suspend fun rows(link: SpoleLink): DiscoverAnswer? { rowsAsked++; return answer() }
+        val asked = mutableListOf<SpoleLink>()
+        val rowsAsked get() = asked.size
+        override suspend fun rows(link: SpoleLink): DiscoverAnswer? { asked += link; return answer() }
         override suspend fun requests(link: SpoleLink, refresh: Boolean): List<DiscoverRequest>? = error("not asked")
         override suspend fun details(link: SpoleLink, type: DiscoverType, tmdbId: Int): DiscoverDetails? = error("not asked")
         override suspend fun related(link: SpoleLink, type: DiscoverType, tmdbId: Int): List<DiscoverRow> = error("not asked")
@@ -48,14 +49,17 @@ class DiscoverRowSourceTest {
         val fetch = RowsFetch { DiscoverAnswer(SeerrAccess.PERSONAL, listOf(DiscoverRow(DiscoverRowKind.TRENDING, listOf(title(603))))) }
         val repository = DiscoverRepository(fetch)
         val accountsAsked = mutableListOf<String>()
-        val source = DiscoverRowSource(repository, { id -> accountsAsked += id; MutableStateFlow(emptyList<MediaAccount>()) }, backgroundScope)
+        val kid = eilev.copy(kid = true)
+        val active = MutableStateFlow<Profile?>(kid)
+        val source = DiscoverRowSource(repository, active, { id -> accountsAsked += id; MutableStateFlow(emptyList<MediaAccount>()) }, backgroundScope)
         // A child has no Discover: no row, and neither its accounts nor Spole are asked.
-        assertEquals(listOf(emptyList<HomeRowUi>()), source.rows(eilev.copy(kid = true)).toList())
+        assertEquals(listOf(emptyList<HomeRowUi>()), source.rows(kid).toList())
         assertEquals(0, fetch.rowsAsked)
         assertEquals(emptyList<String>(), accountsAsked)
         assertNull(repository.state("p1").value)
         // A grown-up who follows nobody in Spole and has no account here has nobody to ask for either.
         val nobody = Profile("p2", "Gjest", AvatarColor.LIME)
+        active.value = nobody
         val seen = mutableListOf<List<HomeRowUi>>()
         val job = launch { source.rows(nobody).toList(seen) }
         assertEquals(listOf(emptyList<HomeRowUi>()), seen)
@@ -71,7 +75,8 @@ class DiscoverRowSourceTest {
             DiscoverAnswer(SeerrAccess.PERSONAL, listOf(DiscoverRow(DiscoverRowKind.TRENDING, trending),
                 DiscoverRow(DiscoverRowKind.UPCOMING_MOVIES, listOf(title(11)))))
         }
-        val source = DiscoverRowSource(DiscoverRepository(fetch), { MutableStateFlow(emptyList<MediaAccount>()) }, backgroundScope)
+        val source = DiscoverRowSource(DiscoverRepository(fetch), MutableStateFlow(eilev), { MutableStateFlow(emptyList<MediaAccount>()) },
+            backgroundScope)
         val seen = mutableListOf<List<HomeRowUi>>()
         val job = launch { source.rows(eilev).toList(seen) }
         // Home is not held up while Spole asks Seerr: nothing yet, and the ask is under way.
@@ -100,6 +105,44 @@ class DiscoverRowSourceTest {
         // A title from the person's own library is no Discover title.
         assertNull(MediaItem("4f2a9c", "a", ItemType.MOVIE, "Heat").asDiscoverTitle())
         assertEquals(1, fetch.rowsAsked)
+        job.cancel()
+    }
+
+    private val trending = DiscoverAnswer(SeerrAccess.PERSONAL, listOf(DiscoverRow(DiscoverRowKind.TRENDING, listOf(title(603)))))
+
+    // Home starts a source once per profile; the person picked in Settings while it runs still counts.
+    @Test fun aSpolePersonChosenWhileHomeRunsBringsTheRow() = runTest(UnconfinedTestDispatcher()) {
+        val fetch = RowsFetch { trending }
+        val plain = eilev.copy(spole = null)
+        val active = MutableStateFlow<Profile?>(plain)
+        val source = DiscoverRowSource(DiscoverRepository(fetch), active, { MutableStateFlow(emptyList<MediaAccount>()) }, backgroundScope)
+        val seen = mutableListOf<List<HomeRowUi>>()
+        val job = launch { source.rows(plain).toList(seen) }
+        assertEquals(listOf(emptyList<HomeRowUi>()), seen)
+        assertEquals(0, fetch.rowsAsked)
+        active.value = eilev
+        assertEquals(listOf(link), fetch.asked)
+        val row = seen.last().single() as HomeRowUi.Media
+        assertEquals("seerr-emby-eilev", row.account.id)
+        assertEquals(listOf("movie-603"), row.items.map { it.id })
+        job.cancel()
+    }
+
+    @Test fun anotherSpolePersonSwapsTheAccountAndAsksAgain() = runTest(UnconfinedTestDispatcher()) {
+        val fetch = RowsFetch { trending }
+        val active = MutableStateFlow<Profile?>(eilev)
+        val source = DiscoverRowSource(DiscoverRepository(fetch), active, { MutableStateFlow(emptyList<MediaAccount>()) }, backgroundScope)
+        val seen = mutableListOf<List<HomeRowUi>>()
+        val job = launch { source.rows(eilev).toList(seen) }
+        assertEquals("seerr-emby-eilev", (seen.last().single() as HomeRowUi.Media).account.id)
+        // The last answer was the other person's, so Spole is asked at once, as the new person.
+        val oyvind = SpoleLink(ServerKind.JELLYFIN, "oyvind")
+        active.value = eilev.copy(spole = oyvind)
+        assertEquals(listOf(link, oyvind), fetch.asked)
+        assertEquals("seerr-jellyfin-oyvind", (seen.last().single() as HomeRowUi.Media).account.id)
+        // A change elsewhere in the profile is no new person, and asks nothing.
+        active.value = eilev.copy(name = "Eilev H", spole = oyvind)
+        assertEquals(2, fetch.rowsAsked)
         job.cancel()
     }
 }

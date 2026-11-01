@@ -11,9 +11,11 @@ import app.stova.media.model.MediaItem
 import app.stova.media.model.Ratings
 import app.stova.media.seerrAccount
 import app.stova.profiles.Profile
+import app.stova.profiles.SpoleLink
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -24,21 +26,33 @@ import kotlinx.coroutines.launch
  * Home's «Oppdag» row: the first twelve of Seerr's popular titles, asked through Spole as the profile's
  * Spole person. Nothing is asked for a child, or for a profile with nobody to ask as. The row comes from
  * [DiscoverRepository]'s last answer, so Home and the Discover page share one question to Spole; until
- * the first answer, and when Seerr is not there for the person, there is no row.
+ * the first answer, and when Seerr is not there for the person, there is no row. The person is read from
+ * [active], since Home starts a source once per profile and the person can be picked in Settings meanwhile.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DiscoverRowSource(
     private val repository: DiscoverRepository,
+    private val active: Flow<Profile?>,
     private val accounts: (String) -> Flow<List<MediaAccount>>,
     private val scope: CoroutineScope,
 ) : HomeRowSource {
-    override fun rows(profile: Profile): Flow<List<HomeRowUi>> =
-        if (profile.kid) flowOf(emptyList())
-        else accounts(profile.id).map { repository.identity(profile, it) }.distinctUntilChanged().flatMapLatest { link ->
+    /** The Spole person [profile] is in Discover, as the session has the profile now; null while another profile is active. */
+    private fun linkFor(profile: Profile): Flow<SpoleLink?> =
+        combine(active.map { current -> current?.takeIf { it.id == profile.id } ?: profile.takeIf { current == null } },
+            accounts(profile.id)) { live, accounts -> live?.let { repository.identity(it, accounts) } }
+            .distinctUntilChanged()
+
+    override fun rows(profile: Profile): Flow<List<HomeRowUi>> {
+        if (profile.kid) return flowOf(emptyList())
+        var asked: SpoleLink? = null
+        return linkFor(profile).flatMapLatest { link ->
             if (link == null) flowOf(emptyList())
             else {
-                // In the app's scope: a profile switch mid-question leaves the answer for the next visit.
-                scope.launch { repository.refresh(profile.id, link) }
+                // Another person than last asked for: the last answer was theirs, so ask at once. In the app's
+                // scope, so a profile switch mid-question leaves the answer for the next visit.
+                val another = asked != null && asked != link
+                asked = link
+                scope.launch { repository.refresh(profile.id, link, force = another) }
                 val account = seerrAccount(profile.id, link)
                 repository.state(profile.id).map { state ->
                     val trending = state?.rows?.firstOrNull { it.kind == DiscoverRowKind.TRENDING }?.items.orEmpty()
@@ -48,6 +62,7 @@ class DiscoverRowSource(
                 }.distinctUntilChanged()
             }
         }
+    }
 
     private companion object {
         const val ROW_SIZE = 12

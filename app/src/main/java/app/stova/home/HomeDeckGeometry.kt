@@ -27,7 +27,7 @@ internal fun homeDeckGeometry(rows: List<HomeRowUi>, home: HomePrefs, p: Appeara
         val style = home.rowFormats[row.key] ?: RowStyle()
         val textStyle = style.headingTextStyle()
         val sourceWidth = (row as? HomeRowUi.Media)?.let { media ->
-            (if (style.showSource) measurer.measure(media.account.serverName, body, maxLines = 1).size.width
+            (if (media.showsSource(style)) measurer.measure(media.account.serverName, body, maxLines = 1).size.width
                 .coerceAtMost(with(density) { StovaLayout.RowSourceMaxWidth.roundToPx() }) else 0) +
                 (if (media.offline) measurer.measure(offline, body, maxLines = 1).size.width else 0)
         } ?: 0

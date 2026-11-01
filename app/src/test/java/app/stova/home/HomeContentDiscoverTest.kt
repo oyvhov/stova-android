@@ -51,6 +51,13 @@ class HomeContentDiscoverTest {
         assertEquals(1, opened)
     }
 
+    // The row has no source to choose, so its header names none, though a row's style shows the source by default.
+    @Test fun theOppdagHeaderNamesNoSource() {
+        show()
+        compose.onNode(hasContentDescription("Heat") and hasClickAction()).assertIsDisplayed()
+        compose.onAllNodesWithText("Seerr").assertCountEquals(0)
+    }
+
     @Test fun longPressOnADiscoverCardHasNoPlay() {
         show()
         compose.onNode(hasContentDescription("Heat") and hasClickAction()).assertIsFocused()
