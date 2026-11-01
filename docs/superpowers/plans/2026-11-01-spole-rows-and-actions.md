@@ -35,4 +35,4 @@ Ingen innlogging kryssar mellom appane: Spole hentar og handlar, Stova får meta
 
 - [x] Loftet: Spole og Stova (TV-bygg). Ein profil utan kontoar som følgjer Spole-personen får rader;
       handlingane på eit kort eigaren vel. Radene og opninga i Spole er prøvde; menyen viser handlingane.
-- [ ] Ei handling utført på ein ekte tittel eigaren vel.
+- [x] Ei handling utført på ein ekte tittel eigaren vel: «Merk som sett» på Emil i Lønneberget S1 E1 (4 min att) på Øyvind-profilen på Loftet. «Merkt som sett», og Emil forsvann frå «Hald fram» med ein gong. «Fjern frå Hald fram» og «Spel frå starten» er ikkje prøvde på eining.

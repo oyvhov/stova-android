@@ -8,11 +8,11 @@ avkryssingsboksar i dei er inga bestilling.
 
 | Plan | Står att |
 |---|---|
-| [Spole-rader for personen og handlingar på korta](2026-11-01-spole-rows-and-actions.md) | Prøva på Loftet. Spole-delen på greina `launcher-rows`. |
 | [Eineståande launcher: finpuss, Heim etter tid, fart og huset](2026-10-26-outstanding-launcher.md) | Steg 2–9. I steg 4 er punkt 8 (snøggmenyen på Innstillingar) gjort. |
 
 ## Historikk
 
+- 2026-11-01: [Spole-rader for personen og handlingar på korta](2026-11-01-spole-rows-and-actions.md), fullført og prøvd på Loftet; Spole-delen på greina `launcher-rows`, ikkje gitt ut.
 - 2026-10-31: [Spole-profilar: eigen profil for Eilev og ei Spole-flis med profilbiletet](2026-10-31-spole-profiles.md), fullført; Spole-delen på greina `launcher-profiles`. Eilev-flyten er ikkje prøvd på ei eining.
 - 2026-10-30: [Stova og Spole: logg inn éin gong, framdrift og bibliotekfliser](2026-10-30-spole-bridge.md), fullført; Spole-delen på greina `launcher-bridge`.
 - 2026-10-27: [Snarvegar i favorittrada](2026-10-27-shortcut-tiles.md), fullført; Spole-lenkja kom i Spole beta26 og er prøvd på Loftet.
