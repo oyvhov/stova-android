@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import app.stova.discover.DiscoverType
 import app.stova.media.model.MediaAccount
 import app.stova.media.model.MediaItem
 import app.stova.media.model.ServerKind
@@ -50,6 +51,14 @@ object SpoleContract {
         Uri.Builder().scheme("spole").authority("library")
             .appendQueryParameter("kind", if (kind == ServerKind.JELLYFIN) "jellyfin" else "emby")
             .appendQueryParameter("user", userId).appendQueryParameter("library", libraryId).build()
+    /** One title in Spole's own details, for a Discover card: a title in Seerr has no id in the person's library. */
+    fun discoverUri(kind: ServerKind, userId: String, type: DiscoverType, tmdbId: Int): Uri =
+        Uri.Builder().scheme("spole").authority("discover")
+            .appendQueryParameter("kind", if (kind == ServerKind.JELLYFIN) "jellyfin" else "emby")
+            .appendQueryParameter("user", userId).appendQueryParameter("type", type.wire)
+            .appendQueryParameter("tmdb", tmdbId.toString()).build()
+    /** The `serverId` of the account behind Discover cards, as `"spole"` is the one behind Spole's rows. */
+    const val SEERR_SERVER = "seerr"
 }
 enum class SpoleApproval { APPROVED, NOT_SIGNED_IN, DECLINED, FAILED }
 /** Asks Spole to approve [code] on [server]; [done] hears the answer when the user comes back from Spole. */
