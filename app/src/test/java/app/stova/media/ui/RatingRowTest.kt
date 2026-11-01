@@ -36,6 +36,13 @@ class RatingRowTest {
         compose.onNodeWithText("TV-MA").assertIsDisplayed()
     }
 
+    // The Shield's hero read «NO-A» for a family film (2026-11-01).
+    @Test fun theNorwegianAForEveryoneReadsAlle() {
+        compose.setContent { StovaTheme { RatingRow(Ratings(official = "NO-A")) } }
+        compose.onNodeWithText("Alle").assertIsDisplayed()
+        compose.onNodeWithText("NO-A").assertDoesNotExist()
+    }
+
     @Test
     @Config(qualifiers = "en-w960dp-h540dp-land-television-xhdpi")
     fun englishAgeUsesLocalizedYears() {

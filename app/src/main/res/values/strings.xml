@@ -147,6 +147,7 @@
     <string name="service_jellyfin">Jellyfin</string>
     <string name="service_emby">Emby</string>
     <string name="rating_tmdb">TMDB</string>
+    <string name="rating_all_ages">Alle</string>
     <plurals name="rating_age_years">
         <item quantity="one">%1$d år</item>
         <item quantity="other">%1$d år</item>

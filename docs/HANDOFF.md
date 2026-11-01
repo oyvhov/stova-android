@@ -1,3 +1,26 @@
+# Testdag på Shield og Loftet: Eilev-heroen, demping, popupar, lys og yting
+2026-11-01, eigaren: «Når eg logga inn med Eilev i Stova, er det ikkje Hero med bilder??», «Resten av rada blir dempa … Ta den vekk heilt», «når eg lukker popuper, så går det svart rand over skjermen», «Du skal installere begge appene på Shield og teste alt», «Gjer full ytelsetest på begge appane», «Lag ein testplan på alt i appane».
+Testplan og resultat: `docs/verification/2026-11-01-testplan-stova-spole.md`.
+Stova (committa, ikkje pusha):
+- Ein Spole-profil får hero frå Spole-radene (`SpoleRowSource.spotlight`, `MediaAccount.viaSpole`).
+- Inga demping av resten av rada.
+- Sidepanelet tonar bort der det står.
+- Fokusvegen i lys- og mediepanelet går gjennom knappane.
+- Lyskortet prøver éin gong til med nivå.
+- «NO-A» blir «Alle».
+- Kvar app-flis har sitt eige lag (Appar-sida på Shield gjekk frå 27–39 % til 4–11 % trege bilete).
+- Heim les fokuset éin gong.
+Spole (greina `launcher-rows`, ikkje gitt ut, installert på Shield og Loftet):
+- `official` i radene, og Emby får spørsmål om `OfficialRating`.
+- Éitt kort per serie i «Nyleg lagt til · Seriar».
+- «NO-15» / «NO-A» blir «15 år» / «Alle».
+- Marg ved høgre kant av ei rad.
+- Høgre-pila stoppar ved enden av rada.
+Står att:
+- Heim på Loftet er avgrensa av maskinvaren (19–26 % trege bilete).
+- Lyskortet med pæra som ikkje svarar, er ikkje prøvd på eininga.
+- Spole beta30 er ikkje gitt ut.
+
 # Kino-modus: lysa dimmar medan Spole spelar
 2026-11-01, eigaren: «Går vidare med planen og integrering», «Gå framover ja». Plansteg 7 i `docs/superpowers/plans/2026-10-26-outstanding-launcher.md`.
 Stova: Innstillingar → Smarthus → «Kino-modus» (berre når Home Assistant er sett opp). Der er det ein brytar og «Lys»: ei liste med alle lysa, ordna etter rom, der kvart lys får sitt eige nivå (Ikkje med, Av, 5, 10, 20, 30 eller 50 %). Av som standard. Dimminga og tilbakestillinga står i `ha/CinemaMode.kt`. Spole sender spelestatus frå greina `launcher-rows` (`55f6fde`, ikkje gitt ut). Spole på Shield (beta29) sender han difor ikkje enno.

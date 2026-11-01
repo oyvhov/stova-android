@@ -30,8 +30,15 @@ private val numericAge = Regex("(?:NO[- ]?)?([0-9]{1,2})\\+?", RegexOption.IGNOR
 private fun officialRatingText(official: String): String {
     val value = official.trim()
     val age = numericAge.matchEntire(value)?.groupValues?.get(1)?.toIntOrNull()
-    return if (age != null) pluralStringResource(R.plurals.rating_age_years, age, age) else value
+    return when {
+        age != null -> pluralStringResource(R.plurals.rating_age_years, age, age)
+        // The Norwegian «A» is for everyone; "NO-A" written out meant nothing on the hero.
+        allAges.matches(value) -> stringResource(R.string.rating_all_ages)
+        else -> value
+    }
 }
+
+private val allAges = Regex("(?:NO[- ]?)?A", RegexOption.IGNORE_CASE)
 
 /** Plain facts over the hero's existing scrim; no individual backgrounds or outlines. */
 @Composable

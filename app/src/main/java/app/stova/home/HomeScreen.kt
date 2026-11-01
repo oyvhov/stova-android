@@ -48,7 +48,9 @@ fun HomeScreen(
         }
     }
     val rows by vm.rows.collectAsStateWithLifecycle()
-    val focused by vm.focused.collectAsStateWithLifecycle()
+    // Read once: Home only restores the last card from it. Following it as state recomposed all of Home
+    // on every arrow, a missed frame per press on the Shield (2026-11-01).
+    val focused = remember(vm, profile?.id) { vm.focused.value }
     val initial by vm.initialFocus.collectAsStateWithLifecycle()
     val spotlight by vm.spotlight.collectAsStateWithLifecycle()
     val reduceMotion = LocalReduceMotion.current

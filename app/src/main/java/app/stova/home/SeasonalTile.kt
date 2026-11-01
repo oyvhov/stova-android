@@ -5,7 +5,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
 import app.stova.core.theme.LocalAppearance
@@ -25,13 +27,15 @@ internal fun tileWeb(seed: Int): TileWeb {
 /**
  * Max dresses each app tile's own box: snow on its top edge with a sprig of holly at Jul, a web in
  * one of its corners at Halloween. [seed] (the app's key) places them differently on every app.
- * Drawn inside the tile's clip, above the icon, and never moving.
+ * Drawn inside the tile's clip, above the icon, and never moving. The tile and its decoration are
+ * drawn once into their own layer: redrawing a dozen webs of stroked curves in every frame of a
+ * scroll made the Apps page stutter on the Shield (2026-11-01).
  */
 @Composable
 fun Modifier.seasonalTile(seed: Int): Modifier {
     val p = LocalAppearance.current
     val touch = tileTouch(p.season(), p.seasonalDecor) ?: return this
-    return drawWithContent {
+    return graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
         drawContent()
         when (touch) {
             SeasonTouch.SNOW_CAPS -> {
