@@ -13,7 +13,8 @@ import kotlinx.coroutines.withContext
  * Asks the installed Spole for Discover (`content://<package>.launcher/discover…`); Spole asks the
  * person's Seerr with its own sign-in. A Spole that knows Discover says in the `seerr` extra of every
  * answer what the person may do. An older one answers with an empty cursor without it, which is no
- * answer, and the next installed Spole is asked. Nothing is asked when Spole is not installed.
+ * answer, and the next installed Spole is asked. Nothing is asked when Spole is not installed. A
+ * question no Spole answered because one tripped throws, so a hiccup is never taken for "no Discover".
  * Blocks while Spole asks Seerr: call it off the main thread, as [SpoleDiscoverFetch] does.
  */
 class SpoleDiscover(private val context: Context) {
@@ -53,32 +54,49 @@ class SpoleDiscover(private val context: Context) {
     /** An answer from a Spole that knows Discover, even when what it holds is nothing. */
     private class Answered<T>(val value: T)
 
-    /** What the first installed Spole that answers holds; null when none does. */
-    private fun <T> first(answer: (pkg: String) -> Answered<T>?): T? = SpoleHandoff(context).installedPackages().firstNotNullOfOrNull(answer)?.value
+    /**
+     * What the first installed Spole that answers holds; null when none does (no Spole, or only older
+     * ones). When none answered and one tripped, the last failure is thrown.
+     */
+    private fun <T> first(answer: (pkg: String) -> Answered<T>?): T? {
+        var tripped: Exception? = null
+        for (pkg in SpoleHandoff(context).installedPackages()) {
+            try { answer(pkg)?.let { return it.value } } catch (e: Exception) { tripped = e }
+        }
+        tripped?.let { throw it }
+        return null
+    }
 
-    /** [pkg]'s answer to [path] for the person [link] names, read by [read]; null when it has none or trips. */
-    private fun <T> ask(pkg: String, link: SpoleLink, path: String, params: List<Pair<String, String>> = emptyList(), read: (Cursor) -> T): Answered<T>? =
-        runCatching {
-            val uri = Uri.parse("content://$pkg.launcher/$path").buildUpon()
-                .appendQueryParameter("kind", link.kind.name.lowercase()).appendQueryParameter("user", link.userId)
-                .apply { params.forEach { (key, value) -> appendQueryParameter(key, value) } }.build()
-            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                if (parseSeerrAccess(cursor) == null) null else Answered(read(cursor))
-            }
-        }.getOrNull()
+    /** [pkg]'s answer to [path] for the person [link] names, read by [read]; null when it has none, and a throw when it tripped. */
+    private fun <T> ask(pkg: String, link: SpoleLink, path: String, params: List<Pair<String, String>> = emptyList(), read: (Cursor) -> T): Answered<T>? {
+        val uri = Uri.parse("content://$pkg.launcher/$path").buildUpon()
+            .appendQueryParameter("kind", link.kind.name.lowercase()).appendQueryParameter("user", link.userId)
+            .apply { params.forEach { (key, value) -> appendQueryParameter(key, value) } }.build()
+        // Spole always gives a cursor. Android gives none for a Spole without the provider, and for one that
+        // died or threw what cannot cross to Stova: only the first is no answer.
+        val cursor = context.contentResolver.query(uri, null, null, null, null)
+            ?: if (context.packageManager.resolveContentProvider("$pkg.launcher", 0) == null) return null
+            else throw IllegalStateException("$pkg gave no cursor for $path")
+        return cursor.use { if (parseSeerrAccess(it) == null) null else Answered(read(it)) }
+    }
 
     /**
      * [method] sent to the first installed Spole that answers it, and only that one, so a request is
-     * never sent twice. An older Spole answers nothing. Numbers go as Int: Spole reads a Long as 0.
+     * never sent twice. An older Spole answers nothing; a Spole that tripped makes it [DiscoverActionResult.FAILED]
+     * when no other answered. Numbers go as Int: Spole reads a Long as 0.
      */
-    private fun act(method: String, link: SpoleLink, extras: Bundle.() -> Unit): DiscoverActionResult =
-        discoverActionResult(SpoleHandoff(context).installedPackages().firstNotNullOfOrNull { pkg ->
-            runCatching {
+    private fun act(method: String, link: SpoleLink, extras: Bundle.() -> Unit): DiscoverActionResult {
+        var tripped = false
+        for (pkg in SpoleHandoff(context).installedPackages()) {
+            val word = try {
                 context.contentResolver.call(Uri.parse("content://$pkg.launcher"), method, null, Bundle().apply {
                     putString("kind", link.kind.name.lowercase()); putString("user", link.userId); extras()
                 })?.getString("result")
-            }.getOrNull()
-        })
+            } catch (e: Exception) { tripped = true; null }
+            if (word != null) return discoverActionResult(word)
+        }
+        return if (tripped) DiscoverActionResult.FAILED else DiscoverActionResult.NOT_SUPPORTED
+    }
 }
 
 /** What [DiscoverRepository] asks of Spole: [SpoleDiscover]'s questions, suspended. */

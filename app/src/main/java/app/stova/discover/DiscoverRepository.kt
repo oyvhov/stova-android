@@ -79,7 +79,7 @@ class DiscoverRepository(
         related.keys.removeAll { it.type == type && it.tmdbId == tmdbId }
     }
 
-    suspend fun search(link: SpoleLink, query: String, page: Int): DiscoverPage? = fetch.search(link, query, page)
+    suspend fun search(link: SpoleLink, query: String, page: Int): DiscoverPage? = orNull { fetch.search(link, query, page) }
 
     suspend fun request(link: SpoleLink, type: DiscoverType, tmdbId: Int, seasons: List<Int>): DiscoverActionResult =
         fetch.request(link, type, tmdbId, seasons).also { if (it == DiscoverActionResult.DONE) invalidate(type, tmdbId) }
@@ -100,7 +100,16 @@ class DiscoverRepository(
     /** What is kept for [key] while younger than five minutes, else [ask]'s answer; no answer is not kept, so the next look asks again. */
     private suspend fun <T : Any> kept(cache: ConcurrentHashMap<TitleKey, Kept<T>>, key: TitleKey, ask: suspend () -> T?): T? {
         cache[key]?.takeIf { now() - it.at < TITLE_MAX_AGE_MILLIS }?.let { return it.value }
-        return ask()?.also { cache[key] = Kept(it, now()) }
+        return orNull(ask)?.also { cache[key] = Kept(it, now()) }
+    }
+
+    /** [ask]'s answer, or none when Spole tripped: a page shows what it has and asks again on the next look. */
+    private suspend fun <T> orNull(ask: suspend () -> T?): T? = try {
+        ask()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        null
     }
 
     companion object {

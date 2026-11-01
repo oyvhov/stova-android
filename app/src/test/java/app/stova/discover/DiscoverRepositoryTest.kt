@@ -22,10 +22,13 @@ class DiscoverRepositoryTest {
         DiscoverTitle(type, tmdb, "T$tmdb", 2021, null, null, null, SeerrStatus.UNKNOWN, null, emptyList())
     private val trending = listOf(DiscoverRow(DiscoverRowKind.TRENDING, listOf(title(603))))
     private val upcoming = listOf(DiscoverRow(DiscoverRowKind.UPCOMING_MOVIES, listOf(title(11))))
+    private val matrix = DiscoverDetails(title(603), null, 136, 83, canRequest = true, requestId = null, requestStage = null, trailer = null,
+        seasons = emptyList())
 
-    /** Spole as the repository sees it: [rows] answers each ask, and every ask is counted. */
+    /** Spole as the repository sees it: [rows] answers each ask, a title's questions throw while [trips], and every ask is counted. */
     private class FakeFetch : DiscoverFetch {
         var rows: suspend () -> DiscoverAnswer? = { null }
+        var trips = false
         var result = DiscoverActionResult.DONE
         val details = mutableMapOf<Pair<DiscoverType, Int>, DiscoverDetails>()
         var rowsAsked = 0
@@ -33,13 +36,17 @@ class DiscoverRepositoryTest {
         var relatedAsked = 0
         override suspend fun rows(link: SpoleLink): DiscoverAnswer? { rowsAsked++; return rows() }
         override suspend fun requests(link: SpoleLink, refresh: Boolean): List<DiscoverRequest>? = emptyList()
-        override suspend fun details(link: SpoleLink, type: DiscoverType, tmdbId: Int): DiscoverDetails? { detailsAsked++; return details[type to tmdbId] }
+        private fun trip() = check(!trips) { "Spole tripped" }
+        override suspend fun details(link: SpoleLink, type: DiscoverType, tmdbId: Int): DiscoverDetails? {
+            detailsAsked++; trip()
+            return details[type to tmdbId]
+        }
         override suspend fun related(link: SpoleLink, type: DiscoverType, tmdbId: Int): List<DiscoverRow> {
-            relatedAsked++
+            relatedAsked++; trip()
             return listOf(DiscoverRow(DiscoverRowKind.SIMILAR, listOf(DiscoverTitle(type, tmdbId + 1, "Like it", null, null, null, null,
                 SeerrStatus.UNKNOWN, null, emptyList()))))
         }
-        override suspend fun search(link: SpoleLink, query: String, page: Int): DiscoverPage? = null
+        override suspend fun search(link: SpoleLink, query: String, page: Int): DiscoverPage? { trip(); return DiscoverPage(emptyList(), page, false) }
         override suspend fun request(link: SpoleLink, type: DiscoverType, tmdbId: Int, seasons: List<Int>) = result
         override suspend fun withdraw(link: SpoleLink, requestId: Int) = result
     }
@@ -91,11 +98,11 @@ class DiscoverRepositoryTest {
         fetch.rows = { throw IllegalStateException("Spole tripped") }
         repository.refresh("p1", link, force = true)
         assertEquals(DiscoverState(SeerrAccess.PERSONAL, trending, emptyList(), loading = false, failed = true), repository.state("p1").value)
-        // Seerr is set up but gives no rows: the same.
+        // A failed answer is not a fresh one: the next return asks again, without force. Seerr set up but giving no rows fails the same way.
         fetch.rows = { DiscoverAnswer(SeerrAccess.BROWSE, emptyList()) }
-        repository.refresh("p1", link, force = true)
+        repository.refresh("p1", link)
+        assertEquals(3, fetch.rowsAsked)
         assertEquals(DiscoverState(SeerrAccess.BROWSE, trending, emptyList(), loading = false, failed = true), repository.state("p1").value)
-        // A failed answer is not a fresh one: the next return asks again, without force.
         fetch.rows = { DiscoverAnswer(SeerrAccess.PERSONAL, upcoming) }
         repository.refresh("p1", link)
         assertEquals(4, fetch.rowsAsked)
@@ -117,8 +124,6 @@ class DiscoverRepositoryTest {
 
     @Test fun requestInvalidatesTheTitle() = runTest {
         var time = 0L
-        val matrix = DiscoverDetails(title(603), null, 136, 83, canRequest = true, requestId = null, requestStage = null, trailer = null,
-            seasons = emptyList())
         val thrones = DiscoverDetails(title(1399, DiscoverType.SERIES), null, null, null, canRequest = false, requestId = 42,
             requestStage = RequestStage.REQUESTED, trailer = null, seasons = emptyList())
         val fetch = FakeFetch().apply { details[DiscoverType.MOVIE to 603] = matrix; details[DiscoverType.SERIES to 1399] = thrones }
@@ -154,5 +159,20 @@ class DiscoverRepositoryTest {
         time = 5 * 60_000L
         repository.details(link, DiscoverType.MOVIE, 603)
         assertEquals(6, fetch.detailsAsked)
+    }
+
+    // Spole tripping on a title's page, its rows or a search gives nothing to show, and the next look asks again.
+    @Test fun aTrippedLookShowsNothingAndAsksAgain() = runTest {
+        val fetch = FakeFetch().apply { details[DiscoverType.MOVIE to 603] = matrix; trips = true }
+        val repository = DiscoverRepository(fetch)
+        assertNull(repository.details(link, DiscoverType.MOVIE, 603))
+        assertEquals(emptyList<DiscoverRow>(), repository.related(link, DiscoverType.MOVIE, 603))
+        assertNull(repository.search(link, "dune", 1))
+        fetch.trips = false
+        assertEquals(matrix, repository.details(link, DiscoverType.MOVIE, 603))
+        assertEquals(1, repository.related(link, DiscoverType.MOVIE, 603).size)
+        assertEquals(DiscoverPage(emptyList(), 2, false), repository.search(link, "dune", 2))
+        assertEquals(2, fetch.detailsAsked)
+        assertEquals(2, fetch.relatedAsked)
     }
 }

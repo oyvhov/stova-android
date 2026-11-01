@@ -4,6 +4,7 @@ import android.content.ContentProvider
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageInfo
+import android.content.pm.ProviderInfo
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
@@ -16,6 +17,7 @@ import app.stova.profiles.SpoleLink
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,8 +32,8 @@ class SpoleDiscoverTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val link = SpoleLink(ServerKind.EMBY, "eilev")
 
-    /** Spole's launcher provider: [answer] answers each query and [result] each call, and it keeps what it was asked. */
-    private class FakeSpole(var answer: (Uri) -> Cursor = { oldSpole() }, var result: String? = null) : ContentProvider() {
+    /** Spole's launcher provider: [answer] answers each query and [result] each call, it trips while [tripped], and it keeps what it was asked. */
+    private class FakeSpole(var answer: (Uri) -> Cursor? = { oldSpole() }, var result: String? = null, var tripped: Boolean = false) : ContentProvider() {
         val asked = mutableListOf<Uri>()
         val calls = mutableListOf<Pair<String, Bundle?>>()
         override fun onCreate() = true
@@ -39,18 +41,24 @@ class SpoleDiscoverTest {
         override fun insert(uri: Uri, values: ContentValues?): Uri? = null
         override fun delete(uri: Uri, selection: String?, args: Array<out String>?) = 0
         override fun update(uri: Uri, values: ContentValues?, selection: String?, args: Array<out String>?) = 0
-        override fun query(uri: Uri, projection: Array<out String>?, selection: String?, args: Array<out String>?, sort: String?): Cursor {
+        override fun query(uri: Uri, projection: Array<out String>?, selection: String?, args: Array<out String>?, sort: String?): Cursor? {
             asked += uri
+            check(!tripped) { "Spole tripped" }
             return answer(uri)
         }
         override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
             calls += method to extras
+            check(!tripped) { "Spole tripped" }
             return result?.let { Bundle().apply { putString("result", it) } }
         }
     }
 
-    private fun register(spole: FakeSpole) = spole.also { ShadowContentResolver.registerProviderInternal("app.reelstack.launcher", it) }
-    private fun install() = shadowOf(context.packageManager).installPackage(PackageInfo().apply { packageName = "app.reelstack" })
+    private fun register(spole: FakeSpole, pkg: String = "app.reelstack") = spole.also { ShadowContentResolver.registerProviderInternal("$pkg.launcher", it) }
+    /** [withProvider] declares the launcher provider as Spole's manifest does; without it the package is a Spole too old to have one. */
+    private fun install(pkg: String = "app.reelstack", withProvider: Boolean = false) = shadowOf(context.packageManager).installPackage(PackageInfo().apply {
+        packageName = pkg
+        if (withProvider) providers = arrayOf(ProviderInfo().apply { authority = "$pkg.launcher"; packageName = pkg; name = "LauncherProfilesProvider" })
+    })
     private fun Cursor.seerr(access: String) = apply { setExtras(Bundle().apply { putString("seerr", access) }) }
     private fun rows() = MatrixCursor(arrayOf("row", "type", "tmdb", "title", "year", "overview", "poster", "backdrop", "status", "community", "genres"))
         .apply { addRow(arrayOf<Any?>("trending", "movie", 603, "The Matrix", 1999, null, "http://p/603", null, 5, 7.8, "Action")) }
@@ -132,6 +140,32 @@ class SpoleDiscoverTest {
         spole.asked.clear()
         assertEquals(emptyList<DiscoverSeason>(), SpoleDiscover(context).details(link, DiscoverType.MOVIE, 603)!!.seasons)
         assertEquals(listOf("/discover/title"), spole.asked.map { it.path })
+    }
+
+    // A Spole that trips is not one without Discover: the repository keeps the rows shown and says it failed.
+    @Test fun aSpoleThatTripsThrowsInsteadOfAnsweringNothing() {
+        val spole = register(FakeSpole(tripped = true))
+        install()
+        val discover = SpoleDiscover(context)
+        assertThrows(IllegalStateException::class.java) { discover.rows(link) }
+        assertThrows(IllegalStateException::class.java) { discover.details(link, DiscoverType.MOVIE, 603) }
+        assertThrows(IllegalStateException::class.java) { discover.related(link, DiscoverType.MOVIE, 603) }
+        assertThrows(IllegalStateException::class.java) { discover.search(link, "dune", 1) }
+        assertEquals(DiscoverActionResult.FAILED, discover.request(link, DiscoverType.MOVIE, 603, emptyList()))
+        // An older Spole still answers nothing, and so does one without the launcher provider, which gets no cursor.
+        spole.tripped = false
+        assertNull(discover.rows(link))
+        spole.answer = { null }
+        assertNull(discover.rows(link))
+        // With the provider there, no cursor is Android's word for a Spole that died or threw what cannot cross.
+        install(withProvider = true)
+        assertThrows(IllegalStateException::class.java) { discover.rows(link) }
+        // Another installed Spole that answers is taken instead.
+        register(FakeSpole(answer = { rows().seerr("browse") }, result = "ok"), "app.reelstack.debug")
+        install("app.reelstack.debug")
+        assertEquals(SeerrAccess.BROWSE, discover.rows(link)?.access)
+        spole.tripped = true
+        assertEquals(DiscoverActionResult.DONE, discover.request(link, DiscoverType.MOVIE, 603, emptyList()))
     }
 
     private companion object {
