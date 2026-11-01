@@ -42,14 +42,14 @@ class WatchNextReaderTest {
         val kept = filterWatchNext(entries, "app.stova")
         assertEquals(listOf("Dark", "Andor"), kept.map { it.title }); assertEquals(0.2f, kept[0].progress!!, 0.001f); assertNull(kept[1].progress)
     }
-    @Test fun theSameTitleFromOneAppIsShownOnceTheNewest() {
+    @Test fun theSameTitleIsShownOnceFromTheAppThatSawItLast() {
         fun entry(id: Long, pkg: String, title: String, at: Long, subtitle: String? = null) =
             WatchNextEntry(id, pkg, title, subtitle, null, "intent:#Intent;package=$pkg;end", null, at)
         val kept = filterWatchNext(listOf(entry(1, "org.jellyfin.androidtv", "One Battle After Another", 100),
             entry(2, "org.jellyfin.androidtv", "One Battle After Another", 300), entry(3, "org.jellyfin.androidtv", "one battle after another ", 200),
             entry(4, "com.netflix.ninja", "One Battle After Another", 50),
             entry(5, "no.nrk.tv", "Emil", 40, "Episode 1"), entry(6, "no.nrk.tv", "Emil", 30, "Episode 2")), "app.stova")
-        assertEquals(listOf(2L, 4L, 5L, 6L), kept.map { it.id })
+        assertEquals(listOf(2L, 5L, 6L), kept.map { it.id })
     }
     @Test fun foreignComponentRejected() = assertNull(launchIntentFor(WatchNextEntry(1, "com.evil", "x", null, null,
         "intent:#Intent;component=com.bank/.Pay;end", null, 0)))

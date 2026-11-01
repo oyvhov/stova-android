@@ -99,7 +99,7 @@ Målt med `dumpsys gfxinfo` (framestat) under ei fast rørsle med D-pad, i tille
 
 ## Resultat
 
-Testa 2026-11-01 frå ca. 15.20 til 17.15 på Shield og Loftet med byggja i dag. «❌→✅» tyder feil funnen, retta, installert og sett på eininga. «❌→⚠️» tyder retta og testa med einingstest, men ikkje sett på eininga.
+Testa 2026-11-01 frå ca. 15.20 til 17.20 på Shield og Loftet med byggja i dag. «❌→✅» tyder feil funnen, retta, installert og sett på eininga. «❌→⚠️» tyder retta og testa med einingstest, men ikkje sett på eininga.
 
 ### Funne og retta
 
@@ -114,7 +114,7 @@ Testa 2026-11-01 frå ca. 15.20 til 17.15 på Shield og Loftet med byggja i dag.
 
 - **A2 Loftet (Google TV):** etter ei oppdatering gjekk Home til Google TV til nokon opna Stova. Når oppdateringa drep Stova på skjermen, kjem Google TV-heimen fram medan Heim-tenesta startar på nytt, så tenesta går glipp av vindaugshendinga. Etterpå står Google TV-heimen allereie framme og gir ingen ny hending, og på Google TV går Home ikkje gjennom tastefilteret. No hugsar Stova om han var framme (`HomeFront`), og tenesta opnar Stova att når ho koplar seg til. Prøvd på Loftet: oppdatering med Stova framme gir Stova att etter under 3 s. Oppdatering med Spole framme lèt Spole stå, og Home gir Stova.
 
-- **«Hald fram i andre appar» (Shield, Eilev):** same tittel stod tre gonger (ein annan app la inn «One Battle After Another» på nytt i staden for å oppdatere). No viser Stova kvar tittel éin gong per app, den nyaste.
+- **«Hald fram i andre appar» (Shield, Eilev):** «One Battle After Another» stod tre gonger. Truleg la fleire appar for same Jellyfin-tenar ho inn kvar for seg. No viser Stova kvar tittel éin gong, frå den appen som såg ho sist. Sett på Shield.
 
 ### Merknader (ikkje retta)
 

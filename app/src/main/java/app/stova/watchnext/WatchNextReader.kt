@@ -39,9 +39,9 @@ fun mapWatchNext(cursor: Cursor): List<WatchNextEntry> = buildList {
 fun filterWatchNext(entries: List<WatchNextEntry>, selfPackage: String, limit: Int = 20): List<WatchNextEntry> =
     entries.filterNot { it.packageName == selfPackage || it.packageName == "app.stova" || it.packageName.startsWith("app.reelstack") }
         .sortedByDescending { it.lastEngagement }
-        // An app that adds a title again instead of updating it showed the same card three times on the
-        // Shield (2026-11-01); the newest one is kept.
-        .distinctBy { Triple(it.packageName, it.title.trim().lowercase(), it.subtitle?.trim()?.lowercase()) }
+        // The same film showed three times on the Shield (2026-11-01): several apps for one Jellyfin server
+        // each put it here. A title is shown once, from the app that saw it last.
+        .distinctBy { it.title.trim().lowercase() to it.subtitle?.trim()?.lowercase() }
         .take(limit)
 
 fun launchIntentFor(entry: WatchNextEntry): Intent? = try {
