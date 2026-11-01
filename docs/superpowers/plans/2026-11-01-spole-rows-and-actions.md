@@ -33,5 +33,6 @@ Ingen innlogging kryssar mellom appane: Spole hentar og handlar, Stova får meta
 
 ## Prøv
 
-- [ ] Loftet: Spole og Stova (TV-bygg). Ein profil utan kontoar som følgjer Spole-personen får rader;
-      handlingane på eit kort eigaren vel.
+- [x] Loftet: Spole og Stova (TV-bygg). Ein profil utan kontoar som følgjer Spole-personen får rader;
+      handlingane på eit kort eigaren vel. Radene og opninga i Spole er prøvde; menyen viser handlingane.
+- [ ] Ei handling utført på ein ekte tittel eigaren vel.
