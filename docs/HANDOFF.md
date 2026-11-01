@@ -10,6 +10,7 @@ Stova (committa, ikkje pusha):
 - «NO-A» blir «Alle».
 - Kvar app-flis har sitt eige lag (Appar-sida på Shield gjekk frå 27–39 % til 4–11 % trege bilete).
 - Heim les fokuset éin gong.
+- Home etter oppdatering på Google TV: tenesta opnar Stova att når Stova vart drepen på skjermen (`homebutton/HomeFront.kt`).
 Spole (greina `launcher-rows`, ikkje gitt ut, installert på Shield og Loftet):
 - `official` i radene, og Emby får spørsmål om `OfficialRating`.
 - Éitt kort per serie i «Nyleg lagt til · Seriar».

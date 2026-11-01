@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import app.stova.homebutton.HomeFront
 import app.stova.homebutton.LaunchGuard
 import app.stova.navigation.StovaApp
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +52,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Tells the Home service this start succeeded (see LaunchGuard).
-        container.appScope.launch(Dispatchers.IO) { LaunchGuard.markAlive(filesDir) }
+        // Tells the Home service this start succeeded (see LaunchGuard), and that Stova is on screen (HomeFront).
+        container.appScope.launch(Dispatchers.IO) { LaunchGuard.markAlive(filesDir); HomeFront.mark(filesDir, true) }
+    }
+
+    override fun onPause() {
+        container.appScope.launch(Dispatchers.IO) { HomeFront.mark(filesDir, false) }
+        super.onPause()
     }
 }

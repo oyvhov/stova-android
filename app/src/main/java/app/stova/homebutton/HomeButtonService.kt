@@ -58,6 +58,8 @@ class HomeButtonService : AccessibilityService() {
         }
         // Load serializers and the JSON reader before the first latency-sensitive Home event.
         state.isOn()
+        // Stova died on screen (an update): the stock home took its place while this service restarted.
+        if (HomeFront.wasInFront(filesDir) && overrideOn()) openStova()
     }
 
     override fun onKeyEvent(event: KeyEvent): Boolean {

@@ -23,7 +23,7 @@ Status: ✅ fungerer, ⚠️ fungerer med merknad, ❌ feil (retta eller ikkje),
 | ID | Kva | Forventa | Shield | Loftet |
 |---|---|---|---|---|
 | A1 | Installer Stova-TV og Spole (launcher-rows) | Begge installerte utan å slette data; Spole-innlogginga er der | ✅ | ✅ |
-| A2 | Home-knappen etter ominstallering | Stova kjem fram; Heim-tenesta er bunden | ✅ | ⚠️ |
+| A2 | Home-knappen etter ominstallering | Stova kjem fram; Heim-tenesta er bunden | ✅ | ❌→✅ |
 | A3 | Kaldstart av Stova (`am start -W`) | Under 1,5 s på Shield, under 2,5 s på Loftet | ✅ 448–711 ms | ✅ 634–1140 ms |
 | A4 | Kaldstart av Spole | Heim med rader utan raude feil; ingen krasj i logcat | ✅ 0,97 s | ✅ 0,84 s |
 
@@ -112,9 +112,10 @@ Testa 2026-11-01 frå ca. 15.20 til 17.15 på Shield og Loftet med byggja i dag.
 - **F6 Spole:** kortet ytst til høgre vart kutta av skjermkanten, og høgre-pila på siste kortet hoppa ned i neste rad, mest under skjermen. No har rada marg på begge sider, og høgre-pila stoppar ved enden av rada.
 - **Alder i tekst:** «NO-A» stod rått på heroen i Stova, og «NO-15» / «NO-A» i Spole. No står det «Alle» og «15 år» i begge.
 
+- **A2 Loftet (Google TV):** etter ei oppdatering gjekk Home til Google TV til nokon opna Stova. Når oppdateringa drep Stova på skjermen, kjem Google TV-heimen fram medan Heim-tenesta startar på nytt, så tenesta går glipp av vindaugshendinga. Etterpå står Google TV-heimen allereie framme og gir ingen ny hending, og på Google TV går Home ikkje gjennom tastefilteret. No hugsar Stova om han var framme (`HomeFront`), og tenesta opnar Stova att når ho koplar seg til. Prøvd på Loftet: oppdatering med Stova framme gir Stova att etter under 3 s. Oppdatering med Spole framme lèt Spole stå, og Home gir Stova.
+
 ### Merknader (ikkje retta)
 
-- **A2 Loftet:** éin gong i dag gjekk Heim-knappen til Google TV rett etter ei ominstallering, og det heldt fram til Stova vart opna éin gong. Seinare gjekk han rett. Årsaka er ikkje funnen.
 - **B5:** éin gong kom fokus tilbake til første kortet i «Hald fram» etter tre rader ned og opp att. Det er ikkje gjenskapt (tre forsøk etterpå gav rett kort).
 - **G1 Loftet:** Heim ligg på 19–26 % trege bilete (p50 27 ms). GPU-en brukar 12–14 ms, og like mykje går med til å sende teiknekommandoar. Ein buffra Halloween-scene endra ingenting. Truleg trengst ei lettare scene for svake TV-ar. Appar-sida på Loftet ligg på 7 %.
 - **G3 / G4:** Smarthus og Spole Heim har om lag éi litt sein ramme per tastetrykk (p90 19–25 ms). Det ser ein knapt.

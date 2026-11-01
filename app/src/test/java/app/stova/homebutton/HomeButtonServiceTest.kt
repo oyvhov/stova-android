@@ -42,6 +42,25 @@ class HomeButtonServiceTest {
         controller.destroy()
     }
 
+    // On the loft's Google TV an update killed Stova on screen; the stock home came up while the service
+    // was restarting, so it missed that window, and Home then changed nothing. Until Stova was opened by
+    // hand, Home led to Google TV (2026-11-01).
+    @Test fun aStovaThatWasOnScreenWhenItsProcessDiedIsOpenedAgainOnConnect() {
+        fun connect(): android.content.Intent? {
+            val controller = Robolectric.buildService(HomeButtonService::class.java).create()
+            val service = controller.get()
+            service.serviceInfo = AccessibilityServiceInfo()
+            ReflectionHelpers.callInstanceMethod<Unit>(service, "onServiceConnected")
+            return org.robolectric.shadow.api.Shadow.extract<ConnectedServiceInfo>(service).nextStartedActivity.also { controller.destroy() }
+        }
+        val files = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>().filesDir
+        HomeFront.mark(files, true)
+        assertEquals(app.stova.MainActivity::class.java.name, connect()?.component?.className)
+        // Left for another app: connecting changes nothing on screen.
+        HomeFront.mark(files, false)
+        assertNull(connect())
+    }
+
     @Test fun connectionWarmsOverrideReaderBeforeFirstHomeKey() {
         val controller = Robolectric.buildService(HomeButtonService::class.java).create()
         val service = controller.get()
