@@ -146,7 +146,11 @@ class AppContainer(
         spoleProfiles = { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { app.stova.media.SpoleProfiles(context).list() } },
     )
 
-    val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session, shortcuts.accounts, shortcuts.haReady), app.stova.media.MediaRowSource(media), app.stova.watchnext.WatchNextRowSource(watchNext))
+    /** The person's rows from Spole, for a profile that follows a Spole person and has no account here. */
+    val spoleRows = app.stova.media.SpoleRowSource(session.active, mediaAccounts::forProfile, { profileId, link ->
+        kotlinx.coroutines.withContext(Dispatchers.IO) { app.stova.media.SpoleProfiles(appContext).rows(profileId, link) }
+    })
+    val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session, shortcuts.accounts, shortcuts.haReady), app.stova.media.MediaRowSource(media), spoleRows, app.stova.watchnext.WatchNextRowSource(watchNext))
 
 
     val haHttp = OkHttpClient.Builder().connectTimeout(4, TimeUnit.SECONDS).readTimeout(8, TimeUnit.SECONDS)

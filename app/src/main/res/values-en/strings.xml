@@ -161,6 +161,14 @@
     <string name="greeting_night">Good night</string>
     <string name="item_play">Play</string>
     <string name="item_details">Details in Spole</string>
+    <string name="item_play_from_start">Play from the start</string>
+    <string name="item_mark_watched">Mark as watched</string>
+    <string name="item_remove_from_continue">Remove from Continue</string>
+    <string name="item_marked_watched">Marked as watched</string>
+    <string name="item_removed_from_continue">Removed from Continue</string>
+    <string name="item_action_failed">Spole could not do it. Try again.</string>
+    <string name="item_action_unknown_account">Spole does not have this account.</string>
+    <string name="item_action_update_spole">Update Spole to do this from Stova.</string>
     <string name="spole_missing">Spole is needed for playback. Download from github.com/oyvhov/spole-android/releases.</string>
     <string name="spole_close">Close</string>
     <string name="invalid_media_ids">This title could not be opened.</string>

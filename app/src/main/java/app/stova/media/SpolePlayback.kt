@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import app.stova.StovaApplication
 import app.stova.media.model.ServerKind
+import kotlinx.coroutines.launch
 
 /**
  * What Spole says when a film or an episode stops, or the player goes to the background. Nothing in
@@ -37,5 +38,13 @@ class SpolePlaybackReceiver : BroadcastReceiver() {
         val report = SpolePlayback.from(intent) ?: return
         val container = runCatching { (context.applicationContext as StovaApplication).container }.getOrNull() ?: return
         container.media.applyPlayback(report)
+        container.session.active.value?.id?.let { id ->
+            container.appScope.launch { kotlinx.coroutines.delay(SPOLE_ROWS_DELAY_MILLIS); container.spoleRows.refresh(id, force = true) }
+        }
+    }
+
+    private companion object {
+        /** Spole reports the stop to the server as it sends this; the rows ask a little after. */
+        const val SPOLE_ROWS_DELAY_MILLIS = 4_000L
     }
 }

@@ -21,6 +21,7 @@ import app.stova.media.model.*
 import app.stova.media.ui.*
 import app.stova.profiles.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -30,6 +31,8 @@ fun HomeScreen(
     onOpenApps: () -> Unit,
     onRefresh: suspend () -> Unit = {},
     onPlaybackOpened: () -> Unit = {},
+    /** A title changed through Spole (watched, out of «Hald fram»): the rows ask again. */
+    onItemChanged: () -> Unit = {},
     topBar: @Composable (List<ChipContent>) -> Unit = {},
     haRepository: HaRepository? = null,
     haConnection: HaConnection? = null,
@@ -57,8 +60,9 @@ fun HomeScreen(
     var actions by remember { mutableStateOf<FocusedTarget.Media?>(null) }
     var appMenu by remember(profile?.id) { mutableStateOf<InstalledApp?>(null) }
     var missing by remember { mutableStateOf(false) }
-    fun open(target: FocusedTarget.Media, action: SpoleAction) {
-        when (handoff.open(target.account, target.item, action)) {
+    val scope = rememberCoroutineScope()
+    fun open(target: FocusedTarget.Media, action: SpoleAction, fromStart: Boolean = false) {
+        when (handoff.open(target.account, target.item, action, fromStart)) {
             HandoffResult.Opened -> onPlaybackOpened()
             HandoffResult.OpenedWithoutLink -> {
                 onPlaybackOpened()
@@ -66,6 +70,27 @@ fun HomeScreen(
             }
             HandoffResult.SpoleMissing -> missing = true
             HandoffResult.InvalidIds -> Toast.makeText(context, R.string.invalid_media_ids, Toast.LENGTH_SHORT).show()
+        }
+    }
+    // Spole does what the menu asks with its own account, so both apps agree afterwards.
+    fun act(target: FocusedTarget.Media, action: app.stova.media.ui.MediaItemAction) {
+        if (action == app.stova.media.ui.MediaItemAction.PLAY_FROM_START) { open(target, SpoleAction.PLAY, fromStart = true); return }
+        val spole = if (action == app.stova.media.ui.MediaItemAction.MARK_WATCHED) app.stova.media.SpoleItemAction.WATCHED
+            else app.stova.media.SpoleItemAction.REMOVE_FROM_CONTINUE
+        scope.launch {
+            val result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                app.stova.media.SpoleProfiles(context).itemAction(target.account.kind, target.account.userId, target.item.id, spole)
+            }
+            val message = when (result) {
+                app.stova.media.SpoleActionResult.DONE -> {
+                    onItemChanged()
+                    if (spole == app.stova.media.SpoleItemAction.WATCHED) R.string.item_marked_watched else R.string.item_removed_from_continue
+                }
+                app.stova.media.SpoleActionResult.FAILED -> R.string.item_action_failed
+                app.stova.media.SpoleActionResult.UNKNOWN_ACCOUNT -> R.string.item_action_unknown_account
+                app.stova.media.SpoleActionResult.NOT_SUPPORTED -> R.string.item_action_update_spole
+            }
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
     val openShortcut = rememberShortcutOpener(haConnection, profile, onPlaybackOpened) { missing = true }
@@ -76,6 +101,7 @@ fun HomeScreen(
         homePrefs = profile?.home ?: HomePrefs(),
         onHomeChange = onHomeChange, canEditRows = profile?.kid == false, onRowFocus = vm::focusRow,
         onMediaPlay = { open(it, SpoleAction.PLAY) },
+        onMediaAction = if (profile?.kid == false) ::act else null,
         appActions = { app, rowActions, dismiss ->
             if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog, rowActions, dismiss)
         },
@@ -88,7 +114,8 @@ fun HomeScreen(
         ItemActionsMenu(target.item,
             onPlay = { actions = null; open(target, SpoleAction.PLAY) },
             onDetails = { actions = null; open(target, SpoleAction.DETAILS) },
-            onDismiss = { actions = null })
+            onDismiss = { actions = null },
+            onAction = if (profile?.kid == false) { action -> actions = null; act(target, action) } else null)
     }
     if (missing) SpoleMissingDialog { missing = false }
 }

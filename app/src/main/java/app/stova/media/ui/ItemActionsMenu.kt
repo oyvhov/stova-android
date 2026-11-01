@@ -18,9 +18,16 @@ import app.stova.media.model.MediaItem
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 
-/** Long OK on a film or an episode: its picture, Play and Details, then the row it sits in. */
+/** What Spole can do with a title from its long-press menu. */
+enum class MediaItemAction { PLAY_FROM_START, MARK_WATCHED, REMOVE_FROM_CONTINUE }
+
+/**
+ * Long OK on a film or an episode: its picture, Play and Details, what Spole can do with it ([onAction],
+ * when given), then the row it sits in. «Spel frå starten» and «Fjern frå Hald fram» are offered for a
+ * title part-way through; «Merk som sett» for any film or episode.
+ */
 @Composable fun ItemActionsMenu(item: MediaItem, onPlay: () -> Unit, onDetails: () -> Unit, onDismiss: () -> Unit,
-    rowActions: @Composable (SheetPages) -> Unit = {}) {
+    rowActions: @Composable (SheetPages) -> Unit = {}, onAction: ((MediaItemAction) -> Unit)? = null) {
     StovaSheet(onDismiss) { pages ->
         if (pages.current == null) {
             val episode = item.type == ItemType.EPISODE
@@ -38,6 +45,15 @@ import coil3.request.ImageRequest
             }
             StovaButton(playLabel, onPlay, Modifier.fillMaxWidth(), primary = true, icon = StovaIcons.Play)
             StovaButton(stringResource(R.string.item_details), onDetails, Modifier.fillMaxWidth(), icon = StovaIcons.Info)
+            if (onAction != null) {
+                if (resuming) app.stova.core.ui.SheetAction(stringResource(R.string.item_play_from_start), StovaIcons.Play,
+                    { onAction(MediaItemAction.PLAY_FROM_START) })
+                if (item.type == ItemType.MOVIE || item.type == ItemType.EPISODE)
+                    app.stova.core.ui.SheetAction(stringResource(R.string.item_mark_watched), StovaIcons.Check,
+                        { onAction(MediaItemAction.MARK_WATCHED) })
+                if (resuming) app.stova.core.ui.SheetAction(stringResource(R.string.item_remove_from_continue), StovaIcons.Hide,
+                    { onAction(MediaItemAction.REMOVE_FROM_CONTINUE) })
+            }
         }
         rowActions(pages)
     }

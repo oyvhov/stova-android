@@ -8,6 +8,7 @@ avkryssingsboksar i dei er inga bestilling.
 
 | Plan | Står att |
 |---|---|
+| [Spole-rader for personen og handlingar på korta](2026-11-01-spole-rows-and-actions.md) | Prøva på Loftet. Spole-delen på greina `launcher-rows`. |
 | [Eineståande launcher: finpuss, Heim etter tid, fart og huset](2026-10-26-outstanding-launcher.md) | Steg 2–9. I steg 4 er punkt 8 (snøggmenyen på Innstillingar) gjort. |
 
 ## Historikk

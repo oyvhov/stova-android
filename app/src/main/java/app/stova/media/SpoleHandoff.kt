@@ -14,11 +14,13 @@ object SpoleContract {
     const val PACKAGE = "app.reelstack"
     const val DEBUG_PACKAGE = "app.reelstack.debug"
     val ID_PATTERN = Regex("[A-Za-z0-9_-]{1,128}")
-    fun uri(kind: ServerKind, userId: String, itemId: String, action: SpoleAction): Uri =
+    /** [fromStart] adds `start=0` to a play link: from the beginning, without Spole asking where to start. */
+    fun uri(kind: ServerKind, userId: String, itemId: String, action: SpoleAction, fromStart: Boolean = false): Uri =
         Uri.Builder().scheme("spole").authority("open")
             .appendQueryParameter("kind", if (kind == ServerKind.JELLYFIN) "jellyfin" else "emby")
             .appendQueryParameter("user", userId).appendQueryParameter("item", itemId)
-            .appendQueryParameter("action", action.wire).build()
+            .appendQueryParameter("action", action.wire)
+            .apply { if (fromStart && action == SpoleAction.PLAY) appendQueryParameter("start", "0") }.build()
     /**
      * Spole approves the Quick Connect code Stova shows, as the account the user picks there: Stova gets its
      * own token and none crosses between the apps. Started for a result, so Spole can see who asks.
@@ -71,9 +73,9 @@ class SpoleHandoff(private val context: Context) {
     fun approvalPackage(): String? = installedPackages().firstOrNull { pkg ->
         context.packageManager.queryIntentActivities(Intent(SpoleContract.APPROVE_ACTION).setPackage(pkg), 0).isNotEmpty()
     }
-    fun open(account: MediaAccount, item: MediaItem, action: SpoleAction): HandoffResult {
+    fun open(account: MediaAccount, item: MediaItem, action: SpoleAction, fromStart: Boolean = false): HandoffResult {
         if (!SpoleContract.ID_PATTERN.matches(account.userId) || !SpoleContract.ID_PATTERN.matches(item.id) || item.accountId != account.id) return HandoffResult.InvalidIds
-        return send(SpoleContract.uri(account.kind, account.userId, item.id, action))
+        return send(SpoleContract.uri(account.kind, account.userId, item.id, action, fromStart))
     }
 
     /** Opens Spole on one of [account]'s libraries, for a favourite library tile. */

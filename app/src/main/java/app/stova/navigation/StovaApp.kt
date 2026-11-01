@@ -171,7 +171,8 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             app.stova.background.ProfileBackdrop(profile.id, profile.appearance, spotlight, null, state = backdrop)
                         }
                         app.stova.kids.KidsHomeScreen(home, profile, container.appArt, container.appCatalog,
-                            onRefresh = { container.media.refresh(profile.id) }, onPlaybackOpened = { container.media.playbackOpened(profile.id) },
+                            onRefresh = { container.spoleRows.refresh(profile.id); container.media.refresh(profile.id) },
+                            onPlaybackOpened = { container.media.playbackOpened(profile.id) },
                             onProfile = switchProfile, world = !art)
                     } else {
                         // Collected only on Home: the spotlight's rotation ticks while Home is on screen, nowhere else.
@@ -204,8 +205,12 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             onOpenApps = { current = Destination.APPS },
                             profile = profile, apps = container.apps,
                             onHomeChange = { prefs -> scope.launch { container.profiles.update(profile.id) { it.copy(home = prefs) } } },
-                            onRefresh = { container.media.refresh(profile.id) },
+                            onRefresh = { container.spoleRows.refresh(profile.id); container.media.refresh(profile.id) },
                             onPlaybackOpened = { container.media.playbackOpened(profile.id) },
+                            onItemChanged = {
+                                container.spoleRows.refresh(profile.id, force = true)
+                                scope.launch { container.media.refresh(profile.id, 0) }
+                            },
                             haRepository = container.haRepository,
                             haConnection = container.haSocket,
                             topBar = { chips ->

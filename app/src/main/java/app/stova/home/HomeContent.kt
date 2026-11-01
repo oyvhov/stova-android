@@ -85,6 +85,8 @@ fun HomeContent(
     onHomeChange: (HomePrefs) -> Unit = {},
     canEditRows: Boolean = false,
     onMediaPlay: (FocusedTarget.Media) -> Unit = onMediaClick,
+    /** What Spole does with a title from its long-press menu; null leaves those actions out. */
+    onMediaAction: ((FocusedTarget.Media, app.stova.media.ui.MediaItemAction) -> Unit)? = null,
     appActions: (@Composable (InstalledApp, @Composable (app.stova.core.ui.SheetPages) -> Unit, () -> Unit) -> Unit)? = null,
     onRowFocus: (HomeRowKey) -> Unit = {},
     onShortcutClick: (FavoriteTile) -> Unit = {},
@@ -411,7 +413,8 @@ fun HomeContent(
             menuShortcut != null && shortcutActions != null -> shortcutActions(menuShortcut!!, controls, ::closeMenu)
             menuMedia != null -> ItemActionsMenu(menuMedia!!.item,
                 { val target = menuMedia!!; closeMenu(); onMediaPlay(target) },
-                { val target = menuMedia!!; closeMenu(); onMediaClick(target) }, ::closeMenu, controls)
+                { val target = menuMedia!!; closeMenu(); onMediaClick(target) }, ::closeMenu, controls,
+                onAction = onMediaAction?.let { act -> { action -> val target = menuMedia!!; closeMenu(); act(target, action) } })
             else -> app.stova.core.ui.StovaSheet(::closeMenu) { pages ->
                 if (pages.current == null) app.stova.core.ui.SheetHeader((homePrefs.rowFormats[row.key] ?: RowStyle()).heading(rowLabel(row.key)),
                     stringResource(R.string.custom_row_section), app.stova.core.ui.StovaIcons.Rows)
