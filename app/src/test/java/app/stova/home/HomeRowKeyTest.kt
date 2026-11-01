@@ -16,6 +16,8 @@ class HomeRowKeyTest {
         assertEquals("apps", HomeRowKey.APPS.value); assertEquals("watch_next", HomeRowKey.WATCH_NEXT.value)
     }
 
+    @Test fun discoverKeyWireName() = assertEquals("discover", HomeRowKey.DISCOVER.value)
+
     @Test fun preferredOrderFirstThenDefaultsMinusHidden() = assertEquals(
         listOf(m, HomeRowKey.APPS),
         arrangeRows(listOf(HomeRowKey.APPS, j, m), HomePrefs(rowOrder = listOf(m, HomeRowKey("gone")), hiddenRows = setOf(j))),

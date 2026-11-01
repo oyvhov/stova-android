@@ -24,10 +24,11 @@ enum class MediaItemAction { PLAY_FROM_START, MARK_WATCHED, REMOVE_FROM_CONTINUE
 /**
  * Long OK on a film or an episode: its picture, Play and Details, what Spole can do with it ([onAction],
  * when given), then the row it sits in. «Spel frå starten» and «Fjern frå Hald fram» are offered for a
- * title part-way through; «Merk som sett» for any film or episode.
+ * title part-way through; «Merk som sett» for any film or episode. Without [canPlay] (a title in Seerr,
+ * not in the library) there is no Play.
  */
 @Composable fun ItemActionsMenu(item: MediaItem, onPlay: () -> Unit, onDetails: () -> Unit, onDismiss: () -> Unit,
-    rowActions: @Composable (SheetPages) -> Unit = {}, onAction: ((MediaItemAction) -> Unit)? = null) {
+    rowActions: @Composable (SheetPages) -> Unit = {}, onAction: ((MediaItemAction) -> Unit)? = null, canPlay: Boolean = true) {
     StovaSheet(onDismiss) { pages ->
         if (pages.current == null) {
             val episode = item.type == ItemType.EPISODE
@@ -43,7 +44,7 @@ enum class MediaItemAction { PLAY_FROM_START, MARK_WATCHED, REMOVE_FROM_CONTINUE
                 resuming -> stringResource(R.string.item_resume)
                 else -> stringResource(R.string.item_play)
             }
-            StovaButton(playLabel, onPlay, Modifier.fillMaxWidth(), primary = true, icon = StovaIcons.Play)
+            if (canPlay) StovaButton(playLabel, onPlay, Modifier.fillMaxWidth(), primary = true, icon = StovaIcons.Play)
             StovaButton(stringResource(R.string.item_details), onDetails, Modifier.fillMaxWidth(), icon = StovaIcons.Info)
             if (onAction != null) {
                 if (resuming) app.stova.core.ui.SheetAction(stringResource(R.string.item_play_from_start), StovaIcons.Play,

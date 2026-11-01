@@ -105,6 +105,8 @@
     <string name="row_move_up">Move up</string>
     <string name="row_move_down">Move down</string>
     <string name="row_watch_next">Continue in other apps</string>
+    <string name="row_discover">Discover</string>
+    <string name="discover_open">Discover</string>
     <string name="appearance_reduce_motion">Reduce motion</string>
     <string name="about_version">Stova %1$s</string>
 

@@ -17,6 +17,7 @@ fun rowLabel(key: HomeRowKey): String = when (key) {
         "latest_series" -> stringResource(R.string.row_latest_series)
         "favorites" -> stringResource(R.string.row_favorites)
         "most_played" -> stringResource(R.string.row_most_played)
+        "discover" -> stringResource(R.string.row_discover)
         else -> key.value
     }
 }

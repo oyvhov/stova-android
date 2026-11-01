@@ -27,7 +27,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: FocusedTarget?,
-    onFocus: (FocusedTarget) -> Unit, onClick: (FocusedTarget.Media) -> Unit, onLongClick: (FocusedTarget.Media) -> Unit, returnFocus: FocusRequester?) {
+    onFocus: (FocusedTarget) -> Unit, onClick: (FocusedTarget.Media) -> Unit, onLongClick: (FocusedTarget.Media) -> Unit, returnFocus: FocusRequester?,
+    onOpenMore: (() -> Unit)? = null) {
     val index = row.items.indexOfFirst { it.id == (restore as? FocusedTarget.Media)?.item?.id }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     // Back from Spole the title just watched goes first: when the order changes, the row follows the card in
@@ -38,6 +39,9 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
         val at = ids.indexOf(focusedId ?: return@LaunchedEffect)
         if (at >= 0 && state.layoutInfo.visibleItemsInfo.none { it.index == at && it.offset >= 0 }) state.scrollToItem(at)
     }
+    // Discover's films and series are drawn as the new films are (defaultRowFormat agrees).
+    val poster = (row.kind == MediaRowKind.LATEST_MOVIES || row.kind == MediaRowKind.DISCOVER) &&
+        app.stova.core.theme.LocalAppearance.current.movieStyle == app.stova.profiles.MovieStyle.POSTER
     Column {
         if (LocalRowStyle.current.showTitle) MediaRowHeader(row) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
         LazyRow(Modifier.focusRestorer(), state = state,
@@ -46,10 +50,24 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
             itemsIndexed(row.items, key = { _, item -> item.id }) { i, item ->
                 val target = FocusedTarget.Media(item, row.account)
                 DrawnFocus(i == index && focus != null) {
-                    MediaCard(item, row.kind == MediaRowKind.LATEST_MOVIES && app.stova.core.theme.LocalAppearance.current.movieStyle == app.stova.profiles.MovieStyle.POSTER,
+                    MediaCard(item, poster,
                         { onClick(target) }, { onLongClick(target) }, { focusedId = item.id; onFocus(target) },
                         (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
                             .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier))
+                }
+            }
+            // The row ends in a way onwards, as «Alle appar» ends the apps; it takes the cards' shape.
+            if (onOpenMore != null) item(key = "stova:discover") {
+                val more = stringResource(R.string.discover_open)
+                val style = LocalRowStyle.current
+                CompositionLocalProvider(LocalRowStyle provides style.copy(format = style.format ?: if (poster) RowFormat.POSTER else RowFormat.WIDE)) {
+                    TileFrame(more, 0, onOpenMore, onOpenMore) { spec ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            androidx.compose.material3.Icon(app.stova.core.ui.StovaIcons.Discover, null, Modifier.size(32.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            if (!spec.captions) Text(more, style = MaterialTheme.typography.titleSmall)
+                        }
+                    }
                 }
             }
         }

@@ -243,6 +243,8 @@ class MediaRepository(private val accounts: MediaAccountRepository,private val c
    MediaRowKind.MOST_PLAYED -> 3
    MediaRowKind.LATEST_MOVIES -> 4
    MediaRowKind.LATEST_SERIES -> 5
+   // Never a child's, and never from a media server: Discover comes from Spole.
+   MediaRowKind.DISCOVER -> 6
   }
  }
  /**

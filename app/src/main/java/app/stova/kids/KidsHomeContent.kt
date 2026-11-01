@@ -369,6 +369,8 @@ private fun rowLook(row: HomeRowUi): Pair<ImageVector, String> = when (row) {
         MediaRowKind.LATEST_SERIES -> StovaIcons.Tv to stringResource(R.string.kids_row_series)
         MediaRowKind.CHRISTMAS -> StovaIcons.Snowflake to stringResource(R.string.theme_christmas)
         MediaRowKind.HALLOWEEN -> StovaIcons.Pumpkin to stringResource(R.string.theme_halloween)
+        // A child never gets Discover; the row looks like Home's if it ever came.
+        MediaRowKind.DISCOVER -> StovaIcons.Discover to stringResource(R.string.row_discover)
         else -> StovaIcons.Star to app.stova.home.rowLabel(row.key)
     }
     is HomeRowUi.WatchNext -> StovaIcons.Play to ""

@@ -88,7 +88,7 @@ internal fun RowSheetSection(key: HomeRowKey, prefs: HomePrefs, pages: app.stova
             val p = app.stova.core.theme.LocalAppearance.current
             app.stova.core.ui.SheetHeader(title, stringResource(R.string.settings_customize_row_hint), StovaIcons.Rows)
             RowStyleChoices(style, defaultRowFormat(key, p), p.cardSize, rowLabel(key),
-                hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT, globalTitles = p.showTitles) { changed ->
+                hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT && key != HomeRowKey.DISCOVER, globalTitles = p.showTitles) { changed ->
                 onChange(prefs.copy(rowFormats = if (changed == RowStyle()) prefs.rowFormats - key else prefs.rowFormats + (key to changed)))
             }
         }

@@ -13,6 +13,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import app.stova.R
 import app.stova.apps.*
 import app.stova.core.theme.LocalReduceMotion
+import app.stova.discover.asDiscoverTitle
 import app.stova.ha.HaConnection
 import app.stova.ha.HaRepository
 import app.stova.ha.ui.ChipContent
@@ -39,6 +40,10 @@ fun HomeScreen(
     profile: app.stova.profiles.Profile? = null,
     apps: AppRepository? = null,
     onHomeChange: (HomePrefs) -> Unit = {},
+    /** The tile at the end of the Oppdag row. */
+    onOpenDiscover: () -> Unit = {},
+    /** A Discover card: the title's page in Stova, opened with what the card showed. */
+    onOpenDiscoverTitle: (app.stova.discover.DiscoverTitle) -> Unit = {},
 ) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val refresh by rememberUpdatedState(onRefresh)
@@ -74,6 +79,10 @@ fun HomeScreen(
             HandoffResult.InvalidIds -> Toast.makeText(context, R.string.invalid_media_ids, Toast.LENGTH_SHORT).show()
         }
     }
+    // A Discover card is a title in Seerr, not in any library: Play and Details both open its page in Stova.
+    fun openMedia(target: FocusedTarget.Media, action: SpoleAction) {
+        if (target.account.viaSeerr) target.item.asDiscoverTitle()?.let(onOpenDiscoverTitle) else open(target, action)
+    }
     // Spole does what the menu asks with its own account, so both apps agree afterwards.
     fun act(target: FocusedTarget.Media, action: app.stova.media.ui.MediaItemAction) {
         if (action == app.stova.media.ui.MediaItemAction.PLAY_FROM_START) { open(target, SpoleAction.PLAY, fromStart = true); return }
@@ -97,12 +106,12 @@ fun HomeScreen(
     }
     val openShortcut = rememberShortcutOpener(haConnection, profile, onPlaybackOpened) { missing = true }
     HomeContent(rows, focused, initial, art, catalog, onOpenApps, vm::focus,
-        onMediaClick = { open(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { HomeChips(haRepository, topBar) },
+        onMediaClick = { openMedia(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { HomeChips(haRepository, topBar) },
         spotlight = if(profile==null) spotlight else backgroundForProfile(spotlight,profile.id,profile.appearance.backgroundFilter), appIconOverrides = profile?.apps?.iconOverrides.orEmpty(),
         onAppLongClick = { app -> if (profile?.kid == false) appMenu = app },
         homePrefs = profile?.home ?: HomePrefs(),
         onHomeChange = onHomeChange, canEditRows = profile?.kid == false, onRowFocus = vm::focusRow,
-        onMediaPlay = { open(it, SpoleAction.PLAY) },
+        onMediaPlay = { openMedia(it, SpoleAction.PLAY) },
         onMediaAction = if (profile?.kid == false) ::act else null,
         appActions = { app, rowActions, dismiss ->
             if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog, rowActions, dismiss)
@@ -110,14 +119,16 @@ fun HomeScreen(
         onShortcutClick = openShortcut,
         shortcutActions = { tile, rowActions, dismiss ->
             if (profile != null && apps != null) ShortcutMenuHost(tile, apps, profile, openShortcut, rowActions, dismiss)
-        })
+        },
+        onOpenDiscover = onOpenDiscover)
     appMenu?.let { app -> if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog) { appMenu = null } }
     actions?.let { target ->
         ItemActionsMenu(target.item,
-            onPlay = { actions = null; open(target, SpoleAction.PLAY) },
-            onDetails = { actions = null; open(target, SpoleAction.DETAILS) },
+            onPlay = { actions = null; openMedia(target, SpoleAction.PLAY) },
+            onDetails = { actions = null; openMedia(target, SpoleAction.DETAILS) },
             onDismiss = { actions = null },
-            onAction = if (profile?.kid == false) { action -> actions = null; act(target, action) } else null)
+            onAction = if (profile?.kid == false && !target.account.viaSeerr) { action -> actions = null; act(target, action) } else null,
+            canPlay = !target.account.viaSeerr)
     }
     if (missing) SpoleMissingDialog { missing = false }
 }

@@ -2,7 +2,8 @@ package app.stova.media
 import app.stova.home.HomeRowKey
 import app.stova.media.model.MediaItem
 import kotlinx.serialization.Serializable
-@Serializable enum class MediaRowKind { CONTINUE, LATEST_MOVIES, LATEST_SERIES, HALLOWEEN, CHRISTMAS, FAVORITES, MOST_PLAYED;
+/** [DISCOVER] is Seerr's popular titles through Spole: a grown-up's row, with no season and nothing for a media server to fetch. */
+@Serializable enum class MediaRowKind { CONTINUE, LATEST_MOVIES, LATEST_SERIES, HALLOWEEN, CHRISTMAS, FAVORITES, MOST_PLAYED, DISCOVER;
  val kidsOnly: Boolean get() = this==FAVORITES || this==MOST_PLAYED
  val season: app.stova.profiles.Season get() = when(this) {
   HALLOWEEN -> app.stova.profiles.Season.HALLOWEEN

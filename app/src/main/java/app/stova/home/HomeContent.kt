@@ -91,6 +91,8 @@ fun HomeContent(
     onRowFocus: (HomeRowKey) -> Unit = {},
     onShortcutClick: (FavoriteTile) -> Unit = {},
     shortcutActions: (@Composable (FavoriteTile, @Composable (app.stova.core.ui.SheetPages) -> Unit, () -> Unit) -> Unit)? = null,
+    /** The tile at the end of the Oppdag row: the Discover page. */
+    onOpenDiscover: () -> Unit = {},
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
     val preview = LocalHomePreview.current
@@ -365,7 +367,7 @@ fun HomeContent(
                                                 is HomeRowUi.WatchNext -> WatchNextRow(row, requester, trackFocus, rowMenu, rowRequester, rowTarget)
                                                 is HomeRowUi.Media -> MediaRow(row, requester, rowTarget, trackFocus, onMediaClick, { target ->
                                                     if (canEditRows) { menuMedia = target; rowMenu() } else onMediaLongClick(target)
-                                                }, rowRequester)
+                                                }, rowRequester, onOpenMore = onOpenDiscover.takeIf { row.kind == MediaRowKind.DISCOVER })
                                                 is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, rowTarget, appIconOverrides, { app ->
                                                     if (canEditRows) { menuApp = app; rowMenu() } else onAppLongClick(app)
                                                 }, rowRequester, onShortcutClick, { tile -> if (canEditRows) { menuShortcut = tile; rowMenu() } }, onOpenApps) {
@@ -410,10 +412,13 @@ fun HomeContent(
         when {
             menuApp != null && appActions != null -> appActions(menuApp!!, controls, ::closeMenu)
             menuShortcut != null && shortcutActions != null -> shortcutActions(menuShortcut!!, controls, ::closeMenu)
+            // A title in Seerr is not in the library yet: nothing to play, and nothing for Spole to mark.
             menuMedia != null -> ItemActionsMenu(menuMedia!!.item,
                 { val target = menuMedia!!; closeMenu(); onMediaPlay(target) },
                 { val target = menuMedia!!; closeMenu(); onMediaClick(target) }, ::closeMenu, controls,
-                onAction = onMediaAction?.let { act -> { action -> val target = menuMedia!!; closeMenu(); act(target, action) } })
+                onAction = onMediaAction?.takeUnless { menuMedia!!.account.viaSeerr }
+                    ?.let { act -> { action -> val target = menuMedia!!; closeMenu(); act(target, action) } },
+                canPlay = !menuMedia!!.account.viaSeerr)
             else -> app.stova.core.ui.StovaSheet(::closeMenu) { pages ->
                 if (pages.current == null) app.stova.core.ui.SheetHeader((homePrefs.rowFormats[row.key] ?: RowStyle()).heading(rowLabel(row.key)),
                     stringResource(R.string.custom_row_section), app.stova.core.ui.StovaIcons.Rows)

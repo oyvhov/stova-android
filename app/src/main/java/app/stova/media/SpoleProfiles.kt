@@ -60,6 +60,14 @@ fun spoleRowAccount(profileId: String, kind: ServerKind, userId: String, server:
     id = "spole-${if (kind == ServerKind.JELLYFIN) "jellyfin" else "emby"}-$userId", profileId = profileId, kind = kind,
     serverId = "spole", serverName = server, baseUrl = "", userId = userId, userName = "")
 
+/** The account behind Discover cards: titles in Seerr, not in any library, so they open Stova's Discover page instead of Spole. */
+val app.stova.media.model.MediaAccount.viaSeerr: Boolean get() = serverId == SpoleContract.SEERR_SERVER
+
+/** The Spole person [link] names, asking Seerr through Spole. Like [spoleRowAccount] it is never stored and has no address. */
+fun seerrAccount(profileId: String, link: app.stova.profiles.SpoleLink) = app.stova.media.model.MediaAccount(
+    id = "seerr-${if (link.kind == ServerKind.JELLYFIN) "jellyfin" else "emby"}-${link.userId}", profileId = profileId, kind = link.kind,
+    serverId = SpoleContract.SEERR_SERVER, serverName = "Seerr", baseUrl = "", userId = link.userId, userName = "")
+
 /**
  * The person's rows Spole answers (`rows?kind=&user=`), as Home rows: per account «Hald fram», new films
  * and new episodes, in that order, with the same keys an account of Stova's own would give them.

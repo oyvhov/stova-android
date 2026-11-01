@@ -16,7 +16,8 @@ fun RowStyle.showsCardTitles(p: AppearancePrefs): Boolean = cardTitles ?: p.show
 
 fun defaultRowFormat(key: HomeRowKey, p: AppearancePrefs): RowFormat = when {
     key == HomeRowKey.APPS && p.appStyle == AppStyle.ICON -> RowFormat.ICON
-    key.value.startsWith("latest_movies:") && p.movieStyle == MovieStyle.POSTER -> RowFormat.POSTER
+    // Discover's titles are films and series from TMDB, drawn as the new films are.
+    (key.value.startsWith("latest_movies:") || key == HomeRowKey.DISCOVER) && p.movieStyle == MovieStyle.POSTER -> RowFormat.POSTER
     else -> RowFormat.WIDE
 }
 

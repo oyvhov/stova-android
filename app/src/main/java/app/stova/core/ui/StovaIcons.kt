@@ -58,6 +58,15 @@ object StovaIcons {
         moveTo(21f, 12f); arcTo(9f, 9f, 0f, true, true, 3f, 12f); arcTo(9f, 9f, 0f, true, true, 21f, 12f)
         moveTo(12f, 11f); lineTo(12f, 17f); moveTo(12f, 7f); lineTo(12.1f, 7f)
     } }
+    /** Oppdag: a compass, its needle pointing north-east. */
+    val Discover by lazy { icon("discover") {
+        moveTo(21f, 12f); arcTo(9f, 9f, 0f, true, true, 3f, 12f); arcTo(9f, 9f, 0f, true, true, 21f, 12f)
+        moveTo(16f, 8f); lineTo(13.8f, 13.8f); lineTo(8f, 16f); lineTo(10.2f, 10.2f); close()
+    } }
+    val Search by lazy { icon("search") {
+        moveTo(17f, 10.5f); arcTo(6.5f, 6.5f, 0f, true, true, 4f, 10.5f); arcTo(6.5f, 6.5f, 0f, true, true, 17f, 10.5f)
+        moveTo(15.2f, 15.2f); lineTo(20f, 20f)
+    } }
     val ChevronRight by lazy { icon("chevron-right") { moveTo(9f, 5f); lineTo(16f, 12f); lineTo(9f, 19f) } }
     val ChevronLeft by lazy { icon("chevron-left") { moveTo(15f, 5f); lineTo(8f, 12f); lineTo(15f, 19f) } }
     val Edit by lazy { icon("edit") {

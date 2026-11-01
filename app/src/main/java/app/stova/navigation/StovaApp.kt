@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.produceState
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -81,6 +82,8 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     val scope = rememberCoroutineScope()
     var current by rememberSaveable { mutableStateOf(Destination.HOME) }
     var smartHomeCardId by remember(profile.id) {mutableStateOf<String?>(null)}
+    // The title a Discover card opened the page at; null opens the page at its rows.
+    var discoverStart by remember(profile.id) { mutableStateOf<app.stova.discover.DiscoverTitle?>(null) }
     val file by container.profiles.file.collectAsStateWithLifecycle(initialValue = null)
     val household by container.household.data.collectAsStateWithLifecycle(initialValue = null)
     var verifiedAdultId by remember { mutableStateOf<String?>(null) }
@@ -207,7 +210,17 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             onOpenApps = { current = Destination.APPS },
                             profile = profile, apps = container.apps,
                             onHomeChange = { prefs -> scope.launch { container.profiles.update(profile.id) { it.copy(home = prefs) } } },
-                            onRefresh = { container.spoleRows.refresh(profile.id); container.media.refresh(profile.id) },
+                            onRefresh = {
+                                container.spoleRows.refresh(profile.id)
+                                kotlinx.coroutines.coroutineScope {
+                                    // Beside the media rows, never before them; the repository asks Spole only every ten minutes.
+                                    launch {
+                                        container.discover.identity(profile, container.mediaAccounts.forProfile(profile.id).first())
+                                            ?.let { container.discover.refresh(profile.id, it) }
+                                    }
+                                    container.media.refresh(profile.id)
+                                }
+                            },
                             onPlaybackOpened = { container.media.playbackOpened(profile.id) },
                             onItemChanged = {
                                 container.spoleRows.refresh(profile.id, force = true)
@@ -215,6 +228,9 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             },
                             haRepository = container.haRepository,
                             haConnection = container.haSocket,
+                            // From a row, not a top bar icon: the page grows from the middle.
+                            onOpenDiscover = { discoverStart = null; origin = TransformOrigin.Center; current = Destination.DISCOVER },
+                            onOpenDiscoverTitle = { discoverStart = it; origin = TransformOrigin.Center; current = Destination.DISCOVER },
                             topBar = { chips ->
                                 TopBar(
                                     profile = profile,
@@ -240,6 +256,8 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                     Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId,backdrop=backdrop.shown)
                     Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile,
                         onOpenApps = { appsFromSettings = true; origin = TransformOrigin.Center; current = Destination.APPS })
+                    // A placeholder until the Discover page (Task 4), which starts at discoverStart; Back walks home as from Apps.
+                    Destination.DISCOVER -> Box(Modifier.fillMaxSize())
                 }
                 }
             }
