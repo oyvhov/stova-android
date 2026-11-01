@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import app.stova.core.theme.color
 
-/** Each profile's picture by profile id, from its Jellyfin or Emby account (see `profilePictures`). */
+/** Each profile's picture by profile id, from its Jellyfin or Emby account or the Spole person it follows (see `withSpolePictures`). */
 val LocalProfilePictures = compositionLocalOf<Map<String, String>> { emptyMap() }
 
 /**

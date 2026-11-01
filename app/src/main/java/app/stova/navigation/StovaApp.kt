@@ -58,7 +58,7 @@ fun StovaApp(container: AppContainer) {
     val profile by container.session.active.collectAsStateWithLifecycle()
     val active = profile
     val date = app.stova.core.theme.currentSeasonDate()
-    val pictures by remember(container) { container.mediaAccounts.pictures }.collectAsStateWithLifecycle(initialValue = emptyMap())
+    val pictures by remember(container) { container.profilePictures }.collectAsStateWithLifecycle(initialValue = emptyMap())
     StovaTheme(
         reduceMotion = active?.appearance?.reduceMotion ?: false,
         appearance = active?.appearance ?: app.stova.profiles.AppearancePrefs(),

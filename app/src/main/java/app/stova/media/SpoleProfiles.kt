@@ -39,6 +39,17 @@ fun spoleProfileFor(profile: app.stova.profiles.Profile, accounts: List<app.stov
 }
 
 /**
+ * Each profile's picture. A profile's own account decides first; one without a picture of its own
+ * takes the picture of the Spole person chosen for it in settings, so «Kven ser på?» shows the same
+ * face as Spole's corner.
+ */
+fun withSpolePictures(own: Map<String, String>, profiles: List<app.stova.profiles.Profile>,
+    spole: List<FavoriteTile.SpoleProfile>): Map<String, String> =
+    own + profiles.filter { it.id !in own }.mapNotNull { profile ->
+        profile.spole?.let { spoleProfileFor(profile, emptyList(), spole)?.image }?.let { profile.id to it }
+    }
+
+/**
  * Asks the installed Spole which profiles it has (`content://<package>.launcher/profiles`). Nothing
  * is asked when Spole is not installed, and a Spole too old to answer gives no tiles.
  */

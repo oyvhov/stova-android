@@ -53,6 +53,17 @@ class SpoleProfilesTest {
         assertEquals(kidInSpole, spoleProfileFor(adult.copy(kid = true), listOf(account("child", ServerKind.JELLYFIN)), all))
     }
 
+    @Test fun aProfileWithoutAPictureOfItsOwnShowsTheSpolePersonItFollows() {
+        val pictured = eilev.copy(image = "http://emby/Users/eilev/Images/Primary")
+        val follows = adult.copy(spole = app.stova.profiles.SpoleLink(ServerKind.EMBY, "eilev"))
+        assertEquals(mapOf("p1" to pictured.image), withSpolePictures(emptyMap(), listOf(follows), listOf(main, pictured)))
+        // The profile's own account picture wins, and a profile that follows nobody keeps its letter.
+        assertEquals(mapOf("p1" to "own"), withSpolePictures(mapOf("p1" to "own"), listOf(follows), listOf(pictured)))
+        assertEquals(emptyMap<String, String>(), withSpolePictures(emptyMap(), listOf(adult), listOf(pictured)))
+        // A child never wears a grown-up's face from Spole.
+        assertEquals(emptyMap<String, String>(), withSpolePictures(emptyMap(), listOf(follows.copy(kid = true)), listOf(pictured)))
+    }
+
     @Test fun aSpoleProfileKeyRoundTripsAndNeverLooksLikeAnApp() {
         assertEquals(ShortcutKey.SpoleProfile(ServerKind.EMBY, "eilev"), ShortcutKey.parse("spole:emby:eilev"))
         assertEquals(null, ShortcutKey.parse("spole:plex:eilev"))

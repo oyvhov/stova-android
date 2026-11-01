@@ -73,6 +73,13 @@ class AppContainer(
         JsonFileStore(File(appContext.filesDir, "media-accounts.json"), app.stova.media.MediaAccountsFile.serializer(), app.stova.media.MediaAccountsFile()),
         app.stova.core.security.KeystoreSecretStore(appContext),
     )
+    /** Each profile's picture (see `withSpolePictures`). Spole is asked only while a profile without one follows a Spole person. */
+    val profilePictures = kotlinx.coroutines.flow.combine(mediaAccounts.pictures, profiles.file.map { it.profiles }.distinctUntilChanged()) { own, people ->
+        val followers = people.filter { it.spole != null && it.id !in own }
+        if (followers.isEmpty()) own
+        else app.stova.media.withSpolePictures(own, followers,
+            kotlinx.coroutines.withContext(Dispatchers.IO) { app.stova.media.SpoleProfiles(appContext).list() })
+    }.distinctUntilChanged()
     val serverProbe = app.stova.media.net.ServerProbe(mediaHttp)
     val mediaAuth = app.stova.media.net.MediaAuth(mediaHttp) { identity.await() }
     val lanDiscovery = app.stova.media.net.LanDiscovery()
