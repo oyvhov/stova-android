@@ -114,6 +114,8 @@ Testa 2026-11-01 frå ca. 15.20 til 17.15 på Shield og Loftet med byggja i dag.
 
 - **A2 Loftet (Google TV):** etter ei oppdatering gjekk Home til Google TV til nokon opna Stova. Når oppdateringa drep Stova på skjermen, kjem Google TV-heimen fram medan Heim-tenesta startar på nytt, så tenesta går glipp av vindaugshendinga. Etterpå står Google TV-heimen allereie framme og gir ingen ny hending, og på Google TV går Home ikkje gjennom tastefilteret. No hugsar Stova om han var framme (`HomeFront`), og tenesta opnar Stova att når ho koplar seg til. Prøvd på Loftet: oppdatering med Stova framme gir Stova att etter under 3 s. Oppdatering med Spole framme lèt Spole stå, og Home gir Stova.
 
+- **«Hald fram i andre appar» (Shield, Eilev):** same tittel stod tre gonger (ein annan app la inn «One Battle After Another» på nytt i staden for å oppdatere). No viser Stova kvar tittel éin gong per app, den nyaste.
+
 ### Merknader (ikkje retta)
 
 - **B5:** éin gong kom fokus tilbake til første kortet i «Hald fram» etter tre rader ned og opp att. Det er ikkje gjenskapt (tre forsøk etterpå gav rett kort).
@@ -122,6 +124,8 @@ Testa 2026-11-01 frå ca. 15.20 til 17.15 på Shield og Loftet med byggja i dag.
 - **Spole-hero:** han byter tittel medan fokus står på «Spel av» (eit val frå beta11; han stoppar ved tastetrykk). OK spelar det som står på skjermen.
 - **Innstillingar:** fokus på «Appar» viser framleis sida for «Profilar» til høgre, fordi «Appar» er ei lenkje til Appar-sida.
 - **Fokuset utan demping:** Løft (standard) gjer kortet med fokus 6 % større utan ring. Utan dempinga er fokuset mindre tydeleg på stillbilete, men tydeleg når det rører seg. «Ring og zoom» under Fokus gir ein ring for den som vil ha det.
+
+- **Watch Next på Eilev:** «Hald fram i andre appar» er felles for heile TV-en (Android TV), så Eilev ser til dømes Øyvind sin «One Battle After Another» (15 år). Det kan vere verdt eit val om å skjule rada på profilar som følgjer ein Spole-person.
 
 ### Side-effektar av testen
 

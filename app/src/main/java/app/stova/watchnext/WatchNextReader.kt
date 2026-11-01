@@ -38,7 +38,11 @@ fun mapWatchNext(cursor: Cursor): List<WatchNextEntry> = buildList {
 }
 fun filterWatchNext(entries: List<WatchNextEntry>, selfPackage: String, limit: Int = 20): List<WatchNextEntry> =
     entries.filterNot { it.packageName == selfPackage || it.packageName == "app.stova" || it.packageName.startsWith("app.reelstack") }
-        .sortedByDescending { it.lastEngagement }.take(limit)
+        .sortedByDescending { it.lastEngagement }
+        // An app that adds a title again instead of updating it showed the same card three times on the
+        // Shield (2026-11-01); the newest one is kept.
+        .distinctBy { Triple(it.packageName, it.title.trim().lowercase(), it.subtitle?.trim()?.lowercase()) }
+        .take(limit)
 
 fun launchIntentFor(entry: WatchNextEntry): Intent? = try {
     if (entry.packageName.isBlank()) null else {
