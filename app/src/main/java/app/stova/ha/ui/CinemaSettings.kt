@@ -20,34 +20,38 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** Cinema mode under Smarthus: on or off, which lights, and how low they go while Spole plays. */
+/** Cinema mode under Smarthus: on or off, and the lights with how low each goes while Spole plays. */
 @Composable
 internal fun CinemaSettings(prefs: CinemaPrefs, onChange: (CinemaPrefs) -> Unit, onPickLights: () -> Unit) {
     SettingsGroup(stringResource(R.string.ha_cinema)) {
         SettingsSwitchRow(stringResource(R.string.ha_cinema_switch), prefs.enabled, { onChange(prefs.copy(enabled = it)) },
             subtitle = stringResource(R.string.ha_cinema_note))
         if (prefs.enabled) {
-            SettingsNavRow(stringResource(R.string.ha_cinema_lights), value = if (prefs.lights.isEmpty()) stringResource(R.string.ha_cinema_lights_none)
-                else pluralStringResource(R.plurals.ha_cinema_lights_count, prefs.lights.size, prefs.lights.size), onClick = onPickLights)
-            SettingsChoiceRow(stringResource(R.string.ha_cinema_level),
-                if (prefs.level == 0) stringResource(R.string.ha_cinema_level_off) else stringResource(R.string.ha_cinema_level_value, prefs.level)) { step ->
-                onChange(prefs.copy(level = nextCinemaLevel(prefs.level, step)))
-            }
+            SettingsNavRow(stringResource(R.string.ha_cinema_lights), value = if (prefs.levels.isEmpty()) stringResource(R.string.ha_cinema_lights_none)
+                else pluralStringResource(R.plurals.ha_cinema_lights_count, prefs.levels.size, prefs.levels.size), onClick = onPickLights)
         }
     }
 }
 
-internal fun nextCinemaLevel(level: Int, step: Int): Int {
-    val levels = CinemaPrefs.LEVELS
-    val at = levels.indexOf(level).takeIf { it >= 0 } ?: levels.indexOfFirst { it >= level }.takeIf { it >= 0 } ?: levels.lastIndex
-    return levels[(at + step).mod(levels.size)]
+/** The next choice for one light: not in cinema mode, then off, then up through the levels, and round. */
+internal fun nextCinemaLevel(level: Int?, step: Int): Int? {
+    val choices = listOf<Int?>(null) + CinemaPrefs.LEVELS
+    val at = choices.indexOf(level).takeIf { it >= 0 } ?: 0
+    return choices[(at + step).mod(choices.size)]
 }
 
-/** The house's lights by room, as Home Assistant names them, to pick for cinema mode. */
 @Composable
-internal fun CinemaLightPicker(connection: HaConnection, registry: suspend () -> HaRegistry?, selected: List<String>,
-    onSave: (List<String>) -> Unit, onDismiss: () -> Unit) {
-    var draft by remember { mutableStateOf(selected.toSet()) }
+private fun cinemaLevelLabel(level: Int?): String = when (level) {
+    null -> stringResource(R.string.ha_cinema_light_unused)
+    0 -> stringResource(R.string.ha_cinema_level_off)
+    else -> stringResource(R.string.ha_cinema_level_value, level)
+}
+
+/** The house's lights by room, as Home Assistant names them, each set to its level in cinema mode or left out. */
+@Composable
+internal fun CinemaLightPicker(connection: HaConnection, registry: suspend () -> HaRegistry?, selected: Map<String, Int>,
+    onSave: (Map<String, Int>) -> Unit, onDismiss: () -> Unit) {
+    var draft by remember { mutableStateOf(selected) }
     var lights by remember { mutableStateOf<List<HaCatalogItem>?>(null) }
     var failed by remember { mutableStateOf(false) }
     var retry by remember { mutableIntStateOf(0) }
@@ -81,16 +85,19 @@ internal fun CinemaLightPicker(connection: HaConnection, registry: suspend () ->
                         item { Text(room ?: stringResource(R.string.ha_cinema_no_room), Modifier.padding(top = 8.dp, start = 16.dp),
                             style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                         items(inRoom, key = { it.entity.id }) { light ->
-                            SettingsSwitchRow(light.name, light.entity.id in draft, { on -> draft = if (on) draft + light.entity.id else draft - light.entity.id },
-                                modifier = if (light == found.first()) Modifier.focusRequester(first) else Modifier)
+                            val id = light.entity.id
+                            SettingsChoiceRow(light.name, cinemaLevelLabel(draft[id]),
+                                modifier = if (light == found.first()) Modifier.focusRequester(first) else Modifier) { step ->
+                                draft = nextCinemaLevel(draft[id], step)?.let { draft + (id to it) } ?: (draft - id)
+                            }
                         }
                     }
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StovaButton(stringResource(R.string.ha_cancel), onDismiss, compact = true, quiet = true)
-                // Lights not found now (unavailable for a while) stay chosen.
-                StovaButton(stringResource(R.string.ha_save), { onSave(selected.filter { it in draft } + (draft - selected.toSet()).sorted()) }, compact = true)
+                // Lights not found now (unavailable for a while) keep their level.
+                StovaButton(stringResource(R.string.ha_save), { onSave(draft) }, compact = true)
             }
         }
     }

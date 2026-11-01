@@ -10,11 +10,14 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
-/** Cinema mode, set up under Smarthus: the chosen lights dim while Spole plays. Off until someone turns it on. */
+/**
+ * Cinema mode, set up under Smarthus: the chosen lights dim while Spole plays, each to its own level in
+ * percent ([levels], 0 turns it off). Off until someone turns it on.
+ */
 @Serializable
-data class CinemaPrefs(val enabled: Boolean = false, val lights: List<String> = emptyList(), val level: Int = 10) {
+data class CinemaPrefs(val enabled: Boolean = false, val levels: Map<String, Int> = emptyMap()) {
     companion object {
-        /** Percent during the film; 0 turns the lights off. */
+        /** Percent during the film; 0 turns the light off. */
         val LEVELS = listOf(0, 5, 10, 20, 30, 50)
     }
 }
@@ -30,15 +33,16 @@ data class CinemaState(val lights: Map<String, DimmedLight> = emptyMap())
 internal data class LightCall(val entityId: String, val service: String, val data: JsonObject = JsonObject(emptyMap()))
 
 /**
- * The calls that bring [lights] down to [level] percent, and how each light was. Only lights that are on
- * and brighter than the level are touched, so a lamp already low stays as it is. A lamp that cannot dim
- * goes off, and at 0 % every light that is on does.
+ * The calls that bring [lights] down to their [levels] (percent), and how each light was. Only lights that
+ * are on and brighter than their level are touched, so a lamp already low stays as it is. A lamp that
+ * cannot dim goes off, as does one set to 0 %.
  */
-internal fun cinemaDim(lights: List<HaEntity>, level: Int): Pair<List<LightCall>, Map<String, DimmedLight>> {
-    val target = (level * 255 / 100.0).roundToInt()
+internal fun cinemaDim(lights: List<HaEntity>, levels: Map<String, Int>): Pair<List<LightCall>, Map<String, DimmedLight>> {
     val calls = mutableListOf<LightCall>()
     val was = mutableMapOf<String, DimmedLight>()
     lights.filter { it.state == "on" }.forEach { light ->
+        val level = levels[light.id] ?: return@forEach
+        val target = (level * 255 / 100.0).roundToInt()
         val brightness = light.brightness
         if (level == 0 || !light.dimmable) {
             calls += LightCall(light.id, "turn_off", light.fade())
@@ -97,9 +101,9 @@ class CinemaMode(
     }
 
     suspend fun playing() = mutex.withLock {
-        val settings = prefs()?.takeIf { it.enabled && it.lights.isNotEmpty() } ?: return@withLock
+        val settings = prefs()?.takeIf { it.enabled && it.levels.isNotEmpty() } ?: return@withLock
         attempt { ha ->
-            val (calls, was) = cinemaDim(ha.states().filter { it.id in settings.lights }, settings.level)
+            val (calls, was) = cinemaDim(ha.states().filter { it.id in settings.levels }, settings.levels)
             // Written before the calls, so the room comes back even if Stova stops halfway. A light already
             // remembered keeps what it was before the film, not the dim level of a pause that was missed.
             store.update { state -> state.copy(lights = was + state.lights) }

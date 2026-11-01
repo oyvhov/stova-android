@@ -648,7 +648,7 @@
     <string name="ha_cinema_note">Lysa blir som før når du pausar, går ut av filmen eller kjem tilbake til Stova.</string>
     <string name="ha_cinema_lights">Lys</string>
     <string name="ha_cinema_lights_none">Ingen valde</string>
-    <string name="ha_cinema_level">Nivå under filmen</string>
+    <string name="ha_cinema_light_unused">Ikkje med</string>
     <string name="ha_cinema_level_off">Av</string>
     <string name="ha_cinema_level_value">%1$d %%</string>
     <string name="ha_cinema_pick_title">Lys i kino-modus</string>

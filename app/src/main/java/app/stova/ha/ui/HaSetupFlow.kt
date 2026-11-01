@@ -93,8 +93,8 @@ fun HaSettings(container: AppContainer) {
         }
     }
     if (pickLights) household?.let { current ->
-        CinemaLightPicker(container.haSocket, container.haRepository::loadRegistry, current.cinema.lights,
-            { lights -> pickLights = false; scope.launch { container.household.update { it.copy(cinema = it.cinema.copy(lights = lights)) } } },
+        CinemaLightPicker(container.haSocket, container.haRepository::loadRegistry, current.cinema.levels,
+            { levels -> pickLights = false; scope.launch { container.household.update { it.copy(cinema = it.cinema.copy(levels = levels)) } } },
             { pickLights = false })
     }
     if (household == null) return

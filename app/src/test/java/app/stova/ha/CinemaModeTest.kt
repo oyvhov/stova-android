@@ -26,17 +26,18 @@ class CinemaModeTest {
             light("light.low", "on", 20),
             light("light.off", "off"),
             light("light.plain", "on", modes = listOf("onoff")),
-        ), level = 10)
+        ), levels = mapOf("light.sofa" to 10, "light.low" to 10, "light.off" to 10, "light.plain" to 10))
         assertEquals(listOf(
             LightCall("light.sofa", "turn_on", buildJsonObject { put("brightness_pct", 10); put("transition", 2) }),
             // A lamp that cannot dim goes off for the film.
             LightCall("light.plain", "turn_off"),
         ), calls)
         assertEquals(mapOf("light.sofa" to DimmedLight(200), "light.plain" to DimmedLight(null, turnedOff = true)), was)
-        // At 0 % every light that is on goes off, the low one too.
-        assertEquals(listOf("light.sofa", "light.low", "light.plain"),
-            cinemaDim(listOf(light("light.sofa", "on", 200), light("light.low", "on", 20), light("light.plain", "on", modes = listOf("onoff"))), 0)
-                .first.filter { it.service == "turn_off" }.map { it.entityId })
+        // Each light has its own level: the ceiling goes off, the low one too at 0 %, the window to 10 %.
+        assertEquals(listOf(LightCall("light.ceiling", "turn_off"), LightCall("light.low", "turn_off"),
+            LightCall("light.window", "turn_on", buildJsonObject { put("brightness_pct", 10) })),
+            cinemaDim(listOf(light("light.ceiling", "on", 255), light("light.low", "on", 20), light("light.window", "on", 200), light("light.other", "on", 255)),
+                mapOf("light.ceiling" to 0, "light.low" to 0, "light.window" to 10)).first)
     }
 
     @Test fun lightsComeBackAsTheyWereUnlessSomeoneSwitchedThemByHand() {
@@ -59,7 +60,7 @@ class CinemaModeTest {
         val ha = FakeHaConnection().apply { allStates = listOf(light("light.sofa", "on", 200), light("light.hall", "on", 255)) }
         val sent = mutableListOf<Pair<String, String>>()
         ha.service = { domain, service, id, _ -> sent += "$domain.$service" to id; true }
-        val (cinema, store) = mode(ha, CinemaPrefs(enabled = true, lights = listOf("light.sofa"), level = 10))
+        val (cinema, store) = mode(ha, CinemaPrefs(enabled = true, levels = mapOf("light.sofa" to 10)))
         cinema.onSpole("playing")
         assertEquals(listOf("light.turn_on" to "light.sofa"), sent)
         assertEquals(mapOf("light.sofa" to DimmedLight(200)), store.current().lights)
@@ -75,17 +76,17 @@ class CinemaModeTest {
 
     @Test fun nothingIsAskedOfHomeAssistantWithoutTheSetupOrWithNothingToPutBack() = runBlocking {
         val ha = FakeHaConnection().apply { allStates = listOf(light("light.sofa", "on", 200)) }
-        mode(ha, CinemaPrefs(enabled = false, lights = listOf("light.sofa"))).first.onSpole("playing")
+        mode(ha, CinemaPrefs(enabled = false, levels = mapOf("light.sofa" to 10))).first.onSpole("playing")
         mode(ha, CinemaPrefs(enabled = true)).first.onSpole("playing")
         mode(ha, null).first.onSpole("playing")
-        mode(ha, CinemaPrefs(enabled = true, lights = listOf("light.sofa"))).first.onSpole("stopped")
+        mode(ha, CinemaPrefs(enabled = true, levels = mapOf("light.sofa" to 10))).first.onSpole("stopped")
         assertEquals(0, ha.stateRequests)
         assertEquals(0, ha.calls)
     }
 
     @Test fun whatWasDimmedIsKeptUntilItCanBePutBack() = runBlocking {
         val ha = FakeHaConnection().apply { allStates = listOf(light("light.sofa", "on", 200)) }
-        val prefs = CinemaPrefs(enabled = true, lights = listOf("light.sofa"))
+        val prefs = CinemaPrefs(enabled = true, levels = mapOf("light.sofa" to 10))
         mode(ha, prefs).first.playing()
         // Home Assistant cannot be reached: the room is remembered for the next try (Stova coming to the front).
         mode(ha, prefs, connected = false).first.restore()

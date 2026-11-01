@@ -50,31 +50,31 @@ class CinemaSettingsTest {
         compose.onNodeWithText("Demp lysa når Spole spelar").performScrollTo().performClick()
         assertEquals(true, prefs().enabled)
         compose.onNodeWithText("Ingen valde", substring = true).assertExists()
-        compose.onNodeWithText("Nivå under filmen").performScrollTo().performClick()
-        assertEquals(20, prefs().level)
     }
 
-    @Test fun theLevelStepsRoundAndOffComesAfterTheHighest() {
-        assertEquals(listOf(5, 10, 20, 30, 50, 0), CinemaPrefs.LEVELS.map { nextCinemaLevel(it, 1) })
-        assertEquals(50, nextCinemaLevel(0, -1))
-        assertEquals(20, nextCinemaLevel(15, 0))
+    @Test fun eachLightStepsFromLeftOutThroughOffAndTheLevelsAndRound() {
+        assertEquals(listOf<Int?>(0, 5, 10, 20, 30, 50, null), (listOf<Int?>(null) + CinemaPrefs.LEVELS).map { nextCinemaLevel(it, 1) })
+        assertEquals(50, nextCinemaLevel(null, -1))
     }
 
-    @Test fun lightsArePickedByRoomAndOnesNotFoundStayChosen() {
+    @Test fun eachLightGetsItsOwnLevelAndOnesNotFoundKeepTheirs() {
         val ha = FakeHaConnection().apply {
             allStates = listOf(HaEntity("light.sofa", "on", JsonObject(emptyMap()), 0, 0), HaEntity("light.hall", "off", JsonObject(emptyMap()), 0, 0),
                 HaEntity("switch.tv", "on", JsonObject(emptyMap()), 0, 0))
-            registryValue = HaRegistry(mapOf("light.sofa" to HaEntityInfo(name = "Sofa", room = "Stova"), "light.hall" to HaEntityInfo(name = "Gang", room = "Gang")))
+            registryValue = HaRegistry(mapOf("light.sofa" to HaEntityInfo(name = "Sofa", room = "Stova"), "light.hall" to HaEntityInfo(name = "Gangtak", room = "Gang")))
         }
-        var saved: List<String>? = null
+        var saved: Map<String, Int>? = null
         compose.setContent {
-            StovaTheme(reduceMotion = true) { CinemaLightPicker(ha, { ha.registry() }, listOf("light.gone"), { saved = it }, {}) }
+            StovaTheme(reduceMotion = true) { CinemaLightPicker(ha, { ha.registry() }, mapOf("light.gone" to 20), { saved = it }, {}) }
         }
         compose.waitUntil(5_000) { compose.onAllNodesWithText("Sofa").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Stova").assertExists()
         compose.onNodeWithText("tv", substring = true).assertDoesNotExist()
+        compose.onAllNodesWithText("Ikkje med", substring = true).assertCountEquals(2)
+        // OK steps: left out → off → 5 % → 10 %.
+        repeat(3) { compose.onNodeWithText("Gangtak").performClick() }
         compose.onNodeWithText("Sofa").performClick()
         compose.onNodeWithText("Lagre").performClick()
-        assertEquals(listOf("light.gone", "light.sofa"), saved)
+        assertEquals(mapOf("light.gone" to 20, "light.hall" to 10, "light.sofa" to 0), saved)
     }
 }

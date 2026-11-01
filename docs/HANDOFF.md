@@ -1,7 +1,8 @@
 # Kino-modus: lysa dimmar medan Spole spelar
 2026-11-01, eigaren: «Går vidare med planen og integrering», «Gå framover ja». Plansteg 7 i `docs/superpowers/plans/2026-10-26-outstanding-launcher.md`.
-Stova: Innstillingar → Smarthus → «Kino-modus» (berre når Home Assistant er sett opp). Der er det ein brytar, «Lys» (ei liste med alle lysa, ordna etter rom) og nivå (Av, 5, 10, 20, 30 eller 50 %). Av som standard. Dimminga og tilbakestillinga står i `ha/CinemaMode.kt`. Spole sender spelestatus frå greina `launcher-rows` (`55f6fde`, ikkje gitt ut). Spole på Shield (beta29) sender han difor ikkje enno.
-Kontroll: Stova 941 testar (58 hoppa over), 0 feil; lint 0 feil. Ikkje prøvd mot ekte lys: det krev at eigaren seier ja og vel kva lys.
+Stova: Innstillingar → Smarthus → «Kino-modus» (berre når Home Assistant er sett opp). Der er det ein brytar og «Lys»: ei liste med alle lysa, ordna etter rom, der kvart lys får sitt eige nivå (Ikkje med, Av, 5, 10, 20, 30 eller 50 %). Av som standard. Dimminga og tilbakestillinga står i `ha/CinemaMode.kt`. Spole sender spelestatus frå greina `launcher-rows` (`55f6fde`, ikkje gitt ut). Spole på Shield (beta29) sender han difor ikkje enno.
+Eigaren: «Taklys i stova skal av. Vinduet skal vere på 10%». Difor fekk kvart lys sitt eige nivå. På Shield er kino-modus slått på med «Taklampe Stova» = Av og «Vindu Stova» = 10 %.
+Kontroll: Stova 941 testar (58 hoppa over), 0 feil; lint 0 feil. Ekte lys: begge var av då oppsettet vart gjort («0 lys på»), så dimminga er ikkje sett på dei enno. Merk: i lyslista steg Høgre-pila nivået òg (som på andre valrader), og eitt feiltrykk på «Kjøkken On» vart stega tilbake til «Ikkje med» før lagring.
 
 # Appar-sida: fire per rad, Spole-profilar før appane
 2026-11-01, eigaren: «Appar sida i Stova er ikkje så bra når det er massevis av appar kan du lage inndelinga finare og kanskje med plass til 4 ikon per rad? Eg vil gjerne spoleprofilar før appar», så «Nei appar skal vere samla» og «Du kan teste på Shield».

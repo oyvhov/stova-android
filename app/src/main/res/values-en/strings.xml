@@ -648,7 +648,7 @@
     <string name="ha_cinema_note">The lights go back to how they were when you pause, leave the film or come back to Stova.</string>
     <string name="ha_cinema_lights">Lights</string>
     <string name="ha_cinema_lights_none">None chosen</string>
-    <string name="ha_cinema_level">Level during the film</string>
+    <string name="ha_cinema_light_unused">Not included</string>
     <string name="ha_cinema_level_off">Off</string>
     <string name="ha_cinema_level_value">%1$d %%</string>
     <string name="ha_cinema_pick_title">Lights in cinema mode</string>
