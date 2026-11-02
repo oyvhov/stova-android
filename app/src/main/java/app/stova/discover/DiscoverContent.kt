@@ -86,9 +86,10 @@ fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit,
     val requests = remember(state?.requests) { state?.requests.orEmpty().distinctBy { it.key } }
     // The card in focus as «row/title», kept while a title's page lies over the rows so Back lands on it again.
     var focusedAt by rememberSaveable { mutableStateOf<String?>(null) }
+    // A request in focus fills the hero with its name over the same title's picture, or the one already shown.
     val focused = focusedAt?.let { at ->
         shown.firstNotNullOfOrNull { (row, _) -> row.items.firstOrNull { spot(row.kind, it) == at } }
-            ?: requests.firstOrNull { requestSpot(it) == at }?.asDiscoverTitle()
+            ?: requests.firstOrNull { requestSpot(it) == at }?.let { it.asDiscoverTitle().copy(backdrop = backdropFor(it, state?.rows.orEmpty(), backdrop.shown)) }
     }
     val hero = focused ?: state?.rows?.firstOrNull { it.kind == DiscoverRowKind.TRENDING }?.items?.firstOrNull()
     val start = focusedAt.takeIf { focused != null } ?: popular.firstOrNull()?.let { (row, _) -> spot(row.kind, row.items.first()) }
@@ -149,6 +150,14 @@ private fun spot(kind: DiscoverRowKind, title: DiscoverTitle) = "${kind.name}/${
 
 /** A request's place on the page, in the row «Dine førespurnader». */
 private fun requestSpot(request: DiscoverRequest) = "$REQUESTS_ROW/${request.key}"
+
+/**
+ * The picture behind a request in focus. Spole gives a request no backdrop, so the same title's (same type and
+ * TMDB id) from the page's rows is used, else [last], the one already shown: the background never fades out for it.
+ */
+internal fun backdropFor(request: DiscoverRequest, rows: List<DiscoverRow>, last: String?): String? = request.backdrop
+    ?: rows.firstNotNullOfOrNull { row -> row.items.firstOrNull { it.type == request.type && it.tmdbId == request.tmdbId && it.backdrop != null }?.backdrop }
+    ?: last
 
 @Composable
 private fun PageNote(@StringRes text: Int) {
