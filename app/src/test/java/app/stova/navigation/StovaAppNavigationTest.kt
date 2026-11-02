@@ -385,6 +385,17 @@ class StovaAppNavigationTest {
         assertEquals(2, searches().size)
     }
 
+    // Spole gives no answer to a query's first page: search says Seerr did not answer, rather than stand blank.
+    @Test fun discoverSearchSaysSoWhenSeerrDoesNotAnswer() {
+        openDiscoverPage()
+        rule.onNode(hasText("Søk") and hasClickAction()).performSemanticsAction(SemanticsActions.OnClick)
+        val field = hasSetTextAction()
+        rule.waitUntil(5_000) { rule.onAllNodes(field and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(field).performTextInput("Dune")
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Seerr svara ikkje.").fetchSemanticsNodes().isNotEmpty() }
+        rule.onAllNodesWithText("Ingen treff", substring = true).assertCountEquals(0)
+    }
+
     /** The Oppdag page opened from Home's tile, with Spole answering for the profile's person and the page's first card in focus. */
     private fun openDiscoverPage(): DiscoverSpole {
         val container = (rule.activity.application as StovaApplication).container
@@ -437,8 +448,8 @@ class StovaAppNavigationTest {
                 "/discover/related" -> if (titles) MatrixCursor(arrayOf("row", "type", "tmdb", "title", "year", "status")).apply {
                     addRow(arrayOf<Any?>("similar", "movie", 8195, "Ronin", 1998, 1))
                 } else null
-                // Two films on page 1 and a third on page 2, the last.
-                "/discover/search" -> MatrixCursor(arrayOf("row", "type", "tmdb", "title", "year", "status")).apply {
+                // Two films on page 1 and a third on page 2, the last; nothing at all for «Dune», as when Spole could not ask Seerr.
+                "/discover/search" -> if (uri.getQueryParameter("q") == "Dune") null else MatrixCursor(arrayOf("row", "type", "tmdb", "title", "year", "status")).apply {
                     if (uri.getQueryParameter("page") == "1") {
                         addRow(arrayOf<Any?>("search", "movie", 949, "Heat", 1995, 5))
                         addRow(arrayOf<Any?>("search", "movie", 136795, "The Heat", 2013, 1))

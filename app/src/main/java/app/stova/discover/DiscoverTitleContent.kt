@@ -22,6 +22,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,20 +70,23 @@ private enum class TitleButton { REQUEST, WITHDRAW, SPOLE }
  * do with it, and Seerr's related titles below. It opens with what [title]'s card showed while [details] is
  * null and fills in when Spole answers. Asking needs [SeerrAccess.PERSONAL] and a title Seerr can still get;
  * a request of the person's own can be taken back until it is in the library; «Opne i Spole» is always
- * there. Focus starts on the first button, and follows the first button when Seerr's page changes which
- * one that is, as long as the person has not moved it themselves. While [busy] (a request or a withdrawal
- * on its way) the buttons keep focus but ignore OK; once it is answered, focus stays on the button pressed
- * while it is there and goes to the first button when it is gone. [backdrop] is the whole Oppdag page's.
+ * there. [related] is null while Seerr's related titles are on their way. Focus starts on the first button,
+ * and follows the first button when Seerr's page changes which one that is, as long as the person has not
+ * moved it themselves. Back from a related title lands on the card it was opened from once the related rows
+ * are here again, and on the first button only when that card is no longer among them. While [busy] (a
+ * request or a withdrawal on its way) the buttons keep focus but ignore OK; once it is answered, focus stays
+ * on the button pressed while it holds focus and goes to the first button otherwise. [backdrop] is the whole
+ * Oppdag page's.
  */
 @Composable
-fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, related: List<DiscoverRow>, access: SeerrAccess, busy: Boolean,
+fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, related: List<DiscoverRow>?, access: SeerrAccess, busy: Boolean,
     onRequest: () -> Unit, onWithdraw: () -> Unit, onOpenSpole: () -> Unit, onOpenTitle: (DiscoverTitle) -> Unit,
     modifier: Modifier = Modifier, backdrop: BackdropState = rememberBackdropState()) {
     val shown = details?.title ?: title
     // The profile's background choice holds here too: the theme's own surface shows no title's picture.
     val themeSurface = LocalAppearance.current.backgroundSource == BackgroundSource.THEME
     val rows = remember(related) {
-        RELATED_ROWS.mapNotNull { (kind, heading) -> related.firstOrNull { it.kind == kind && it.items.isNotEmpty() }?.let { it to heading } }
+        RELATED_ROWS.mapNotNull { (kind, heading) -> related.orEmpty().firstOrNull { it.kind == kind && it.items.isNotEmpty() }?.let { it to heading } }
     }
     val request = details?.requestAction?.takeIf { access == SeerrAccess.PERSONAL }
     val withdraw = details?.withdrawable == true
@@ -100,20 +105,32 @@ fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, relate
     val pressed = remember { mutableStateOf<TitleButton?>(null) }
     val firstNow by rememberUpdatedState(firstButton)
     val buttonsNow by rememberUpdatedState(buttons)
+    // The related card opened from here, as «row/title», kept while its title's page lies over this one so Back lands on
+    // it again; it is where focus returns once its row is drawn again.
+    var openedAt by rememberSaveable { mutableStateOf<String?>(null) }
+    val returnTo = openedAt?.takeIf { at -> rows.any { (row, _) -> row.items.any { spot(row.kind, it) == at } } }
+    val awaitingRows = openedAt != null && related == null
+    val back = remember { FocusRequester() }
     fun placeFocus() {
         placed.value = firstNow
         moved.value = false
         runCatching { first.requestFocus() }
     }
     // Seerr's page nearly always comes after the first frame: focus goes to the first button again when that
-    // changes, unless the person has moved it to a card or another button, which it is never taken from.
-    LaunchedEffect(title.key, firstButton) {
+    // changes, unless the person has moved it to a card or another button, which it is never taken from. Back
+    // from a related title waits for the related rows, and goes to the first button only without that card.
+    LaunchedEffect(title.key, firstButton, returnTo, awaitingRows) {
         withFrameNanos { }
-        if (moved.value && holds.value) return@LaunchedEffect
-        placeFocus()
+        when {
+            returnTo != null -> { runCatching { back.requestFocus() }; openedAt = null }
+            awaitingRows -> Unit
+            moved.value && holds.value -> Unit
+            else -> { openedAt = null; placeFocus() }
+        }
     }
-    // Spole has answered a request or a withdrawal. The button pressed keeps focus while it is there; once it is gone the
-    // first button takes focus, rather than whichever button the system found. Focus taken to a related card stays there.
+    // Spole has answered a request or a withdrawal. The button pressed keeps focus while it is there and holds it; once it
+    // is gone, or focus has left the page, the first button takes focus rather than whichever button the system found.
+    // Focus taken to a related card stays there.
     LaunchedEffect(busy) {
         if (busy || !waited.value) {
             waited.value = busy
@@ -123,7 +140,7 @@ fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, relate
         waited.value = false
         withFrameNanos { }
         if (holds.value && !onButtons.value) return@LaunchedEffect
-        if (pressed.value != null && pressed.value == focused.value && pressed.value in buttonsNow) return@LaunchedEffect
+        if (onButtons.value && pressed.value != null && pressed.value == focused.value && pressed.value in buttonsNow) return@LaunchedEffect
         placeFocus()
     }
     // Before the page has placed focus, a button taking it is the system's own first focus, not the person moving.
@@ -158,7 +175,12 @@ fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, relate
                         Modifier.padding(top = 8.dp).onFocusChanged { onButtons.value = it.hasFocus })
                 }
             }
-            for ((row, heading) in rows) DiscoverTitleRow(stringResource(heading), row.items, onFocus = { moved.value = true }, onOpen = onOpenTitle)
+            for ((row, heading) in rows) {
+                val here = returnTo?.takeIf { it.startsWith("${row.kind.name}/") }
+                DiscoverTitleRow(stringResource(heading), row.items, onFocus = { moved.value = true },
+                    onOpen = { openedAt = spot(row.kind, it); onOpenTitle(it) }, focus = back.takeIf { here != null },
+                    focusOn = here?.substringAfter('/'))
+            }
         }
     }
 }

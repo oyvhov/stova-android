@@ -61,15 +61,18 @@ fun RequestSheet(details: DiscoverDetails, onSend: (seasons: List<Int>) -> Unit,
     }
 }
 
-/** Taking the person's own request for [title] back. Back and «Behald» keep it. */
+/**
+ * Taking the person's own request for [title] back. Back and «Behald» keep it. The sheet opens on «Behald», the safe
+ * choice, so the OK that opened it pressed once more takes nothing back; «Trekk tilbake» is one press down.
+ */
 @Composable
 fun WithdrawSheet(title: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     StovaSheet(onDismiss) {
         SheetHeader(stringResource(R.string.discover_withdraw_title, title), icon = StovaIcons.Discover)
         Text(stringResource(R.string.discover_withdraw_note), style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
-        SheetAction(stringResource(R.string.discover_withdraw), StovaIcons.Hide, onConfirm, danger = true)
         SheetAction(stringResource(R.string.discover_keep), StovaIcons.Check, onDismiss)
+        SheetAction(stringResource(R.string.discover_withdraw), StovaIcons.Hide, onConfirm, danger = true)
     }
 }
 

@@ -105,6 +105,19 @@ class RequestSheetTest {
         assertTrue(sent.isEmpty())
     }
 
+    // A sheet for a step that cannot be undone opens on the safe choice: the OK that opened it, pressed again, keeps the
+    // request. «Trekk tilbake» is one press down.
+    @Test fun withdrawSheetOpensOnKeep() {
+        var confirmed = 0
+        compose.setContent {
+            StovaTheme(reduceMotion = true) { WithdrawSheet("Heat", onConfirm = { confirmed++ }, onDismiss = {}) }
+        }
+        compose.onNodeWithText("Behald").assertIsFocused().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.onNodeWithText("Trekk tilbake").assertIsFocused().performKeyInput { pressKey(Key.DirectionUp) }
+        compose.onNodeWithText("Behald").assertIsFocused()
+        assertEquals(0, confirmed)
+    }
+
     @Test fun withdrawSheetConfirmsOrKeeps() {
         var confirmed = 0
         var kept = 0

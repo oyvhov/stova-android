@@ -90,12 +90,14 @@ data class DiscoverPage(val items: List<DiscoverTitle>, val page: Int, val hasMo
 /** How a request or a withdrawal ended; [NOT_SUPPORTED] is a Spole too old to answer, or none. */
 enum class DiscoverActionResult { DONE, ALREADY, NOT_PERSONAL, FORBIDDEN, FAILED, UNKNOWN, NOT_SUPPORTED }
 
+/** No word is a Spole that cannot do it. A word Stova does not know comes from a newer Spole, which can: it is [DiscoverActionResult.FAILED]. */
 fun discoverActionResult(wire: String?): DiscoverActionResult = when (wire) {
+    null -> DiscoverActionResult.NOT_SUPPORTED
     "ok" -> DiscoverActionResult.DONE
     "already" -> DiscoverActionResult.ALREADY
     "not_personal" -> DiscoverActionResult.NOT_PERSONAL
     "forbidden" -> DiscoverActionResult.FORBIDDEN
     "failed" -> DiscoverActionResult.FAILED
     "unknown" -> DiscoverActionResult.UNKNOWN
-    else -> DiscoverActionResult.NOT_SUPPORTED
+    else -> DiscoverActionResult.FAILED
 }

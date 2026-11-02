@@ -145,8 +145,8 @@ fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit,
     }
 }
 
-/** A card's place on the page: its row and its title, since a title can be in more than one row. */
-private fun spot(kind: DiscoverRowKind, title: DiscoverTitle) = "${kind.name}/${title.key}"
+/** A card's place on a page: its row and its title, since a title can be in more than one row. */
+internal fun spot(kind: DiscoverRowKind, title: DiscoverTitle) = "${kind.name}/${title.key}"
 
 /** A request's place on the page, in the row «Dine førespurnader». */
 private fun requestSpot(request: DiscoverRequest) = "$REQUESTS_ROW/${request.key}"

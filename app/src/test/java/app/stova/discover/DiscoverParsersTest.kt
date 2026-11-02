@@ -175,9 +175,10 @@ class DiscoverParsersTest {
         assertEquals(DiscoverActionResult.FORBIDDEN, discoverActionResult("forbidden"))
         assertEquals(DiscoverActionResult.FAILED, discoverActionResult("failed"))
         assertEquals(DiscoverActionResult.UNKNOWN, discoverActionResult("unknown"))
-        // No answer at all, or a word from a newer Spole, is a Spole that cannot do it.
+        // No answer at all is a Spole that cannot do it. A word Stova does not know comes from a newer Spole, which can:
+        // that is a failure, never advice to update Spole.
         assertEquals(DiscoverActionResult.NOT_SUPPORTED, discoverActionResult(null))
-        assertEquals(DiscoverActionResult.NOT_SUPPORTED, discoverActionResult("later"))
+        assertEquals(DiscoverActionResult.FAILED, discoverActionResult("later"))
     }
 
     @Test fun discoverUriHasTypeAndTmdb() {

@@ -35,7 +35,9 @@ class DiscoverSearchContentTest {
     private val more = hasContentDescription("Hent fleire") and hasClickAction()
 
     private fun show(query: String, page: DiscoverPage?, onQuery: (String) -> Unit = {}, onOpenTitle: (DiscoverTitle) -> Unit = {}) =
-        compose.setContent { StovaTheme(reduceMotion = true) { DiscoverSearchContent(query, page, false, onQuery, {}, onOpenTitle) } }
+        compose.setContent {
+            StovaTheme(reduceMotion = true) { DiscoverSearchContent(query, page, page?.let { query }, false, false, onQuery, {}, onOpenTitle) }
+        }
 
     @Test fun resultsShowAsPosters() {
         val opened = mutableListOf<DiscoverTitle>()
@@ -61,7 +63,7 @@ class DiscoverSearchContentTest {
     @Test fun moreTileAppearsOnlyWithMorePages() {
         var current by mutableStateOf(DiscoverPage(found.take(3), 1, hasMore = false))
         var asked = 0
-        compose.setContent { StovaTheme(reduceMotion = true) { DiscoverSearchContent("Heat", current, false, {}, { asked++ }, {}) } }
+        compose.setContent { StovaTheme(reduceMotion = true) { DiscoverSearchContent("Heat", current, "Heat", false, false, {}, { asked++ }, {}) } }
         card("The Heat").assertIsDisplayed()
         compose.onAllNodes(more).assertCountEquals(0)
         compose.runOnIdle { current = current.copy(hasMore = true) }
@@ -81,9 +83,15 @@ class DiscoverSearchContentTest {
         var query by mutableStateOf("Zzyzx")
         var loading by mutableStateOf(false)
         compose.setContent {
-            StovaTheme(reduceMotion = true) { DiscoverSearchContent(query, DiscoverPage(emptyList(), 1, hasMore = false), loading, {}, {}, {}) }
+            StovaTheme(reduceMotion = true) {
+                DiscoverSearchContent(query, DiscoverPage(emptyList(), 1, hasMore = false), "Zzyzx", loading, false, {}, {}, {})
+            }
         }
         compose.onNodeWithText("Ingen treff for «Zzyzx».").assertIsDisplayed()
+        // The text names the query Seerr answered, not what has been typed since and is not asked yet.
+        compose.runOnIdle { query = "Zzyzxa" }
+        compose.onNodeWithText("Ingen treff for «Zzyzx».").assertIsDisplayed()
+        compose.runOnIdle { query = "Zzyzx" }
         // While Seerr is asked, the page says so instead.
         compose.runOnIdle { loading = true }
         compose.onAllNodesWithText("Ingen treff", substring = true).assertCountEquals(0)
@@ -91,6 +99,23 @@ class DiscoverSearchContentTest {
         // A query shorter than two characters is no search, and has no hits to tell of.
         compose.runOnIdle { loading = false; query = "Z" }
         compose.onAllNodesWithText("Ingen treff", substring = true).assertCountEquals(0)
+    }
+
+    // Seerr gave nothing for a query's first page: search says so rather than stand blank, and says it is fetching again
+    // while the next query is asked.
+    @Test fun aFirstPageSeerrDidNotAnswerSaysSo() {
+        var query by mutableStateOf("Dune")
+        var loading by mutableStateOf(false)
+        compose.setContent {
+            StovaTheme(reduceMotion = true) { DiscoverSearchContent(query, null, null, loading, failed = true, {}, {}, {}) }
+        }
+        compose.onNodeWithText("Seerr svara ikkje.").assertIsDisplayed()
+        compose.runOnIdle { loading = true }
+        compose.onAllNodesWithText("Seerr svara ikkje.").assertCountEquals(0)
+        compose.onNodeWithText("Hentar frå Seerr …").assertIsDisplayed()
+        // A query too short to be searched for has nothing to tell of.
+        compose.runOnIdle { loading = false; query = "D" }
+        compose.onAllNodesWithText("Seerr svara ikkje.").assertCountEquals(0)
     }
 
     @Test fun typingCallsOnQuery() {

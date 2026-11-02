@@ -125,7 +125,7 @@ class DiscoverScreensTest {
         compose.setContent {
             StovaTheme(reduceMotion = true) {
                 Box(Modifier.background(MaterialTheme.colorScheme.background)) {
-                    DiscoverSearchContent("the", DiscoverPage(found, 1, hasMore = true), loading = false, {}, {}, {})
+                    DiscoverSearchContent("the", DiscoverPage(found, 1, hasMore = true), "the", loading = false, failed = false, {}, {}, {})
                 }
             }
         }

@@ -62,13 +62,14 @@ private val MOVES = setOf(Key.DirectionUp, Key.DirectionDown, Key.DirectionLeft,
 /**
  * Search on the Oppdag page: the field, then what Seerr found as posters six across, with «Hent fleire» last while
  * Seerr has more. The field has focus as the step opens and Down goes from it to the first title; Back from a
- * title's page lands on the card it was opened from. A query of [MIN_QUERY] characters or more that found nothing
- * says so; while Seerr is asked and nothing is shown yet, the page says it is fetching. After «Hent fleire» the
- * next page's first title takes focus.
+ * title's page lands on the card it was opened from. [answered] is the query [page] answers: when it found nothing,
+ * the page says so in its words. While Seerr is asked and nothing is shown yet, the page says it is fetching; when
+ * Seerr gave nothing for the query's first page ([failed]) and nothing is shown, it says Seerr did not answer. A query
+ * shorter than [MIN_QUERY] characters says nothing. After «Hent fleire» the next page's first title takes focus.
  */
 @Composable
-fun DiscoverSearchContent(query: String, page: DiscoverPage?, loading: Boolean, onQuery: (String) -> Unit, onMore: () -> Unit,
-    onOpenTitle: (DiscoverTitle) -> Unit, modifier: Modifier = Modifier) {
+fun DiscoverSearchContent(query: String, page: DiscoverPage?, answered: String?, loading: Boolean, failed: Boolean, onQuery: (String) -> Unit,
+    onMore: () -> Unit, onOpenTitle: (DiscoverTitle) -> Unit, modifier: Modifier = Modifier) {
     val items = page?.items.orEmpty()
     val field = remember { FocusRequester() }
     val first = remember { FocusRequester() }
@@ -96,7 +97,9 @@ fun DiscoverSearchContent(query: String, page: DiscoverPage?, loading: Boolean, 
     val note = when {
         items.isNotEmpty() -> null
         loading -> stringResource(R.string.discover_loading)
-        page != null && asked.length >= MIN_QUERY -> stringResource(R.string.discover_no_hits, asked)
+        asked.length < MIN_QUERY -> null
+        failed -> stringResource(R.string.discover_failed)
+        page != null && answered != null -> stringResource(R.string.discover_no_hits, answered)
         else -> null
     }
     BoxWithConstraints(modifier.fillMaxSize()) {

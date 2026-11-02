@@ -14,6 +14,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
 import app.stova.media.model.ServerKind
 import app.stova.profiles.SpoleLink
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -32,10 +36,14 @@ class SpoleDiscoverTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val link = SpoleLink(ServerKind.EMBY, "eilev")
 
-    /** Spole's launcher provider: [answer] answers each query and [result] each call, it trips while [tripped], and it keeps what it was asked. */
+    /**
+     * Spole's launcher provider: [answer] answers each query and [result] each call, it trips while [tripped], it keeps what
+     * it was asked, and while [held] is set every question waits for it, as a Spole stuck on a Seerr that never answers.
+     */
     private class FakeSpole(var answer: (Uri) -> Cursor? = { oldSpole() }, var result: String? = null, var tripped: Boolean = false) : ContentProvider() {
-        val asked = mutableListOf<Uri>()
-        val calls = mutableListOf<Pair<String, Bundle?>>()
+        val asked = CopyOnWriteArrayList<Uri>()
+        val calls = CopyOnWriteArrayList<Pair<String, Bundle?>>()
+        @Volatile var held: CountDownLatch? = null
         override fun onCreate() = true
         override fun getType(uri: Uri): String? = null
         override fun insert(uri: Uri, values: ContentValues?): Uri? = null
@@ -43,11 +51,13 @@ class SpoleDiscoverTest {
         override fun update(uri: Uri, values: ContentValues?, selection: String?, args: Array<out String>?) = 0
         override fun query(uri: Uri, projection: Array<out String>?, selection: String?, args: Array<out String>?, sort: String?): Cursor? {
             asked += uri
+            held?.await(10, TimeUnit.SECONDS)
             check(!tripped) { "Spole tripped" }
             return answer(uri)
         }
         override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
             calls += method to extras
+            held?.await(10, TimeUnit.SECONDS)
             check(!tripped) { "Spole tripped" }
             return result?.let { Bundle().apply { putString("result", it) } }
         }
@@ -166,6 +176,34 @@ class SpoleDiscoverTest {
         assertEquals(SeerrAccess.BROWSE, discover.rows(link)?.access)
         spole.tripped = true
         assertEquals(DiscoverActionResult.DONE, discover.request(link, DiscoverType.MOVIE, 603, emptyList()))
+    }
+
+    // A Spole stuck on a Seerr that never answers is a failure once the wait is up, not a page left fetching for ever: the
+    // rows shown stay, the next ask is not queued behind it, a search finds nothing and a request says it failed.
+    @Test fun aSpoleThatNeverAnswersFailsAfterTheTimeout() = runBlocking<Unit> {
+        val spole = register(FakeSpole(answer = { uri ->
+            if (uri.path == "/discover") rows().seerr("personal") else MatrixCursor(arrayOf("row")).seerr("personal")
+        }, result = "ok"))
+        install()
+        // Asked once before, so the first good answer below is not slowed by the first look at the provider.
+        SpoleDiscover(context).rows(link)
+        val repository = DiscoverRepository(SpoleDiscoverFetch(SpoleDiscover(context), timeoutMillis = 1_000))
+        repository.refresh("p1", link)
+        val shown = repository.state("p1").value!!.rows
+        assertEquals(1, shown.size)
+        val stuck = CountDownLatch(1)
+        spole.held = stuck
+        try {
+            val started = System.nanoTime()
+            repository.refresh("p1", link, force = true)
+            assertEquals(DiscoverState(SeerrAccess.PERSONAL, shown, emptyList(), loading = false, failed = true), repository.state("p1").value)
+            assertNull(repository.search(link, "dune", 1))
+            assertEquals(DiscoverActionResult.FAILED, repository.request(link, DiscoverType.MOVIE, 603, emptyList()))
+            // Three questions of a second each, not the ten seconds Spole would keep them waiting.
+            assertTrue(TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started) < 8)
+        } finally {
+            stuck.countDown()
+        }
     }
 
     private companion object {

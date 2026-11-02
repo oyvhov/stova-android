@@ -1,9 +1,19 @@
 package app.stova.discover
 
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -229,6 +239,61 @@ class DiscoverTitleContentTest {
         compose.runOnIdle { current = details() }
         compose.onNodeWithText("Be om").assertExists().assertIsNotFocused()
         card("Ronin").assertIsFocused()
+    }
+
+    // Focus that left the page altogether while Spole was asked is put back on the first button when Spole answers, even
+    // though the button pressed is still there.
+    @Test fun answerPlacesFocusWhenNothingHoldsIt() {
+        var busy by mutableStateOf(false)
+        val elsewhere = FocusRequester()
+        compose.setContent {
+            StovaTheme(reduceMotion = true) {
+                Column {
+                    Box(Modifier.size(8.dp).focusRequester(elsewhere).focusable().testTag("elsewhere"))
+                    DiscoverTitleContent(heat, details(), emptyList(), SeerrAccess.PERSONAL, busy, {}, {}, {}, {})
+                }
+            }
+        }
+        compose.onNodeWithText("Be om").assertIsFocused()
+        compose.runOnIdle { busy = true }
+        compose.runOnIdle { elsewhere.requestFocus() }
+        compose.onNodeWithTag("elsewhere").assertIsFocused()
+        compose.runOnIdle { busy = false }
+        compose.onNodeWithText("Be om").assertIsFocused()
+    }
+
+    // Back from a related title lands on the card it was opened from, as the rows page and search do, once the title's page
+    // has its related rows again; until then focus is not put on the first button. When that card is no longer among them,
+    // the first button takes focus.
+    @Test fun backFromARelatedTitleLandsOnItsCard() {
+        val collateral = DiscoverTitle(DiscoverType.MOVIE, 1538, "Collateral", 2004, null, null, null, SeerrStatus.UNKNOWN, null, emptyList())
+        val rows = listOf(DiscoverRow(DiscoverRowKind.SIMILAR, listOf(ronin)), DiscoverRow(DiscoverRowKind.RECOMMENDED, listOf(thrones, collateral)))
+        var away by mutableStateOf(false)
+        var related by mutableStateOf<List<DiscoverRow>?>(rows)
+        compose.setContent {
+            StovaTheme(reduceMotion = true) {
+                // The title's step as DiscoverScreen holds it: its own saved state while another title's page lies over it.
+                val held = rememberSaveableStateHolder()
+                if (!away) held.SaveableStateProvider("heat") {
+                    DiscoverTitleContent(heat, details(), related, SeerrAccess.PERSONAL, false, {}, {}, {}, onOpenTitle = { away = true })
+                }
+            }
+        }
+        compose.onNodeWithText("Be om").assertIsFocused().performKeyInput { pressKey(Key.DirectionDown) }
+        card("Ronin").assertIsFocused().performKeyInput { pressKey(Key.DirectionDown) }
+        card("Game of Thrones").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
+        card("Collateral").assertIsFocused().performKeyInput { pressKey(Key.DirectionCenter) }
+        // Back: the page is made anew, and its related rows come a moment after it.
+        compose.runOnIdle { related = null; away = false }
+        compose.onNodeWithText("Be om").assertIsNotFocused()
+        compose.runOnIdle { related = rows }
+        card("Collateral").assertIsFocused()
+        compose.onNodeWithText("Be om").assertIsNotFocused()
+        // Opened again, and back to rows without it.
+        card("Collateral").performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.runOnIdle { related = null; away = false }
+        compose.runOnIdle { related = listOf(DiscoverRow(DiscoverRowKind.SIMILAR, listOf(ronin))) }
+        compose.onNodeWithText("Be om").assertIsFocused()
     }
 
     // The profile chose the theme's own surface as background: Oppdag draws no title's picture behind it either.

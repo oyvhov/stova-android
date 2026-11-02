@@ -61,9 +61,27 @@ private fun restoredStep(saved: List<*>): DiscoverStep = when (saved.first()) {
     else -> DiscoverStep.Rows
 }
 
-/** A search's answer as plain values, saved with the search step so Back from a title finds the titles found again. */
-private val DiscoverPageSaver: Saver<DiscoverPage?, Any> = Saver(
-    save = { page -> page?.let { arrayListOf(it.page, it.hasMore, ArrayList(it.items.map(::savedTitle))) } },
+/** The most titles of a search saved with its step: three of Seerr's pages. */
+private const val SAVED_SEARCH_TITLES = 60
+
+/** The most titles one page of Seerr's search holds. */
+private const val SEERR_PAGE_SIZE = 20
+
+/**
+ * A search's answer as plain values, saved with the search step so Back from a title finds the titles found again. It is
+ * written each time a title's page goes over the search and with the activity whenever an app opens, so it is kept small:
+ * no story and no genres, which a title's page asks Seerr for anyway, and no more than [SAVED_SEARCH_TITLES] titles. Cut
+ * short, it holds at least the first three pages whole (a page holds [SEERR_PAGE_SIZE] titles at most), and «Hent fleire»
+ * goes on from the fourth; a title it brings again is shown once.
+ */
+internal val DiscoverPageSaver: Saver<DiscoverPage?, Any> = Saver(
+    save = { page ->
+        page?.let {
+            val cut = it.items.size > SAVED_SEARCH_TITLES
+            val items = it.items.take(SAVED_SEARCH_TITLES).map { title -> savedTitle(title.copy(overview = null, genres = emptyList())) }
+            arrayListOf(if (cut) minOf(it.page, SAVED_SEARCH_TITLES / SEERR_PAGE_SIZE) else it.page, cut || it.hasMore, ArrayList(items))
+        }
+    },
     restore = { saved ->
         val (page, hasMore, items) = saved as List<*>
         DiscoverPage((items as List<*>).map { restoredTitle(it as List<*>) }, page as Int, hasMore as Boolean)
@@ -152,8 +170,9 @@ private const val SEARCH_DEBOUNCE_MILLIS = 400L
 /**
  * Search's step. Spole is asked as the profile's person once typing has paused for [SEARCH_DEBOUNCE_MILLIS] and the query,
  * spaces at either end left out, has [MIN_QUERY] characters or more; a shorter one shows nothing, and a new query stops
- * the ask before it. «Hent fleire» asks for the next page and adds it. When Spole trips, what is shown stays. The query
- * and what it found are saved with the step, so Back from a title finds both again without asking Spole twice.
+ * the ask before it. «Hent fleire» asks for the next page and adds it. When Spole trips, what is shown stays; with nothing
+ * shown, the page says Seerr did not answer. The query and what it found are saved with the step, so Back from a title
+ * finds both again without asking Spole twice.
  */
 @Composable
 private fun SearchStep(container: AppContainer, link: SpoleLink?, onOpenTitle: (DiscoverTitle) -> Unit) {
@@ -163,6 +182,8 @@ private fun SearchStep(container: AppContainer, link: SpoleLink?, onOpenTitle: (
     var answered by rememberSaveable { mutableStateOf<String?>(null) }
     // True from the first key of a query to Spole's answer, and while the next page is on its way: one ask at a time.
     var loading by remember { mutableStateOf(false) }
+    // Spole gave nothing for the first page of the query typed.
+    var failed by remember { mutableStateOf(false) }
     var nextPage by remember { mutableStateOf<Job?>(null) }
     val scope = rememberCoroutineScope()
     val asked = query.trim()
@@ -170,17 +191,19 @@ private fun SearchStep(container: AppContainer, link: SpoleLink?, onOpenTitle: (
         // A next page of the query before belongs to that query: it is not added under this one's answer.
         nextPage?.cancel()
         when {
-            asked.length < MIN_QUERY -> { page = null; answered = null; loading = false }
-            asked == answered || link == null -> loading = false
+            asked.length < MIN_QUERY -> { page = null; answered = null; failed = false; loading = false }
+            asked == answered || link == null -> { failed = false; loading = false }
             else -> {
                 loading = true
                 delay(SEARCH_DEBOUNCE_MILLIS)
-                container.discover.search(link, asked, 1)?.let { page = it; answered = asked }
+                val found = container.discover.search(link, asked, 1)
+                found?.let { page = it; answered = asked }
+                failed = found == null
                 loading = false
             }
         }
     }
-    DiscoverSearchContent(query, page, loading, onQuery = { query = it }, onOpenTitle = onOpenTitle, onMore = more@{
+    DiscoverSearchContent(query, page, answered, loading, failed, onQuery = { query = it }, onOpenTitle = onOpenTitle, onMore = more@{
         val shown = page ?: return@more
         val person = link ?: return@more
         val words = answered ?: return@more
@@ -209,7 +232,8 @@ private enum class TitleSheet { REQUEST, WITHDRAW }
 private fun TitleStep(container: AppContainer, profileId: String, link: SpoleLink?, step: DiscoverStep.Title, access: SeerrAccess,
     backdrop: BackdropState, onOpenSpole: () -> Unit, onOpenTitle: (DiscoverTitle) -> Unit) {
     var details by remember { mutableStateOf<DiscoverDetails?>(null) }
-    var related by remember { mutableStateOf(emptyList<DiscoverRow>()) }
+    // Null until Spole has answered for the related rows, so Back from a related title knows when its card can be found.
+    var related by remember { mutableStateOf<List<DiscoverRow>?>(null) }
     var sheet by remember { mutableStateOf<TitleSheet?>(null) }
     // Busy while a request or a withdrawal is on its way: one at a time, so a second OK sends nothing twice.
     var busy by remember { mutableStateOf(false) }
