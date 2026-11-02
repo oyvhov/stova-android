@@ -202,6 +202,31 @@ class StovaAppNavigationTest {
         rule.waitUntil(5_000) { rule.onAllNodes(tile and isFocused()).fetchSemanticsNodes().isNotEmpty() }
     }
 
+    // Opened from the Apps page's tile, Back from Discover goes back to the Apps page; Apps opened from Settings still returns there.
+    @Test fun discoverFromTheAppsPageReturnsThere() {
+        val container = (rule.activity.application as StovaApplication).container
+        shadowOf(rule.activity.packageManager).installPackage(PackageInfo().apply { packageName = "app.reelstack" })
+        ShadowContentResolver.registerProviderInternal("app.reelstack.launcher", DiscoverSpole())
+        runBlocking { container.profiles.update(container.session.active.value!!.id) { it.copy(spole = SpoleLink(ServerKind.EMBY, "eilev")) } }
+        val tile = hasContentDescription("Oppdag") and hasClickAction()
+        // Home's row says Spole has answered for the person.
+        rule.waitUntil(10_000) { rule.onAllNodes(tile).fetchSemanticsNodes().isNotEmpty() }
+        rule.onAllNodesWithText("Innstillingar")[0].performClick()
+        rule.onNodeWithTag("screen-SETTINGS").assertExists()
+        rule.onNodeWithText("Appar").performClick()
+        rule.onNodeWithTag("screen-APPS").assertExists()
+        rule.waitUntil(5_000) { rule.onAllNodes(tile).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(tile).performSemanticsAction(SemanticsActions.OnClick)
+        rule.onNodeWithTag("screen-DISCOVER").assertExists()
+        rule.waitUntil(5_000) { rule.onAllNodes(hasContentDescription("Heat") and hasClickAction() and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        rule.waitForIdle()
+        rule.onNodeWithTag("screen-APPS").assertExists()
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        rule.waitForIdle()
+        rule.onNodeWithTag("screen-SETTINGS").assertExists()
+    }
+
     // A request Spole follows for the person stands on the page; OK opens its title with what the card showed.
     @Test fun discoverRequestOpensItsTitle() {
         openDiscoverPage()

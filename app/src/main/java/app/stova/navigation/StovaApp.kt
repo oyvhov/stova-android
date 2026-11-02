@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -89,13 +90,21 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     var verifiedAdultId by remember { mutableStateOf<String?>(null) }
     var askAdultPin by remember { mutableStateOf(false) }
 
-    // Apps opened from Settings returns there; everything else walks home, and stops there.
+    // Apps opened from Settings returns there, and Discover opened from Apps returns to Apps; everything else walks
+    // home, and stops there. Back from Discover to Apps keeps where Apps itself came from.
     var appsFromSettings by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = current != Destination.HOME) {
-        current = if (current == Destination.APPS && appsFromSettings) Destination.SETTINGS else Destination.HOME
-        appsFromSettings = false
+    var discoverFromApps by rememberSaveable { mutableStateOf(false) }
+    val back: () -> Unit = {
+        current = when {
+            current == Destination.DISCOVER && discoverFromApps -> Destination.APPS
+            current == Destination.APPS && appsFromSettings -> Destination.SETTINGS
+            else -> Destination.HOME
+        }
+        discoverFromApps = false
+        if (current != Destination.APPS) appsFromSettings = false
     }
-    LaunchedEffect(container) { container.homeRequests.collect { appsFromSettings = false; current = Destination.HOME } }
+    BackHandler(enabled = current != Destination.HOME, onBack = back)
+    LaunchedEffect(container) { container.homeRequests.collect { appsFromSettings = false; discoverFromApps = false; current = Destination.HOME } }
     val switchProfile = {
         val profiles = file
         if (leavingNeedsAdultPin(profiles, profile)) {
@@ -251,14 +260,23 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         )
                         }
                     }
-                    Destination.APPS -> AppsScreen(container.apps, profile, container.appArt, container.appCatalog, container.shortcuts, container.haSocket)
+                    Destination.APPS -> {
+                        // Only what the person may do reaches the page: Spole being asked again leaves the grid alone.
+                        val discover = remember(profile.id) { container.discover.state(profile.id) }.collectAsStateWithLifecycle()
+                        val discoverAccess by remember(discover) { derivedStateOf { discover.value?.access ?: app.stova.discover.SeerrAccess.NONE } }
+                        AppsScreen(container.apps, profile, container.appArt, container.appCatalog, container.shortcuts, container.haSocket,
+                            discoverAccess = discoverAccess,
+                            // From a tile in the grid, as from Home's row: the page grows from the middle, and Back comes back here.
+                            onOpenDiscover = { discoverStart = null; discoverFromApps = true; origin = TransformOrigin.Center; current = Destination.DISCOVER })
+                    }
                     Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId,backdrop=backdrop.shown)
                     Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile,
                         onOpenApps = { appsFromSettings = true; origin = TransformOrigin.Center; current = Destination.APPS })
-                    // Opened at the title a card showed, or at the rows; Back walks the page's own steps, then home as from Apps.
+                    // Opened at the title a card showed, or at the rows; Back walks the page's own steps, then to where the
+                    // page was opened from. With nothing to show it leaves the same way, but only while it is the page shown.
                     Destination.DISCOVER -> app.stova.discover.DiscoverScreen(container, profile,
                         start = discoverStart?.let { app.stova.discover.DiscoverStep.Title(it.type, it.tmdbId, it) } ?: app.stova.discover.DiscoverStep.Rows,
-                        onLeave = { current = Destination.HOME })
+                        onLeave = { if (current == Destination.DISCOVER) back() })
                 }
                 }
             }

@@ -10,11 +10,17 @@ import app.stova.TV_QUALIFIERS
 import app.stova.core.storage.JsonFileStore
 import app.stova.core.theme.AvatarColor
 import app.stova.core.theme.StovaTheme
+import app.stova.discover.DiscoverRepository
+import app.stova.discover.SeerrAccess
+import app.stova.discover.SeerrSpole
+import app.stova.discover.SpoleDiscover
+import app.stova.discover.SpoleDiscoverFetch
 import app.stova.media.model.MediaAccount
 import app.stova.media.model.ServerKind
 import app.stova.profiles.Profile
 import app.stova.profiles.ProfileRepository
 import app.stova.profiles.ProfilesFile
+import app.stova.profiles.SpoleLink
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
@@ -36,11 +42,20 @@ class AppsShortcutsTest {
     @get:Rule val tmp = TemporaryFolder()
     private val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
     private val app = InstalledApp("demo/.Main", "demo", ".Main", "Demo", true)
+    // Discover as the launcher has it: the repository asks Spole, and the page gets what the person may do.
+    private val discover = DiscoverRepository(SpoleDiscoverFetch(SpoleDiscover(context)))
+    private val link = SpoleLink(ServerKind.EMBY, "eilev")
+    private var spole: SeerrSpole? = null
 
-    private fun show(kid: Boolean = false): Pair<ProfileRepository, Profile> {
+    /** With [seerr], a Spole that says so has been asked as the profile's person before the page opens. */
+    private fun show(kid: Boolean = false, seerr: String? = null, onOpenDiscover: () -> Unit = {}): Pair<ProfileRepository, Profile> {
         val profiles = ProfileRepository(JsonFileStore(tmp.root.resolve("p.json"), ProfilesFile.serializer(), ProfilesFile(), Dispatchers.Unconfined))
         val created = runBlocking {
             profiles.create("A", AvatarColor.LIME, false).let { adult -> if (kid) profiles.create("B", AvatarColor.LIME, true) else adult }
+        }
+        if (seerr != null) {
+            spole = SeerrSpole.install(context, seerr)
+            runBlocking { discover.refresh(created.id, link) }
         }
         val account = MediaAccount("acc", created.id, ServerKind.JELLYFIN, "s", "Heim", "https://demo.invalid", "u1", "U")
         val library = FavoriteTile.Library(ShortcutKey.Library("acc", "lib1").key, "Filmar", null, account, "lib1")
@@ -51,7 +66,10 @@ class AppsShortcutsTest {
         val repo = AppRepository(catalog, profiles, MainScope())
         compose.setContent {
             val profile by remember { profiles.file.map { file -> file.profiles.first { it.id == created.id } } }.collectAsState(created)
-            StovaTheme(appearance = profile.appearance) { AppsScreen(repo, profile, AppArtCache(context), catalog, shortcuts) }
+            val access = remember { discover.state(created.id) }.collectAsState().value?.access ?: SeerrAccess.NONE
+            StovaTheme(appearance = profile.appearance) {
+                AppsScreen(repo, profile, AppArtCache(context), catalog, shortcuts, discoverAccess = access, onOpenDiscover = onOpenDiscover)
+            }
         }
         return profiles to created
     }
@@ -103,5 +121,52 @@ class AppsShortcutsTest {
         compose.onNodeWithText("Bibliotek").assertDoesNotExist()
         compose.onNodeWithText("Scenar og skript").assertDoesNotExist()
         compose.onNodeWithText("Spole-profilar").assertDoesNotExist()
+    }
+
+    // With Seerr there for the person, the page has its own way to Discover, so it stays reachable with Home's row hidden:
+    // a section after Spole's people with one tile as wide as an app's banner, reached with the D-pad and opened with OK.
+    @Test fun discoverTileShowsWithAccess() {
+        var opened = 0
+        show(seerr = "browse", onOpenDiscover = { opened++ })
+        val tile = hasContentDescription("Oppdag") and hasClickAction()
+        val eilev = hasContentDescription("Eilev") and hasClickAction()
+        val demo = hasContentDescription("Demo") and hasClickAction()
+        compose.waitUntil(5_000) { compose.onAllNodes(eilev).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasScrollAction()).performScrollToNode(tile)
+        val heading = hasText("Oppdag") and !hasClickAction()
+        compose.onNode(heading).assertExists()
+        assertTrue(compose.onNode(heading).fetchSemanticsNode().boundsInRoot.bottom <= compose.onNode(tile).fetchSemanticsNode().boundsInRoot.top)
+        val width = compose.onNode(tile).fetchSemanticsNode().size.width
+        compose.onNode(hasScrollAction()).performScrollToNode(demo)
+        assertEquals(compose.onNode(demo).fetchSemanticsNode().size.width, width)
+        // Down from Spole's person lands on it, and Down again on the first of all the apps.
+        compose.onNode(hasScrollAction()).performScrollToNode(eilev)
+        compose.onNode(eilev).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        compose.onNode(eilev).assertIsFocused().performKeyInput { pressKey(androidx.compose.ui.input.key.Key.DirectionDown) }
+        compose.onNode(tile).assertIsFocused().performKeyInput { pressKey(androidx.compose.ui.input.key.Key.DirectionCenter) }
+        compose.waitForIdle()
+        assertEquals(1, opened)
+        compose.onNode(tile).performKeyInput { pressKey(androidx.compose.ui.input.key.Key.DirectionDown) }
+        compose.onNode(demo).assertIsFocused()
+    }
+
+    // A child has no Discover: not even a Spole saying the person may ask for titles puts the tile on a child's page.
+    @Test fun kidSeesNoDiscoverTile() {
+        val (_, kid) = show(kid = true, seerr = "personal")
+        assertEquals(SeerrAccess.PERSONAL, discover.state(kid.id).value?.access)
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Alle appar").fetchSemanticsNodes().isNotEmpty() }
+        compose.onAllNodesWithText("Oppdag").assertCountEquals(0)
+        compose.onAllNodesWithContentDescription("Oppdag").assertCountEquals(0)
+    }
+
+    // Seerr not there for the person: no section and no tile. Once Spole says it is, the way to Discover comes.
+    @Test fun noAccessNoTile() {
+        val (_, created) = show(seerr = "none")
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Spole-profilar").fetchSemanticsNodes().isNotEmpty() }
+        compose.onAllNodesWithText("Oppdag").assertCountEquals(0)
+        compose.onAllNodesWithContentDescription("Oppdag").assertCountEquals(0)
+        spole!!.seerr = "browse"
+        runBlocking { discover.refresh(created.id, link, force = true) }
+        compose.waitUntil(5_000) { compose.onAllNodes(hasContentDescription("Oppdag") and hasClickAction()).fetchSemanticsNodes().isNotEmpty() }
     }
 }

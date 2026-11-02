@@ -25,6 +25,7 @@ import app.stova.R
 import app.stova.core.ui.SettingsGroup
 import app.stova.core.ui.SettingsSwitchRow
 import app.stova.core.ui.StovaButton
+import app.stova.discover.SeerrAccess
 import app.stova.home.HomeRowKey
 import app.stova.home.HomeViewModel
 import app.stova.home.arrangeRows
@@ -42,11 +43,14 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
     val scope = rememberCoroutineScope()
     val accountFlow = remember(profile.id) { container.mediaAccounts.forProfile(profile.id) }
     val accounts by accountFlow.collectAsStateWithLifecycle(initialValue = emptyList())
+    // With Seerr there for a grown-up's person, the Oppdag row can be shown or hidden before Home has it.
+    val discover by remember(profile.id) { container.discover.state(profile.id) }.collectAsStateWithLifecycle()
+    val discoverRow = !profile.kid && (discover?.access ?: SeerrAccess.NONE) != SeerrAccess.NONE
     val stored = profile.home.rowOrder + profile.home.hiddenRows + profile.home.rowFormats.keys
     val known = (listOf(HomeRowKey.APPS) + (if (profile.kid) emptyList() else listOf(HomeRowKey.WATCH_NEXT)) + accounts.flatMap { account ->
         listOf(HomeRowKey.continueWatching(account.id), HomeRowKey.latestMovies(account.id), HomeRowKey.latestSeries(account.id)) +
             profile.appearance.season().takeUnless { it == Season.NONE }?.let { listOf(HomeRowKey.seasonal(account.id, it)) }.orEmpty()
-    } + stored).distinct()
+    } + (if (discoverRow) listOf(HomeRowKey.DISCOVER) else emptyList()) + stored).distinct()
     val available = if (home != null) {
         val loaded by home.availableRows.collectAsStateWithLifecycle()
         (known + loaded).distinct()

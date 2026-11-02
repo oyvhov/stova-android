@@ -3,15 +3,18 @@ package app.stova.apps
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -34,6 +38,7 @@ import app.stova.core.ui.focusOutline
 import app.stova.core.ui.PageHeader
 import app.stova.core.ui.SectionHeading
 import app.stova.core.ui.StovaIcons
+import app.stova.discover.SeerrAccess
 import app.stova.profiles.Profile
 import app.stova.media.model.MediaAccount
 import kotlinx.coroutines.flow.combine
@@ -41,14 +46,16 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 /**
- * Every app, favourites first. With [shortcuts], an adult then sees the people in Spole; all the apps
- * follow together, four to a row however large the cards are set; then the profile's libraries and the
- * house's scenes, which can be long, to add to the favourites like an app. Adults get a menu per app;
+ * Every app, favourites first. With [shortcuts], an adult then sees the people in Spole, and with Seerr
+ * there for the person ([discoverAccess]) a tile to Discover ([onOpenDiscover]); all the apps follow
+ * together, four to a row however large the cards are set; then the profile's libraries and the house's
+ * scenes, which can be long, to add to the favourites like an app. Adults get a menu per app;
  * a kid only opens what is allowed.
  */
 @Composable
 fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog: AppCatalog,
-    shortcuts: ShortcutCatalog? = null, haConnection: app.stova.ha.HaConnection? = null) {
+    shortcuts: ShortcutCatalog? = null, haConnection: app.stova.ha.HaConnection? = null,
+    discoverAccess: SeerrAccess = SeerrAccess.NONE, onOpenDiscover: () -> Unit = {}) {
     val currentProfile by rememberUpdatedState(profile)
     val offers = shortcuts?.takeIf { !profile.kid }
     val arrangedFlow = remember(apps, offers, profile.id) {
@@ -116,6 +123,19 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
             header(R.string.apps_spole_profiles)
             items(spoleProfiles, key = { "spole:${it.key}" }) { tile -> ShortcutTile(tile, { openShortcut(tile) }, { shortcutMenu = tile }) }
         }
+        // Discover's own way in, so the page stays reachable with Home's row hidden; a child has no Discover.
+        if (discoverAccess != SeerrAccess.NONE && !profile.kid) {
+            header(R.string.discover_title)
+            item(key = "stova:discover") {
+                val label = stringResource(R.string.discover_open)
+                TileFrame(label, 0, onOpenDiscover, onOpenDiscover) { spec ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(StovaIcons.Discover, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (!spec.captions) Text(label, style = MaterialTheme.typography.titleSmall)
+                    }
+                }
+            }
+        }
         header(R.string.apps_all)
         items(arranged.all, key = { "all:${it.key}" }) { app ->
             AppTile(app, art, { catalog.launch(app) }, { onLong(app) }, iconOverride = profile.apps.iconOverrides[app.key])
@@ -166,6 +186,7 @@ private fun LazyGridScope.header(title: Int) {
             R.string.apps_libraries -> StovaIcons.Rows
             R.string.apps_scenes -> StovaIcons.Sun
             R.string.apps_spole_profiles -> StovaIcons.User
+            R.string.discover_title -> StovaIcons.Discover
             else -> StovaIcons.Apps
         },
             Modifier.padding(top = StovaLayout.SectionTop, bottom = StovaLayout.SectionBottom))
