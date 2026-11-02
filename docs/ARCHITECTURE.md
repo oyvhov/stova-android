@@ -155,7 +155,9 @@ roleg over feltet. Opp/Ned når alle ikkje-tomme rader. `HomeViewModel` hugsar s
 slik at like titlar i fleire rader får rett fokus ved retur. Byte av visingsmodus bevarer aktiv rad.
 
 I det valfrie «Rullande oversikt»-moduset er heroen første element i same `LazyColumn` som radene. Første rad viser heroen; ved neste rad
-rullar han ut og radene får heile høgda under topplinja. Tilbake til første rad viser heroen att.
+rullar han ut saman med toppfeltet, og radene får heile skjermhøgda. Tilbake til første rad viser heroen og toppfeltet att.
+Toppfeltet ligg over plassen sin øvst i lista (`TopFieldLayout` i `HomeContent.kt`) og følgjer rullinga i laget sitt;
+radfeltet (éi eller to rader) held det i eit fast band.
 Parallax les rullestillinga i `graphicsLayer`, utan ny komposisjon eller storleiksanimasjon per ramme.
 Logoar som lastar eller feilar har tittel som reserve. Spotlight-byte endrar ikkje høgda på overskrifta.
 Fokus tilbake til topplinja rullar også lista til toppen, så heroen kan hentast fram sjølv etter

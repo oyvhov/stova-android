@@ -93,6 +93,41 @@ class HomeScrollTest {
         compose.onNodeWithText("Toppen").assertIsFocused()
     }
 
+    // The top field rode above the rows in a band of its own, so every row scrolled in under it.
+    @Test fun theTopFieldRollsAwayWithTheHeroAndUpBringsItBack() {
+        render()
+        compose.onNodeWithText("Toppen").assertIsDisplayed()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Toppen").assertIsNotDisplayed()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionUp) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Toppen").assertIsDisplayed()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionUp) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Toppen").assertIsFocused()
+    }
+
+    @Test fun withoutAHeroTheTopFieldStillRollsAway() {
+        render(appearance = app.stova.profiles.AppearancePrefs(homeRows = app.stova.profiles.HomeRows.SCROLLING,
+            heroSize = app.stova.profiles.HeroSize.OFF))
+        compose.onNodeWithText("Toppen").assertIsDisplayed()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Toppen").assertIsNotDisplayed()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionUp); pressKey(Key.DirectionUp) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Toppen").assertIsDisplayed()
+        compose.onNodeWithText("Toppen").assertIsFocused()
+    }
+
+    @Test fun theDeckKeepsItsTopFieldInView() {
+        render(appearance = app.stova.profiles.AppearancePrefs(homeRows = app.stova.profiles.HomeRows.ONE))
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Toppen").assertIsDisplayed()
+    }
+
     @Test fun focusedRowSnapsToTheTopWithoutThePreviousRowPeeking() {
         render()
         compose.onNodeWithText("Fyrste").performSemanticsAction(SemanticsActions.RequestFocus)

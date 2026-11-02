@@ -23,9 +23,11 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.apps.*
@@ -152,7 +154,8 @@ fun HomeContent(
     var pendingRow by remember { mutableStateOf<HomeRowKey?>(null) }
     var navigationVersion by remember { mutableIntStateOf(0) }
     val motion = stovaMotion
-    fun scrollIndex(index: Int) = if (deck || index == 0 || appearance.heroSize == HeroSize.OFF) index else index + 1
+    // The scrolling view always opens with a header item: the top field's room, and the hero under it.
+    fun scrollIndex(index: Int) = if (deck || index == 0) index else index + 1
     val initialRow = availableRows.orEmpty().indexOfFirst { it.key == (activeRow ?: restoreRow) }.coerceAtLeast(0)
     val listState = key(appearance.homeRows) { rememberLazyListState(initialFirstVisibleItemIndex = scrollIndex(initialRow)) }
     LaunchedEffect(focusReturn) {
@@ -230,19 +233,25 @@ fun HomeContent(
         // Automation marker, not user-facing copy. Null rows mean sources are still loading.
         if (availableRows != null) contentDescription = "home-ready"
     }) {
-        Box(Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
-            if (event.key != Key.DirectionDown) false else {
-                if (event.type == KeyEventType.KeyDown) nextRow(-1, 1)?.let(::focusRow)
-                true
-            }
-        }.focusRequester(topBarFocus).focusRestorer().onFocusChanged { state ->
-            if (state.hasFocus && !topBarFocused) topReturn++
-            topBarFocused = state.hasFocus
-        }.focusGroup()) { topBar() }
         if (movingRow != null) Text(stringResource(R.string.custom_move_hint), Modifier.padding(horizontal = StovaLayout.TvSafeEdge),
             style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-        BoxWithConstraints(Modifier.weight(1f)) {
+        val listShown = !deck && !availableRows.isNullOrEmpty()
+        TopFieldLayout(!deck, { if (!listShown) 0 else if (listState.firstVisibleItemIndex > 0) Int.MAX_VALUE else listState.firstVisibleItemScrollOffset },
+            Modifier.weight(1f), field = {
+            Box(Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
+                if (event.key != Key.DirectionDown) false else {
+                    if (event.type == KeyEventType.KeyDown) nextRow(-1, 1)?.let(::focusRow)
+                    true
+                }
+            }.focusRequester(topBarFocus).focusRestorer().onFocusChanged { state ->
+                if (state.hasFocus && !topBarFocused) topReturn++
+                topBarFocused = state.hasFocus
+            }.focusGroup()) { topBar() }
+        }) { lead ->
+        BoxWithConstraints(Modifier.fillMaxSize()) {
             val viewportHeight = maxHeight
+            // The rows get the whole height; the hero and the first row share what the top field leaves.
+            val room = maxHeight - lead
             val geometry = if (deck) homeDeckGeometry(availableRows.orEmpty(), homePrefs, appearance, maxWidth, maxHeight) else null
             val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
             val artworkHeight = availableRows.orEmpty().maxOfOrNull { row ->
@@ -254,14 +263,14 @@ fun HomeContent(
                 (if (anyCaptions) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp + StovaLayout.TvSafeEdge
             // Fixed for these profile/font choices, independent of each spotlight title. Reserve
             // room for a whole row; even a large poster's optional caption must remain reachable.
-            val baseHeroHeight = if (fontScale >= 1.5f) maxHeight * (appearance.heroSize.fraction + 0.16f)
-                else minOf(maxHeight * appearance.heroSize.fraction, (maxHeight - rowHeight).coerceAtLeast(0.dp))
+            val baseHeroHeight = if (fontScale >= 1.5f) room * (appearance.heroSize.fraction + 0.16f)
+                else minOf(room * appearance.heroSize.fraction, (room - rowHeight).coerceAtLeast(0.dp))
             val deckHeroSpace = geometry?.let { (maxHeight - it.height - it.bottom).coerceAtLeast(0.dp) }
             // The scrolling view opens like the deck, with only the first row at the bottom under a big
             // hero; moving down then scrolls the hero away. Large text keeps the fixed fraction.
             val scrollHeroSpace = if (!deck && fontScale < 1.5f && !availableRows.isNullOrEmpty()) {
-                val first = homeDeckGeometry(availableRows.take(1), homePrefs, appearance.copy(homeRows = HomeRows.ONE), maxWidth, maxHeight)
-                (maxHeight - first.height - first.bottom).coerceAtLeast(0.dp)
+                val first = homeDeckGeometry(availableRows.take(1), homePrefs, appearance.copy(homeRows = HomeRows.ONE), maxWidth, room)
+                (room - first.height - first.bottom).coerceAtLeast(0.dp)
             } else null
             val heroHeight = if (appearance.heroSize == HeroSize.OFF) 0.dp else if (deckHeroSpace != null) {
                 if (deckHeroSpace < if (fontScale >= 1.5f) 140.dp else 112.dp) 0.dp
@@ -273,17 +282,21 @@ fun HomeContent(
             else if (appearance.showOverview && fontScale < 1.5f) maxOf(baseHeroHeight, 208.dp) else baseHeroHeight
             Column {
                 when {
-                    availableRows == null -> if (appearance.heroSize != HeroSize.OFF) HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
+                    availableRows == null -> {
+                        Spacer(Modifier.height(lead))
+                        if (appearance.heroSize != HeroSize.OFF) HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
+                    }
                     availableRows.isEmpty() -> {
+                        Spacer(Modifier.height(lead))
                         if (appearance.heroSize != HeroSize.OFF) HeroPanel(spotlight, Modifier.fillMaxWidth().height(heroHeight))
                         EmptyHome(onOpenApps)
                     }
                     else -> {
-                        val headerItems = if (deck || appearance.heroSize == HeroSize.OFF) 0 else 1
+                        val headerItems = if (deck) 0 else 1
                         // The backdrop follows the scrolling hero; the deck and a view without a hero leave it still.
                         val shift = LocalHomeScrollShift.current
-                        if (shift != null && headerItems == 1) {
-                            val heroPx = with(androidx.compose.ui.platform.LocalDensity.current) { heroHeight.toPx().coerceAtLeast(1f) }
+                        if (shift != null && !deck && appearance.heroSize != HeroSize.OFF) {
+                            val heroPx = with(androidx.compose.ui.platform.LocalDensity.current) { (lead + heroHeight).toPx().coerceAtLeast(1f) }
                             DisposableEffect(shift, listState) { shift.list = listState; onDispose { shift.list = null } }
                             SideEffect { shift.heroPx = heroPx }
                         }
@@ -314,8 +327,9 @@ fun HomeContent(
                         val lastArt = artworkDimensions(lastStyle.format ?: defaultRowFormat(availableRows.last().key, appearance), lastStyle.size ?: appearance.cardSize).height.dp
                         val lastRowHeight = appearance.rowSpacing.top.dp + (if (lastStyle.showTitle) 25.dp * fontScale + StovaLayout.SectionBottom else 0.dp) + lastArt +
                             (if (lastStyle.showsCardTitles(appearance)) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp
-                        // Even the last row can reach the top after the hero has scrolled away.
-                        val bottomSpace = (viewportHeight - lastRowHeight).coerceAtLeast(StovaLayout.TvSafeEdge)
+                        // Even the last row can reach the top after the hero has scrolled away. Text can measure a
+                        // little under its estimate, and the row above then peeked in at the screen's top edge.
+                        val bottomSpace = (viewportHeight - lastRowHeight + 16.dp).coerceAtLeast(StovaLayout.TvSafeEdge)
                         // One animation owns the column, including the hero. Individual cards must
                         // not start a second vertical bring-into-view scroll during a row transition.
                         CompositionLocalProvider(LocalBringIntoViewSpec provides StayPut) {
@@ -323,7 +337,11 @@ fun HomeContent(
                                 else Modifier.fillMaxSize().bottomFade(appearance.homeRowInset.dp.dp)).focusRestorer(), state = listState,
                                 contentPadding = PaddingValues(bottom = if (deck) 0.dp else bottomSpace)) {
                                 if (headerItems != 0) item(key = "spotlight-header", contentType = "hero") {
-                                    ParallaxHero(spotlight, heroHeight, listState)
+                                    // The top field lies over this room and leaves with it.
+                                    Column {
+                                        Spacer(Modifier.height(lead))
+                                        if (appearance.heroSize != HeroSize.OFF) ParallaxHero(spotlight, heroHeight, listState)
+                                    }
                                 }
                                 itemsIndexed(availableRows, key = { _, row -> row.key.value }) { index, row ->
                                     val requester = if (row.key == restoreRow) firstItem else null
@@ -386,6 +404,7 @@ fun HomeContent(
                 }
             }
         }
+        }
     SeasonalScene(Modifier.matchParentSize(), front = true, clock = seasonClock)
     hiddenRow?.let { hidden ->
         androidx.compose.material3.Surface(Modifier.align(Alignment.BottomCenter).padding(24.dp), shape = MaterialTheme.shapes.large) {
@@ -424,6 +443,31 @@ fun HomeContent(
                     stringResource(R.string.custom_row_section), app.stova.core.ui.StovaIcons.Rows)
                 controls(pages)
             }
+        }
+    }
+}
+
+private enum class TopFieldSlot { FIELD, CONTENT }
+
+/**
+ * Home's top field over what lies under it. While the rows scroll, [content] gets the whole height and the
+ * field's room at its top, and the field rides up [lift] pixels with the list until it is gone; only its
+ * layer reads the scroll, so nothing measures again per frame. The deck keeps the field in a band of its own.
+ */
+@Composable
+private fun TopFieldLayout(scrolls: Boolean, lift: () -> Int, modifier: Modifier, field: @Composable () -> Unit,
+    content: @Composable (lead: Dp) -> Unit) {
+    SubcomposeLayout(modifier) { constraints ->
+        val bar = subcompose(TopFieldSlot.FIELD, field).map { it.measure(constraints.copy(minWidth = 0, minHeight = 0)) }
+        val barHeight = bar.maxOfOrNull { it.height } ?: 0
+        val top = if (scrolls) 0 else barHeight
+        val height = (constraints.maxHeight - top).coerceAtLeast(0)
+        val lead = if (scrolls) barHeight.toDp() else 0.dp
+        val rest = subcompose(TopFieldSlot.CONTENT) { content(lead) }
+            .map { it.measure(constraints.copy(minHeight = height, maxHeight = height)) }
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            rest.forEach { it.place(0, top) }
+            bar.forEach { if (scrolls) it.placeWithLayer(0, 0) { translationY = -lift().coerceAtMost(barHeight).toFloat() } else it.place(0, 0) }
         }
     }
 }

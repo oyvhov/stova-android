@@ -1,3 +1,9 @@
+# Toppfeltet på Heim rullar vekk med heroen
+2026-11-02, eigaren om toppfeltet som låg fast over radene: «Helt jævli med meny som ligg over alt. Eg har aldri bedt om det», så «Det skal rulle vekk. Test på Loftet berre».
+Gjort (committa på `main`, ikkje pusha): i «Rullande oversikt» ligg toppfeltet over plassen sin øvst i lista og rullar ut med heroen; radene får heile skjermhøgda, og Opp frå første rad hentar det fram att. Radfeltet (éi eller to rader) held toppfeltet fast som før. Plassen under siste rad har 16 dp ekstra, så rada over ikkje stikk fram i toppkanten.
+Kontroll: 1044 testar, 0 feil (tre nye i `HomeScrollTest`); lint 0 feil. Loftet (tv-bygg): Øyvind og Spole-test rullar feltet vekk og hentar det att med Opp; Pip test (barn) har eigen barneheim utan toppfelt. Skjermbilete i `.superpowers/topfield-loftet-2026-11-02/`.
+Merk: Shield har framleis Stova-bygget frå 14:44 (Oppdag, med fast toppfelt); berre Loftet har det nye. Oppdag er slått saman til `main` og sjekka på Øyvind på Shield; Eilev på Shield og ein ekte Seerr-førespurnad er ikkje prøvde.
+
 # Oppdag i Stova: Seerr gjennom Spole
 2026-11-02, eigaren: «Eg ønsker egentlig implementere oppdag/Seerr inni launcheren, men Stova sitt designspråk. Lag den skikkelig bra.», så «Berre start». Plan `docs/superpowers/plans/2026-11-01-oppdag.md`, spesifikasjon `docs/superpowers/specs/2026-11-01-oppdag-design.md`.
 Stova (greina `oppdag`, ikkje pusha): pakken `discover/` gir rada «Oppdag» på Heim, Oppdag-sida (heroband, «Populært no», «Dine førespurnader», komande filmar og seriar, søk), tittelsida («Be om» eller «Vel sesongar», «Trekk tilbake», «Opne i Spole», «Liknande» og «Tilrådd frå denne») og ei «Oppdag»-flis på Appar-sida. Berre vaksne profilar med ein Spole-person, og berre når Spole svarar med Seerr-tilgang; utan Spole blir ingenting spurt. Undervegs: ein navigasjonstest som berre var grøn medan ein sesong var på, er uavhengig av kalenderen no (`38a59fa`).
