@@ -6,7 +6,8 @@ Ein flat og rask Android TV-launcher for NVIDIA Shield. Stova viser filmar og se
 
 ## Dette kan Stova
 
-- **Framsida:** ein stor hero med logo, fakta og bakgrunnskunst, favorittappar og mediarader som Hald fram, Nyleg lagt til og Watch Next. Heroen rullar bort med ein lett parallax når du går nedover, og radene blir bufra så Heim opnar raskt.
+- **Framsida:** ein stor hero med logo, fakta og bakgrunnskunst, favorittappar og mediarader som Hald fram, Nyleg lagt til og Watch Next. Heroen og toppfeltet rullar bort med ein lett parallax når du går nedover, og radene blir bufra så Heim opnar raskt.
+- **Oppdag:** aktuelle og kommande filmar og seriar frå Seerr, søk og eigne førespurnader, med Seerr-innlogginga til Spole. Flisa ligg på Apps-sida, og Oppdag er berre for vaksne profilar.
 - **Tema og sesong:** fargetema og aksentfarge for kvar profil. Sesongpynten Max gjev Halloween og jul med pynt som rører seg, og spindelvev eller snø på kvar appflis. Pynten kviler etter to minutt utan tastetrykk.
 - **Snøggmeny:** hald OK på Innstillingar-ikonet for nettverk, Bluetooth, bilete og lyd, lagring og omstart, med ekte status frå TV-en.
 - **Appmeny:** hald OK på ein app for å opne, flytte eller skjule han, byte ikon eller fjerne han frå favorittane.
@@ -42,6 +43,7 @@ Bileta er tekne på ein NVIDIA Shield med ekte appar, eit ekte Jellyfin-bibliote
 
 - Android TV 11 / API 30 eller nyare. Stova er laga for og prøvd på NVIDIA Shield. Chromecast med Google TV og andre Google TV-einingar skal fungere, men er ikkje prøvde.
 - Jellyfin eller Emby for mediarader; Spole med støtte for `spole://open` for avspeling.
+- Spole 1.0.0-beta33 eller nyare med Seerr for Oppdag (valfritt).
 - Home Assistant for Smarthus (valfritt).
 - Android SDK Platform-Tools på ei datamaskin for installasjon via adb.
 
