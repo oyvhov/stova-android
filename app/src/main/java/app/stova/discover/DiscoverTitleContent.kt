@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.withFrameNanos
@@ -57,12 +58,16 @@ private const val POSTER_SCALE = 1.4f
 /** Wide enough for five lines of story beside the poster, narrow enough to leave the backdrop's subject free. */
 private val INFO_WIDTH = 600.dp
 
+/** The page's buttons, to know which one is first and which one the page put focus on. */
+private enum class TitleButton { REQUEST, WITHDRAW, SPOLE }
+
 /**
  * A title's page on Oppdag: its backdrop, poster, facts and where it stands in Seerr, what the person may
  * do with it, and Seerr's related titles below. It opens with what [title]'s card showed while [details] is
  * null and fills in when Spole answers. Asking needs [SeerrAccess.PERSONAL] and a title Seerr can still get;
  * a request of the person's own can be taken back until it is in the library; «Opne i Spole» is always
- * there. Focus starts on the first button, once per title. [backdrop] is the whole Oppdag page's.
+ * there. Focus starts on the first button, and follows the first button when Seerr's page changes which
+ * one that is, as long as the person has not moved it themselves. [backdrop] is the whole Oppdag page's.
  */
 @Composable
 fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, related: List<DiscoverRow>, access: SeerrAccess, busy: Boolean,
@@ -74,17 +79,36 @@ fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, relate
     val rows = remember(related) {
         RELATED_ROWS.mapNotNull { (kind, heading) -> related.firstOrNull { it.kind == kind && it.items.isNotEmpty() }?.let { it to heading } }
     }
+    val request = details?.requestAction?.takeIf { access == SeerrAccess.PERSONAL }
+    val withdraw = details?.withdrawable == true
+    val firstButton = when {
+        request != null -> TitleButton.REQUEST
+        withdraw -> TitleButton.WITHDRAW
+        else -> TitleButton.SPOLE
+    }
     val first = remember { FocusRequester() }
-    LaunchedEffect(title.key) {
+    // Where the page put focus, whether the person has moved it since, and whether anything on the page has it.
+    // Read only in callbacks and the effect below, so moving focus never recomposes the page.
+    val placed = remember { mutableStateOf<TitleButton?>(null) }
+    val moved = remember { mutableStateOf(false) }
+    val holds = remember { mutableStateOf(false) }
+    // Seerr's page nearly always comes after the first frame: focus goes to the first button again when that
+    // changes, unless the person has moved it to a card or another button, which it is never taken from.
+    LaunchedEffect(title.key, firstButton) {
         withFrameNanos { }
+        if (moved.value && holds.value) return@LaunchedEffect
+        placed.value = firstButton
+        moved.value = false
         runCatching { first.requestFocus() }
     }
+    val onButtonFocused: (TitleButton) -> Unit = { if (it != placed.value) moved.value = true }
     // Back up from the related rows the whole head comes into sight, not just the button that takes focus.
     val head = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
     Box(modifier.fillMaxSize()) {
         BackdropLayer(shown.backdrop.takeUnless { themeSurface }, state = backdrop)
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = StovaLayout.TvSafeEdge)) {
+        Column(Modifier.fillMaxSize().onFocusChanged { holds.value = it.hasFocus }.verticalScroll(rememberScrollState())
+            .padding(vertical = StovaLayout.TvSafeEdge)) {
             Row(Modifier.padding(horizontal = StovaLayout.TvSafeEdge).bringIntoViewRequester(head)
                 .onFocusChanged { if (it.hasFocus) scope.launch { head.bringIntoView() } },
                 horizontalArrangement = Arrangement.spacedBy(32.dp)) {
@@ -101,10 +125,11 @@ fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, relate
                         Text(it, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 5, overflow = TextOverflow.Ellipsis)
                     }
-                    TitleActions(details, access, busy, first, onRequest, onWithdraw, onOpenSpole, Modifier.padding(top = 8.dp))
+                    TitleActions(request, withdraw, firstButton, busy, first, onButtonFocused, onRequest, onWithdraw, onOpenSpole,
+                        Modifier.padding(top = 8.dp))
                 }
             }
-            for ((row, heading) in rows) DiscoverTitleRow(stringResource(heading), row.items, onFocus = {}, onOpen = onOpenTitle)
+            for ((row, heading) in rows) DiscoverTitleRow(stringResource(heading), row.items, onFocus = { moved.value = true }, onOpen = onOpenTitle)
         }
     }
 }
@@ -147,19 +172,20 @@ private fun StatusLine(title: DiscoverTitle, details: DiscoverDetails?) {
     Text(stringResource(label), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
-/** Ask (the film, or a series' seasons), take a request back, and open the title in Spole; [first] goes on the first one there. */
+/**
+ * Ask (the film, or a series' seasons), take a request back, and open the title in Spole. [first] goes on
+ * [firstButton]; [onFocused] hears which button takes focus.
+ */
 @Composable
-private fun TitleActions(details: DiscoverDetails?, access: SeerrAccess, busy: Boolean, first: FocusRequester, onRequest: () -> Unit,
-    onWithdraw: () -> Unit, onOpenSpole: () -> Unit, modifier: Modifier = Modifier) {
-    val request = details?.requestAction?.takeIf { access == SeerrAccess.PERSONAL }
-    val withdraw = details?.withdrawable == true
-    val firstFocus = Modifier.focusRequester(first)
+private fun TitleActions(request: RequestAction?, withdraw: Boolean, firstButton: TitleButton, busy: Boolean, first: FocusRequester,
+    onFocused: (TitleButton) -> Unit, onRequest: () -> Unit, onWithdraw: () -> Unit, onOpenSpole: () -> Unit, modifier: Modifier = Modifier) {
+    fun Modifier.button(button: TitleButton) = onFocusChanged { if (it.isFocused) onFocused(button) }
+        .then(if (button == firstButton) Modifier.focusRequester(first) else Modifier)
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         if (request != null) StovaButton(stringResource(if (request == RequestAction.MOVIE) R.string.discover_request else R.string.discover_choose_seasons),
-            onRequest, firstFocus, primary = true, enabled = !busy)
-        if (withdraw) StovaButton(stringResource(R.string.discover_withdraw), onWithdraw, if (request == null) firstFocus else Modifier,
+            onRequest, Modifier.button(TitleButton.REQUEST), primary = true, enabled = !busy)
+        if (withdraw) StovaButton(stringResource(R.string.discover_withdraw), onWithdraw, Modifier.button(TitleButton.WITHDRAW),
             quiet = true, enabled = !busy)
-        StovaButton(stringResource(R.string.discover_open_spole), onOpenSpole, if (request == null && !withdraw) firstFocus else Modifier,
-            quiet = true, enabled = !busy)
+        StovaButton(stringResource(R.string.discover_open_spole), onOpenSpole, Modifier.button(TitleButton.SPOLE), quiet = true, enabled = !busy)
     }
 }

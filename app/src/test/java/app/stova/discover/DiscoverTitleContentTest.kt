@@ -138,6 +138,31 @@ class DiscoverTitleContentTest {
         compose.onNodeWithText("Be om").assertIsFocused()
     }
 
+    // Seerr's page nearly always comes after the first frame: the person is not left on «Opne i Spole» once «Be om» is there.
+    @Test fun requestButtonTakesFocusWhenDetailsArrive() {
+        var current by mutableStateOf<DiscoverDetails?>(null)
+        compose.setContent {
+            StovaTheme(reduceMotion = true) { DiscoverTitleContent(heat, current, emptyList(), SeerrAccess.PERSONAL, false, {}, {}, {}, {}) }
+        }
+        compose.onNodeWithText("Opne i Spole").assertIsFocused()
+        compose.runOnIdle { current = details() }
+        compose.onNodeWithText("Be om").assertIsFocused()
+    }
+
+    // …but focus the person moved themselves stays where they put it.
+    @Test fun detailsArrivingNeverTakeFocusFromTheViewer() {
+        var current by mutableStateOf<DiscoverDetails?>(null)
+        val related = listOf(DiscoverRow(DiscoverRowKind.SIMILAR, listOf(ronin)))
+        compose.setContent {
+            StovaTheme(reduceMotion = true) { DiscoverTitleContent(heat, current, related, SeerrAccess.PERSONAL, false, {}, {}, {}, {}) }
+        }
+        compose.onNodeWithText("Opne i Spole").assertIsFocused().performKeyInput { pressKey(Key.DirectionDown) }
+        card("Ronin").assertIsFocused()
+        compose.runOnIdle { current = details() }
+        compose.onNodeWithText("Be om").assertExists().assertIsNotFocused()
+        card("Ronin").assertIsFocused()
+    }
+
     // The profile chose the theme's own surface as background: Oppdag draws no title's picture behind it either.
     @Test fun themeBackgroundDrawsNoBackdrop() {
         val picture = "https://demo.invalid/heat-backdrop"
