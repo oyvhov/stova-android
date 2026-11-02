@@ -72,13 +72,14 @@ Stova lastar direkte.
 | `discover/related?…&type=&tmdb=` | Rader `similar` og `recommended` med radkolonnane. |
 | `discover/search?kind=&user=&q=&page=` | Rad `search` med radkolonnane. Extras: `page`, `has_more`. |
 | `call("discover_request", {kind,user,type,tmdb,seasons})` | `result` = `ok`, `already`, `not_personal`, `forbidden`, `failed`, `unknown`. |
-| `call("discover_withdraw", {kind,user,request_id})` | `result` = `ok`, `failed`, `unknown`. |
+| `call("discover_withdraw", {kind,user,request_id})` | `result` = `ok`, `not_personal`, `failed`, `unknown`. |
 | `spole://discover?kind=&user=&type=&tmdb=` | Opnar tittelen i Spole sitt Oppdag. |
 
 `status` er Seerr sin mediestatus (1 ukjend, 2 ventar, 3 på veg, 4 delvis, 5 i biblioteket,
 6 sperra). `stage` er Spole sitt steg (`requested`, `downloading`, `importing`, `available`,
-`declined`, `failed`, `unknown`, `watching`). Ein eldre Spole utan desse stiane svarer med den tomme
-profilmarkøren utan `seerr`-extra; Stova les det som «ikkje svart» og viser ingenting.
+`declined`, `failed`, `unknown`, `watching`). Kvart svar på ein `discover`-sti har `seerr`-extraen, ikkje
+berre `discover`: Stova reknar eit svar som svart berre når han er der. Ein eldre Spole utan desse stiane
+svarer med den tomme profilmarkøren utan `seerr`-extra; Stova les det som «ikkje svart» og viser ingenting.
 
 ## Ikkje med no
 
