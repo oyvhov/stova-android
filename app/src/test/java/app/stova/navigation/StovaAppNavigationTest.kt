@@ -190,19 +190,74 @@ class StovaAppNavigationTest {
         rule.waitUntil(5_000) { rule.onAllNodes(tile and isFocused()).fetchSemanticsNodes().isNotEmpty() }
     }
 
-    /** Spole's launcher provider answering Discover with one popular title, for a person who may ask in their own name. */
+    // A request Spole follows for the person stands on the page; OK opens its title with what the card showed.
+    @Test fun discoverRequestOpensItsTitle() {
+        openDiscoverPage()
+        val request = hasContentDescription("The Gorge") and hasClickAction()
+        rule.waitUntil(5_000) { rule.onAllNodes(request).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Lastar ned · 42 %").assertExists()
+        rule.onNode(request).performSemanticsAction(SemanticsActions.OnClick)
+        rule.waitForIdle()
+        rule.onAllNodes(request).assertCountEquals(0)
+        rule.onNodeWithText("The Gorge").assertExists()
+        rule.onNodeWithTag("screen-DISCOVER").assertExists()
+    }
+
+    // Spole says Seerr is not there for the person any more: the page has nothing to show, so it goes home by itself.
+    @Test fun discoverLeavesForHomeWhenSeerrIsGone() {
+        val spole = openDiscoverPage()
+        spole.seerr = "none"
+        val container = (rule.activity.application as StovaApplication).container
+        runBlocking { container.discover.refresh(container.session.active.value!!.id, SpoleLink(ServerKind.EMBY, "eilev"), force = true) }
+        rule.waitUntil(5_000) { rule.onAllNodesWithTag("screen-HOME").fetchSemanticsNodes().isNotEmpty() }
+        rule.waitForIdle()
+        rule.onAllNodesWithTag("screen-DISCOVER").assertCountEquals(0)
+    }
+
+    // The profile names no Spole person any more and has no account to ask as: the page goes home by itself.
+    @Test fun discoverLeavesForHomeWithoutASpolePerson() {
+        openDiscoverPage()
+        val container = (rule.activity.application as StovaApplication).container
+        runBlocking { container.profiles.update(container.session.active.value!!.id) { it.copy(spole = null) } }
+        rule.waitUntil(5_000) { rule.onAllNodesWithTag("screen-HOME").fetchSemanticsNodes().isNotEmpty() }
+        rule.waitForIdle()
+        rule.onAllNodesWithTag("screen-DISCOVER").assertCountEquals(0)
+    }
+
+    /** The Oppdag page opened from Home's tile, with Spole answering for the profile's person and the page's first card in focus. */
+    private fun openDiscoverPage(): DiscoverSpole {
+        val container = (rule.activity.application as StovaApplication).container
+        val spole = DiscoverSpole()
+        shadowOf(rule.activity.packageManager).installPackage(PackageInfo().apply { packageName = "app.reelstack" })
+        ShadowContentResolver.registerProviderInternal("app.reelstack.launcher", spole)
+        runBlocking { container.profiles.update(container.session.active.value!!.id) { it.copy(spole = SpoleLink(ServerKind.EMBY, "eilev")) } }
+        val tile = hasContentDescription("Oppdag") and hasClickAction()
+        rule.waitUntil(10_000) { rule.onAllNodes(tile).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(tile).performSemanticsAction(SemanticsActions.OnClick)
+        rule.onNodeWithTag("screen-DISCOVER").assertExists()
+        rule.waitUntil(5_000) { rule.onAllNodes(hasContentDescription("Heat") and hasClickAction() and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        return spole
+    }
+
+    /** Spole's launcher provider answering Discover with one popular title; [seerr] is what it says the person may do. */
     private class DiscoverSpole : ContentProvider() {
+        @Volatile var seerr = "personal"
         override fun onCreate() = true
         override fun getType(uri: Uri): String? = null
         override fun insert(uri: Uri, values: ContentValues?): Uri? = null
         override fun delete(uri: Uri, selection: String?, args: Array<out String>?) = 0
         override fun update(uri: Uri, values: ContentValues?, selection: String?, args: Array<out String>?) = 0
         override fun query(uri: Uri, projection: Array<out String>?, selection: String?, args: Array<out String>?, sort: String?): Cursor? =
-            if (uri.path != "/discover") null
-            else MatrixCursor(arrayOf("row", "type", "tmdb", "title", "year", "overview", "poster", "backdrop", "status", "community", "genres")).apply {
-                addRow(arrayOf<Any?>("trending", "movie", 949, "Heat", 1995, null, null, null, 5, 8.3, "Crime"))
-                setExtras(Bundle().apply { putString("seerr", "personal") })
-            }
+            when (uri.path) {
+                "/discover" -> MatrixCursor(arrayOf("row", "type", "tmdb", "title", "year", "overview", "poster", "backdrop", "status", "community", "genres")).apply {
+                    if (seerr != "none") addRow(arrayOf<Any?>("trending", "movie", 949, "Heat", 1995, null, null, null, 5, 8.3, "Crime"))
+                }
+                // One request the person follows, downloading.
+                "/discover/requests" -> MatrixCursor(arrayOf("type", "tmdb", "title", "poster", "backdrop", "stage", "percent", "seasons", "request_id", "is4k")).apply {
+                    if (seerr != "none") addRow(arrayOf<Any?>("movie", 950396, "The Gorge", null, null, "downloading", 42, "", 7, 0))
+                }
+                else -> null
+            }?.apply { setExtras(Bundle().apply { putString("seerr", seerr) }) }
     }
 
     @Test fun homeIntentClosesSmartHomeAndKeepsItAvailable() {

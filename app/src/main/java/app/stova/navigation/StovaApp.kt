@@ -212,14 +212,13 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             onHomeChange = { prefs -> scope.launch { container.profiles.update(profile.id) { it.copy(home = prefs) } } },
                             onRefresh = {
                                 container.spoleRows.refresh(profile.id)
-                                kotlinx.coroutines.coroutineScope {
-                                    // Beside the media rows, never before them; the repository asks Spole only every ten minutes.
-                                    launch {
-                                        container.discover.identity(profile, container.mediaAccounts.forProfile(profile.id).first())
-                                            ?.let { container.discover.refresh(profile.id, it) }
-                                    }
-                                    container.media.refresh(profile.id)
+                                // Beside the media rows and never holding them up: a slow Spole keeps the refresh's pace. In the
+                                // app's scope; the repository asks Spole one question at a time per profile, every ten minutes.
+                                container.appScope.launch {
+                                    container.discover.identity(profile, container.mediaAccounts.forProfile(profile.id).first())
+                                        ?.let { container.discover.refresh(profile.id, it) }
                                 }
+                                container.media.refresh(profile.id)
                             },
                             onPlaybackOpened = { container.media.playbackOpened(profile.id) },
                             onItemChanged = {

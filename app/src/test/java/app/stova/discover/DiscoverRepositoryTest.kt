@@ -25,17 +25,22 @@ class DiscoverRepositoryTest {
     private val matrix = DiscoverDetails(title(603), null, 136, 83, canRequest = true, requestId = null, requestStage = null, trailer = null,
         seasons = emptyList())
 
-    /** Spole as the repository sees it: [rows] answers each ask, a title's questions throw while [trips], and every ask is counted. */
+    /**
+     * Spole as the repository sees it: [rows] and [requests] answer each ask, a title's questions throw while [trips],
+     * and every ask is counted; [requestsAsked] holds whether each ask for the requests had Spole ask Seerr first.
+     */
     private class FakeFetch : DiscoverFetch {
         var rows: suspend () -> DiscoverAnswer? = { null }
+        var requests: suspend () -> List<DiscoverRequest>? = { emptyList() }
         var trips = false
         var result = DiscoverActionResult.DONE
         val details = mutableMapOf<Pair<DiscoverType, Int>, DiscoverDetails>()
         var rowsAsked = 0
+        val requestsAsked = mutableListOf<Boolean>()
         var detailsAsked = 0
         var relatedAsked = 0
         override suspend fun rows(link: SpoleLink): DiscoverAnswer? { rowsAsked++; return rows() }
-        override suspend fun requests(link: SpoleLink, refresh: Boolean): List<DiscoverRequest>? = emptyList()
+        override suspend fun requests(link: SpoleLink, refresh: Boolean): List<DiscoverRequest>? { requestsAsked += refresh; return requests() }
         private fun trip() = check(!trips) { "Spole tripped" }
         override suspend fun details(link: SpoleLink, type: DiscoverType, tmdbId: Int): DiscoverDetails? {
             detailsAsked++; trip()
@@ -107,6 +112,52 @@ class DiscoverRepositoryTest {
         repository.refresh("p1", link)
         assertEquals(4, fetch.rowsAsked)
         assertEquals(DiscoverState(SeerrAccess.PERSONAL, upcoming, emptyList(), loading = false, failed = false), repository.state("p1").value)
+    }
+
+    // The person's requests come with the rows. Spole asks Seerr for their state first on the first look, when
+    // forced, and when the last look is ten minutes old; Spole tripping on them alone hides nothing.
+    @Test fun requestsAreFetchedWithRowsAndRefreshedOnForce() = runTest {
+        var time = 0L
+        val gorge = DiscoverRequest(DiscoverType.MOVIE, 950396, "The Gorge", null, null, RequestStage.DOWNLOADING, 42, emptyList(), 7, is4k = false)
+        val fetch = FakeFetch().apply { rows = { DiscoverAnswer(SeerrAccess.PERSONAL, trending) }; requests = { listOf(gorge) } }
+        val repository = DiscoverRepository(fetch, now = { time })
+        repository.refresh("p1", link)
+        assertEquals(DiscoverState(SeerrAccess.PERSONAL, trending, listOf(gorge), loading = false, failed = false), repository.state("p1").value)
+        assertEquals(listOf(true), fetch.requestsAsked)
+        // While the rows are fresh nothing is asked; forced, Spole asks Seerr again and the new state replaces the old.
+        time = 60_000L
+        repository.refresh("p1", link)
+        assertEquals(listOf(true), fetch.requestsAsked)
+        val done = gorge.copy(stage = RequestStage.AVAILABLE, percent = null)
+        fetch.requests = { listOf(done) }
+        repository.refresh("p1", link, force = true)
+        assertEquals(listOf(true, true), fetch.requestsAsked)
+        assertEquals(listOf(done), repository.state("p1").value?.requests)
+        // Spole trips on the rows: the requests shown stay, and a Spole that just failed is not asked for them.
+        fetch.rows = { throw IllegalStateException("Spole tripped") }
+        repository.refresh("p1", link, force = true)
+        assertEquals(DiscoverState(SeerrAccess.PERSONAL, trending, listOf(done), loading = false, failed = true), repository.state("p1").value)
+        assertEquals(listOf(true, true), fetch.requestsAsked)
+        // The next return asks again; the requests were looked at a minute ago, so Spole answers with what it has.
+        fetch.rows = { DiscoverAnswer(SeerrAccess.PERSONAL, trending) }
+        time = 2 * 60_000L
+        repository.refresh("p1", link)
+        assertEquals(listOf(true, true, false), fetch.requestsAsked)
+        // Spole trips on the requests alone: the rows come, nothing is said to have failed, and the requests shown stay.
+        fetch.requests = { throw IllegalStateException("Spole tripped") }
+        repository.refresh("p1", link, force = true)
+        assertEquals(DiscoverState(SeerrAccess.PERSONAL, trending, listOf(done), loading = false, failed = false), repository.state("p1").value)
+        assertEquals(listOf(true, true, false, true), fetch.requestsAsked)
+        // Ten minutes after the last look that answered, Spole asks Seerr again without being forced.
+        fetch.requests = { listOf(done) }
+        time += 10 * 60_000L
+        repository.refresh("p1", link)
+        assertEquals(listOf(true, true, false, true, true), fetch.requestsAsked)
+        // Seerr is not there for the person any more: nothing to show, and the requests are not asked for.
+        fetch.rows = { DiscoverAnswer(SeerrAccess.NONE, emptyList()) }
+        repository.refresh("p1", link, force = true)
+        assertEquals(DiscoverState(SeerrAccess.NONE, emptyList(), emptyList(), loading = false, failed = false), repository.state("p1").value)
+        assertEquals(5, fetch.requestsAsked.size)
     }
 
     @Test fun identityPrefersTheSpoleLinkAndSkipsKids() {

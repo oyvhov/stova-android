@@ -16,11 +16,16 @@ import kotlinx.coroutines.sync.withLock
 data class DiscoverState(val access: SeerrAccess, val rows: List<DiscoverRow>, val requests: List<DiscoverRequest>, val loading: Boolean,
     val failed: Boolean)
 
+/** Nobody answered, or Seerr is not there for the person: nothing to show, nothing being asked, and nothing went wrong. */
+val DiscoverState.nothingToShow: Boolean get() = access == SeerrAccess.NONE && !loading && !failed
+
 /**
  * Discover from Spole, kept in memory so the page and Home's row open with what Stova has and ask again
  * quietly. [refresh] asks only when the last good answer is older than [minAgeMillis], unless forced; when
- * Spole trips, the rows already shown stay and the state says it failed. A title's page and its related
- * rows are kept five minutes per person, and forgotten when a request changes the title.
+ * Spole trips, the rows already shown stay and the state says it failed. The person's requests come with
+ * the rows, from a Spole that has Seerr for them; Spole tripping on those alone keeps the ones shown and
+ * fails nothing. A title's page and its related rows are kept five minutes per person, and forgotten when
+ * a request changes the title.
  */
 class DiscoverRepository(
     private val fetch: DiscoverFetch,
@@ -29,6 +34,7 @@ class DiscoverRepository(
 ) {
     private val states = ConcurrentHashMap<String, MutableStateFlow<DiscoverState?>>()
     private val fetchedAt = ConcurrentHashMap<String, Long>()
+    private val requestsAt = ConcurrentHashMap<String, Long>()
     private val locks = ConcurrentHashMap<String, Mutex>()
     private val titles = ConcurrentHashMap<TitleKey, Kept<DiscoverDetails>>()
     private val related = ConcurrentHashMap<TitleKey, Kept<List<DiscoverRow>>>()
@@ -47,6 +53,10 @@ class DiscoverRepository(
             try {
                 val answer = fetch.rows(link)
                 state.update { answered(it ?: EMPTY, answer) }
+                // The rows show at once; the requests follow, asked only of a Spole that has Seerr for the person.
+                if (answer != null && answer.access != SeerrAccess.NONE) {
+                    requests(profileId, link, force)?.let { requests -> state.update { it?.copy(requests = requests) } }
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -57,6 +67,15 @@ class DiscoverRepository(
             // Only a good answer is fresh: after a failure the next return asks again.
             if (state.value?.failed == false) fetchedAt[profileId] = now() else fetchedAt.remove(profileId)
         }
+    }
+
+    /**
+     * The person's requests, with Spole asking Seerr for their state first when forced or when the last look that
+     * answered is older than [minAgeMillis]; none when Spole tripped or nobody answered, so the ones shown stay.
+     */
+    private suspend fun requests(profileId: String, link: SpoleLink, force: Boolean): List<DiscoverRequest>? {
+        val old = requestsAt[profileId]?.let { now() - it >= minAgeMillis } ?: true
+        return orNull { fetch.requests(link, refresh = force || old) }?.also { requestsAt[profileId] = now() }
     }
 
     private fun answered(old: DiscoverState, answer: DiscoverAnswer?): DiscoverState = when {

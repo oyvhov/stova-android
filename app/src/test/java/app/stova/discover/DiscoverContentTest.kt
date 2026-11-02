@@ -35,8 +35,13 @@ class DiscoverContentTest {
         DiscoverRow(DiscoverRowKind.UPCOMING_SERIES, listOf(title(DiscoverType.SERIES, 95396, "Severance"))),
     )
 
-    private fun state(access: SeerrAccess = SeerrAccess.PERSONAL, rows: List<DiscoverRow> = this.rows, failed: Boolean = false) =
-        DiscoverState(access, rows, emptyList(), loading = false, failed = failed)
+    private fun state(access: SeerrAccess = SeerrAccess.PERSONAL, rows: List<DiscoverRow> = this.rows, failed: Boolean = false,
+        requests: List<DiscoverRequest> = emptyList()) = DiscoverState(access, rows, requests, loading = false, failed = failed)
+
+    private fun request(tmdbId: Int, name: String, stage: RequestStage, percent: Int? = null) =
+        DiscoverRequest(DiscoverType.MOVIE, tmdbId, name, null, null, stage, percent, emptyList(), tmdbId, is4k = false)
+    private val gorge = request(950396, "The Gorge", RequestStage.DOWNLOADING, 42)
+    private val nosferatu = request(426063, "Nosferatu", RequestStage.REQUESTED, 10)
 
     private fun show(state: DiscoverState?, onOpenSearch: () -> Unit = {}, onRetry: () -> Unit = {}) = compose.setContent {
         StovaTheme(reduceMotion = true) { DiscoverContent(state, {}, onOpenSearch, {}, onRetry) }
@@ -84,6 +89,40 @@ class DiscoverContentTest {
         compose.runOnIdle { current = current.copy(loading = false) }
         compose.onNodeWithText("Seerr svara ikkje.").assertIsDisplayed()
         compose.onNodeWithText("Prøv att").assertIsFocused()
+    }
+
+    @Test fun requestsRowAppearsOnlyWhenThereAreAny() {
+        var current by mutableStateOf(state())
+        val opened = mutableListOf<DiscoverRequest>()
+        compose.setContent { StovaTheme(reduceMotion = true) { DiscoverContent(current, {}, {}, { opened += it }, {}) } }
+        compose.onAllNodesWithText("Dine førespurnader").assertCountEquals(0)
+        compose.runOnIdle { current = current.copy(requests = listOf(gorge, nosferatu)) }
+        compose.onNodeWithText("Dine førespurnader").assertExists()
+        // The row stands right after «Populært no»: Down from the first popular title lands on the first request, and Down again on what is coming.
+        card("Dune: Part Two").assertIsFocused().performKeyInput { pressKey(Key.DirectionDown) }
+        card("The Gorge").assertIsFocused()
+        compose.onNode(hasText("The Gorge") and inHero).assertIsDisplayed()
+        card("The Gorge").performKeyInput { pressKey(Key.DirectionDown) }
+        card("Mickey 17").assertIsFocused().performKeyInput { pressKey(Key.DirectionUp) }
+        // OK on a request opens its title.
+        card("The Gorge").assertIsFocused().performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf(gorge), opened)
+        compose.runOnIdle { current = current.copy(requests = emptyList()) }
+        compose.onAllNodesWithText("Dine førespurnader").assertCountEquals(0)
+    }
+
+    @Test fun downloadingCardShowsPercent() {
+        show(state(requests = listOf(gorge, nosferatu)))
+        // The row stands under the fold; walking down to it brings the card into view whole, with the line under it.
+        card("Dune: Part Two").assertIsFocused().performKeyInput { pressKey(Key.DirectionDown) }
+        card("The Gorge").assertIsFocused()
+        compose.onNodeWithText("Lastar ned · 42 %").assertIsDisplayed()
+        compose.onNodeWithText("Bede om").assertIsDisplayed()
+        // Only the download draws a bar, as far across its card as the download has come.
+        compose.onAllNodesWithTag("card-progress", useUnmergedTree = true).assertCountEquals(1)
+        val bar = compose.onNode(hasTestTag("card-progress") and hasAnyAncestor(hasContentDescription("The Gorge")), useUnmergedTree = true)
+        val cardWidth = card("The Gorge").fetchSemanticsNode().size.width
+        assertEquals(cardWidth * 0.42f, bar.fetchSemanticsNode().size.width.toFloat(), 1f)
     }
 
     @Test fun browseAccessShowsTheSignInHint() {

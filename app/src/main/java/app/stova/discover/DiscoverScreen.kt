@@ -79,9 +79,10 @@ private fun DiscoverStep.stateKey(depth: Int): String = "$depth:" + when (this) 
 /**
  * The Oppdag page with a stack of its own: the rows, a title's page and search. Back takes the top step away
  * and the step under it comes back as it was left; on the first step Back reaches the shell's own handler,
- * which walks home as from Apps. [onLeave] takes the page home. Spole is asked for the rows on the way in,
- * as the person the profile is in Discover, unless its last answer is younger than ten minutes. The steps
- * share one backdrop, so a title's page and the rows under it hand the picture over without a fade from dark.
+ * which walks home as from Apps. [onLeave] takes the page home; the page goes there by itself when it has
+ * nothing to show. Spole is asked for the rows and the person's requests on the way in, as the person the
+ * profile is in Discover, unless its last answer is younger than ten minutes. The steps share one backdrop,
+ * so a title's page and the rows under it hand the picture over without a fade from dark.
  */
 @Composable
 fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverStep = DiscoverStep.Rows, onLeave: () -> Unit) {
@@ -97,6 +98,13 @@ fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverSte
     val state by remember(container, profile.id) { container.discover.state(profile.id) }.collectAsStateWithLifecycle()
     // In the app's scope, so an answer that arrives after the page has closed is there for the next visit.
     LaunchedEffect(link) { link?.let { container.appScope.launch { container.discover.refresh(profile.id, it) } } }
+    // Nothing to show for good: nobody to ask as once the accounts are read, or Spole saying Seerr is not there for
+    // the person. The page goes home instead of standing empty. The state is read again here, since a refresh begun
+    // just above for an old answer has already said it is asking.
+    val nothing = accounts != null && (link == null || state?.nothingToShow == true)
+    LaunchedEffect(nothing) {
+        if (nothing && (link == null || container.discover.state(profile.id).value?.nothingToShow == true)) onLeave()
+    }
     val backdrop = rememberBackdropState()
     val context = LocalContext.current
     val handoff = remember(context) { SpoleHandoff(context) }
@@ -117,10 +125,7 @@ fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverSte
             DiscoverStep.Rows -> DiscoverContent(state,
                 onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) },
                 onOpenSearch = { steps = steps + DiscoverStep.Search },
-                onOpenRequest = { request ->
-                    steps = steps + DiscoverStep.Title(request.type, request.tmdbId, DiscoverTitle(request.type, request.tmdbId, request.title,
-                        null, null, request.poster, request.backdrop, SeerrStatus.UNKNOWN, null, emptyList()))
-                },
+                onOpenRequest = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it.asDiscoverTitle()) },
                 onRetry = { link?.let { container.appScope.launch { container.discover.refresh(profile.id, it, force = true) } } },
                 backdrop = backdrop)
             is DiscoverStep.Title -> TitleStep(container, link, step, state?.access ?: SeerrAccess.NONE, backdrop,

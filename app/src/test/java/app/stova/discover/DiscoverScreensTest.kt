@@ -2,6 +2,8 @@ package app.stova.discover
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
 import app.stova.assumeScreensEnabled
@@ -43,14 +45,37 @@ class DiscoverScreensTest {
         )),
     )
 
+    private fun request(type: DiscoverType, tmdbId: Int, name: String, stage: RequestStage, percent: Int? = null) =
+        DiscoverRequest(type, tmdbId, name, null, null, stage, percent, emptyList(), tmdbId, is4k = false)
+
+    private val requests = listOf(
+        request(DiscoverType.MOVIE, 950396, "The Gorge", RequestStage.DOWNLOADING, 42),
+        request(DiscoverType.SERIES, 83867, "Andor", RequestStage.REQUESTED),
+        request(DiscoverType.MOVIE, 426063, "Nosferatu", RequestStage.IMPORTING),
+        request(DiscoverType.MOVIE, 1064213, "Anora", RequestStage.AVAILABLE),
+    )
+
     @Test fun discoverRows() {
         assumeScreensEnabled()
         compose.setContent {
             StovaTheme(reduceMotion = true) {
-                DiscoverContent(DiscoverState(SeerrAccess.PERSONAL, rows, emptyList(), loading = false, failed = false), {}, {}, {}, {})
+                DiscoverContent(DiscoverState(SeerrAccess.PERSONAL, rows, requests, loading = false, failed = false), {}, {}, {}, {})
             }
         }
         compose.saveScreen("discover-rows")
+    }
+
+    // Scrolled to «Dine førespurnader»: each card says how far it has come, and only the download draws a bar.
+    // Focus does not reach the window in this graphics mode, so the rows are scrolled instead of walked.
+    @Test fun discoverRequests() {
+        assumeScreensEnabled()
+        compose.setContent {
+            StovaTheme(reduceMotion = true) {
+                DiscoverContent(DiscoverState(SeerrAccess.PERSONAL, rows, requests, loading = false, failed = false), {}, {}, {}, {})
+            }
+        }
+        compose.onNodeWithTag("discover-rows").performScrollToIndex(1)
+        compose.saveScreen("discover-requests")
     }
 
     @Test fun discoverTitle() {

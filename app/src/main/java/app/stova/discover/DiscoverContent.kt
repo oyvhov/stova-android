@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -49,7 +50,7 @@ import app.stova.profiles.BackgroundSource
 import app.stova.profiles.MovieStyle
 import app.stova.profiles.spacingDp
 
-/** The page's rows in their order, with their headings; the person's own requests (Task 6) come right after «Populært no». */
+/** The page's rows of titles in their order, with their headings; the person's own requests come right after «Populært no». */
 private val PAGE_ROWS = listOf(
     DiscoverRowKind.TRENDING to R.string.discover_row_trending,
     DiscoverRowKind.UPCOMING_MOVIES to R.string.discover_row_upcoming_movies,
@@ -60,14 +61,18 @@ private val PAGE_ROWS = listOf(
 private val HERO_WIDTH = 560.dp
 
 /** The cards on this page stand for titles in Seerr; the account id only keeps them apart from library cards. */
-private const val SEERR_CARDS = "seerr"
+internal const val SEERR_CARDS = "seerr"
+
+/** The key of the row «Dine førespurnader», and the start of its cards' places; no [DiscoverRowKind] is named so. */
+private const val REQUESTS_ROW = "REQUESTS"
 
 /**
  * The Oppdag page's rows: a header with «Søk», a hero band for the card in focus over that title's backdrop,
- * and Seerr's rows below. Until Spole first answers it says it is fetching; when Seerr did not answer and
- * there is nothing to show it offers to try again; a person who may only look is told how to ask. The page
- * opens on the first card, or on the card it was left on while a title's page lay over it. [backdrop] is the
- * whole Oppdag page's, so going to a title and back never fades the picture in from the bare background.
+ * and Seerr's rows below, with the person's own requests after «Populært no» when there are any. Until Spole
+ * first answers it says it is fetching; when Seerr did not answer and there is nothing to show it offers to
+ * try again; a person who may only look is told how to ask. The page opens on the first card, or on the card
+ * it was left on while a title's page lay over it. [backdrop] is the whole Oppdag page's, so going to a title
+ * and back never fades the picture in from the bare background.
  */
 @Composable
 fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit, onOpenSearch: () -> Unit,
@@ -76,11 +81,18 @@ fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit,
     val shown = remember(state?.rows) {
         PAGE_ROWS.mapNotNull { (kind, heading) -> state?.rows?.firstOrNull { it.kind == kind && it.items.isNotEmpty() }?.let { it to heading } }
     }
+    // «Populært no», then the requests, then what is coming. A request Spole gave twice is drawn once.
+    val (popular, coming) = remember(shown) { shown.partition { (row, _) -> row.kind == DiscoverRowKind.TRENDING } }
+    val requests = remember(state?.requests) { state?.requests.orEmpty().distinctBy { it.key } }
     // The card in focus as «row/title», kept while a title's page lies over the rows so Back lands on it again.
     var focusedAt by rememberSaveable { mutableStateOf<String?>(null) }
-    val focused = focusedAt?.let { at -> shown.firstNotNullOfOrNull { (row, _) -> row.items.firstOrNull { spot(row.kind, it) == at } } }
+    val focused = focusedAt?.let { at ->
+        shown.firstNotNullOfOrNull { (row, _) -> row.items.firstOrNull { spot(row.kind, it) == at } }
+            ?: requests.firstOrNull { requestSpot(it) == at }?.asDiscoverTitle()
+    }
     val hero = focused ?: state?.rows?.firstOrNull { it.kind == DiscoverRowKind.TRENDING }?.items?.firstOrNull()
-    val start = focusedAt.takeIf { focused != null } ?: shown.firstOrNull()?.let { (row, _) -> spot(row.kind, row.items.first()) }
+    val start = focusedAt.takeIf { focused != null } ?: popular.firstOrNull()?.let { (row, _) -> spot(row.kind, row.items.first()) }
+        ?: requests.firstOrNull()?.let(::requestSpot) ?: coming.firstOrNull()?.let { (row, _) -> spot(row.kind, row.items.first()) }
     // «Prøv att» stands only while nothing is being asked: a retry says it is fetching, and the button comes back if Seerr fails again.
     val showRetry = state != null && state.failed && state.rows.isEmpty() && !state.loading
     val first = remember { FocusRequester() }
@@ -111,11 +123,20 @@ fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit,
                     DiscoverHero(hero, Modifier.padding(start = StovaLayout.TvSafeEdge, end = StovaLayout.TvSafeEdge, top = 16.dp))
                     // Cards scroll out to the screen's edge as on Home; the rows' own padding keeps them at the safe edge.
                     LazyColumn(Modifier.weight(1f).testTag("discover-rows"), contentPadding = PaddingValues(bottom = StovaLayout.TvSafeEdge)) {
-                        for ((row, heading) in shown) item(key = row.kind.name) {
-                            val here = start?.takeIf { it.startsWith("${row.kind.name}/") }
-                            DiscoverTitleRow(stringResource(heading), row.items, onFocus = { focusedAt = spot(row.kind, it) }, onOpen = onOpenTitle,
-                                focus = first.takeIf { here != null }, focusOn = here?.substringAfter('/'))
+                        fun titleRows(rows: List<Pair<DiscoverRow, Int>>) {
+                            for ((row, heading) in rows) item(key = row.kind.name) {
+                                val here = start?.takeIf { it.startsWith("${row.kind.name}/") }
+                                DiscoverTitleRow(stringResource(heading), row.items, onFocus = { focusedAt = spot(row.kind, it) }, onOpen = onOpenTitle,
+                                    focus = first.takeIf { here != null }, focusOn = here?.substringAfter('/'))
+                            }
                         }
+                        titleRows(popular)
+                        if (requests.isNotEmpty()) item(key = REQUESTS_ROW) {
+                            val here = start?.takeIf { it.startsWith("$REQUESTS_ROW/") }
+                            DiscoverRequestRow(stringResource(R.string.discover_row_requests), requests, onFocus = { focusedAt = requestSpot(it) },
+                                onOpen = onOpenRequest, focus = first.takeIf { here != null }, focusOn = here?.substringAfter('/'))
+                        }
+                        titleRows(coming)
                     }
                 }
             }
@@ -125,6 +146,9 @@ fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit,
 
 /** A card's place on the page: its row and its title, since a title can be in more than one row. */
 private fun spot(kind: DiscoverRowKind, title: DiscoverTitle) = "${kind.name}/${title.key}"
+
+/** A request's place on the page, in the row «Dine førespurnader». */
+private fun requestSpot(request: DiscoverRequest) = "$REQUESTS_ROW/${request.key}"
 
 @Composable
 private fun PageNote(@StringRes text: Int) {
@@ -174,6 +198,25 @@ internal fun DiscoverTitleRow(heading: String, items: List<DiscoverTitle>, onFoc
                 val card = remember(item) { item.asMediaItem(SEERR_CARDS) }
                 MediaCard(card, poster, { onOpen(item) }, { onOpen(item) }, { onFocus(item) },
                     if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
+            }
+        }
+    }
+}
+
+/** The person's requests as [DiscoverRequestCard]s, laid out as [DiscoverTitleRow] lays out titles; OK opens the title. */
+@Composable
+private fun DiscoverRequestRow(heading: String, requests: List<DiscoverRequest>, onFocus: (DiscoverRequest) -> Unit,
+    onOpen: (DiscoverRequest) -> Unit, focus: FocusRequester? = null, focusOn: String? = null) {
+    val appearance = LocalAppearance.current
+    val index = requests.indexOfFirst { it.key == focusOn }.coerceAtLeast(0)
+    val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
+    Column {
+        RowHeader(heading)
+        LazyRow(Modifier.focusRestorer(), state = state, contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
+            horizontalArrangement = Arrangement.spacedBy(appearance.spacingDp.dp)) {
+            itemsIndexed(requests, key = { _, request -> request.key }) { i, request ->
+                DiscoverRequestCard(request, { onOpen(request) }, Modifier.onFocusChanged { if (it.hasFocus) onFocus(request) }
+                    .then(if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier))
             }
         }
     }

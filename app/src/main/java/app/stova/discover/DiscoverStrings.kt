@@ -14,6 +14,13 @@ fun seerrStatusLabel(status: SeerrStatus): Int? = when (status) {
     SeerrStatus.BLOCKED -> R.string.seerr_status_blocked
 }
 
+/**
+ * The line under a request's card: the stage's label, and how far the download has come only while it
+ * downloads and Spole knows it, held to 0–100. With a percent the line is `discover_request_caption_percent`.
+ */
+fun requestCaption(stage: RequestStage, percent: Int?): Pair<Int, Int?> =
+    requestStageLabel(stage) to percent?.takeIf { stage == RequestStage.DOWNLOADING }?.coerceIn(0, 100)
+
 /** How far the person's own request has come. */
 @StringRes
 fun requestStageLabel(stage: RequestStage): Int = when (stage) {
