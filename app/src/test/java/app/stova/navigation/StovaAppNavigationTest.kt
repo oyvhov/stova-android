@@ -109,6 +109,18 @@ class StovaAppNavigationTest {
         rule.onNodeWithTag("screen-HOME").assertExists()
     }
 
+    // The Home service bringing Stova back after its own restart is no press: the page stays.
+    @Test fun theHomeServiceComingBackMovesNothing() {
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("Opne Appar").performClick()
+        rule.onNodeWithTag("screen-APPS").assertExists()
+        rule.activityRule.scenario.onActivity {
+            it.onNewIntent(android.content.Intent(android.content.Intent.ACTION_MAIN).addCategory(android.content.Intent.CATEGORY_HOME)
+                .putExtra(app.stova.homebutton.HomeButtonService.EXTRA_RESTORE, true))
+        }
+        rule.onNodeWithTag("screen-APPS").assertExists()
+    }
+
     @Test fun settingsOpensAppsAndBackReturnsToSettingsThenHome() {
         rule.onAllNodesWithText("Innstillingar")[0].performClick()
         rule.onNodeWithTag("screen-SETTINGS").assertExists()

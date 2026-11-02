@@ -114,6 +114,8 @@ fun KidsHomeContent(
     /** False when the parents chose the films' own artwork behind the rows instead of Pip's world. */
     world: Boolean = true,
     seasonOverride: KidsSeason? = null,
+    /** Counts the Home button pressed while Home is already on screen; each press goes back to the first row. */
+    toTop: Int = 0,
 ) {
     val season = seasonOverride ?: profile.appearance.kidsSeason(date)
     val part = DayPart.at(time)
@@ -193,6 +195,9 @@ fun KidsHomeContent(
         val motion = stovaMotion
         // By the row too, not just its place: a row that arrives above (Continue, on a first visit) takes that place.
         LaunchedEffect(focusedRow, shown.getOrNull(focusedRow)?.key) { listState.smoothScrollToItem(focusedRow, motion) }
+        // The Home button: the first row comes back into the list, and its first card takes focus again.
+        val toTopAtStart = remember { toTop }
+        LaunchedEffect(toTop) { if (toTop != toTopAtStart) listState.scrollToItem(0) }
         val rowSpec = LocalBringIntoViewSpec.current
         CompositionLocalProvider(LocalBringIntoViewSpec provides StayPut) {
             LazyColumn(Modifier.fillMaxSize().focusRestorer(), state = listState,
@@ -201,7 +206,7 @@ fun KidsHomeContent(
                     // Rows the child has gone past leave the sky to Pip and the greeting.
                     val present by animateFloatAsState(if (index < focusedRow) 0f else 1f, tween(320), label = "row")
                     CompositionLocalProvider(LocalBringIntoViewSpec provides rowSpec) {
-                        Box(Modifier.graphicsLayer { alpha = present }) { KidsRow(row, art, first = index == 0, focused = index == focusedRow,
+                        Box(Modifier.graphicsLayer { alpha = present }) { KidsRow(row, art, first = index == 0, toTop = toTop, focused = index == focusedRow,
                             onFocused = { title, label, isNew -> focusedRow = index; focusedTitle = title; focusedLabel = label; focusedNew = isNew },
                             onMoved = { bounds -> focusedCard.value = bounds.translate(-origin) },
                             onPlay = play, onApp = onApp) }
@@ -318,11 +323,11 @@ private fun Bubble(label: String?, text: String, pip: PipMotion, pipW: Float, pi
 }
 
 @Composable
-private fun KidsRow(row: HomeRowUi, art: AppArtCache?, first: Boolean, focused: Boolean, onFocused: (String, String, Boolean) -> Unit, onMoved: (Rect) -> Unit,
+private fun KidsRow(row: HomeRowUi, art: AppArtCache?, first: Boolean, toTop: Int, focused: Boolean, onFocused: (String, String, Boolean) -> Unit, onMoved: (Rect) -> Unit,
     onPlay: (FocusedTarget.Media) -> Unit, onApp: (InstalledApp) -> Unit) {
     val start = remember { FocusRequester() }
-    // The first card takes focus as soon as the row has laid it out.
-    if (first) LaunchedEffect(Unit) {
+    // The first card takes focus as soon as the row has laid it out, and again on the Home button.
+    if (first) LaunchedEffect(toTop) {
         repeat(30) { withFrameNanos { }; if (runCatching { start.requestFocus() }.getOrDefault(false)) return@LaunchedEffect }
     }
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {

@@ -148,16 +148,16 @@ class AppearanceRenderingTest {
             HomeContent(listOf(row), null, row.key, AppArtCache(ctx), PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {}, spotlight = SpotlightEntry(film, account, false))
         } }
         compose.onNodeWithContentDescription("Fjordlys").assertWidthIsEqualTo(132.dp)
-        val before = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot().top
+        val before = compose.onNodeWithText("Siste filmar").getUnclippedBoundsInRoot().top
         compose.runOnIdle { prefs = prefs.copy(movieStyle = MovieStyle.WIDE, heroSize = HeroSize.LARGE, rowSpacing = RowSpacing.AIRY) }
         compose.onNodeWithContentDescription("Fjordlys").assertWidthIsEqualTo(248.dp)
-        val after = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot().top
+        val after = compose.onNodeWithText("Siste filmar").getUnclippedBoundsInRoot().top
         assertTrue(after > before)
         val cardBottom = compose.onNodeWithContentDescription("Fjordlys").getUnclippedBoundsInRoot().bottom
         compose.runOnIdle { prefs = prefs.copy(rowSpacing = RowSpacing.TIGHT) }
         // The first row stays at the bottom under the big hero; the spacing it gives up goes to the hero.
         assertEquals(cardBottom.value, compose.onNodeWithContentDescription("Fjordlys").getUnclippedBoundsInRoot().bottom.value, 1f)
-        assertEquals(after.value, compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot().top.value, 1f)
+        assertEquals(after.value, compose.onNodeWithText("Siste filmar").getUnclippedBoundsInRoot().top.value, 1f)
     }
 
     @Test fun largestPosterAndItsTitleFitBelowTheFixedHero() {
@@ -168,7 +168,7 @@ class AppearanceRenderingTest {
         } }
         val card = compose.onNodeWithContentDescription("Fjordlys").getUnclippedBoundsInRoot()
         assertTrue("Full poster and title must fit: $card", card.bottom <= 540.dp)
-        val header = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot()
+        val header = compose.onNodeWithText("Siste filmar").getUnclippedBoundsInRoot()
         assertTrue(compose.onNodeWithText("Film · Drama").getUnclippedBoundsInRoot().bottom <= header.top)
     }
 
@@ -183,7 +183,7 @@ class AppearanceRenderingTest {
         } }
         val art = compose.onNodeWithContentDescription("Fjordlys").getUnclippedBoundsInRoot()
         assertTrue("Whole large poster must remain inside the 48 dp safe edge: $art", art.bottom <= 492.dp)
-        val heading = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot()
+        val heading = compose.onNodeWithText("Siste filmar").getUnclippedBoundsInRoot()
         assertTrue(compose.onNodeWithText("Film · Drama").getUnclippedBoundsInRoot().bottom <= heading.top)
     }
 
@@ -204,7 +204,7 @@ class AppearanceRenderingTest {
         assertEquals(3, layouts.single().lineCount)
         assertTrue("All three overview lines must fit", layouts.single().getLineBottom(2) <= layouts.single().size.height + 0.5f)
         val overview = overviewNode.getUnclippedBoundsInRoot()
-        val header = compose.onNodeWithText("Nyleg lagt til · Filmar").getUnclippedBoundsInRoot()
+        val header = compose.onNodeWithText("Siste filmar").getUnclippedBoundsInRoot()
         assertTrue("Hero overview must not cover row heading: $overview vs $header", overview.bottom <= header.top)
     }
 

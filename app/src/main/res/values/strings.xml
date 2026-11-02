@@ -199,8 +199,8 @@
     <string name="sign_in_failed">Kunne ikkje logge inn. Prøv igjen.</string>
     <string name="account_retry">Prøv igjen</string>
     <string name="row_continue">Hald fram</string>
-    <string name="row_latest_movies">Nyleg lagt til · Filmar</string>
-    <string name="row_latest_series">Nyleg lagt til · Seriar</string>
+    <string name="row_latest_movies">Siste filmar</string>
+    <string name="row_latest_series">Siste episodar</string>
     <string name="offline">Fråkopla</string>
     <string name="service_jellyfin">Jellyfin</string>
     <string name="service_emby">Emby</string>

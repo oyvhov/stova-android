@@ -44,10 +44,13 @@ class MainActivity : ComponentActivity() {
         window.setBackgroundDrawable(null)
     }
 
-    /** Home while Stova is in front (from the remote or the Home service) goes back to Home. */
+    /** Home (from the remote or the Home service) goes back to Home; pressed on Stova itself, to Home's top. */
     public override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.hasCategory(Intent.CATEGORY_HOME)) container.homeRequests.tryEmit(Unit)
+        // Window focus tells a press on Stova from a return from another app, as Android's own launcher does.
+        // The Home service bringing Stova back after its own restart is no press at all.
+        if (intent.hasCategory(Intent.CATEGORY_HOME) && !intent.getBooleanExtra(app.stova.homebutton.HomeButtonService.EXTRA_RESTORE, false))
+            container.homeRequests.tryEmit(hasWindowFocus())
     }
 
     override fun onResume() {

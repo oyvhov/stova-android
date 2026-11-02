@@ -459,7 +459,7 @@ class AppScreensTest {
         rule.onNodeWithText("135 øre").assertIsDisplayed()
         rule.onNodeWithText("Smarthus").assertIsDisplayed()
         rule.onNodeWithText("Hald fram").assertIsDisplayed()
-        rule.onNodeWithText("Nyleg lagt til · Seriar").assertIsNotDisplayed()
+        rule.onNodeWithText("Siste episodar").assertIsNotDisplayed()
         rule.onNodeWithText("2024").assertIsDisplayed()
         rule.onNodeWithText("12 år").assertIsDisplayed()
         rule.saveScreen("12-home-media-ha")

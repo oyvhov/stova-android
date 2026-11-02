@@ -36,6 +36,8 @@ fun KidsHomeScreen(
     onPlaybackOpened: () -> Unit,
     onProfile: () -> Unit,
     world: Boolean = true,
+    /** Counts the Home button pressed while Home is already on screen. */
+    toTop: Int = 0,
 ) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val refresh by rememberUpdatedState(onRefresh)
@@ -73,6 +75,7 @@ fun KidsHomeScreen(
         }
     }
     KidsHomeContent(profile, rows, art, app.stova.core.theme.LocalSeasonDate.current, hour ?: now,
-        onPlay = ::open, onApp = { catalog.launch(it) }, onProfile = onProfile, onSpeak = voice, world = world, seasonOverride = season)
+        onPlay = ::open, onApp = { catalog.launch(it) }, onProfile = onProfile, onSpeak = voice, world = world, seasonOverride = season,
+        toTop = toTop)
     if (missing) SpoleMissingDialog { missing = false }
 }

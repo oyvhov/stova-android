@@ -1,6 +1,7 @@
 package app.stova.home
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.key.Key
@@ -33,6 +34,7 @@ class HomeScrollTest {
         listOf(MediaItem("$title-id", "a", ItemType.MOVIE, title, progress = 0.4f)), false)
     private val rows = listOf(row(HomeRowKey.continueWatching("a"), "Fyrste"), row(HomeRowKey.latestMovies("a"), "Andre"),
         row(HomeRowKey.latestSeries("a"), "Tredje"))
+    private var toTop by mutableIntStateOf(0)
 
     private fun render(focused: FocusedTarget? = null,
         appearance: app.stova.profiles.AppearancePrefs = app.stova.profiles.AppearancePrefs(homeRows = app.stova.profiles.HomeRows.SCROLLING)) = compose.setContent {
@@ -40,8 +42,23 @@ class HomeScrollTest {
         StovaTheme(reduceMotion = true, appearance = appearance) {
             HomeContent(rows, focused, rows.first().key, AppArtCache(context), PackageManagerAppCatalog(context, emptySet()),
                 {}, {}, {}, {}, topBar = { app.stova.core.ui.StovaButton("Toppen", {}) },
-                spotlight = SpotlightEntry(MediaItem("hero", "a", ItemType.MOVIE, "Heroen"), account, false))
+                spotlight = SpotlightEntry(MediaItem("hero", "a", ItemType.MOVIE, "Heroen"), account, false), toTop = toTop)
         }
+    }
+
+    @Test fun theHomeButtonOnHomeGoesBackToTheTop() {
+        render()
+        compose.waitForIdle()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitForIdle()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitForIdle()
+        compose.onNode(isFocused()).assert(hasText("Tredje", substring = true))
+        compose.onNodeWithText("Heroen").assertIsNotDisplayed()
+        compose.runOnIdle { toTop++ }
+        compose.waitForIdle()
+        compose.onNode(isFocused()).assert(hasText("Fyrste", substring = true))
+        compose.onNodeWithText("Heroen").assertIsDisplayed()
     }
 
     @Test fun aNewProfileOpensTheScrollingViewSoTheHeroRollsAway() {
@@ -173,11 +190,10 @@ class HomeScrollTest {
         compose.onNode(isFocused()).assert(hasText("Tredje", substring = true))
     }
 
-    @Test fun homeShowsNoServiceLogo() {
+    @Test fun homeHeadingsNameNoServerAndShowNoServiceLogo() {
         render(FocusedTarget.Media(rows.first().items.first(), account))
         compose.waitForIdle()
-        // The server name stays in each row header; only the logo goes.
-        compose.onAllNodesWithText("Demo").assertCountEquals(2)
+        compose.onAllNodesWithText("Demo").assertCountEquals(0)
         compose.onAllNodesWithContentDescription("Jellyfin").assertCountEquals(0)
     }
 }

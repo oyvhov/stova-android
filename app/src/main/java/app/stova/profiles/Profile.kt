@@ -3,6 +3,7 @@ package app.stova.profiles
 import app.stova.core.security.PinHash
 import app.stova.core.theme.AvatarColor
 import app.stova.home.HomeRowKey
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -156,7 +157,9 @@ fun FocusEffect.resolved(): FocusEffect = if (this == FocusEffect.RING) FocusEff
     val showTitle: Boolean = true,
     val title: String? = null,
     val headingSize: HeadingSize = HeadingSize.NORMAL,
-    val showSource: Boolean = true,
+    /** The server's name after the heading, only when asked for. Stored under a new name, so the old
+     *  «showSource» that every row carried as on is left behind and Home names no server. */
+    @SerialName("showServer") val showSource: Boolean = false,
     /** Names below this row's cards; null follows the profile's choice. */
     val cardTitles: Boolean? = null,
 ) {

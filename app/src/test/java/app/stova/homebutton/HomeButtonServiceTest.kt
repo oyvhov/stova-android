@@ -36,8 +36,10 @@ class HomeButtonServiceTest {
         service.onAccessibilityEvent(window("com.spocky.projengmenu.ui.settings.SettingsActivity"))
         assertNull(org.robolectric.shadow.api.Shadow.extract<ConnectedServiceInfo>(service).nextStartedActivity)
         service.onAccessibilityEvent(window(home.className))
-        assertEquals(app.stova.MainActivity::class.java.name,
-            org.robolectric.shadow.api.Shadow.extract<ConnectedServiceInfo>(service).nextStartedActivity?.component?.className)
+        val press = org.robolectric.shadow.api.Shadow.extract<ConnectedServiceInfo>(service).nextStartedActivity
+        assertEquals(app.stova.MainActivity::class.java.name, press?.component?.className)
+        // A Home press, so Stova may go to Home's top.
+        assertEquals(false, press?.getBooleanExtra(HomeButtonService.EXTRA_RESTORE, true))
         assertTrue(home.packageName in service.serviceInfo.packageNames)
         controller.destroy()
     }
@@ -55,7 +57,10 @@ class HomeButtonServiceTest {
         }
         val files = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>().filesDir
         HomeFront.mark(files, true)
-        assertEquals(app.stova.MainActivity::class.java.name, connect()?.component?.className)
+        val back = connect()
+        assertEquals(app.stova.MainActivity::class.java.name, back?.component?.className)
+        // Not a Home press: a Stova still on screen keeps its page and focus (seen when uiautomator rebound the service).
+        assertEquals(true, back?.getBooleanExtra(HomeButtonService.EXTRA_RESTORE, false))
         // Left for another app: connecting changes nothing on screen.
         HomeFront.mark(files, false)
         assertNull(connect())

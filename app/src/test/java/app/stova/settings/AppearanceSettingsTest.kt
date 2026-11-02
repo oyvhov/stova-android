@@ -129,7 +129,7 @@ class AppearanceSettingsTest {
         } }
         val choices = listOf("Herostorleik", "Logo eller tittel", "Omtale i heroen", "Sjangrar i heroen", "Radavstand",
             "Vis årstal i heroen", "Vis aldersgrense i heroen", "Vis vurderingar i heroen", "Vis ny sesong i heroen",
-            "Kortstorleik", "Titlar under kort", "Appstil", "Nyleg lagt til · Filmar",
+            "Kortstorleik", "Titlar under kort", "Appstil", "Siste filmar",
             "Aksentfarge", "Fokuseffekt", "Klokkeformat", "Framdriftsstrek", "Bakgrunnskjelde",
             "Titlar til bakgrunnen", "Roleg bakgrunnsrørsle", "Vis dato", "Plassering av HA-brikker", "Vis HA-brikker", "Vis julenedteljing",
             "Vis Smarthus-knapp", "Vis profilbilete", "Klokkestorleik", "Klokkestil")

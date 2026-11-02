@@ -104,7 +104,12 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         if (current != Destination.APPS) appsFromSettings = false
     }
     BackHandler(enabled = current != Destination.HOME, onBack = back)
-    LaunchedEffect(container) { container.homeRequests.collect { appsFromSettings = false; discoverFromApps = false; current = Destination.HOME } }
+    var homeToTop by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    LaunchedEffect(container) { container.homeRequests.collect { inFront ->
+        // Home pressed while Home is on screen goes back to its top.
+        if (inFront && current == Destination.HOME) homeToTop++
+        appsFromSettings = false; discoverFromApps = false; current = Destination.HOME
+    } }
     val switchProfile = {
         val profiles = file
         if (leavingNeedsAdultPin(profiles, profile)) {
@@ -187,7 +192,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         app.stova.kids.KidsHomeScreen(home, profile, container.appArt, container.appCatalog,
                             onRefresh = { container.spoleRows.refresh(profile.id); container.media.refresh(profile.id) },
                             onPlaybackOpened = { container.media.playbackOpened(profile.id) },
-                            onProfile = switchProfile, world = !art)
+                            onProfile = switchProfile, world = !art, toTop = homeToTop)
                     } else {
                         // Collected only on Home: the spotlight's rotation ticks while Home is on screen, nowhere else.
                         val spotlight by home.spotlight.collectAsStateWithLifecycle()
@@ -239,6 +244,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             // From a row, not a top bar icon: the page grows from the middle.
                             onOpenDiscover = { discoverStart = null; origin = TransformOrigin.Center; current = Destination.DISCOVER },
                             onOpenDiscoverTitle = { discoverStart = it; origin = TransformOrigin.Center; current = Destination.DISCOVER },
+                            toTop = homeToTop,
                             topBar = { chips ->
                                 TopBar(
                                     profile = profile,

@@ -59,7 +59,7 @@ class HomeButtonService : AccessibilityService() {
         // Load serializers and the JSON reader before the first latency-sensitive Home event.
         state.isOn()
         // Stova died on screen (an update): the stock home took its place while this service restarted.
-        if (HomeFront.wasInFront(filesDir) && overrideOn()) openStova()
+        if (HomeFront.wasInFront(filesDir) && overrideOn()) openStova(restore = true)
     }
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
@@ -88,6 +88,8 @@ class HomeButtonService : AccessibilityService() {
 
     companion object {
         const val ACTION_POWER_MENU = "app.stova.action.POWER_MENU"
+        /** On the start that brings Stova back after this service restarted: no Home press, so nothing on screen moves. */
+        const val EXTRA_RESTORE = "app.stova.extra.RESTORE"
     }
     override fun onDestroy() {
         if (observingPackages) { unregisterReceiver(packageChanges); unregisterReceiver(powerMenu) }
@@ -95,14 +97,15 @@ class HomeButtonService : AccessibilityService() {
         super.onDestroy()
     }
 
-    private fun openStova() {
+    private fun openStova(restore: Boolean = false) {
         launches.addLast(System.currentTimeMillis())
         while (launches.size > LaunchGuard.THRESHOLD * 4) launches.removeFirst()
         startActivity(
             Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_HOME)
                 .setClass(this, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .putExtra(EXTRA_RESTORE, restore),
         )
     }
 }

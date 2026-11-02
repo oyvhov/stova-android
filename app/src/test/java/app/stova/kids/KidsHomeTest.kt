@@ -124,6 +124,25 @@ class KidsHomeTest {
         assertTrue("the new first row starts in the sky band, below the header: ${card.top}", card.top >= 150.dp)
     }
 
+    @Test fun theHomeButtonTakesTheChildBackToTheFirstRow() {
+        val latest = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES,
+            listOf(MediaItem("m2", "a", ItemType.MOVIE, "Flåklypa")), false)
+        val toTop = androidx.compose.runtime.mutableIntStateOf(0)
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            val input = androidx.compose.ui.platform.LocalInputModeManager.current
+            androidx.compose.runtime.SideEffect { input.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
+            KidsHomeContent(child, rows + latest, null, halloween, LocalTime.NOON, onPlay = {}, onApp = {}, onProfile = {},
+                toTop = toTop.intValue)
+        } }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.onNodeWithContentDescription("Flåklypa").assertIsFocused()
+        toTop.intValue++
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.onNodeWithContentDescription("Bluey").assertIsFocused()
+    }
+
     // Back from Spole the title just watched goes first in Continue; the card in focus moves with it and stays in sight.
     @Test fun theCardInFocusStaysInSightWhenItMovesToTheFrontOfItsRow() {
         val films = (1..8).map { MediaItem("m$it", "a", ItemType.MOVIE, "Film $it", progress = 0.3f) }

@@ -95,6 +95,8 @@ fun HomeContent(
     shortcutActions: (@Composable (FavoriteTile, @Composable (app.stova.core.ui.SheetPages) -> Unit, () -> Unit) -> Unit)? = null,
     /** The tile at the end of the Oppdag row: the Discover page. */
     onOpenDiscover: () -> Unit = {},
+    /** Counts the Home button pressed while Home is already on screen; each press goes back to the top. */
+    toTop: Int = 0,
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
     val preview = LocalHomePreview.current
@@ -201,6 +203,13 @@ fun HomeContent(
         .filter { if (step > 0) it > from else it < from }
         .let { if (step > 0) it else it.reversed() }
         .firstOrNull { currentRows!![it].hasFocusableItems() }
+    // The Home button on Home: the first row again, with the hero and the top field above it, as Home opens.
+    val toTopAtStart = remember { toTop }
+    LaunchedEffect(toTop) {
+        if (toTop == toTopAtStart) return@LaunchedEffect
+        movingRow = null
+        nextRow(-1, 1)?.let(::focusRow)
+    }
     Box(Modifier.fillMaxSize()) {
     // One clock for the decor behind the content and the see-through layer over it.
     val seasonClock = rememberSeasonalClock()

@@ -118,12 +118,14 @@ class HomeDeckTest {
     @Test fun duplicateMediaReturnsToTheRememberedRowInsteadOfTheFirstMatch() {
         render(third = true, duplicate = true, initial = HomeRowKey.latestMovies("a"),
             target = FocusedTarget.Media((rows[1] as HomeRowUi.Media).items[0], account))
-        compose.onNodeWithText("Nyleg lagt til · Filmar").assertIsDisplayed()
+        compose.onNodeWithText("Siste filmar").assertIsDisplayed()
         compose.onNodeWithText("Hald fram").assertIsNotDisplayed()
     }
 
     @Test fun longServerAndOfflineStateDoNotSqueezeTheDoubleFontRowHeading() {
-        render(fontScale = 2f, longSource = true, initial = HomeRowKey.continueWatching("a"))
+        // Home names no server unless the row asks for it; this one does.
+        render(fontScale = 2f, longSource = true, initial = HomeRowKey.continueWatching("a"),
+            home = HomePrefs(rowFormats = mapOf(HomeRowKey.continueWatching("a") to app.stova.profiles.RowStyle(showSource = true))))
         compose.onNodeWithText("Hald fram").assertIsDisplayed()
         compose.onNodeWithContentDescription("Film").assertIsFocused().assertIsDisplayed()
         val heading = compose.onNodeWithText("Hald fram").getUnclippedBoundsInRoot()

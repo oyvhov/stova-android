@@ -44,6 +44,8 @@ fun HomeScreen(
     onOpenDiscover: () -> Unit = {},
     /** A Discover card: the title's page in Stova, opened with what the card showed. */
     onOpenDiscoverTitle: (app.stova.discover.DiscoverTitle) -> Unit = {},
+    /** Counts the Home button pressed while Home is already on screen. */
+    toTop: Int = 0,
 ) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val refresh by rememberUpdatedState(onRefresh)
@@ -116,7 +118,7 @@ fun HomeScreen(
         appActions = { app, rowActions, dismiss ->
             if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog, rowActions, dismiss)
         },
-        onShortcutClick = openShortcut,
+        onShortcutClick = openShortcut, toTop = toTop,
         shortcutActions = { tile, rowActions, dismiss ->
             if (profile != null && apps != null) ShortcutMenuHost(tile, apps, profile, openShortcut, rowActions, dismiss)
         },

@@ -22,6 +22,16 @@ class RowStyleTest {
         assertEquals(row.copy(title=null),saved.withHeading(""))
     }
 
+    @Test fun headingsNameNoServerUnlessTheRowAsksAgain() {
+        assertFalse(RowStyle().showSource)
+        // Every stored row carried the old «showSource» as on; that is left behind.
+        val old=StovaJson.decodeFromString<RowStyle>("""{"format":"POSTER","showSource":true}""")
+        assertFalse(old.showSource)
+        assertEquals(RowFormat.POSTER,old.format)
+        val asked=RowStyle(showSource=true)
+        assertEquals(asked,StovaJson.decodeFromString<RowStyle>(StovaJson.encodeToString(asked)))
+    }
+
     @Test fun legacyDefaultRingBecomesCalmFocusButAnExplicitOutlineRemainsAvailable() {
         val old=StovaJson.decodeFromString<AppearancePrefs>("""{"focusEffect":"RING"}""")
         assertEquals(FocusEffect.LIFT,old.focusEffect.resolved())

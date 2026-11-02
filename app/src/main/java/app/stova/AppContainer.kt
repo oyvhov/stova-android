@@ -44,7 +44,8 @@ class AppContainer(
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     /** Home pressed while Stova is already in front: whatever page is open goes back to Home. */
-    val homeRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    /** The Home button; true when Stova already had the screen. */
+    val homeRequests = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
 
     val profiles = ProfileRepository(
         JsonFileStore(File(appContext.filesDir, "profiles.json"), ProfilesFile.serializer(), ProfilesFile()),
