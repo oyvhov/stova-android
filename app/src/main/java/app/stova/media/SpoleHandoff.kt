@@ -9,6 +9,7 @@ import app.stova.discover.DiscoverType
 import app.stova.media.model.MediaAccount
 import app.stova.media.model.MediaItem
 import app.stova.media.model.ServerKind
+import app.stova.profiles.SpoleLink
 
 enum class SpoleAction(val wire: String) { DETAILS("details"), PLAY("play") }
 object SpoleContract {
@@ -97,6 +98,12 @@ class SpoleHandoff(private val context: Context) {
     fun openProfile(kind: ServerKind, userId: String): HandoffResult {
         if (!SpoleContract.ID_PATTERN.matches(userId)) return HandoffResult.InvalidIds
         return send(SpoleContract.profileUri(kind, userId))
+    }
+
+    /** Opens a Discover title in Spole's own details, as the person [link] names: «Opne i Spole» on a title's page. */
+    fun openDiscover(link: SpoleLink, type: DiscoverType, tmdbId: Int): HandoffResult {
+        if (!SpoleContract.ID_PATTERN.matches(link.userId)) return HandoffResult.InvalidIds
+        return send(SpoleContract.discoverUri(link.kind, link.userId, type, tmdbId))
     }
 
     private fun send(link: Uri): HandoffResult {

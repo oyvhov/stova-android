@@ -9,7 +9,10 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
+import app.stova.background.BackdropState
 import app.stova.core.theme.StovaTheme
+import app.stova.profiles.AppearancePrefs
+import app.stova.profiles.BackgroundSource
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -96,5 +99,21 @@ class DiscoverContentTest {
         card("Dune: Part Two").assertIsFocused().performKeyInput { pressKey(Key.DirectionUp) }
         compose.onNodeWithText("Søk").assertIsFocused().performClick()
         assertEquals(1, searched)
+    }
+
+    // The profile chose the theme's own surface as background: the rows draw no title's picture behind them either.
+    @Test fun themeBackgroundDrawsNoBackdrop() {
+        val picture = "https://demo.invalid/dune-backdrop"
+        val shown = BackdropState().apply { this.shown = picture }
+        val withPicture = rows.map { row -> row.copy(items = row.items.map { it.copy(backdrop = picture) }) }
+        var source by mutableStateOf(BackgroundSource.SPOTLIGHT)
+        compose.setContent {
+            StovaTheme(reduceMotion = true, appearance = AppearancePrefs(backgroundSource = source)) {
+                DiscoverContent(state(rows = withPicture), {}, {}, {}, {}, backdrop = shown)
+            }
+        }
+        compose.onNodeWithTag("backdrop-target:$picture").assertExists()
+        compose.runOnIdle { source = BackgroundSource.THEME }
+        compose.onNodeWithTag("backdrop-target:$picture").assertDoesNotExist()
     }
 }

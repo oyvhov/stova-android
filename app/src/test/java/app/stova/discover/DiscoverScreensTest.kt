@@ -52,4 +52,23 @@ class DiscoverScreensTest {
         }
         compose.saveScreen("discover-rows")
     }
+
+    @Test fun discoverTitle() {
+        assumeScreensEnabled()
+        val heat = title(DiscoverType.MOVIE, 949, "Heat", 1995, community = 8.3, genres = listOf("Action", "Krim", "Drama"),
+            overview = "Ein meistertjuv og gjengen hans planlegg eit siste stort kupp i Los Angeles, medan ein besett politimann " +
+                "kjem stadig nærare. Dei to mennene er like på fleire måtar enn nokon av dei vil innrømme.")
+        val details = DiscoverDetails(heat, "Ein Los Angeles-kriminalsaga.", 170, 88, canRequest = true, requestId = null,
+            requestStage = null, trailer = null, seasons = emptyList())
+        val related = listOf(
+            DiscoverRow(DiscoverRowKind.SIMILAR, listOf(title(DiscoverType.MOVIE, 8195, "Ronin", 1998), title(DiscoverType.MOVIE, 949001, "Collateral", 2004),
+                title(DiscoverType.MOVIE, 1422, "The Departed", 2006), title(DiscoverType.MOVIE, 155, "The Dark Knight", 2008))),
+            DiscoverRow(DiscoverRowKind.RECOMMENDED, listOf(title(DiscoverType.MOVIE, 680, "Pulp Fiction", 1994),
+                title(DiscoverType.MOVIE, 769, "GoodFellas", 1990))),
+        )
+        compose.setContent {
+            StovaTheme(reduceMotion = true) { DiscoverTitleContent(heat, details, related, SeerrAccess.PERSONAL, busy = false, {}, {}, {}, {}) }
+        }
+        compose.saveScreen("discover-title")
+    }
 }

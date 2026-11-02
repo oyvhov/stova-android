@@ -80,4 +80,15 @@ class SpoleHandoffTest {
         assertEquals(HandoffResult.SpoleMissing, SpoleHandoff(context).openLibrary(acc, "f137a2"))
         assertEquals(HandoffResult.InvalidIds, SpoleHandoff(context).openLibrary(acc, "../x"))
     }
+    // «Opne i Spole» on a Discover title: Spole's own page for it, as the person Stova is in Discover.
+    @Test fun opensADiscoverTitleInSpole() {
+        val eilev = app.stova.profiles.SpoleLink(ServerKind.EMBY, "eilev")
+        assertEquals(HandoffResult.SpoleMissing, SpoleHandoff(context).openDiscover(eilev, app.stova.discover.DiscoverType.MOVIE, 949))
+        shadowOf(context.packageManager).installPackage(PackageInfo().apply { packageName = "app.reelstack" })
+        val recorder = Recorder(emptySet())
+        assertEquals(HandoffResult.Opened, SpoleHandoff(recorder).openDiscover(eilev, app.stova.discover.DiscoverType.SERIES, 1399))
+        assertEquals("spole://discover?kind=emby&user=eilev&type=tv&tmdb=1399", recorder.started.single().data.toString())
+        assertEquals(HandoffResult.InvalidIds,
+            SpoleHandoff(recorder).openDiscover(eilev.copy(userId = "../x"), app.stova.discover.DiscoverType.MOVIE, 949))
+    }
 }

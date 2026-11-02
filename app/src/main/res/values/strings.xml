@@ -119,6 +119,14 @@
     <string name="discover_retry">Prøv att</string>
     <string name="discover_browse_only">Logg inn i Spole for å be om titlar.</string>
     <string name="discover_card_details">Sjå i Oppdag</string>
+    <string name="discover_request">Be om</string>
+    <string name="discover_choose_seasons">Vel sesongar</string>
+    <string name="discover_withdraw">Trekk tilbake</string>
+    <string name="discover_open_spole">Opne i Spole</string>
+    <string name="discover_row_similar">Liknande</string>
+    <string name="discover_row_recommended">Tilrådd frå denne</string>
+    <string name="discover_runtime">%1$d min</string>
+    <string name="discover_critic">%1$d %% kritikarar</string>
     <string name="seerr_status_pending">Ventar på godkjenning</string>
     <string name="seerr_status_processing">På veg</string>
     <string name="seerr_status_partly">Delvis i biblioteket</string>

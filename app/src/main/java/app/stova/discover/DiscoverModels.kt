@@ -63,6 +63,18 @@ data class DiscoverDetails(
     val withdrawable: Boolean get() = requestId != null && requestStage in WITHDRAWABLE_STAGES
 }
 
+/** What asking for a title means: the film itself, or a choice of a series' seasons. */
+enum class RequestAction { MOVIE, SEASONS }
+
+/** What the person can ask Seerr for here; null when Seerr says no, the title is in the library, or a series has no season left to get. */
+val DiscoverDetails.requestAction: RequestAction?
+    get() = when {
+        !canRequest || title.status == SeerrStatus.AVAILABLE -> null
+        title.type == DiscoverType.MOVIE -> RequestAction.MOVIE
+        requestableSeasons.isNotEmpty() -> RequestAction.SEASONS
+        else -> null
+    }
+
 /** A request the person follows. [percent] is the download's, when Spole knows it; [seasons] is empty for a film. */
 data class DiscoverRequest(
     val type: DiscoverType, val tmdbId: Int, val title: String, val poster: String?, val backdrop: String?, val stage: RequestStage,

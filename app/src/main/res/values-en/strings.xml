@@ -119,6 +119,14 @@
     <string name="discover_retry">Try again</string>
     <string name="discover_browse_only">Sign in to Spole to request titles.</string>
     <string name="discover_card_details">See in Discover</string>
+    <string name="discover_request">Request</string>
+    <string name="discover_choose_seasons">Choose seasons</string>
+    <string name="discover_withdraw">Withdraw</string>
+    <string name="discover_open_spole">Open in Spole</string>
+    <string name="discover_row_similar">Similar</string>
+    <string name="discover_row_recommended">Recommended from this</string>
+    <string name="discover_runtime">%1$d min</string>
+    <string name="discover_critic">%1$d%% critics</string>
     <string name="seerr_status_pending">Awaiting approval</string>
     <string name="seerr_status_processing">On the way</string>
     <string name="seerr_status_partly">Partly in your library</string>

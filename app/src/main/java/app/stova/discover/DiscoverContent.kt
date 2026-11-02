@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.background.BackdropLayer
+import app.stova.background.BackdropState
 import app.stova.background.rememberBackdropState
 import app.stova.core.theme.LocalAppearance
 import app.stova.core.theme.StovaLayout
@@ -44,6 +45,7 @@ import app.stova.core.ui.softEntrance
 import app.stova.home.RowHeader
 import app.stova.media.ui.MediaCard
 import app.stova.media.ui.communityText
+import app.stova.profiles.BackgroundSource
 import app.stova.profiles.MovieStyle
 import app.stova.profiles.spacingDp
 
@@ -64,11 +66,13 @@ private const val SEERR_CARDS = "seerr"
  * The Oppdag page's rows: a header with «Søk», a hero band for the card in focus over that title's backdrop,
  * and Seerr's rows below. Until Spole first answers it says it is fetching; when Seerr did not answer and
  * there is nothing to show it offers to try again; a person who may only look is told how to ask. The page
- * opens on the first card, or on the card it was left on while a title's page lay over it.
+ * opens on the first card, or on the card it was left on while a title's page lay over it. [backdrop] is the
+ * whole Oppdag page's, so going to a title and back never fades the picture in from the bare background.
  */
 @Composable
 fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit, onOpenSearch: () -> Unit,
-    onOpenRequest: (DiscoverRequest) -> Unit, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+    onOpenRequest: (DiscoverRequest) -> Unit, onRetry: () -> Unit, modifier: Modifier = Modifier,
+    backdrop: BackdropState = rememberBackdropState()) {
     val shown = remember(state?.rows) {
         PAGE_ROWS.mapNotNull { (kind, heading) -> state?.rows?.firstOrNull { it.kind == kind && it.items.isNotEmpty() }?.let { it to heading } }
     }
@@ -86,8 +90,10 @@ fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit,
         withFrameNanos { }
         if (start != null) runCatching { first.requestFocus() } else if (showRetry) runCatching { retry.requestFocus() }
     }
+    // The profile's background choice holds here too: the theme's own surface shows no title's picture.
+    val themeSurface = LocalAppearance.current.backgroundSource == BackgroundSource.THEME
     Box(modifier.fillMaxSize()) {
-        BackdropLayer(hero?.backdrop, state = rememberBackdropState())
+        BackdropLayer(hero?.backdrop.takeUnless { themeSurface }, state = backdrop)
         Column(Modifier.fillMaxSize().padding(top = StovaLayout.TvSafeEdge)) {
             PageHeader(stringResource(R.string.discover_title), StovaIcons.Discover, Modifier.padding(horizontal = StovaLayout.TvSafeEdge),
                 subtitle = stringResource(R.string.discover_subtitle)) {
