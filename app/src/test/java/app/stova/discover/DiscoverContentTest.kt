@@ -1,5 +1,8 @@
 package app.stova.discover
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
@@ -65,10 +68,19 @@ class DiscoverContentTest {
 
     @Test fun failedStateOffersRetry() {
         var retried = 0
-        show(state(rows = emptyList(), failed = true), onRetry = { retried++ })
+        var current by mutableStateOf(state(rows = emptyList(), failed = true))
+        compose.setContent { StovaTheme(reduceMotion = true) { DiscoverContent(current, {}, {}, {}, { retried++ }) } }
         compose.onNodeWithText("Seerr svara ikkje.").assertIsDisplayed()
-        compose.onNodeWithText("Prøv att").performClick()
+        // OK tries again at once: the button has focus.
+        compose.onNodeWithText("Prøv att").assertIsFocused().performClick()
         assertEquals(1, retried)
+        // While Spole is asked again the page says so; when Seerr fails once more the button is back, with focus.
+        compose.runOnIdle { current = current.copy(loading = true) }
+        compose.onNodeWithText("Hentar frå Seerr …").assertIsDisplayed()
+        compose.onAllNodesWithText("Prøv att").assertCountEquals(0)
+        compose.runOnIdle { current = current.copy(loading = false) }
+        compose.onNodeWithText("Seerr svara ikkje.").assertIsDisplayed()
+        compose.onNodeWithText("Prøv att").assertIsFocused()
     }
 
     @Test fun browseAccessShowsTheSignInHint() {

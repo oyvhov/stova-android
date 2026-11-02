@@ -77,13 +77,14 @@ fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit,
     val focused = focusedAt?.let { at -> shown.firstNotNullOfOrNull { (row, _) -> row.items.firstOrNull { spot(row.kind, it) == at } } }
     val hero = focused ?: state?.rows?.firstOrNull { it.kind == DiscoverRowKind.TRENDING }?.items?.firstOrNull()
     val start = focusedAt.takeIf { focused != null } ?: shown.firstOrNull()?.let { (row, _) -> spot(row.kind, row.items.first()) }
-    val failed = state != null && state.failed && state.rows.isEmpty()
+    // «Prøv att» stands only while nothing is being asked: a retry says it is fetching, and the button comes back if Seerr fails again.
+    val showRetry = state != null && state.failed && state.rows.isEmpty() && !state.loading
     val first = remember { FocusRequester() }
     val retry = remember { FocusRequester() }
-    // Focus where the remote can act at once: on a card once there are rows, on «Prøv att» when Seerr failed.
-    LaunchedEffect(start != null, failed) {
+    // Focus where the remote can act at once: on a card once there are rows, on «Prøv att» each time it is drawn.
+    LaunchedEffect(start != null, showRetry) {
         withFrameNanos { }
-        if (start != null) runCatching { first.requestFocus() } else if (failed) runCatching { retry.requestFocus() }
+        if (start != null) runCatching { first.requestFocus() } else if (showRetry) runCatching { retry.requestFocus() }
     }
     Box(modifier.fillMaxSize()) {
         BackdropLayer(hero?.backdrop, state = rememberBackdropState())
@@ -95,7 +96,7 @@ fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit,
             if (state?.access == SeerrAccess.BROWSE) PageNote(R.string.discover_browse_only)
             when {
                 state == null || (state.loading && state.rows.isEmpty()) -> PageNote(R.string.discover_loading)
-                failed -> {
+                showRetry -> {
                     PageNote(R.string.discover_failed)
                     StovaButton(stringResource(R.string.discover_retry), onRetry,
                         Modifier.padding(start = StovaLayout.TvSafeEdge, top = 16.dp).focusRequester(retry))
