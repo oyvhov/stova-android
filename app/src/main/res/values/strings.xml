@@ -110,6 +110,9 @@
     <string name="discover_title">Oppdag</string>
     <string name="discover_subtitle">Populært, komande og dine førespurnader frå Seerr</string>
     <string name="discover_search">Søk</string>
+    <string name="discover_search_hint">Filmar og seriar</string>
+    <string name="discover_more">Hent fleire</string>
+    <string name="discover_no_hits">Ingen treff for «%1$s».</string>
     <string name="discover_row_trending">Populært no</string>
     <string name="discover_row_upcoming_movies">Komande filmar</string>
     <string name="discover_row_upcoming_series">Komande seriar</string>

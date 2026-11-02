@@ -12,6 +12,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
@@ -20,6 +21,7 @@ import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.hasAnySibling
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.performKeyInput
@@ -30,6 +32,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.MainActivity
@@ -310,6 +313,53 @@ class StovaAppNavigationTest {
         rule.onAllNodes(withdraw).assertCountEquals(0)
     }
 
+    // «Søk» opens search with the field in focus. Spole is asked once typing has paused, with what was typed and page 1; text
+    // typed before the pause is never asked for on its own. «Hent fleire» asks for page 2 and adds it, a result opens its title,
+    // and Back from there finds the field's text and the card again without asking Spole twice.
+    @Test fun discoverSearchAsksSpoleOnceTypingPauses() {
+        val spole = openDiscoverPage()
+        val searches = { spole.asked.filter { it.path == "/discover/search" } }
+        rule.onNode(hasText("Søk") and hasClickAction()).performSemanticsAction(SemanticsActions.OnClick)
+        val field = hasSetTextAction()
+        rule.waitUntil(5_000) { rule.onAllNodes(field and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        rule.mainClock.autoAdvance = false
+        rule.onNode(field).performTextInput("He")
+        rule.mainClock.advanceTimeBy(200)
+        rule.onNode(field).performTextInput("at")
+        rule.mainClock.advanceTimeBy(300)
+        assertTrue(searches().isEmpty())
+        rule.mainClock.advanceTimeBy(200)
+        rule.mainClock.autoAdvance = true
+        val heat = hasContentDescription("Heat") and hasClickAction()
+        rule.waitUntil(5_000) { rule.onAllNodes(heat).fetchSemanticsNodes().isNotEmpty() }
+        val first = searches().single()
+        assertEquals("Heat", first.getQueryParameter("q"))
+        assertEquals("1", first.getQueryParameter("page"))
+        // Down from the field to the first title, along the row to «Hent fleire» and OK: page 2 comes, its first title in focus.
+        rule.onNode(field).performKeyInput { pressKey(Key.DirectionDown) }
+        rule.onNode(heat).assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
+        rule.onNode(hasContentDescription("The Heat") and hasClickAction()).assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
+        rule.onNode(hasContentDescription("Hent fleire") and hasClickAction()).assertIsFocused().performKeyInput { pressKey(Key.DirectionCenter) }
+        val wave = hasContentDescription("Heat Wave") and hasClickAction()
+        rule.waitUntil(5_000) { rule.onAllNodes(wave and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        assertEquals(2, searches().size)
+        assertEquals("Heat", searches()[1].getQueryParameter("q"))
+        assertEquals("2", searches()[1].getQueryParameter("page"))
+        rule.onNode(heat).assertExists()
+        rule.onAllNodes(hasContentDescription("Hent fleire")).assertCountEquals(0)
+        // OK on a result opens its title; Back returns to the search as it was left.
+        rule.onNode(wave).performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.waitForIdle()
+        rule.onAllNodes(wave).assertCountEquals(0)
+        rule.onNodeWithText("Heat Wave").assertExists()
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        rule.waitUntil(5_000) { rule.onAllNodes(wave and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(field).assert(hasText("Heat"))
+        rule.mainClock.advanceTimeBy(1_000)
+        rule.waitForIdle()
+        assertEquals(2, searches().size)
+    }
+
     /** The Oppdag page opened from Home's tile, with Spole answering for the profile's person and the page's first card in focus. */
     private fun openDiscoverPage(): DiscoverSpole {
         val container = (rule.activity.application as StovaApplication).container
@@ -328,7 +378,8 @@ class StovaAppNavigationTest {
     /**
      * Spole's launcher provider answering Discover with one popular title; [seerr] is what it says the person may do. With
      * [titles] it answers a title's page too, once [held] lets it: Heat still to be asked for, and The Gorge the person's own
-     * request, each with Ronin as a related title. Every call is answered `ok` and kept in [calls], every question in [asked].
+     * request, each with Ronin as a related title. A search finds two films on its first page and one more on its second.
+     * Every call is answered `ok` and kept in [calls], every question in [asked].
      * What was sent shows on a title's page only once Spole has been asked to look at the person's requests in Seerr again,
      * as Seerr gives a new request its id only then.
      */
@@ -361,8 +412,20 @@ class StovaAppNavigationTest {
                 "/discover/related" -> if (titles) MatrixCursor(arrayOf("row", "type", "tmdb", "title", "year", "status")).apply {
                     addRow(arrayOf<Any?>("similar", "movie", 8195, "Ronin", 1998, 1))
                 } else null
+                // Two films on page 1 and a third on page 2, the last.
+                "/discover/search" -> MatrixCursor(arrayOf("row", "type", "tmdb", "title", "year", "status")).apply {
+                    if (uri.getQueryParameter("page") == "1") {
+                        addRow(arrayOf<Any?>("search", "movie", 949, "Heat", 1995, 5))
+                        addRow(arrayOf<Any?>("search", "movie", 136795, "The Heat", 2013, 1))
+                    } else addRow(arrayOf<Any?>("search", "movie", 1242, "Heat Wave", 2022, 1))
+                }
                 else -> null
-            }?.apply { setExtras(Bundle().apply { putString("seerr", seerr) }) }
+            }?.apply {
+                setExtras(Bundle().apply {
+                    putString("seerr", seerr)
+                    if (uri.path == "/discover/search") uri.getQueryParameter("page")?.toInt()?.let { putInt("page", it); putBoolean("has_more", it == 1) }
+                })
+            }
         }
         override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
             calls += method to extras

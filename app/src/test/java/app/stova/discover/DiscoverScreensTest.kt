@@ -1,6 +1,10 @@
 package app.stova.discover
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollToIndex
@@ -111,6 +115,21 @@ class DiscoverScreensTest {
             }
         }
         compose.saveScreen("discover-request-sheet", android.view.inspector.WindowInspector.getGlobalWindowViews().last())
+    }
+
+    // What Seerr found for «the», six posters across, with «Hent fleire» last as Seerr has another page. The page draws
+    // no background of its own: it stands on the shell's, as Apps does.
+    @Test fun discoverSearch() {
+        assumeScreensEnabled()
+        val found = rows.flatMap { it.items }.take(9)
+        compose.setContent {
+            StovaTheme(reduceMotion = true) {
+                Box(Modifier.background(MaterialTheme.colorScheme.background)) {
+                    DiscoverSearchContent("the", DiscoverPage(found, 1, hasMore = true), loading = false, {}, {}, {})
+                }
+            }
+        }
+        compose.saveScreen("discover-search")
     }
 
     @Test fun discoverWithdrawSheet() {

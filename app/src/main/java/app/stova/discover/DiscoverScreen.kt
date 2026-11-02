@@ -3,19 +3,17 @@ package app.stova.discover
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.AppContainer
@@ -27,6 +25,8 @@ import app.stova.media.SpoleHandoff
 import app.stova.media.ui.SpoleMissingDialog
 import app.stova.profiles.Profile
 import app.stova.profiles.SpoleLink
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -52,23 +52,31 @@ private const val SEARCH = "search"
 private fun savedStep(step: DiscoverStep): List<Any?> = when (step) {
     DiscoverStep.Rows -> listOf(ROWS)
     DiscoverStep.Search -> listOf(SEARCH)
-    is DiscoverStep.Title -> listOf(TITLE, step.type.name, step.tmdbId) + step.fallback?.let {
-        listOf(it.title, it.year, it.overview, it.poster, it.backdrop, it.status.name, it.community, ArrayList(it.genres))
-    }.orEmpty()
+    is DiscoverStep.Title -> listOf(TITLE, step.type.name, step.tmdbId, step.fallback?.let(::savedTitle))
 }
 
 private fun restoredStep(saved: List<*>): DiscoverStep = when (saved.first()) {
-    TITLE -> {
-        val type = DiscoverType.valueOf(saved[1] as String)
-        val tmdbId = saved[2] as Int
-        DiscoverStep.Title(type, tmdbId, saved.takeIf { it.size > 3 }?.let {
-            DiscoverTitle(type, tmdbId, it[3] as String, it[4] as Int?, it[5] as String?, it[6] as String?, it[7] as String?,
-                SeerrStatus.valueOf(it[8] as String), it[9] as Double?, (it[10] as List<*>).map { genre -> genre as String })
-        })
-    }
+    TITLE -> DiscoverStep.Title(DiscoverType.valueOf(saved[1] as String), saved[2] as Int, (saved[3] as List<*>?)?.let(::restoredTitle))
     SEARCH -> DiscoverStep.Search
     else -> DiscoverStep.Rows
 }
+
+/** A search's answer as plain values, saved with the search step so Back from a title finds the titles found again. */
+private val DiscoverPageSaver: Saver<DiscoverPage?, Any> = Saver(
+    save = { page -> page?.let { arrayListOf(it.page, it.hasMore, ArrayList(it.items.map(::savedTitle))) } },
+    restore = { saved ->
+        val (page, hasMore, items) = saved as List<*>
+        DiscoverPage((items as List<*>).map { restoredTitle(it as List<*>) }, page as Int, hasMore as Boolean)
+    },
+)
+
+/** A title as plain values, for a title's step and a search's answer. */
+private fun savedTitle(title: DiscoverTitle): ArrayList<Any?> = arrayListOf(title.type.name, title.tmdbId, title.title, title.year,
+    title.overview, title.poster, title.backdrop, title.status.name, title.community, ArrayList(title.genres))
+
+private fun restoredTitle(saved: List<*>): DiscoverTitle = DiscoverTitle(DiscoverType.valueOf(saved[0] as String), saved[1] as Int,
+    saved[2] as String, saved[3] as Int?, saved[4] as String?, saved[5] as String?, saved[6] as String?, SeerrStatus.valueOf(saved[7] as String),
+    saved[8] as Double?, (saved[9] as List<*>).map { it as String })
 
 /** Each step's own saved state (focus, scrolling) by its place on the stack and what it shows. */
 private fun DiscoverStep.stateKey(depth: Int): String = "$depth:" + when (this) {
@@ -132,11 +140,60 @@ fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverSte
             is DiscoverStep.Title -> TitleStep(container, profile.id, link, step, state?.access ?: SeerrAccess.NONE, backdrop,
                 onOpenSpole = { openInSpole(step.type, step.tmdbId) },
                 onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) })
-            // Search is drawn by a later step of the plan (Task 8); until then the step is empty and Back closes it.
-            DiscoverStep.Search -> Box(Modifier.fillMaxSize())
+            DiscoverStep.Search -> SearchStep(container, link, onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) })
         }
     }
     if (missing) SpoleMissingDialog { missing = false }
+}
+
+/** How long typing must pause before Spole is asked. */
+private const val SEARCH_DEBOUNCE_MILLIS = 400L
+
+/**
+ * Search's step. Spole is asked as the profile's person once typing has paused for [SEARCH_DEBOUNCE_MILLIS] and the query,
+ * spaces at either end left out, has [MIN_QUERY] characters or more; a shorter one shows nothing, and a new query stops
+ * the ask before it. «Hent fleire» asks for the next page and adds it. When Spole trips, what is shown stays. The query
+ * and what it found are saved with the step, so Back from a title finds both again without asking Spole twice.
+ */
+@Composable
+private fun SearchStep(container: AppContainer, link: SpoleLink?, onOpenTitle: (DiscoverTitle) -> Unit) {
+    var query by rememberSaveable { mutableStateOf("") }
+    var page by rememberSaveable(stateSaver = DiscoverPageSaver) { mutableStateOf<DiscoverPage?>(null) }
+    // The query [page] answers.
+    var answered by rememberSaveable { mutableStateOf<String?>(null) }
+    // True from the first key of a query to Spole's answer, and while the next page is on its way: one ask at a time.
+    var loading by remember { mutableStateOf(false) }
+    var nextPage by remember { mutableStateOf<Job?>(null) }
+    val scope = rememberCoroutineScope()
+    val asked = query.trim()
+    LaunchedEffect(link, asked) {
+        // A next page of the query before belongs to that query: it is not added under this one's answer.
+        nextPage?.cancel()
+        when {
+            asked.length < MIN_QUERY -> { page = null; answered = null; loading = false }
+            asked == answered || link == null -> loading = false
+            else -> {
+                loading = true
+                delay(SEARCH_DEBOUNCE_MILLIS)
+                container.discover.search(link, asked, 1)?.let { page = it; answered = asked }
+                loading = false
+            }
+        }
+    }
+    DiscoverSearchContent(query, page, loading, onQuery = { query = it }, onOpenTitle = onOpenTitle, onMore = more@{
+        val shown = page ?: return@more
+        val person = link ?: return@more
+        val words = answered ?: return@more
+        if (!shown.hasMore || loading) return@more
+        loading = true
+        nextPage = scope.launch {
+            // Pages can overlap as Seerr's order shifts: a title already shown stays where it is.
+            container.discover.search(person, words, shown.page + 1)?.let { next ->
+                page = DiscoverPage((shown.items + next.items).distinctBy { it.key }, shown.page + 1, next.hasMore)
+            }
+            loading = false
+        }
+    })
 }
 
 /** What a title's step has open over its page. */

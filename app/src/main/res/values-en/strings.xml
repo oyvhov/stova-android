@@ -110,6 +110,9 @@
     <string name="discover_title">Discover</string>
     <string name="discover_subtitle">Popular, upcoming and your requests from Seerr</string>
     <string name="discover_search">Search</string>
+    <string name="discover_search_hint">Films and series</string>
+    <string name="discover_more">Load more</string>
+    <string name="discover_no_hits">No hits for “%1$s”.</string>
     <string name="discover_row_trending">Popular now</string>
     <string name="discover_row_upcoming_movies">Upcoming films</string>
     <string name="discover_row_upcoming_series">Upcoming series</string>
