@@ -23,6 +23,7 @@ import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -34,6 +35,7 @@ import app.stova.StovaApplication
 import app.stova.TV_QUALIFIERS
 import app.stova.core.theme.AvatarColor
 import app.stova.media.model.ServerKind
+import app.stova.profiles.SeasonChoice
 import app.stova.profiles.SpoleLink
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertFalse
@@ -54,6 +56,9 @@ class StovaAppNavigationTest {
         val container = (rule.activity.application as StovaApplication).container
         runBlocking {
             val a = container.profiles.create("A", AvatarColor.LIME, false)
+            // No season, whatever today's date: the seasonal scene's clock asks for frames of its own, so
+            // with the calendar on these tests saw different frames at Halloween and Jul than the rest of the year.
+            container.profiles.update(a.id) { it.copy(appearance = SeasonChoice.NONE.applyTo(it.appearance)) }
             container.session.enter(a.id)
         }
         rule.waitForIdle()
@@ -143,10 +148,10 @@ class StovaAppNavigationTest {
     @Test fun theLeavingPageCannotTakeFocusWhileItFades() {
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
         rule.mainClock.autoAdvance = false
-        rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("Opne Appar").performClick()
-        rule.mainClock.advanceTimeByFrame()
-        rule.mainClock.advanceTimeByFrame()
+        // Frame by frame until the switch has begun: which frame a click's recomposition lands on is
+        // Compose's business. The fade lasts many frames more, so the old page is still there below.
+        repeat(5) { if (rule.onAllNodesWithTag("screen-APPS").fetchSemanticsNodes().isEmpty()) rule.mainClock.advanceTimeByFrame() }
         rule.onNodeWithTag("screen-APPS").assertExists()
         rule.onNodeWithText("Opne Appar").assertExists() // still fading out
         rule.onNodeWithText("Opne Appar").performSemanticsAction(SemanticsActions.RequestFocus)
