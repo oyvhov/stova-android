@@ -2,6 +2,7 @@ package app.stova.discover
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -128,7 +129,7 @@ fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverSte
                 onOpenRequest = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it.asDiscoverTitle()) },
                 onRetry = { link?.let { container.appScope.launch { container.discover.refresh(profile.id, it, force = true) } } },
                 backdrop = backdrop)
-            is DiscoverStep.Title -> TitleStep(container, link, step, state?.access ?: SeerrAccess.NONE, backdrop,
+            is DiscoverStep.Title -> TitleStep(container, profile.id, link, step, state?.access ?: SeerrAccess.NONE, backdrop,
                 onOpenSpole = { openInSpole(step.type, step.tmdbId) },
                 onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) })
             // Search is drawn by a later step of the plan (Task 8); until then the step is empty and Back closes it.
@@ -138,26 +139,67 @@ fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverSte
     if (missing) SpoleMissingDialog { missing = false }
 }
 
+/** What a title's step has open over its page. */
+private enum class TitleSheet { REQUEST, WITHDRAW }
+
 /**
  * A title's step: the page with what its card showed at once, then Seerr's page and related rows from Spole.
  * When Spole trips the page stays as the card showed it, with «Opne i Spole»; the rows page tells of Seerr failing.
+ * «Be om» and «Trekk tilbake» open their sheets; what a sheet sends goes through Spole as the profile's person,
+ * and a toast tells how it went once the sheet has closed.
  */
 @Composable
-private fun TitleStep(container: AppContainer, link: SpoleLink?, step: DiscoverStep.Title, access: SeerrAccess, backdrop: BackdropState,
-    onOpenSpole: () -> Unit, onOpenTitle: (DiscoverTitle) -> Unit) {
+private fun TitleStep(container: AppContainer, profileId: String, link: SpoleLink?, step: DiscoverStep.Title, access: SeerrAccess,
+    backdrop: BackdropState, onOpenSpole: () -> Unit, onOpenTitle: (DiscoverTitle) -> Unit) {
     var details by remember { mutableStateOf<DiscoverDetails?>(null) }
     var related by remember { mutableStateOf(emptyList<DiscoverRow>()) }
-    // Busy while a request or a withdrawal is on its way (Task 7); until then nothing is.
-    val busy = remember { mutableStateOf(false) }
+    var sheet by remember { mutableStateOf<TitleSheet?>(null) }
+    // Busy while a request or a withdrawal is on its way: one at a time, so a second OK sends nothing twice.
+    var busy by remember { mutableStateOf(false) }
+    val context = LocalContext.current.applicationContext
     // With the link too: opened straight from Home, the profile's accounts may not be read yet.
     LaunchedEffect(link, step.type, step.tmdbId) {
         if (link == null) return@LaunchedEffect
         launch { related = container.discover.related(link, step.type, step.tmdbId) }
         details = container.discover.details(link, step.type, step.tmdbId)
     }
+    // In the app's scope: Spole has what was sent whether or not the page is still open, so the answer is told either way.
+    // When it went through, Spole first asks Seerr for the person's requests again (a new request gets its id only then),
+    // and only after that is the title's page asked for anew, so «Trekk tilbake» can follow a request.
+    fun act(@StringRes done: Int, send: suspend (SpoleLink) -> DiscoverActionResult) {
+        val person = link ?: return
+        if (busy) return
+        busy = true
+        container.appScope.launch {
+            try {
+                val result = send(person)
+                val message = if (result == DiscoverActionResult.DONE) done else discoverActionMessage(result)
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                if (result == DiscoverActionResult.DONE) {
+                    container.discover.refresh(profileId, person, force = true)
+                    container.discover.details(person, step.type, step.tmdbId)?.let { details = it }
+                }
+            } finally {
+                busy = false
+            }
+        }
+    }
     // A step saved without its card has only Seerr's page to show, once it comes.
     val title = step.fallback ?: DiscoverTitle(step.type, step.tmdbId, "", null, null, null, null, SeerrStatus.UNKNOWN, null, emptyList())
-    // Asking and taking back open their sheets in Task 7.
-    DiscoverTitleContent(title, details, related, access, busy.value, onRequest = {}, onWithdraw = {}, onOpenSpole = onOpenSpole,
-        onOpenTitle = onOpenTitle, backdrop = backdrop)
+    DiscoverTitleContent(title, details, related, access, busy, onRequest = { if (!busy) sheet = TitleSheet.REQUEST },
+        onWithdraw = { if (!busy) sheet = TitleSheet.WITHDRAW }, onOpenSpole = onOpenSpole, onOpenTitle = onOpenTitle, backdrop = backdrop)
+    val page = details
+    when (sheet) {
+        TitleSheet.REQUEST -> if (page != null) RequestSheet(page, onSend = { seasons ->
+            sheet = null
+            act(R.string.discover_sent) { container.discover.request(it, step.type, step.tmdbId, seasons) }
+        }, onDismiss = { sheet = null })
+        TitleSheet.WITHDRAW -> page?.requestId?.let { id ->
+            WithdrawSheet(page.title.title.ifBlank { title.title }, onConfirm = {
+                sheet = null
+                act(R.string.discover_withdrawn) { container.discover.withdraw(it, id) }
+            }, onDismiss = { sheet = null })
+        }
+        null -> Unit
+    }
 }

@@ -96,4 +96,26 @@ class DiscoverScreensTest {
         }
         compose.saveScreen("discover-title")
     }
+
+    // A series' seasons to ask for: the two Seerr can still get chosen, the one in the library saying so, the specials last.
+    @Test fun discoverRequestSheet() {
+        assumeScreensEnabled()
+        val severance = title(DiscoverType.SERIES, 95396, "Severance", 2022, SeerrStatus.PARTLY, 8.4)
+        val seasons = listOf(DiscoverSeason(0, "Spesialar", 3, SeerrStatus.UNKNOWN, null), DiscoverSeason(1, "Sesong 1", 9, SeerrStatus.AVAILABLE, null),
+            DiscoverSeason(2, "Sesong 2", 10, SeerrStatus.UNKNOWN, null), DiscoverSeason(3, "Sesong 3", 10, SeerrStatus.UNKNOWN, null))
+        val details = DiscoverDetails(severance, null, null, null, canRequest = true, requestId = null, requestStage = null, trailer = null, seasons = seasons)
+        compose.setContent {
+            StovaTheme(reduceMotion = true) {
+                DiscoverTitleContent(severance, details, emptyList(), SeerrAccess.PERSONAL, busy = false, {}, {}, {}, {})
+                RequestSheet(details, onSend = {}, onDismiss = {})
+            }
+        }
+        compose.saveScreen("discover-request-sheet", android.view.inspector.WindowInspector.getGlobalWindowViews().last())
+    }
+
+    @Test fun discoverWithdrawSheet() {
+        assumeScreensEnabled()
+        compose.setContent { StovaTheme(reduceMotion = true) { WithdrawSheet("The Gorge", onConfirm = {}, onDismiss = {}) } }
+        compose.saveScreen("discover-withdraw-sheet", android.view.inspector.WindowInspector.getGlobalWindowViews().last())
+    }
 }

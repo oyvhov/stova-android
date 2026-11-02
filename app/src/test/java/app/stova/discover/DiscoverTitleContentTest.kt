@@ -149,6 +149,74 @@ class DiscoverTitleContentTest {
         compose.onNodeWithText("Be om").assertIsFocused()
     }
 
+    // While a request is on its way the buttons stay as they are and keep focus, so the viewer never lands nowhere when
+    // the sheet closes; OK does nothing until Spole has answered.
+    @Test fun busyPageKeepsFocusAndIgnoresPresses() {
+        var busy by mutableStateOf(false)
+        var requested = 0
+        compose.setContent {
+            StovaTheme(reduceMotion = true) {
+                DiscoverTitleContent(heat, details(), emptyList(), SeerrAccess.PERSONAL, busy, onRequest = { requested++ }, onWithdraw = {},
+                    onOpenSpole = {}, onOpenTitle = {})
+            }
+        }
+        compose.onNodeWithText("Be om").assertIsFocused()
+        compose.runOnIdle { busy = true }
+        compose.onNodeWithText("Be om").assertIsFocused().performClick()
+        assertEquals(0, requested)
+        compose.runOnIdle { busy = false }
+        compose.onNodeWithText("Be om").assertIsFocused().performClick()
+        assertEquals(1, requested)
+    }
+
+    // Once Spole has answered, focus goes to the first button there, even after the viewer moved between the buttons: the
+    // one pressed may be gone, as «Be om» is once the film has been asked for.
+    @Test fun answerPutsFocusOnTheFirstButton() {
+        var busy by mutableStateOf(false)
+        var current by mutableStateOf(details())
+        compose.setContent {
+            StovaTheme(reduceMotion = true) { DiscoverTitleContent(heat, current, emptyList(), SeerrAccess.PERSONAL, busy, {}, {}, {}, {}) }
+        }
+        compose.onNodeWithText("Be om").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
+        compose.onNodeWithText("Opne i Spole").assertIsFocused().performKeyInput { pressKey(Key.DirectionLeft) }
+        compose.onNodeWithText("Be om").assertIsFocused()
+        compose.runOnIdle { busy = true }
+        compose.runOnIdle { current = details(canRequest = false, requestId = 8, stage = RequestStage.REQUESTED); busy = false }
+        compose.onNodeWithText("Trekk tilbake").assertIsFocused()
+    }
+
+    // …but a button pressed that is still there keeps focus, as after a withdrawal Spole could not make.
+    @Test fun answerLeavesFocusOnTheButtonPressedWhileItIsThere() {
+        var busy by mutableStateOf(false)
+        val current = details(thrones, requestId = 42, stage = RequestStage.REQUESTED, seasons = listOf(season(1, SeerrStatus.PENDING),
+            season(2, SeerrStatus.UNKNOWN)))
+        compose.setContent {
+            StovaTheme(reduceMotion = true) { DiscoverTitleContent(thrones, current, emptyList(), SeerrAccess.PERSONAL, busy, {}, {}, {}, {}) }
+        }
+        compose.onNodeWithText("Vel sesongar").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
+        compose.onNodeWithText("Trekk tilbake").assertIsFocused()
+        compose.runOnIdle { busy = true }
+        compose.runOnIdle { busy = false }
+        compose.onNodeWithText("Trekk tilbake").assertIsFocused()
+    }
+
+    // …and focus the viewer took to a related card while waiting stays there.
+    @Test fun answerLeavesFocusOnACardTheViewerChose() {
+        var busy by mutableStateOf(false)
+        var current by mutableStateOf(details())
+        val related = listOf(DiscoverRow(DiscoverRowKind.SIMILAR, listOf(ronin)))
+        compose.setContent {
+            StovaTheme(reduceMotion = true) { DiscoverTitleContent(heat, current, related, SeerrAccess.PERSONAL, busy, {}, {}, {}, {}) }
+        }
+        compose.onNodeWithText("Be om").assertIsFocused()
+        compose.runOnIdle { busy = true }
+        compose.onNodeWithText("Be om").performKeyInput { pressKey(Key.DirectionDown) }
+        card("Ronin").assertIsFocused()
+        compose.runOnIdle { current = details(canRequest = false, requestId = 8, stage = RequestStage.REQUESTED); busy = false }
+        compose.onNodeWithText("Trekk tilbake").assertExists().assertIsNotFocused()
+        card("Ronin").assertIsFocused()
+    }
+
     // …but focus the person moved themselves stays where they put it.
     @Test fun detailsArrivingNeverTakeFocusFromTheViewer() {
         var current by mutableStateOf<DiscoverDetails?>(null)

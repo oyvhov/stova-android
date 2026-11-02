@@ -17,8 +17,10 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.assertWidthIsEqualTo
+import androidx.compose.ui.test.hasAnySibling
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
@@ -37,8 +39,12 @@ import app.stova.core.theme.AvatarColor
 import app.stova.media.model.ServerKind
 import app.stova.profiles.SeasonChoice
 import app.stova.profiles.SpoleLink
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -46,6 +52,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowContentResolver
+import org.robolectric.shadows.ShadowToast
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
@@ -224,6 +231,58 @@ class StovaAppNavigationTest {
         rule.onAllNodesWithTag("screen-DISCOVER").assertCountEquals(0)
     }
 
+    // «Be om» opens the sheet and Back closes it without sending; «Send førespurnad» sends the film through Spole and says so.
+    // The page shows the person's own request only once Spole has asked Seerr for their requests again, so «Trekk tilbake»
+    // proves that came before the title's page was asked for anew. The button pressed keeps focus while Spole is asked, and
+    // when it goes the first button there takes focus.
+    @Test fun discoverRequestGoesThroughSpole() {
+        val spole = openDiscoverPage().apply { titles = true }
+        rule.onNode(hasContentDescription("Heat") and hasClickAction() and isFocused()).performSemanticsAction(SemanticsActions.OnClick)
+        val ask = hasText("Be om") and hasClickAction()
+        rule.waitUntil(5_000) { rule.onAllNodes(ask).fetchSemanticsNodes().isNotEmpty() }
+        // Focus where the viewer puts it before pressing OK.
+        rule.onNode(ask).performSemanticsAction(SemanticsActions.RequestFocus)
+        rule.onNode(ask).assertIsFocused().performSemanticsAction(SemanticsActions.OnClick)
+        rule.onNodeWithText("Legg filmen til i biblioteket ditt.").assertExists()
+        rule.onNodeWithText("Send førespurnad").performKeyInput { pressKey(Key.Back) }
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Send førespurnad").fetchSemanticsNodes().isEmpty() }
+        rule.onNode(ask).assertIsFocused()
+        assertTrue(spole.calls.isEmpty())
+        rule.onNode(ask).performSemanticsAction(SemanticsActions.OnClick)
+        rule.onNodeWithText("Send førespurnad").performSemanticsAction(SemanticsActions.OnClick)
+        rule.waitUntil(5_000) { rule.onAllNodes(hasText("Trekk tilbake") and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        val (method, extras) = spole.calls.single()
+        assertEquals("discover_request", method)
+        assertEquals("movie", extras!!.getString("type"))
+        assertEquals(949, extras.getInt("tmdb"))
+        assertArrayEquals(intArrayOf(), extras.getIntArray("seasons"))
+        assertEquals("Sendt til Seerr.", ShadowToast.getTextOfLatestToast())
+        val refreshed = spole.asked.indexOfLast { it.path == "/discover/requests" && it.getQueryParameter("refresh") == "1" }
+        assertTrue(refreshed in 0 until spole.asked.indexOfLast { it.path == "/discover/title" })
+        rule.onAllNodes(ask).assertCountEquals(0)
+    }
+
+    // «Trekk tilbake» on the person's own request asks first; the sheet's «Trekk tilbake» sends the request's id through Spole,
+    // and once Spole has asked Seerr the page offers «Be om» again, in focus.
+    @Test fun discoverWithdrawalGoesThroughSpole() {
+        val spole = openDiscoverPage().apply { titles = true }
+        val request = hasContentDescription("The Gorge") and hasClickAction()
+        rule.waitUntil(5_000) { rule.onAllNodes(request).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(request).performSemanticsAction(SemanticsActions.OnClick)
+        val withdraw = hasText("Trekk tilbake") and hasClickAction()
+        rule.waitUntil(5_000) { rule.onAllNodes(withdraw).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(withdraw).performSemanticsAction(SemanticsActions.RequestFocus)
+        rule.onNode(withdraw).assertIsFocused().performSemanticsAction(SemanticsActions.OnClick)
+        rule.onNodeWithText("Trekk tilbake «The Gorge»?").assertExists()
+        rule.onNode(withdraw and hasAnySibling(hasText("Behald"))).performSemanticsAction(SemanticsActions.OnClick)
+        rule.waitUntil(5_000) { rule.onAllNodes(hasText("Be om") and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        val (method, extras) = spole.calls.single()
+        assertEquals("discover_withdraw", method)
+        assertEquals(7, extras!!.getInt("request_id"))
+        assertEquals("Førespurnaden er trekt tilbake.", ShadowToast.getTextOfLatestToast())
+        rule.onAllNodes(withdraw).assertCountEquals(0)
+    }
+
     /** The Oppdag page opened from Home's tile, with Spole answering for the profile's person and the page's first card in focus. */
     private fun openDiscoverPage(): DiscoverSpole {
         val container = (rule.activity.application as StovaApplication).container
@@ -239,25 +298,54 @@ class StovaAppNavigationTest {
         return spole
     }
 
-    /** Spole's launcher provider answering Discover with one popular title; [seerr] is what it says the person may do. */
+    /**
+     * Spole's launcher provider answering Discover with one popular title; [seerr] is what it says the person may do. With
+     * [titles] it answers a title's page too: Heat still to be asked for, and The Gorge the person's own request. Every call
+     * is answered `ok` and kept in [calls], every question in [asked]. What was sent shows on a title's page only once Spole
+     * has been asked to look at the person's requests in Seerr again, as Seerr gives a new request its id only then.
+     */
     private class DiscoverSpole : ContentProvider() {
         @Volatile var seerr = "personal"
+        @Volatile var titles = false
+        val calls = CopyOnWriteArrayList<Pair<String, Bundle?>>()
+        val asked = CopyOnWriteArrayList<Uri>()
+        // Seerr has what Stova sent, and Spole has looked at the person's requests since.
+        @Volatile private var sent = false
+        @Volatile private var refreshed = false
         override fun onCreate() = true
         override fun getType(uri: Uri): String? = null
         override fun insert(uri: Uri, values: ContentValues?): Uri? = null
         override fun delete(uri: Uri, selection: String?, args: Array<out String>?) = 0
         override fun update(uri: Uri, values: ContentValues?, selection: String?, args: Array<out String>?) = 0
-        override fun query(uri: Uri, projection: Array<out String>?, selection: String?, args: Array<out String>?, sort: String?): Cursor? =
-            when (uri.path) {
+        override fun query(uri: Uri, projection: Array<out String>?, selection: String?, args: Array<out String>?, sort: String?): Cursor? {
+            asked += uri
+            return when (uri.path) {
                 "/discover" -> MatrixCursor(arrayOf("row", "type", "tmdb", "title", "year", "overview", "poster", "backdrop", "status", "community", "genres")).apply {
                     if (seerr != "none") addRow(arrayOf<Any?>("trending", "movie", 949, "Heat", 1995, null, null, null, 5, 8.3, "Crime"))
                 }
                 // One request the person follows, downloading.
                 "/discover/requests" -> MatrixCursor(arrayOf("type", "tmdb", "title", "poster", "backdrop", "stage", "percent", "seasons", "request_id", "is4k")).apply {
+                    if (sent && uri.getQueryParameter("refresh") == "1") refreshed = true
                     if (seerr != "none") addRow(arrayOf<Any?>("movie", 950396, "The Gorge", null, null, "downloading", 42, "", 7, 0))
                 }
+                "/discover/title" -> if (titles) title(uri.getQueryParameter("tmdb")) else null
                 else -> null
             }?.apply { setExtras(Bundle().apply { putString("seerr", seerr) }) }
+        }
+        override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
+            calls += method to extras
+            sent = true
+            return Bundle().apply { putString("result", "ok") }
+        }
+        /** Heat to be asked for until the request has reached its page; The Gorge downloading as the person's own until taken back. */
+        private fun title(tmdb: String?) = MatrixCursor(arrayOf("type", "tmdb", "title", "year", "status", "can_request", "request_id", "request_status")).apply {
+            when (tmdb) {
+                "949" -> addRow(if (refreshed) arrayOf<Any?>("movie", 949, "Heat", 1995, 2, 0, 8, "requested")
+                    else arrayOf<Any?>("movie", 949, "Heat", 1995, 1, 1, null, null))
+                "950396" -> addRow(if (refreshed) arrayOf<Any?>("movie", 950396, "The Gorge", 2025, 1, 1, null, null)
+                    else arrayOf<Any?>("movie", 950396, "The Gorge", 2025, 3, 0, 7, "downloading"))
+            }
+        }
     }
 
     @Test fun homeIntentClosesSmartHomeAndKeepsItAvailable() {

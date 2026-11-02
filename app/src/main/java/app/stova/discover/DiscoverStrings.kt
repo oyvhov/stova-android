@@ -21,6 +21,18 @@ fun seerrStatusLabel(status: SeerrStatus): Int? = when (status) {
 fun requestCaption(stage: RequestStage, percent: Int?): Pair<Int, Int?> =
     requestStageLabel(stage) to percent?.takeIf { stage == RequestStage.DOWNLOADING }?.coerceIn(0, 100)
 
+/** What the person is told when Spole has answered a request; a withdrawal that went through says so in its own words. */
+@StringRes
+fun discoverActionMessage(result: DiscoverActionResult): Int = when (result) {
+    DiscoverActionResult.DONE -> R.string.discover_sent
+    DiscoverActionResult.ALREADY -> R.string.discover_already
+    DiscoverActionResult.NOT_PERSONAL -> R.string.discover_not_personal
+    DiscoverActionResult.FORBIDDEN -> R.string.discover_forbidden
+    DiscoverActionResult.FAILED -> R.string.discover_failed_action
+    DiscoverActionResult.UNKNOWN -> R.string.discover_unknown_profile
+    DiscoverActionResult.NOT_SUPPORTED -> R.string.discover_update_spole
+}
+
 /** How far the person's own request has come. */
 @StringRes
 fun requestStageLabel(stage: RequestStage): Int = when (stage) {

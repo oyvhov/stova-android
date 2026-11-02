@@ -128,6 +128,25 @@
     <string name="discover_runtime">%1$d min</string>
     <string name="discover_critic">%1$d%% critics</string>
     <string name="discover_request_caption_percent">%1$s · %2$d%%</string>
+    <string name="discover_request_movie">Add this film to your library.</string>
+    <string name="discover_send">Send request</string>
+    <plurals name="discover_send_seasons">
+        <item quantity="one">Send request · %1$d season</item>
+        <item quantity="other">Send request · %1$d seasons</item>
+    </plurals>
+    <string name="discover_seasons">Seasons</string>
+    <string name="discover_cancel">Cancel</string>
+    <string name="discover_withdraw_title">Withdraw “%1$s”?</string>
+    <string name="discover_withdraw_note">The request is removed from Seerr. Anything already downloaded stays.</string>
+    <string name="discover_keep">Keep</string>
+    <string name="discover_sent">Sent to Seerr.</string>
+    <string name="discover_withdrawn">The request was withdrawn.</string>
+    <string name="discover_already">Already requested or in your library.</string>
+    <string name="discover_not_personal">Sign in to Spole to request as yourself.</string>
+    <string name="discover_forbidden">Your account can’t request this.</string>
+    <string name="discover_failed_action">Seerr didn’t answer. Try again later.</string>
+    <string name="discover_unknown_profile">Spole doesn’t know this profile.</string>
+    <string name="discover_update_spole">Update Spole to request from Stova.</string>
     <string name="seerr_status_pending">Awaiting approval</string>
     <string name="seerr_status_processing">On the way</string>
     <string name="seerr_status_partly">Partly in your library</string>
