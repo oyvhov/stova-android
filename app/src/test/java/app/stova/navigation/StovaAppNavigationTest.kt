@@ -40,6 +40,8 @@ import app.stova.media.model.ServerKind
 import app.stova.profiles.SeasonChoice
 import app.stova.profiles.SpoleLink
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -231,6 +233,34 @@ class StovaAppNavigationTest {
         rule.onAllNodesWithTag("screen-DISCOVER").assertCountEquals(0)
     }
 
+    // Opened from the rows, the system puts focus on «Opne i Spole» while Seerr's page is on its way. That is not the viewer
+    // moving: when the page comes, «Be om» takes focus without a press.
+    @Test fun discoverTitleFocusesRequestWhenDetailsArrive() {
+        val spole = openDiscoverPage().apply { titles = true; held = CountDownLatch(1) }
+        rule.onNode(hasContentDescription("Heat") and hasClickAction() and isFocused()).performSemanticsAction(SemanticsActions.OnClick)
+        rule.waitUntil(5_000) { rule.onAllNodes(hasText("Opne i Spole") and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        rule.waitForIdle()
+        rule.onAllNodesWithText("Be om").assertCountEquals(0)
+        spole.held!!.countDown()
+        rule.waitUntil(5_000) { rule.onAllNodes(hasText("Be om") and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    // …but a D-pad move to a related card before the page comes is the viewer's, and focus stays on the card.
+    @Test fun discoverTitleKeepsFocusTheViewerMovedBeforeDetails() {
+        val spole = openDiscoverPage().apply { titles = true; held = CountDownLatch(1) }
+        rule.onNode(hasContentDescription("Heat") and hasClickAction() and isFocused()).performSemanticsAction(SemanticsActions.OnClick)
+        val ronin = hasContentDescription("Ronin") and hasClickAction()
+        rule.waitUntil(5_000) { rule.onAllNodes(ronin).fetchSemanticsNodes().isNotEmpty() }
+        rule.waitUntil(5_000) { rule.onAllNodes(hasText("Opne i Spole") and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(hasText("Opne i Spole") and isFocused()).performKeyInput { pressKey(Key.DirectionDown) }
+        rule.onNode(ronin).assertIsFocused()
+        spole.held!!.countDown()
+        rule.waitUntil(5_000) { rule.onAllNodes(hasText("Be om") and hasClickAction()).fetchSemanticsNodes().isNotEmpty() }
+        rule.waitForIdle()
+        rule.onNode(hasText("Be om") and hasClickAction()).assertIsNotFocused()
+        rule.onNode(ronin).assertIsFocused()
+    }
+
     // «Be om» opens the sheet and Back closes it without sending; «Send førespurnad» sends the film through Spole and says so.
     // The page shows the person's own request only once Spole has asked Seerr for their requests again, so «Trekk tilbake»
     // proves that came before the title's page was asked for anew. The button pressed keeps focus while Spole is asked, and
@@ -239,10 +269,8 @@ class StovaAppNavigationTest {
         val spole = openDiscoverPage().apply { titles = true }
         rule.onNode(hasContentDescription("Heat") and hasClickAction() and isFocused()).performSemanticsAction(SemanticsActions.OnClick)
         val ask = hasText("Be om") and hasClickAction()
-        rule.waitUntil(5_000) { rule.onAllNodes(ask).fetchSemanticsNodes().isNotEmpty() }
-        // Focus where the viewer puts it before pressing OK.
-        rule.onNode(ask).performSemanticsAction(SemanticsActions.RequestFocus)
-        rule.onNode(ask).assertIsFocused().performSemanticsAction(SemanticsActions.OnClick)
+        rule.waitUntil(5_000) { rule.onAllNodes(ask and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(ask).performSemanticsAction(SemanticsActions.OnClick)
         rule.onNodeWithText("Legg filmen til i biblioteket ditt.").assertExists()
         rule.onNodeWithText("Send førespurnad").performKeyInput { pressKey(Key.Back) }
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Send førespurnad").fetchSemanticsNodes().isEmpty() }
@@ -270,9 +298,8 @@ class StovaAppNavigationTest {
         rule.waitUntil(5_000) { rule.onAllNodes(request).fetchSemanticsNodes().isNotEmpty() }
         rule.onNode(request).performSemanticsAction(SemanticsActions.OnClick)
         val withdraw = hasText("Trekk tilbake") and hasClickAction()
-        rule.waitUntil(5_000) { rule.onAllNodes(withdraw).fetchSemanticsNodes().isNotEmpty() }
-        rule.onNode(withdraw).performSemanticsAction(SemanticsActions.RequestFocus)
-        rule.onNode(withdraw).assertIsFocused().performSemanticsAction(SemanticsActions.OnClick)
+        rule.waitUntil(5_000) { rule.onAllNodes(withdraw and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(withdraw).performSemanticsAction(SemanticsActions.OnClick)
         rule.onNodeWithText("Trekk tilbake «The Gorge»?").assertExists()
         rule.onNode(withdraw and hasAnySibling(hasText("Behald"))).performSemanticsAction(SemanticsActions.OnClick)
         rule.waitUntil(5_000) { rule.onAllNodes(hasText("Be om") and isFocused()).fetchSemanticsNodes().isNotEmpty() }
@@ -300,13 +327,15 @@ class StovaAppNavigationTest {
 
     /**
      * Spole's launcher provider answering Discover with one popular title; [seerr] is what it says the person may do. With
-     * [titles] it answers a title's page too: Heat still to be asked for, and The Gorge the person's own request. Every call
-     * is answered `ok` and kept in [calls], every question in [asked]. What was sent shows on a title's page only once Spole
-     * has been asked to look at the person's requests in Seerr again, as Seerr gives a new request its id only then.
+     * [titles] it answers a title's page too, once [held] lets it: Heat still to be asked for, and The Gorge the person's own
+     * request, each with Ronin as a related title. Every call is answered `ok` and kept in [calls], every question in [asked].
+     * What was sent shows on a title's page only once Spole has been asked to look at the person's requests in Seerr again,
+     * as Seerr gives a new request its id only then.
      */
     private class DiscoverSpole : ContentProvider() {
         @Volatile var seerr = "personal"
         @Volatile var titles = false
+        @Volatile var held: CountDownLatch? = null
         val calls = CopyOnWriteArrayList<Pair<String, Bundle?>>()
         val asked = CopyOnWriteArrayList<Uri>()
         // Seerr has what Stova sent, and Spole has looked at the person's requests since.
@@ -328,7 +357,10 @@ class StovaAppNavigationTest {
                     if (sent && uri.getQueryParameter("refresh") == "1") refreshed = true
                     if (seerr != "none") addRow(arrayOf<Any?>("movie", 950396, "The Gorge", null, null, "downloading", 42, "", 7, 0))
                 }
-                "/discover/title" -> if (titles) title(uri.getQueryParameter("tmdb")) else null
+                "/discover/title" -> if (titles) { held?.await(5, TimeUnit.SECONDS); title(uri.getQueryParameter("tmdb")) } else null
+                "/discover/related" -> if (titles) MatrixCursor(arrayOf("row", "type", "tmdb", "title", "year", "status")).apply {
+                    addRow(arrayOf<Any?>("similar", "movie", 8195, "Ronin", 1998, 1))
+                } else null
                 else -> null
             }?.apply { setExtras(Bundle().apply { putString("seerr", seerr) }) }
         }

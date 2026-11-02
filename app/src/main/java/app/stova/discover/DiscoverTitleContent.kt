@@ -126,9 +126,10 @@ fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, relate
         if (pressed.value != null && pressed.value == focused.value && pressed.value in buttonsNow) return@LaunchedEffect
         placeFocus()
     }
+    // Before the page has placed focus, a button taking it is the system's own first focus, not the person moving.
     val onButtonFocused: (TitleButton) -> Unit = {
         focused.value = it
-        if (it != placed.value) moved.value = true
+        if (placed.value != null && it != placed.value) moved.value = true
     }
     // Back up from the related rows the whole head comes into sight, not just the button that takes focus.
     val head = remember { BringIntoViewRequester() }
