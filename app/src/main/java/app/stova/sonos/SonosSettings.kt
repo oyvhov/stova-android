@@ -20,15 +20,12 @@ fun SonosSettings(container: AppContainer, onOpen: () -> Unit) {
         else {
             SettingsSwitchRow(stringResource(R.string.sonos_enable), current.sonos.enabled, { enabled ->
                 scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(enabled = enabled)) } }
-            }, subtitle = stringResource(R.string.sonos_settings_hint))
+            })
             if (current.sonos.enabled) {
+                SettingsNavRow(stringResource(R.string.sonos_open), onClick = onOpen)
                 SettingsSwitchRow(stringResource(R.string.sonos_widget), current.sonos.showNowPlaying, { value ->
                     scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(showNowPlaying = value)) } }
                 })
-                SettingsSwitchRow(stringResource(R.string.sonos_ma_enable), current.sonos.musicAssistant, { value ->
-                    scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(musicAssistant = value)) } }
-                }, subtitle = stringResource(R.string.sonos_ma_hint))
-                if (current.sonos.musicAssistant) SettingsNavRow(stringResource(R.string.sonos_ma_link), onClick = { linking = true })
                 SettingsSwitchRow(stringResource(R.string.sonos_home_icon), current.sonos.showHomeButton, { value ->
                     scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(showHomeButton = value)) } }
                 })
@@ -38,7 +35,10 @@ fun SonosSettings(container: AppContainer, onOpen: () -> Unit) {
                 SettingsSwitchRow(stringResource(R.string.sonos_home_art), current.sonos.homeArtwork, { value ->
                     scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(homeArtwork = value)) } }
                 }, subtitle = stringResource(R.string.sonos_home_art_hint))
-                SettingsNavRow(stringResource(R.string.sonos_open), onClick = onOpen)
+                SettingsSwitchRow(stringResource(R.string.sonos_ma_enable), current.sonos.musicAssistant, { value ->
+                    scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(musicAssistant = value)) } }
+                }, subtitle = stringResource(R.string.sonos_ma_hint))
+                if (current.sonos.musicAssistant) SettingsNavRow(stringResource(R.string.sonos_ma_link), onClick = { linking = true })
             }
         }
     }

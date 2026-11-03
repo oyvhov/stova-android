@@ -131,12 +131,11 @@ fun SonosHomeHero(room: SonosRoom, modifier: Modifier) {
     Column(Modifier.fillMaxWidth().padding(horizontal = StovaLayout.TvSafeEdge, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             Icon(StovaIcons.Sonos, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(stringResource(R.string.sonos_home_playing, room.name), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(room.displayName, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Text(room.title ?: stringResource(R.string.sonos_playing), style = if (compact) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall,
             modifier = Modifier.weight(1f, fill = false), maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
         room.artist?.let { Text(it, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-        if (!compact) room.album?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
     }
     }
 }

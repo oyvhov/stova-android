@@ -4,14 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.apps.ShortcutKey
@@ -91,21 +89,18 @@ fun SonosFavoriteCard(card: SonosCard, modifier: Modifier, compact: Boolean = fa
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to colors.background.copy(alpha = 0f),
                 .45f to colors.background.copy(alpha = 0f), 1f to colors.background.copy(alpha = .92f))))
             if (card.room != null) Icon(StovaIcons.Sonos, null, Modifier.align(Alignment.TopStart).padding(10.dp).size(18.dp), tint = colors.onSurface.copy(alpha = .8f))
-            Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(card.title ?: stringResource(R.string.sonos_title),
-                    style = MaterialTheme.typography.titleSmall, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                card.room?.let { room ->
-                    Text(stringResource(R.string.sonos_card_status, room.name, stringResource(when (card.status) {
+            val detail = card.room?.let { room ->
+                    stringResource(R.string.sonos_card_status, room.displayName, stringResource(when (card.status) {
                         SonosCardStatus.PLAYING -> R.string.sonos_card_playing
                         SonosCardStatus.PAUSED -> R.string.sonos_paused
                         SonosCardStatus.BUFFERING -> R.string.sonos_card_buffering
                         SonosCardStatus.TV -> R.string.sonos_tv
                         SonosCardStatus.OFFLINE -> R.string.sonos_unavailable
                         else -> R.string.sonos_ready
-                    })), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
+                    }))
             }
+            SonosLabels(card.title ?: stringResource(R.string.sonos_title), detail, MaterialTheme.typography.titleSmall,
+                Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp))
         }
     }
 }

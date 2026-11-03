@@ -42,7 +42,7 @@ class SonosFullscreenTest {
     private var left = 0
     private var artworkStarts = 0
 
-    private fun page(vararg shown: SonosRoom, busy: Boolean = false, backgroundArt: Boolean = true) {
+    private fun page(vararg shown: SonosRoom, busy: Boolean = false, backgroundArt: Boolean = true, roomsOpen: Boolean = false) {
         rooms = shown.toList()
         compose.setContent { StovaTheme(reduceMotion = true) {
             val input = androidx.compose.ui.platform.LocalInputModeManager.current
@@ -50,7 +50,7 @@ class SonosFullscreenTest {
             // As the app: the page's own Back comes after Sonos is left.
             BackHandler { left++ }
             SonosContent(SonosState(rooms, loading = false), rooms.firstOrNull()?.id, {}, { actions += it }, {}, {}, {},
-                busy = busy, backgroundArt = backgroundArt, roomsOpen = false,
+                busy = busy, backgroundArt = backgroundArt, roomsOpen = roomsOpen,
                 artwork = { path, modifier ->
                     DisposableEffect(path) { artworkStarts++; onDispose {} }
                     Box(modifier.testTag("art-$path"))
@@ -114,6 +114,13 @@ class SonosFullscreenTest {
     }
 
     // 2. Full screen.
+    @Test fun playerShowsTheTrackAndShortRoomNameWithoutARepeatedHeading() {
+        page(room(name = "Sonos Storestova"), roomsOpen = true)
+        compose.onNodeWithText("Inspector Norse").assertIsDisplayed()
+        compose.onNodeWithText("Storestova", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithText("Din musikk").assertDoesNotExist()
+    }
+
     @Test fun longPressEditsGroupInTheRoomListAndOnlyApplySendsTheDraft() {
         val leader = room(id = "media_player.a", name = "A")
         val other = room(id = "media_player.b", name = "B")

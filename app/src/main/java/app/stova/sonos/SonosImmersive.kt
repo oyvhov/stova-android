@@ -64,7 +64,7 @@ import app.stova.home.rememberSeasonalClock
             verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Icon(StovaIcons.Sonos, null, Modifier.size(20.dp), tint = colors.onSurfaceVariant)
-                Text(listOfNotNull(room.name, room.speaker.label).joinToString(" · "), Modifier.weight(1f),
+                Text(room.displayName, Modifier.weight(1f),
                     style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 SonosSeasonMark()
                 SonosIconButton(StovaIcons.Collapse, stringResource(R.string.sonos_fullscreen_exit), onExit,

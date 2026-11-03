@@ -15,6 +15,11 @@ dekoda, og overtonar i lagfasen. Eit rombyte eller TV-lyd fjernar den gamle
 kunsten med ein gong. Den delte Sonos-bakgrunnen får eit ekstra matt lag
 med 14 % temafarge.
 
+`SonosLabels` gir Sonos eit felles oppsett for tittel og sekundærtekst frå
+Heim til spelaren, biblioteket og Fleire val. Visingsnamnet tek bort eit
+innleiande «Sonos » der merkevara alt går fram av flata. Tenestekall,
+romkopling og lagring bruker dei same ID-ane og namna som før.
+
 | Oppgåve | Start her | Ansvar |
 |---|---|---|
 | Navigasjon og profilbyte | `navigation/StovaApp.kt` | Destinasjonar, tilbakeknapp og felles bakgrunn |

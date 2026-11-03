@@ -18,7 +18,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.theme.stovaMotion
@@ -39,7 +38,7 @@ import kotlin.math.sin
     val shape = MaterialTheme.shapes.medium
     val title = player.title ?: stringResource(R.string.sonos_playing)
     val subtitle = if (failed) stringResource(R.string.sonos_action_failed) else
-        listOfNotNull(room.name, if (!player.playing) stringResource(R.string.sonos_paused) else player.artist).joinToString(" · ")
+        listOfNotNull(room.displayName, if (!player.playing) stringResource(R.string.sonos_paused) else player.artist).joinToString(" · ")
     val colors = MaterialTheme.colorScheme
     Row(modifier.widthIn(max = 360.dp).background(colors.surface.copy(alpha = .72f), shape)
         .border(1.dp, colors.outline.copy(alpha = .35f), shape), verticalAlignment = Alignment.CenterVertically) {
@@ -51,11 +50,8 @@ import kotlin.math.sin
                     if (path != null) artwork(path, Modifier.fillMaxSize())
                 }
             }
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
+            SonosLabels(title, subtitle, MaterialTheme.typography.titleSmall, Modifier.weight(1f),
+                detailColor = if (failed) colors.error else colors.onSurfaceVariant)
             if (player.playing) SonosPlayingBars()
         }
         // Busy keeps the button focused and enabled; a second press while HA answers does nothing.

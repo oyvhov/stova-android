@@ -1,3 +1,8 @@
+# Sonos: felles uttrykk på tvers av appen
+2026-11-03 (Codex): Felles tittel og sekundærtekst på Heim, spelaren, fullskjerm, bibliotek og Fleire val. Kortare romnamn, ryddigare romval og færre repetisjonar.
+121 Sonos- og designtestar med skjermprøver, lint 0 feil, TV-bygg grønt. Såg over romval, Heim-widget og bibliotek under `app/build/screens/`.
+Ikkje installert på Loftet eller Shield. Fysisk visuell prøve av denne designrunden står att. Ingen uferdig kode.
+
 # Musikkdelen blir verande ved romval
 2026-11-03 (Codex): Flytta Bruk og Avbryt til toppen og fjerna forklaringsblokka. Omslag, låt, transport og volum er synlege under romval.
 Målretta Sonos- og designtestar og TV-bygg grøne. Installerte berre på Loftet og prøvde langt OK. Skjermbilete i `.superpowers/loftet-sonos-2026-11-03/romval-musikk.png`.

@@ -27,10 +27,9 @@ import app.stova.ha.cards.rememberResumedNow
             .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large).padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(stringResource(R.string.sonos_more), Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
+                SonosLabels(stringResource(R.string.sonos_more), room.displayName, MaterialTheme.typography.headlineSmall, Modifier.weight(1f))
                 StovaButton(stringResource(R.string.ha_close), onDismiss, Modifier.focusRequester(first), compact = true, quiet = true)
             }
-            Text(room.name, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (failed) Text(stringResource(R.string.sonos_action_failed), color = MaterialTheme.colorScheme.error)
             Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(4.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)) {

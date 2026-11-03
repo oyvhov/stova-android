@@ -28,7 +28,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.theme.StovaLayout
@@ -154,9 +153,6 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                 SonosSeasonMark()
                 Spacer(Modifier.weight(1f))
                 draft?.let { edit ->
-                    Text(anchor?.name ?: stringResource(R.string.sonos_group),
-                        Modifier.weight(1f, fill = false), style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
                     StovaButton(stringResource(R.string.sonos_apply), {
                         if (!busy) {
                             groupAttempted = true
@@ -170,7 +166,7 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                     }, Modifier.focusRequester(groupApplyFocus), primary = true, enabled = canApply || busy, compact = true)
                     StovaButton(stringResource(R.string.sonos_cancel), ::endGroup, Modifier.focusRequester(groupCancelFocus), compact = true)
                 }
-                if (room != null && draft == null) StovaButton(if (roomsOpen) stringResource(R.string.sonos_rooms_hide) else stringResource(R.string.sonos_rooms_show, room.name),
+                if (room != null && draft == null) StovaButton(if (roomsOpen) stringResource(R.string.sonos_rooms_hide) else stringResource(R.string.sonos_rooms_show, room.displayName),
                     { focusAfterToggle = !roomsOpen; onRoomsOpen(!roomsOpen) }, Modifier.testTag("sonos-rooms-toggle"),
                     icon = StovaIcons.Rows, compact = true, quiet = true)
                 if (room != null && draft == null) SonosIconButton(StovaIcons.Expand, stringResource(R.string.sonos_fullscreen), { onImmersive(true) },
@@ -281,13 +277,14 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         // The speaker's light already says whether music plays; no separate play glyph.
         SonosSpeakerArt(room.speaker, visual, Modifier.size(52.dp, 48.dp).graphicsLayer { rotationZ = rotation() }, "sonos-speaker-${room.id}", room.available)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(room.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            // Status, and the model when HA knows it: the one place on the page that names the speaker.
-            Text(listOfNotNull(stringResource(when { !room.available -> R.string.sonos_unavailable; room.tvAudio -> R.string.sonos_tv; room.members.size > 1 -> R.string.sonos_grouped; visual.playing -> R.string.sonos_playing; else -> R.string.sonos_ready }),
-                room.speaker.label).joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        val status = when {
+            !room.available -> R.string.sonos_unavailable
+            room.tvAudio -> R.string.sonos_tv
+            room.members.size > 1 && !editing -> R.string.sonos_grouped
+            else -> null
         }
+        val detail = listOfNotNull(status?.let { stringResource(it) }, room.speaker.label).joinToString(" · ")
+        SonosLabels(room.displayName, detail, MaterialTheme.typography.titleMedium, Modifier.weight(1f))
         if (editing && active) Icon(if (anchor) StovaIcons.Link else StovaIcons.Check,
             stringResource(if (anchor) R.string.sonos_group_leader else R.string.sonos_group_selected), Modifier.size(20.dp),
             tint = colors.onSurface)
@@ -311,20 +308,12 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
 
 /** Status, title and artist; a new track crossfades in. TV audio says so and shows no stale track. */
 @Composable internal fun SonosTrackText(room: SonosRoom, player: SonosRoom?, tv: Boolean, largeType: Boolean, immersive: Boolean = false) {
-    val colors = MaterialTheme.colorScheme
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (!immersive) Text(if (player?.playing == true && !tv) stringResource(R.string.sonos_playing_room, room.name) else stringResource(R.string.sonos_now),
-            style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
-        Crossfade(Triple(if (tv) null else player?.title, if (tv) null else player?.artist, if (tv) null else player?.album),
-            animationSpec = stovaMotion.fade(stovaMotion.standard), label = "sonos-track") { (title, artist, album) ->
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(if (tv) stringResource(R.string.sonos_tv) else title?.takeIf(String::isNotBlank) ?: stringResource(R.string.sonos_no_track),
-                    style = if (immersive && !largeType) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineSmall,
-                    maxLines = if (largeType) 1 else 2, overflow = TextOverflow.Ellipsis)
-                artist?.let { Text(it, style = if (immersive) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
-                    color = if (immersive) colors.onSurfaceVariant else colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                if (!immersive) album?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            }
+        Crossfade((if (tv) null else player?.title) to (if (tv) null else player?.artist),
+            animationSpec = stovaMotion.fade(stovaMotion.standard), label = "sonos-track") { (title, artist) ->
+            SonosLabels(if (tv) stringResource(R.string.sonos_tv) else title?.takeIf(String::isNotBlank) ?: stringResource(R.string.sonos_no_track),
+                artist, if (immersive && !largeType) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineSmall,
+                titleLines = if (largeType) 1 else 2, detailStyle = MaterialTheme.typography.titleMedium)
         }
         if (!room.available || player?.available != true) Text(stringResource(R.string.sonos_unavailable))
     }

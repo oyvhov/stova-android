@@ -16,7 +16,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.theme.StovaLayout
@@ -64,12 +63,11 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
     SeasonalScene(Modifier.matchParentSize(), clock = seasonClock)
     Column(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            StovaButton(stringResource(R.string.sonos_back), ::back, Modifier.focusRequester(first), icon = StovaIcons.ChevronLeft)
+            StovaButton(stringResource(R.string.sonos_back), ::back, Modifier.focusRequester(first),
+                icon = StovaIcons.ChevronLeft, compact = true, quiet = true)
             SonosSeasonMark()
-            Column(Modifier.weight(1f)) {
-                Text(current?.title ?: stringResource(R.string.sonos_library), style = MaterialTheme.typography.headlineMedium)
-                Text(stringResource(R.string.sonos_play_in, room.name), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            SonosLabels(current?.title?.takeIf(String::isNotBlank) ?: stringResource(R.string.sonos_library),
+                room.displayName, MaterialTheme.typography.headlineMedium, Modifier.weight(1f))
             if (current?.playable == true) StovaButton(stringResource(R.string.ha_play), { choosing = current }, enabled = !busy && !loading)
         }
         if (failed) Text(stringResource(R.string.sonos_action_failed), color = MaterialTheme.colorScheme.error)
@@ -86,7 +84,7 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
                             if (item.expandable) { target = item; retry = 0 } else choosing = item
                         }.padding(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SonosLibraryTile(item, index, thumbnail)
-                        Text(item.title, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall)
+                        SonosLabels(item.title, null, MaterialTheme.typography.titleSmall, titleLines = 2)
                     }
                 }
             }
@@ -100,9 +98,13 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
             Column(Modifier.widthIn(max = 520.dp).background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(item.title, style = MaterialTheme.typography.headlineSmall)
                 Text(stringResource(R.string.sonos_replace_queue), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                StovaButton(stringResource(R.string.ha_play), { play(SonosAction.PlayMedia(item)); choosing = null }, primary = true, enabled = !busy)
-                if (room.supports(2097152)) StovaButton(stringResource(R.string.sonos_enqueue), { play(SonosAction.PlayMedia(item, enqueue = true)); choosing = null }, enabled = !busy)
-                StovaButton(stringResource(R.string.sonos_cancel), { choosing = null })
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    StovaButton(stringResource(R.string.ha_play), { play(SonosAction.PlayMedia(item)); choosing = null },
+                        icon = StovaIcons.Play, primary = true, enabled = !busy, compact = true)
+                    if (room.supports(2097152)) StovaButton(stringResource(R.string.sonos_enqueue),
+                        { play(SonosAction.PlayMedia(item, enqueue = true)); choosing = null }, enabled = !busy, compact = true)
+                    StovaButton(stringResource(R.string.sonos_cancel), { choosing = null }, compact = true, quiet = true)
+                }
             }
         }
     }

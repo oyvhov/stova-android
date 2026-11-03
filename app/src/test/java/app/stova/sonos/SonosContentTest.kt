@@ -184,7 +184,7 @@ class SonosContentTest {
         } }
         compose.onNodeWithText("Northern Lights").assertIsDisplayed()
         compose.onNodeWithText("Musikk i heile huset").assertDoesNotExist()
-        compose.onNodeWithText("Spelar no · Stova").assertIsDisplayed()
+        compose.onNodeWithText("Spelar no · Stova").assertDoesNotExist()
         compose.onNodeWithTag("sonos-room-${room.id}").assertIsFocused()
         compose.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithTag("sonos-room-${room.id}").assertIsNotFocused()
