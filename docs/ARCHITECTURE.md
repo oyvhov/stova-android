@@ -5,6 +5,11 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 
 ## Finn rett stad å endre
 
+`navigation/PageAnchor.kt` finn posisjonen til den trykte kontrollen når
+brukaren opnar ei side. `StovaApp` brukar punktet i den felles
+sideovergangen. Planen for resten av appen ligg i
+[`2026-11-03-roersle-i-heile-stova.md`](superpowers/plans/2026-11-03-roersle-i-heile-stova.md).
+
 På Sonos-sida kan `SonosScreen` førehandshente eitt omslag frå den aktive,
 kopla Music Assistant-køen medan sporet spelar. `SonosQueueArtwork` sjekkar
 spelar, kø og aktiv spor-ID, og den ferdig dekoda kunsten blir brukt først

@@ -129,7 +129,9 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
             header(R.string.discover_title)
             item(key = "stova:discover") {
                 val label = stringResource(R.string.discover_open)
-                TileFrame(label, 0, onOpenDiscover, onOpenDiscover) { spec ->
+                val anchor = app.stova.navigation.rememberPageAnchor()
+                val open = { anchor.open(onOpenDiscover) }
+                TileFrame(label, 0, open, open, anchor.modifier) { spec ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(StovaIcons.Discover, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (!spec.captions) Text(label, style = MaterialTheme.typography.titleSmall)
@@ -141,7 +143,8 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
         if (onOpenSonos != null && !profile.kid) item(key = "stova:sonos") {
             val label = stringResource(R.string.sonos_title)
             // A long press offers the same panel as any shortcut: add Sonos to the favourites, move or remove it.
-            TileFrame(label, 0, onOpenSonos, { shortcutMenu = FavoriteTile.Sonos(label) }) { spec ->
+            val anchor = app.stova.navigation.rememberPageAnchor()
+            TileFrame(label, 0, { anchor.open(onOpenSonos) }, { shortcutMenu = FavoriteTile.Sonos(label) }, anchor.modifier) { spec ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(StovaIcons.Sonos, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurface)
                     if (!spec.captions) Text(label, style = MaterialTheme.typography.titleSmall)

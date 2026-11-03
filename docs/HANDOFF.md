@@ -1,3 +1,8 @@
+# Overgangar i heile Stova: plan og pilot
+2026-11-03 (Codex): Skreiv planen `2026-11-03-roersle-i-heile-stova.md` og la han under Gjeld no. Han dekkjer sider, undernivå, panel, innhaldsbyte og D-pad.
+Piloten forankrar sideopning i Sonos-widgeten, Sonos-favoritten, toppfeltet, Alle appar og Oppdag-flisene. Redusert rørsle hoppar over animasjonen.
+37 målretta testar, lint og TV-bygg grøne. Ikkje installert på TV. Sjølve rørsla, fokusretur på eining og resten av planen står att.
+
 # Sonos-rettingane på Heim installerte på begge TV-ane
 2026-11-03 (Codex): Installerte TV-bygget frå `2b79657` med install-r på Loftet og Shield.
 SHA-256 samsvarar med lokal APK på begge. Installerte utan å opne appen eller starte avspeling.

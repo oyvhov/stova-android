@@ -34,9 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.layout.findRootCoordinates
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -110,7 +107,7 @@ fun TopBar(
 private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit, onPageOrigin: (TransformOrigin) -> Unit = {},
     onLongClick: (() -> Unit)? = null, anchored: @Composable () -> Unit = {}) {
     val source = remember { MutableInteractionSource() }
-    var centre by remember { mutableStateOf(TransformOrigin.Center) }
+    val anchor = rememberPageAnchor(onPageOrigin)
     val focused by source.collectIsFocusedAsState()
     val shape = MaterialTheme.shapes.extraLarge
     val motion = app.stova.core.theme.stovaMotion
@@ -118,16 +115,12 @@ private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit, 
     Box(
         Modifier
             .size(48.dp)
-            .onGloballyPositioned { coords ->
-                val root = coords.findRootCoordinates().size
-                val at = coords.boundsInRoot().center
-                if (root.width > 0 && root.height > 0) centre = TransformOrigin(at.x / root.width, at.y / root.height)
-            }
+            .then(anchor.modifier)
             .focusOutline(source, shape)
             .then(if (onLongClick == null) Modifier else Modifier.onKeyEvent { event ->
                 if (event.key == Key.Menu && event.type == KeyEventType.KeyUp) { onLongClick(); true } else false
             })
-            .combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick) { onPageOrigin(centre); onClick() }
+            .combinedClickable(source, indication = null, role = Role.Button, onLongClick = onLongClick) { anchor.open(onClick) }
             .semantics { text = AnnotatedString(label) },
         contentAlignment = Alignment.Center,
     ) {
