@@ -1,3 +1,9 @@
+# Sonos-design med Claude, installert og visuelt prøvd på Loftet
+2026-11-03: Claude Code gjorde høgtalarfigurar, animasjon og bibliotekfinpuss i `db81866`, `0e0bfe7` og `944aae0`; Codex tok gjennomgang og installasjon på Loftet etter eigaren si bestilling. Ingen push.
+Loftet: ekte Play:3/Playbar/Era 100/Play:1, gruppevising, fråkopla rom, omslag, favorittar/spelelister og Heim-widget kontrollerte med D-pad. Sonos er aktivert; MA og Heim-kunst er av. Ingen avspeling, volum- eller gruppeendringar. Heim-tenesta er bound; Loftet søv på Øyvind.
+Kontroll: 1097 grøne før avgrensa rettingar, deretter 62 og 58 målretta grøne med DesignRules/ThemePalette; slutt-lint 0 feil og assembleTv grønt. Skjermbilete lokalt i `.superpowers/sonos-visuals-2026-11-03/`; detaljar i `docs/verification/2026-11-03-sonos-hoyttalarar.md`.
+Står att: rørsle under ekte musikk, TV-lyd og lydhandlingar/MA på anlegget. Spørsmål om kort låg test på Lydplanke er ubesvart. Nokre svarte tenestelogoar har låg kontrast. Ingen uferdig kode; brukaren si `.codex-remote-attachments/` er urørt.
+
 # Sonos: teikna høgtalarar med modell frå HA
 2026-11-03 (Claude, på bestilling via Codex): høgtalarteikningar (One/Era/Five/Move/Roam/lydplanker/Sub/Amp, nøytral for ukjend) i romlista, ved volumet, i grupperekkja og gruppedialogen. Modell frå HA device-registeret (`HaEntityInfo.model/manufacturer`, berre Sonos). Lyset pustar berre medan musikk spelar. Plan `docs/superpowers/plans/2026-11-03-sonos-hoyttalarar.md`.
 Kontroll: 1097 testar, 0 feil; lint 0 feil; debug-APK bygd, ikkje installert. Skjermbilete i `docs/images/sonos-speakers.png` m.fl.

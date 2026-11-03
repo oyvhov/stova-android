@@ -25,7 +25,7 @@ pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest lintDebug assembleDeb
 laust lokk, det ukjende motivet likna ein One, lydplanka fekk for høg scene, og ei gruppe
 viste same høgtalar to gonger og skauv volumet under kanten.
 
-## Ikkje verifisert
+## Ikkje verifisert etter første runde
 
 Animasjonen er berre kontrollert via semantikk/testar, ikkje sett i rørsle på ei eining.
 Ingen eining, HA eller Sonos er brukt. Kva modellstrengar eigaren sitt HA faktisk rapporterer,
@@ -75,3 +75,46 @@ skjermtesten `SonosScreensTest.library` (`docs/images/sonos-library.png`, kontro
 'app.stova.core.theme.ThemePaletteTest' -Pstova.screens=true`: **58 testar, 0 feil, 0 hoppa over**.
 Ikkje løyst: ein svart transparent logo (til dømes «Favorites» på Loftet) har låg kontrast mot den
 mørke flata; det krev ei eiga lys plate eller fargejustering og er ikkje gjort no.
+
+## Runde 4: Loftet med verkelege data (Codex, 3. november)
+
+Eigaren bad uttrykkeleg om designgjennomgang med Claude og installasjon/test på Loftet.
+Claude Code gjorde design og kode i `db81866`, `0e0bfe7` og `944aae0`; Codex kontrollerte
+bileta, bad om rettingar og tok einingstesten. Berre éin kode-/byggagent arbeidde om gongen.
+
+Sluttkontroll: `pwsh -NoProfile -File scripts/gradle.ps1 lintDebug assembleTv` grønt,
+lint **0 feil, 84 åtvaringar, 1 hint**. Full suite før siste avgrensa rettingar: 1097 grøne;
+siste modell-/synlegheitsrunde 62 grøne; siste biblioteksrunde 58 grøne, med DesignRules og
+ThemePalette i begge. Ingen ny full suite etter biblioteksrettinga.
+
+Installerte med `scripts/Install-Stova.ps1 -Serial 192.168.10.125:5555 -Tv` (install -r).
+Loftet Tv er Google TV Streamer; eksisterande Øyvind-profil, kontoar og HA-tilkopling vart
+bevarte. Sonos vart aktivert, med standardval for widget/toppikon/sidekunst. Heim-kunst og
+Music Assistant er framleis av. Vald Sonos-spelar er Lydplanke. Ingen demodata eller clear,
+avinstallering, force-stop eller endring av systemlauncheren. Shield vart ikkje brukt.
+
+Kontrollert på faktiske skjermbilete:
+- HA rapporterer Play:3 for Sonos Kjøkken, Playbar for Sonos Lydplanke, Era 100 for
+  Sonos Platespelar (fråkopla) og Play:1 for Sonos Storestova. Figurane og etikettane stemmer
+  med denne modellkoplinga. Platespelar får dempa figur og deaktiverte kontrollar.
+- Eksisterande gruppe Kjøkken/Storestova får eigne medlemsfigurar. Gruppedialogen viser
+  modell og varsel om flytting frå anna gruppe; lukka utan å bruke endringar.
+- Omslag, bakgrunn, romval, volumvising og D-pad-rulling fungerer. Langt OK med `hold:1500`
+  på valt rom starta inga musikk. Volumet på Lydplanke vart verande 9 %.
+- Bibliotek → Favorites → Playlists viser dei verkelege favorittane med omslag, mellom
+  anna «2021 Sommar». Val opnar «Spel» / «Legg til i køen» / «Avbryt»; lukka utan avspeling.
+  Tilbake gjennom alle nivå fungerer. Dei engelske kategorinamna kjem frå HA.
+- Biblioteklogoar er etter rettinga heile og utan dobbelt reserveikon. Svart Sonos-logo og
+  mørk tekst i nokre tenestelogoar har framleis låg kontrast på den mørke flata.
+- Heim-widget viser omslag, rom og «På pause»; tittelknappen opnar Sonos. Toppikonet er synleg.
+- Heim-knapp-tenesta var både enabled og bound etter siste installasjon; crash-bufferen var
+  tom. Loftet vart sett tilbake på Øyvind sin Heim og lagt i søvn (`mWakefulness=Asleep`).
+
+Bilete ligg lokalt (ikkje i Git) under `.superpowers/sonos-visuals-2026-11-03/`:
+`final-sonos.png`, `loftet-group.png`, `loftet-offline.png`, `final-library.png`,
+`final-playlists.png`, `final-favorite-choice.png` og `final-restored-home.png`.
+
+Ikkje prøvd på anlegget: musikkstart/pause/volum/gruppering, Music Assistant, aktiv TV-lyd
+og animasjonen under avspeling. Alle tilgjengelege rom var pausa; ingen tenestehandlingar
+vart sende. Spørsmålet om ein kort, låg test på Lydplanke vart ikkje svara på i denne økta.
+Animasjonsvilkår og TV-sperre er kontrollerte i automatiske testar, ikkje under ekte lyd.
