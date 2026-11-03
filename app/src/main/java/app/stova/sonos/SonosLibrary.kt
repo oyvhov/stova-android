@@ -10,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
@@ -20,9 +22,12 @@ import app.stova.R
 import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.*
 
+/** Loads one library picture. [fit] keeps logos and icons whole; [onLoad] removes the fallback mark under it. */
+internal typealias SonosThumbnail = @Composable (path: String, modifier: Modifier, fit: Boolean, onLoad: () -> Unit) -> Unit
+
 @Composable
 internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Boolean, failed: Boolean,
-    play: (SonosAction) -> Unit, artwork: @Composable (String, Modifier) -> Unit, onBack: () -> Unit) {
+    play: (SonosAction) -> Unit, thumbnail: SonosThumbnail, onBack: () -> Unit) {
     var stack by remember(room.id) { mutableStateOf<List<SonosMedia>>(emptyList()) }
     var target by remember(room.id) { mutableStateOf<SonosMedia?>(null) }
     var loading by remember { mutableStateOf(true) }
@@ -64,13 +69,13 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
             current?.children.isNullOrEmpty() -> Text(stringResource(R.string.sonos_library_empty))
             else -> LazyVerticalGrid(GridCells.Adaptive(150.dp), contentPadding = PaddingValues(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                itemsIndexed(current!!.children, key = { index, item -> "${item.type}/${item.id}/$index" }) { _, item ->
+                itemsIndexed(current!!.children, key = { index, item -> "${item.type}/${item.id}/$index" }) { index, item ->
                     val source = remember { MutableInteractionSource() }
                     Column(Modifier.focusOutline(source, MaterialTheme.shapes.large)
                         .clickable(source, null, enabled = item.expandable || item.playable, role = Role.Button) {
                             if (item.expandable) { target = item; retry = 0 } else choosing = item
                         }.padding(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SonosCover(item.artwork, Modifier.fillMaxWidth().aspectRatio(1f), artwork)
+                        SonosLibraryTile(item, index, thumbnail)
                         Text(item.title, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall)
                     }
                 }
@@ -88,5 +93,21 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
                 StovaButton(stringResource(R.string.sonos_cancel), { choosing = null })
             }
         }
+    }
+}
+
+/**
+ * Album and playlist art fills the square; logos and folder icons sit whole on a quiet plate.
+ * The neutral mark shows only until a picture has loaded, never through a transparent one.
+ */
+@Composable private fun SonosLibraryTile(item: SonosMedia, index: Int, thumbnail: SonosThumbnail) {
+    val path = item.artwork
+    var loaded by remember(path) { mutableStateOf(false) }
+    Box(Modifier.fillMaxWidth().aspectRatio(1f).clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center) {
+        if (!loaded) Icon(StovaIcons.Sonos, null, Modifier.size(56.dp).testTag("sonos-library-fallback-$index"),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (path != null) thumbnail(path, if (item.logoArtwork) Modifier.fillMaxSize().padding(24.dp) else Modifier.fillMaxSize(),
+            item.logoArtwork) { loaded = true }
     }
 }

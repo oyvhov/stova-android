@@ -72,11 +72,19 @@ fun sonosPlaybackRoom(room: SonosRoom, state: SonosState): SonosRoom? {
     return state.musicAssistant[native.id]?.takeIf { it.available && !it.entity.attributes.text("active_queue").isNullOrBlank() } ?: native
 }
 data class SonosMedia(val id: String, val type: String, val title: String, val artwork: String? = null,
-    val playable: Boolean = false, val expandable: Boolean = false, val children: List<SonosMedia> = emptyList())
+    val playable: Boolean = false, val expandable: Boolean = false, val children: List<SonosMedia> = emptyList(),
+    val mediaClass: String = "") {
+    /** Brand logos, source and folder icons are often transparent: show them whole, never cropped. */
+    val logoArtwork get() = artwork != null && (artwork.contains("brands.home-assistant.io") || artwork.contains("/api/brands/") ||
+        mediaClass !in pictureClasses)
+}
+/** Classes whose thumbnail is a picture (a sleeve, a photo, a still) that may fill its square. */
+private val pictureClasses = setOf("album", "artist", "playlist", "track", "podcast", "episode", "movie", "tv_show", "season", "video", "music")
 fun sonosMedia(json: JsonObject, depth: Int = 0): SonosMedia = SonosMedia(
     json.text("media_content_id").orEmpty(), json.text("media_content_type").orEmpty(), json.text("title").orEmpty(), json.text("thumbnail"),
     (json["can_play"] as? JsonPrimitive)?.booleanOrNull == true, (json["can_expand"] as? JsonPrimitive)?.booleanOrNull == true,
-    if (depth == 0) (json["children"] as? JsonArray)?.filterIsInstance<JsonObject>()?.map { sonosMedia(it, 1) }.orEmpty() else emptyList())
+    if (depth == 0) (json["children"] as? JsonArray)?.filterIsInstance<JsonObject>()?.map { sonosMedia(it, 1) }.orEmpty() else emptyList(),
+    json.text("media_class").orEmpty())
 
 sealed interface SonosAction {
     data object PlayPause : SonosAction

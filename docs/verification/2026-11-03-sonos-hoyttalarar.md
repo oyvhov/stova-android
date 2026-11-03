@@ -54,3 +54,24 @@ Kontroll: `testDebugUnitTest --tests 'app.stova.sonos.*' --tests 'app.stova.ha.H
 --tests 'app.stova.DesignRulesTest' --tests 'app.stova.core.theme.ThemePaletteTest'
 -Pstova.screens=true`: **62 testar, 0 feil, 0 hoppa over**. Full suite og lint er ikkje køyrde
 på nytt i denne runden. Galleriet er rendra på nytt og kontrollert (`docs/images/sonos-speakers.png`).
+
+## Runde 3: bibliotekbilete (funn frå Loftet)
+
+Funn (`.superpowers/sonos-visuals-2026-11-03/loftet-library-first.png`): HA-biblioteket
+crop-fylte transparente logoar og mappeikon, og Sonos-reserveikonet skein gjennom dei.
+
+- `SonosMedia` les `media_class`. `logoArtwork`: HA-merkelogoar (`brands.home-assistant.io`,
+  `/api/brands/`) og alt som ikkje er bilete-klasser (album, artist, spelelister, spor, podkast,
+  episode, film, serie, sesong, video, musikk) blir viste heile (`ContentScale.Fit`) med luft på
+  ei roleg flate. Album- og spelelistekunst fyller framleis ruta.
+- `SonosLibraryTile`: reserveteiknet blir berre vist til biletet har lasta (`HaImage.onLoad`), og
+  blir verande ved manglande eller feila bilete, så ingen rute blir tom. Ingen HA-kjelder er skjulte.
+- Avspelingssida (`SonosCover`) og Heim er urørte: albumkunst, feil- og tomreserve som før.
+
+Testar først (raude ved kompilering før endringa): `logosAndFolderIconsAreFittedWholeButAlbumArtFillsItsSquare`
+og `aLoadedPictureHidesTheFallbackButAMissingOrFailedOneKeepsIt` i `SonosLibraryTest`, og
+skjermtesten `SonosScreensTest.library` (`docs/images/sonos-library.png`, kontrollert).
+`testDebugUnitTest --tests 'app.stova.sonos.*' --tests 'app.stova.DesignRulesTest' --tests
+'app.stova.core.theme.ThemePaletteTest' -Pstova.screens=true`: **58 testar, 0 feil, 0 hoppa over**.
+Ikkje løyst: ein svart transparent logo (til dømes «Favorites» på Loftet) har låg kontrast mot den
+mørke flata; det krev ei eiga lys plate eller fargejustering og er ikkje gjort no.

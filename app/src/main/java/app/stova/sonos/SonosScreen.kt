@@ -61,7 +61,9 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
         if (!busy) { busy = true; failed = false
             scope.launch { try { failed = !repository.perform(libraryRoom.id, action) } finally { busy = false } }
         }
-    }, artwork) { library = null }
+    }, { path, modifier, fit, onLoad ->
+        HaImage(path, images, modifier, contentScale = if (fit) ContentScale.Fit else ContentScale.Crop, onLoad = onLoad)
+    }) { library = null }
     else SonosContent(state, room?.id, { id ->
         selected = id; failed = false
         scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(preferredRoom = id)) } }

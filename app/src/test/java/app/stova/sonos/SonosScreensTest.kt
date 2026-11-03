@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.first
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.*
 import app.stova.core.theme.StovaTheme
@@ -72,6 +73,34 @@ class SonosScreensTest {
             }
         } }
         compose.saveScreen("sonos-speakers")
+    }
+    /** Transparent logos sit whole on the plate; sleeves fill; a missing picture keeps the quiet mark. */
+    @Test fun library() {
+        val fake = app.stova.ha.FakeHaConnection()
+        val room = sonosPreviewRooms().first()
+        fake.entities.value = mapOf(room.id to room.entity)
+        fake.registryValue = app.stova.ha.HaRegistry(mapOf(room.id to app.stova.ha.HaEntityInfo(platform = "sonos")))
+        val connection = object : app.stova.ha.HaConnection by fake {
+            override suspend fun browseMedia(entityId: String, contentType: String?, contentId: String?) =
+                app.stova.core.storage.StovaJson.parseToJsonElement("""{"title":"Sonos","media_content_id":"root","media_content_type":"library","children":[
+                {"title":"Favorites","media_class":"directory","media_content_id":"f","media_content_type":"favorites","can_expand":true,"thumbnail":"logo:rows"},
+                {"title":"Radio","media_class":"app","media_content_id":"r","media_content_type":"app","can_expand":true,"thumbnail":"logo:play"},
+                {"title":"Emby/Jellyfin","media_class":"directory","media_content_id":"e","media_content_type":"app","can_expand":true,"thumbnail":"https://brands.home-assistant.io/_/emby/logo.png"},
+                {"title":"A Quiet Kind of Blue","media_class":"album","media_content_id":"a","media_content_type":"album","can_play":true,"thumbnail":"album"},
+                {"title":"Line-in","media_class":"directory","media_content_id":"l","media_content_type":"app","can_expand":true}]}""").let {
+                    (it as kotlinx.serialization.json.JsonObject) }
+        }
+        val repository = SonosRepository(connection) { true }
+        kotlinx.coroutines.runBlocking { repository.observe().first { it.rooms.isNotEmpty() } }
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SonosLibrary(repository, room, false, false, {}, { path, modifier, fit, onLoad ->
+                LaunchedEffect(path) { onLoad() }
+                if (!fit) SonosPreviewArtwork(modifier)
+                else androidx.compose.material3.Icon(when (path) { "logo:rows" -> app.stova.core.ui.StovaIcons.Rows; "logo:play" -> app.stova.core.ui.StovaIcons.Play
+                    else -> app.stova.core.ui.StovaIcons.Link }, null, modifier, tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface)
+            }) {}
+        } }
+        compose.saveScreen("sonos-library")
     }
     @Test fun nowPlaying() = render()
     @Test fun largeFont() = render(2f)
