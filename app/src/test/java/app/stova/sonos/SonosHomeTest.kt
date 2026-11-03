@@ -9,6 +9,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class SonosHomeTest {
+    private fun sonosWidgetRoom(prefs: SonosPrefs, state: SonosState, now: Long = 0) = selectSonosWidget(prefs, state, now).room
     private val adult = Profile("a", "A", AvatarColor.LIME)
     private val room = SonosRoom(HaEntity("media_player.a", "playing", StovaJson.parseToJsonElement(
         """{"entity_picture":"/api/art/a"}""").jsonObject, 0, 0), "A")
@@ -65,5 +66,33 @@ class SonosHomeTest {
         assertEquals(paused, sonosWidgetRoom(prefs, SonosState(listOf(paused)), now = 69_999))
         assertNull(sonosWidgetRoom(prefs, SonosState(listOf(paused)), now = 70_000))
         assertEquals(other, sonosWidgetRoom(prefs, SonosState(listOf(paused, other)), now = 11_000))
+    }
+
+    @Test fun widgetKeepsItsRoomThroughIdleAndDelayedPauseWithOneDeadline() {
+        val prefs = SonosPrefs(enabled = true)
+        val playing = selectSonosWidget(prefs, SonosState(listOf(room)), now = 1_000)
+        val idle = room.copy(entity = room.entity.copy(state = "idle"))
+        val gap = selectSonosWidget(prefs, SonosState(listOf(idle)), now = 2_000, hold = playing.hold)
+        assertEquals(idle, gap.room)
+        val paused = room.copy(entity = room.entity.copy(state = "paused", lastChanged = 5_000))
+        val pause = selectSonosWidget(prefs, SonosState(listOf(paused)), now = 5_000, hold = gap.hold)
+        assertEquals(paused, pause.room)
+        assertEquals(62_000L, pause.hold?.expiresAt)
+        assertNull(selectSonosWidget(prefs, SonosState(listOf(paused)), now = 62_000, hold = pause.hold).room)
+        assertEquals(room, selectSonosWidget(prefs, SonosState(listOf(room)), now = 62_000, hold = pause.hold).room)
+        assertNull(selectSonosWidget(prefs, SonosState(emptyList()), now = 5_000, hold = pause.hold).room)
+    }
+
+    @Test fun losingTheAssistantQueueDuringPauseKeepsTheSameRoomUntilTvAudioStarts() {
+        val prefs = SonosPrefs(enabled = true)
+        val idle = room.copy(entity = room.entity.copy(state = "idle"))
+        val assistant = room.copy(entity = room.entity.copy(id = "media_player.ma",
+            attributes = StovaJson.parseToJsonElement("""{"active_queue":"queue"}""").jsonObject))
+        val playing = selectSonosWidget(prefs, SonosState(listOf(idle), musicAssistant = mapOf(idle.id to assistant)), now = 1_000)
+        assertEquals(idle, playing.room)
+        val gap = selectSonosWidget(prefs, SonosState(listOf(idle)), now = 2_000, hold = playing.hold)
+        assertEquals(idle, gap.room)
+        val tv = idle.copy(entity = idle.entity.copy(attributes = StovaJson.parseToJsonElement("""{"source":"TV"}""").jsonObject))
+        assertNull(selectSonosWidget(prefs, SonosState(listOf(tv)), now = 3_000, hold = gap.hold).room)
     }
 }

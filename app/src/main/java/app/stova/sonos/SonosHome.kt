@@ -46,34 +46,59 @@ val LocalHomeSonos = compositionLocalOf<SonosRoom?> { null }
 
 data class SonosHomeSession(val state: SonosState, val busy: Boolean, val failed: Boolean, val playPause: (String) -> Unit)
 
-private fun pauseEnds(player: SonosRoom) = player.entity.lastChanged + 60_000L
+private const val WidgetPauseMillis = 60_000L
+internal data class SonosWidgetHold(val roomId: String, val expiresAt: Long? = null)
+internal data class SonosWidgetSelection(val room: SonosRoom? = null, val hold: SonosWidgetHold? = null)
 
-fun sonosWidgetRoom(prefs: SonosPrefs, state: SonosState, now: Long = System.currentTimeMillis()): SonosRoom? {
-    if (!prefs.enabled || !prefs.showNowPlaying) return null
+internal fun selectSonosWidget(prefs: SonosPrefs, state: SonosState, now: Long,
+    hold: SonosWidgetHold? = null): SonosWidgetSelection {
+    if (!prefs.enabled || !prefs.showNowPlaying) return SonosWidgetSelection()
     val rooms = state.rooms.mapNotNull { room ->
         val player = sonosPlaybackRoom(room, state) ?: return@mapNotNull null
         if (!room.available || !player.available || room.tvAudio || player.tvAudio) return@mapNotNull null
-        if (player.playing || player.entity.state == "paused" && now in player.entity.lastChanged until pauseEnds(player)) room to player
-        else null
+        room to player
     }
+    val retained = hold?.let { previous ->
+        rooms.find { (room, _) -> room.id == previous.roomId }?.let { (room, player) ->
+            when {
+                player.playing -> SonosWidgetSelection(room, previous.copy(expiresAt = null))
+                player.entity.state in setOf("paused", "idle", "buffering") -> {
+                    // Some players pass through idle or buffering before reporting pause. Start
+                    // the grace period at the first quiet update and keep that same deadline.
+                    val deadline = previous.expiresAt ?: now + WidgetPauseMillis
+                    SonosWidgetSelection(room.takeIf { now < deadline }, previous.copy(expiresAt = deadline))
+                }
+                else -> null
+            }
+        }
+    }
+    if (retained?.room != null) return retained
+
     val playing = rooms.filter { it.second.playing }
-    val eligible = playing.ifEmpty { rooms }
-    return (eligible.find { it.first.id == prefs.preferredRoom } ?: eligible.firstOrNull())?.first
+    val eligible = playing.ifEmpty { rooms.filter { (room, player) ->
+        room.id != retained?.hold?.roomId && player.entity.state == "paused" &&
+            now in player.entity.lastChanged until (player.entity.lastChanged + WidgetPauseMillis)
+    } }
+    val (room, player) = eligible.find { it.first.id == prefs.preferredRoom } ?: eligible.firstOrNull()
+        ?: return retained ?: SonosWidgetSelection()
+    return SonosWidgetSelection(room, SonosWidgetHold(room.id,
+        if (player.playing) null else player.entity.lastChanged + WidgetPauseMillis))
 }
 
 @Composable
 fun rememberSonosWidgetRoom(prefs: SonosPrefs, state: SonosState): SonosRoom? {
+    var hold by remember(prefs.enabled, prefs.showNowPlaying, prefs.preferredRoom) { mutableStateOf<SonosWidgetHold?>(null) }
     var expiredAt by remember { mutableLongStateOf(0L) }
-    val room = sonosWidgetRoom(prefs, state, maxOf(expiredAt, System.currentTimeMillis()))
-    val player = room?.let { sonosPlaybackRoom(it, state) }
-    val deadline = player?.takeIf { it.entity.state == "paused" }?.let(::pauseEnds)
+    val selection = selectSonosWidget(prefs, state, maxOf(expiredAt, System.currentTimeMillis()), hold)
+    SideEffect { hold = selection.hold }
+    val deadline = selection.hold?.expiresAt?.takeIf { selection.room != null }
     LaunchedEffect(deadline) {
         if (deadline != null) {
             delay((deadline - System.currentTimeMillis()).coerceAtLeast(0L))
             expiredAt = deadline
         }
     }
-    return room
+    return selection.room
 }
 
 /** One visible-Home subscription serves the widget and opt-in backdrop. */

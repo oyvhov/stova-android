@@ -13,6 +13,8 @@ avkryssingsboksar i dei er inga bestilling.
 
 ## Historikk
 
+- 2026-11-03: [Hald Sonos-widgeten synleg gjennom pause](2026-11-03-sonos-widget-pause.md), fullført med 19 grøne testar, lint og TV-bygg.
+
 - 2026-11-03: [Sonos-kunst på Heim når andre rom brukar TV](2026-11-03-sonos-heim-tv-lyd.md), fullført med 24 grøne testar, lint og TV-bygg.
 
 - 2026-11-03: [Sonos: felles uttrykk](2026-11-03-sonos-felles-uttrykk.md), fullført med 121 grøne testar, visuell skjermkontroll, lint og TV-bygg.

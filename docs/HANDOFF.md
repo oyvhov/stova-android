@@ -1,3 +1,8 @@
+# Sonos-kunst og pause på Heim
+2026-11-03 (Codex): `811142b` avgrensa TV-sperra for bakgrunnskunst til valt rom og koordinatoren i same gruppe. 24 testar, lint og TV-bygg grøne.
+Widgeten held same rom i 60 sekund gjennom tomgang og pause, også når MA-køen slepper taket. 19 Sonos-/fokus-/designtestar, lint og TV-bygg grøne.
+Ingen uferdig kode. Dei to rettingane er ikkje installerte eller prøvde på ekte TV i denne økta.
+
 # Felles Sonos-uttrykk installert på Loftet og Shield
 2026-11-03 (Codex): Installerte `5556f23` med install-r på begge TV-ane. Ingen avspeling, volum- eller gruppeendringar.
 Loftet: langt OK opna romval med korte romnamn, markeringar og musikkdelen synleg. Avslutta med Tilbake. Bilete i `.superpowers/sonos-felles-tv/125-romval.png`.
