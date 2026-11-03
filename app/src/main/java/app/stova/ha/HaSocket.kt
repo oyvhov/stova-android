@@ -32,6 +32,7 @@ interface HaConnection {
     fun hold() {}
     fun release() {}
     suspend fun callService(domain: String, service: String, entityId: String, data: JsonObject = JsonObject(emptyMap())): Boolean
+    suspend fun serviceResponse(domain: String, service: String, entityId: String): JsonObject? = null
     suspend fun history(entityId: String, hours: Int = 24): List<Pair<Long, Double>>
     suspend fun states(): List<HaEntity>
     /** Null when any of the three lists failed: a partial registry would erase the rooms. */
@@ -84,6 +85,7 @@ class HaSocket(
     private var pricesAt=0L
     private val histories = HaReadCache<List<Pair<Long, Double>>>()
     private val forecasts = HaReadCache<List<ForecastDay>>()
+    private val services = HaReadCache<JsonObject>()
     /** Integrations Home Assistant has loaded (`get_config` components); null until first known. */
     private val components=MutableStateFlow<Set<String>?>(null)
     @Volatile private var homeZone=ZoneId.systemDefault()
@@ -108,7 +110,7 @@ class HaSocket(
         }
     }
     fun reconfigure() = post {
-        histories.clear(); forecasts.clear(); components.value = null; priceResponse = null; pricesAt = 0L
+        histories.clear(); forecasts.clear(); services.clear(); components.value = null; priceResponse = null; pricesAt = 0L
         reconnect?.cancel(); disconnect(); mutableEntities.value = emptyMap(); snapshots.value = null; authFailures = 0; failures = 0
         mutableStatus.value = if (address() == null) HaStatus.NOT_CONFIGURED else HaStatus.DISCONNECTED
         reconcileDemand()
@@ -257,6 +259,14 @@ class HaSocket(
     }
     override suspend fun callService(domain: String, service: String, entityId: String, data: JsonObject): Boolean =
         request { app.stova.ha.callService(it, domain, service, entityId, data) }?.get("success")?.jsonPrimitive?.booleanOrNull == true
+    override suspend fun serviceResponse(domain: String, service: String, entityId: String): JsonObject? {
+        val available = services.get("services", 300_000) {
+            request(::getServices)?.get("result") as? JsonObject ?: JsonObject(emptyMap())
+        }
+        if ((available[domain] as? JsonObject)?.containsKey(service) != true) return null
+        val reply = request { app.stova.ha.callService(it, domain, service, entityId, JsonObject(emptyMap()), returnResponse = true) }
+        return ((reply?.get("result") as? JsonObject)?.get("response") as? JsonObject)
+    }
     override suspend fun history(entityId: String, hours: Int): List<Pair<Long, Double>> = histories.get("$entityId/$hours", 300_000) {
         val response = request { historyRequest(it, entityId, Instant.now().minusSeconds(hours.toLong() * 3600)) }
         (response?.get("result") as? JsonObject)?.let { parseHistory(it, entityId) }.orEmpty()

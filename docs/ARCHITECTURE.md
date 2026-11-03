@@ -5,6 +5,16 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 
 ## Finn rett stad å endre
 
+På Sonos-sida kan `SonosScreen` førehandshente eitt omslag frå den aktive,
+kopla Music Assistant-køen medan sporet spelar. `SonosQueueArtwork` sjekkar
+spelar, kø og aktiv spor-ID, og den ferdig dekoda kunsten blir brukt først
+når det aktuelle sporet startar. `HaSocket.serviceResponse` sjekkar at
+køhandlinga finst. `HaImage` brukar ei avgrensa, sesjonsdelt minnebuffer for
+Sonos-omslag. `SonosArtworkFade` held det gamle biletet til det nye er
+dekoda, og overtonar i lagfasen. Eit rombyte eller TV-lyd fjernar den gamle
+kunsten med ein gong. Den delte Sonos-bakgrunnen får eit ekstra matt lag
+med 14 % temafarge.
+
 | Oppgåve | Start her | Ansvar |
 |---|---|---|
 | Navigasjon og profilbyte | `navigation/StovaApp.kt` | Destinasjonar, tilbakeknapp og felles bakgrunn |

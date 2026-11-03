@@ -13,6 +13,8 @@ avkryssingsboksar i dei er inga bestilling.
 
 ## Historikk
 
+- 2026-11-03: [Sonos: klargjer neste omslag](2026-11-03-sonos-neste-omslag.md), fullført og verifisert med kø- og skjermtestar. Ekte TV-kø ikkje prøvd.
+
 - 2026-11-03: [Sonos: roleg volum, fullskjerm og mikrorørsle](2026-11-03-sonos-fullskjerm.md), fullført og installert på Loftet. Berre visuell prøve, utan avspeling eller volumendring. 1156 testar før sluttgjennomgang, 113 målretta etter; lint og TV-bygg grøne. [Verifisering](../../verification/2026-11-03-sonos-fullskjerm.md).
 
 - 2026-11-03: [Sonos gjennom Home Assistant](2026-11-03-sonos.md), fullført og installert på begge TV-ar. Native kontrollar og TV-kunst prøvde; Music Assistant-bibliotek og avspeling/pause prøvde på Shield ved 0. Fleire MA-rom og høyrbar lyd er ikkje prøvde.

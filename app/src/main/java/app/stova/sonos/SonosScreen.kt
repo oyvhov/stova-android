@@ -5,7 +5,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.animation.core.Animatable
 import app.stova.core.theme.stovaMotion
 import androidx.compose.ui.layout.ContentScale
@@ -49,7 +52,9 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
     val room = state.rooms.find { it.id == (selected ?: household?.sonos?.preferredRoom) } ?: state.rooms.firstOrNull()
     val player = room?.let { coordinator(it, state.rooms) }
     val images = household?.haBaseUrl?.let { remember(it) { HaImageSource(it, container.haAuth, container.haImages) } }
-    val artwork: @Composable (String, Modifier) -> Unit = { path, modifier -> HaImage(path, images, modifier, contentScale = ContentScale.Crop) }
+    val loadArt: SonosArtLoader = { path, modifier, loaded, failed ->
+        HaImage(path, images, modifier, contentScale = ContentScale.Crop, onLoad = loaded, onError = failed, artworkSize = 1280)
+    }
     val act: (SonosAction) -> Unit = { action ->
         if (!busy && room != null) {
             busy = true; failed = false
@@ -57,6 +62,23 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
         }
     }
     val libraryRoom = (state.rooms + state.musicAssistant.values).find { it.id == library }
+    val queuePlayer = room?.let { sonosPlaybackRoom(it, state) }
+    val queue = room?.let { sonosQueueTarget(it, state, requirePlaying = false) }
+    val target = queue?.takeIf { allowed && images != null && libraryRoom == null && queuePlayer?.playing == true }
+    var candidate by remember(target) { mutableStateOf<SonosQueuedArtwork?>(null) }
+    var warmed by remember(repository, images, room?.id, queue?.player, queue?.queue) { mutableStateOf(emptyList<SonosQueuedArtwork>()) }
+    LaunchedEffect(repository, owner, target, room?.id, queuePlayer?.shuffle, queuePlayer?.repeat) {
+        if (target == null) return@LaunchedEffect
+        owner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            candidate = null
+            candidate = repository.nextArtwork(room.id, target)
+        }
+    }
+    candidate?.let { next -> key(next) {
+        loadArt(next.path, Modifier.size(1.dp).graphicsLayer { alpha = 0f }.clearAndSetSemantics {}, {
+            warmed = (listOf(next) + warmed.filterNot { it.target == next.target }).take(2)
+        }, {})
+    } }
     val motion = stovaMotion
     val pageAlpha = remember(libraryRoom?.id) { Animatable(if (motion.still) 1f else 0f) }
     LaunchedEffect(pageAlpha) { pageAlpha.animateTo(1f, motion.enter()) }
@@ -74,7 +96,8 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
     }, act,
         { grouping = player?.id; failed = false }, { library = player?.id }, { retry++ }, busy, failed,
         backgroundArt = household?.sonos?.backgroundArt == true && profile.appearance.backgroundSource != app.stova.profiles.BackgroundSource.THEME,
-        artwork = artwork, onBack = onBack, roomsOpen = roomsOpen, onRoomsOpen = { roomsOpen = it },
+        onBack = onBack, roomsOpen = roomsOpen, onRoomsOpen = { roomsOpen = it },
+        preparedArtwork = warmed.firstOrNull { it.matches(queue) }?.path, loadArtwork = loadArt,
         immersive = immersive, onImmersive = { immersive = it },
         onBrowseMusicAssistant = state.musicAssistant[player?.id]?.takeIf { it.available && it.supports(131072) }?.let { ma -> { library = ma.id } })
     }

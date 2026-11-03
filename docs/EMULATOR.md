@@ -52,6 +52,8 @@ eit teikna prøveomslag, utan tilkoplingar eller lagring. Start på **5580** med
 `adb -s emulator-5580 shell am start -n app.stova.debug/app.stova.sonos.SonosPreviewActivity`.
 `--ez largeFont true` prøver dobbel skrift, `--es mode empty` tomtilstanden og `--es mode error`
 fråkopling. Avspeling, volum og gruppeval endrar berre prøveverdiane i minnet.
+`--ez immersive true` startar i fullskjerm. «Neste spor» byter til eit
+anna prøveomslag med 700 ms forseinking før overtoninga.
 
 ## Ekte tenester
 

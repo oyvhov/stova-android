@@ -19,7 +19,9 @@ import coil3.request.ImageRequest
 import kotlinx.coroutines.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
-data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader)
+data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader) {
+    internal val artworkSession = java.util.UUID.randomUUID().toString()
+}
 
 @Composable fun CameraCard(entity:HaEntity,images:HaImageSource?,visible:Boolean,size:CardSize=CardSize.S) {
     HaImage("/api/camera_proxy/${entity.id}",images,Modifier.fillMaxWidth().height(if(size==CardSize.L) 208.dp else 80.dp),if(visible) 10_000L else null)
@@ -28,7 +30,7 @@ data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader)
 
 /** No bearer token crosses origins, no camera frames are cached, and paused/offscreen cards stop. */
 @Composable internal fun HaImage(path:String, source:HaImageSource?,modifier:Modifier=Modifier,refreshMillis:Long?=null,contentScale:ContentScale=ContentScale.Fit,
-    onLoad: () -> Unit = {}, onError: () -> Unit = {}) {
+    onLoad: () -> Unit = {}, onError: () -> Unit = {}, artworkSize: Int? = null) {
     val context=LocalContext.current
     val scope=rememberCoroutineScope()
     var token by remember(source,path) { mutableStateOf<String?>(null) }
@@ -50,11 +52,16 @@ data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader)
         onPauseOrDispose { job.cancel() }
     }
     val camera=path.startsWith("/api/camera_proxy/")
-    val request=remember(url,token,tick) {
+    val request=remember(source,url,token,tick,artworkSize) {
         if(url==null || token==null || (camera && refreshMillis==null)) null else ImageRequest.Builder(context)
             .data(if(camera) url.newBuilder().addQueryParameter("cache",tick.toString()).build().toString() else url.toString())
             .httpHeaders(NetworkHeaders.Builder().apply { if(sameOrigin && !token.isNullOrEmpty()) set("Authorization","Bearer $token") }.build())
-            .memoryCachePolicy(CachePolicy.DISABLED).diskCachePolicy(CachePolicy.DISABLED).build()
+            .diskCachePolicy(CachePolicy.DISABLED).apply {
+                if (!camera && artworkSize != null) {
+                    size(artworkSize, artworkSize)
+                    memoryCacheKeyExtra("ha-art-session", source.artworkSession)
+                } else memoryCachePolicy(CachePolicy.DISABLED)
+            }.build()
     }
     // Null means credentials are still loading (or the camera is paused), not a failed image.
     // Coil reports a null model as an error; cover consumers would then remove the loader

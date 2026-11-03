@@ -24,6 +24,7 @@ fun historyRequest(id: Int, entityId: String, start: Instant) = command(id, "his
     put("minimal_response", true); put("no_attributes", true); put("significant_changes_only", false)
 }
 fun getStates(id: Int) = command(id, "get_states")
+internal fun getServices(id: Int) = command(id, "get_services")
 fun getConfig(id:Int) = command(id,"get_config")
 fun splitIncoming(text: String): List<JsonObject> = when (val json = StovaJson.parseToJsonElement(text)) {
     is JsonObject -> listOf(json)

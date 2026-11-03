@@ -18,6 +18,22 @@ import java.io.File
 import org.junit.rules.TemporaryFolder
 
 class HaSocketTest {
+    @Test fun queueResponseRequiresAnAdvertisedServiceAndReturnsTheTargetData() = runBlocking {
+        try {
+            enqueue(); val s = socket(); s.hold(); s.start()
+            withTimeout(5_000) { s.status.first { it == HaStatus.CONNECTED } }
+            assertNull(s.serviceResponse("sonos", "get_queue", "media_player.room"))
+            val result = s.serviceResponse("music_assistant", "get_queue", "media_player.room")
+            assertEquals("queue-a", result?.get("media_player.room")?.jsonObject?.text("queue_id"))
+            assertEquals(1, received.count { it.text("type") == "get_services" })
+            val request = received.single { it.text("type") == "call_service" }
+            assertEquals("music_assistant", request.text("domain"))
+            assertEquals("get_queue", request.text("service"))
+            assertEquals("media_player.room", request["target"]?.jsonObject?.text("entity_id"))
+            assertEquals(true, request["return_response"]?.jsonPrimitive?.booleanOrNull)
+        } finally { scope.cancel() }
+    }
+
     @Test fun mediaBrowserUsesWebsocketAndPassesTheOpaqueMediaIdUnchanged() = runBlocking {
         try {
             enqueue(); val s = socket(); s.hold(); s.start()
@@ -57,6 +73,10 @@ class HaSocketTest {
                         ws.send("""[{"id":$id,"type":"result","success":true},{"id":$id,"type":"event","event":$event}]""")
                     }
                     "get_config" -> ws.send("""{"id":$id,"type":"result","success":true,"result":{"time_zone":"Europe/Oslo","components":$components}}""")
+                    "get_services" -> ws.send("""{"id":$id,"type":"result","success":true,"result":{"music_assistant":{"get_queue":{}}}}""")
+                    "call_service" -> if (j.text("service") == "get_queue") {
+                        ws.send("""{"id":$id,"type":"result","success":true,"result":{"response":{"media_player.room":{"queue_id":"queue-a"}}}}""")
+                    } else ws.send("""{"id":$id,"type":"result","success":true,"result":[]}""")
                     "media_player/browse_media" -> ws.send("""{"id":$id,"type":"result","success":true,"result":{"title":"Music","children":[]}}""")
                     else -> ws.send("""{"id":$id,"type":"result","success":true,"result":[]} """)
                 }

@@ -113,6 +113,32 @@ class SonosFullscreenTest {
     }
 
     // 2. Full screen.
+    @Test fun backdropKeepsTheOldImageWhileTheNextDecodes() {
+        var path by mutableStateOf<String?>("first")
+        val callbacks = mutableMapOf<String, () -> Unit>()
+        compose.setContent { StovaTheme {
+            SonosArtworkFade(path, backdrop = true) { image, modifier, ready, _ ->
+                SideEffect { callbacks[image] = ready }
+                Box(modifier.testTag(image))
+            }
+        } }
+        compose.runOnIdle { callbacks.getValue("first")() }
+        compose.mainClock.advanceTimeBy(1000)
+        compose.runOnIdle { path = "next" }
+        compose.mainClock.advanceTimeBy(1000)
+        compose.onNodeWithTag("first").assertExists()
+        compose.mainClock.autoAdvance = false
+        compose.runOnIdle { callbacks.getValue("next")() }
+        compose.mainClock.advanceTimeBy(300)
+        compose.onNodeWithTag("first").assertExists()
+        compose.mainClock.advanceTimeBy(1000)
+        compose.onNodeWithTag("first").assertDoesNotExist()
+        compose.onNodeWithTag("next").assertExists()
+        compose.mainClock.autoAdvance = true
+        compose.runOnIdle { path = null }
+        compose.onNodeWithTag("next").assertDoesNotExist()
+    }
+
     @Test fun enteringFullScreenKeepsTheExistingBackgroundImageLoaded() {
         page(room())
         // The backdrop and the square cover are already loaded.

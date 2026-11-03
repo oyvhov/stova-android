@@ -32,11 +32,10 @@ import app.stova.home.rememberSeasonalClock
  * grouping or settings here. TV audio and lost speakers never show album art, not even fading out.
  */
 @Composable internal fun SonosImmersive(room: SonosRoom, native: SonosRoom?, player: SonosRoom?, busy: Boolean, actionFailed: Boolean,
-    backgroundArt: Boolean, artwork: @Composable (String, Modifier) -> Unit, onAction: (SonosAction) -> Unit, onExit: () -> Unit) {
+    backgroundArt: Boolean, art: String?, load: SonosArtLoader, onAction: (SonosAction) -> Unit, onExit: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val ink = colors.background
     val tv = room.tvAudio || native?.tvAudio == true || player?.tvAudio == true
-    val art = player?.artwork?.takeUnless { tv || !room.available || it.isBlank() }
     val playFocus = remember { FocusRequester() }
     val exitFocus = remember { FocusRequester() }
     val entry = remember { FocusRequester() }
@@ -53,8 +52,10 @@ import app.stova.home.rememberSeasonalClock
         SeasonalScene(Modifier.matchParentSize(), clock = seasonClock)
         // Without full-bleed art the sleeve, or the room's own speaker, stands to the right as the
         // picture; words and controls keep the left and the foot, as with art.
-        if (art != null && !backgroundArt) SonosCover(art, Modifier.align(Alignment.CenterEnd).padding(end = StovaLayout.TvSafeEdge)
-            .size(if (largeType) 180.dp else 300.dp), artwork)
+        if (art != null && !backgroundArt) key(room.id, player?.id) {
+            SonosCover(art, Modifier.align(Alignment.CenterEnd).padding(end = StovaLayout.TvSafeEdge)
+                .size(if (largeType) 180.dp else 300.dp), load)
+        }
         else if (art == null) SonosSpeakerArt(room.speaker, rememberSonosVisual(room, SonosState(listOfNotNull(room, native).distinct(), loading = false)),
             Modifier.align(Alignment.CenterEnd).padding(end = StovaLayout.TvSafeEdge).width(360.dp).height(if (largeType) 120.dp else 200.dp),
             "sonos-immersive-speaker", room.available, waves = true)

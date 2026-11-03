@@ -31,6 +31,7 @@ class SonosPreviewActivity : ComponentActivity() {
                 var rooms by remember { mutableStateOf(sonosPreviewRooms()) }
                 var selected by remember { mutableStateOf(rooms.first().id) }
                 var group by remember { mutableStateOf(false) }
+                var immersive by remember { mutableStateOf(intent.getBooleanExtra("immersive", false)) }
                 val mode = intent.getStringExtra("mode")
                 val shown = if (mode == "empty" || mode == "error") emptyList() else rooms
                 val state = SonosState(shown, loading = false, failed = mode == "error")
@@ -38,9 +39,23 @@ class SonosPreviewActivity : ComponentActivity() {
                     rooms = rooms.map { room -> if (room.id != selected) room else when (action) {
                         SonosAction.PlayPause -> room.copy(entity = room.entity.copy(state = if (room.playing) "paused" else "playing"))
                         is SonosAction.Volume -> room.copy(entity = room.entity.copy(attributes = JsonObject(room.entity.attributes + ("volume_level" to JsonPrimitive(action.percent / 100.0)))))
+                        SonosAction.Next, SonosAction.Previous -> {
+                            val alternate = room.artwork == "preview-art"
+                            room.copy(entity = room.entity.copy(attributes = JsonObject(room.entity.attributes + mapOf(
+                                "entity_picture" to JsonPrimitive(if (alternate) "preview-art-next" else "preview-art"),
+                                "media_title" to JsonPrimitive(if (alternate) "Under a Copper Sky" else "A Quiet Kind of Blue"),
+                            ))))
+                        }
                         else -> room
                     } }
-                }, { group = true }, {}, {}, artwork = { _, modifier -> SonosPreviewArtwork(modifier) }, onBack = { finish() })
+                }, { group = true }, {}, {}, onBack = { finish() }, immersive = immersive, onImmersive = { immersive = it },
+                    loadArtwork = { path, modifier, ready, _ ->
+                        LaunchedEffect(path) {
+                            if (path == "preview-art-next") kotlinx.coroutines.delay(700)
+                            ready()
+                        }
+                        SonosPreviewArtwork(modifier, alternate = path == "preview-art-next")
+                    })
                 if (group) {
                     val anchor = coordinator(rooms.first { it.id == selected }, rooms)!!
                     SonosGroupDialog(anchor, rooms, false, false, { members ->
@@ -67,10 +82,11 @@ internal fun sonosPreviewRooms(): List<SonosRoom> = listOf("Stova" to "Arc", "Kj
 }
 
 /** A fixed illustrative album sleeve for screenshots, using the existing theme's paint colours. */
-@Composable internal fun SonosPreviewArtwork(modifier: Modifier) {
+@Composable internal fun SonosPreviewArtwork(modifier: Modifier, alternate: Boolean = false) {
     Canvas(modifier) {
-        drawRect(Brush.verticalGradient(listOf(StovaColors.Mist, StovaColors.Ink)))
-        drawCircle(StovaColors.Caution, size.minDimension * .18f, Offset(size.width * .68f, size.height * .32f))
+        drawRect(Brush.verticalGradient(listOf(if (alternate) StovaColors.Caution else StovaColors.Mist, StovaColors.Ink)))
+        drawCircle(if (alternate) StovaColors.Mist else StovaColors.Caution, size.minDimension * .18f,
+            Offset(size.width * if (alternate) .38f else .68f, size.height * .32f))
         val hills = Path().apply {
             moveTo(0f, size.height * .66f)
             cubicTo(size.width * .2f, size.height * .3f, size.width * .4f, size.height * .92f, size.width * .7f, size.height * .58f)

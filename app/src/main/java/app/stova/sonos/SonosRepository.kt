@@ -49,6 +49,12 @@ class SonosRepository(private val connection: HaConnection,
         val links = musicAssistantLinks()
         return assistants.filter { (native, ma) -> links[native] == ma.id && rooms.any { it.id == native && it.available } }
     }
+    internal suspend fun nextArtwork(roomId: String, expected: SonosQueueTarget): SonosQueuedArtwork? {
+        if (!allowed()) return null
+        val room = rooms.find { it.id == roomId } ?: return null
+        if (sonosQueueTarget(room, SonosState(rooms, musicAssistant = currentAssistants())) != expected) return null
+        return connection.serviceResponse("music_assistant", "get_queue", expected.player)?.let { nextSonosArtwork(expected, it) }
+    }
     suspend fun perform(roomId: String, action: SonosAction): Boolean = guarded {
         val current = currentAssistants()
         val explicit = current.values.find { it.id == roomId && it.available }

@@ -46,7 +46,8 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     /** The rooms are a side menu: hidden, the music takes the page. Hoisted so it survives the library. */
     roomsOpen: Boolean = true, onRoomsOpen: (Boolean) -> Unit = {},
     /** The music alone on the screen; hoisted in [SonosScreen]. Back returns to this page. */
-    immersive: Boolean = false, onImmersive: (Boolean) -> Unit = {}) {
+    immersive: Boolean = false, onImmersive: (Boolean) -> Unit = {},
+    preparedArtwork: String? = null, loadArtwork: SonosArtLoader? = null) {
     val room = state.rooms.find { it.id == selectedId } ?: state.rooms.firstOrNull()
     val native = room?.let { coordinator(it, state.rooms) }
     val player = room?.let { sonosPlaybackRoom(it, state) }
@@ -87,16 +88,22 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     // authenticated image here makes a visible empty frame even when the sleeve is cached.
     Box(Modifier.fillMaxSize().background(colors.background)) {
     val tvAudio = native?.tvAudio == true || room?.tvAudio == true || player?.tvAudio == true
-    val shownArt = player?.artwork?.takeIf { backgroundArt && !tvAudio && room?.available == true && player.available }
-    key(backgroundArt, tvAudio, shownArt == null) {
-        Crossfade(shownArt, animationSpec = stovaMotion.fade(stovaMotion.ambient), label = "sonos-art") { path ->
-            if (path != null) artwork(path, Modifier.fillMaxSize())
+    val art = (preparedArtwork ?: player?.artwork)?.takeIf { it.isNotBlank() && !tvAudio && room?.available == true && player?.available == true }
+    val load: SonosArtLoader = loadArtwork ?: { path, modifier, ready, _ ->
+        artwork(path, modifier)
+        SideEffect { ready() }
+    }
+    val shownArt = art.takeIf { backgroundArt }
+    key(room?.id, player?.id, shownArt == null) {
+        if (shownArt != null) {
+            SonosArtworkFade(shownArt, backdrop = true, load)
+            Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = .14f)))
         }
     }
     if (immersive && room != null) {
         BackHandler { leaveImmersive() }
         SonosModeReveal("immersive") {
-            SonosImmersive(room, native, player, busy, actionFailed, backgroundArt, artwork, guarded, ::leaveImmersive)
+            SonosImmersive(room, native, player, busy, actionFailed, backgroundArt, art, load, guarded, ::leaveImmersive)
         }
     } else SonosModeReveal("page") {
     Box(Modifier.fillMaxSize()) {
@@ -142,10 +149,10 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                     // With the rooms hidden the freed width goes to the sleeve and the music, not to more controls.
                     val cover = if (roomsOpen) 190.dp else 236.dp
                     if (largeType) {
-                        SonosCover(player?.artwork.takeUnless { native?.tvAudio == true || room.tvAudio }, Modifier.size(160.dp), artwork)
+                        key(room.id, player?.id) { SonosCover(art, Modifier.size(160.dp), load) }
                         SonosPlayback(room, player, guarded, playbackFocus, rooms, playFocus)
                     } else Row(Modifier.heightIn(min = cover + 32.dp), horizontalArrangement = Arrangement.spacedBy(28.dp), verticalAlignment = Alignment.CenterVertically) {
-                        SonosCover(player?.artwork.takeUnless { native?.tvAudio == true || room.tvAudio }, Modifier.size(cover), artwork)
+                        key(room.id, player?.id) { SonosCover(art, Modifier.size(cover), load) }
                         Column(Modifier.weight(1f)) { SonosPlayback(room, player, guarded, playbackFocus, rooms, playFocus) }
                     }
                     if (actionFailed) Text(stringResource(R.string.sonos_action_failed), color = colors.error)
@@ -211,13 +218,10 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
     }
 }
 
-@Composable internal fun SonosCover(path: String?, modifier: Modifier, artwork: @Composable (String, Modifier) -> Unit) {
+@Composable internal fun SonosCover(path: String?, modifier: Modifier, load: SonosArtLoader) {
     Box(modifier.clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
         Icon(StovaIcons.Sonos, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        // A new sleeve crossfades over the old; losing the sleeve (TV, silence) removes it at once.
-        key(path == null) { Crossfade(path, animationSpec = stovaMotion.fade(stovaMotion.standard), label = "sonos-cover") { shown ->
-            if (shown != null) artwork(shown, Modifier.fillMaxSize())
-        } }
+        key(path == null) { SonosArtworkFade(path, backdrop = false, load) }
     }
 }
 
