@@ -29,16 +29,17 @@ import kotlinx.coroutines.delay
 
 fun sonosHomeRoom(prefs: SonosPrefs, profile: Profile, rooms: List<SonosRoom>, assistants: Map<String, SonosRoom> = emptyMap()): SonosRoom? {
     if (!prefs.enabled || !prefs.homeArtwork || profile.kid || profile.appearance.backgroundSource == BackgroundSource.THEME) return null
-    // A soundbar using TV audio suppresses the music background for the entire Home, even if
-    // another room plays music. Old track metadata on the soundbar must never take over the TV.
-    if (rooms.any { it.available && it.entity.state in setOf("playing", "buffering") && it.tvAudio }) return null
+    val selected = rooms.find { it.id == prefs.preferredRoom }
+    val preferred = selected?.let { coordinator(it, rooms) }
+    // TV audio suppresses the backdrop only for the selected room and its own group.
+    if (selected?.let { it.available && it.tvAudio } == true ||
+        preferred?.let { it.available && it.tvAudio } == true) return null
     val state = SonosState(rooms, musicAssistant = assistants)
     val candidates = rooms.filter { it.available && !it.tvAudio && it.id == it.coordinatorId }.map { native ->
         val playback = sonosPlaybackRoom(native, state) ?: native
         if (playback.id == native.id) native else playback.copy(name = native.name)
-    }.filter { it.playing && !it.artwork.isNullOrBlank() }
-    val preferred = rooms.find { it.id == prefs.preferredRoom }?.coordinatorId
-    return candidates.find { it.id == preferred || it.id == assistants[preferred]?.id } ?: candidates.firstOrNull()
+    }.filter { it.playing && !it.tvAudio && !it.artwork.isNullOrBlank() }
+    return candidates.find { it.id == preferred?.id || it.id == assistants[preferred?.id]?.id } ?: candidates.firstOrNull()
 }
 
 val LocalHomeSonos = compositionLocalOf<SonosRoom?> { null }

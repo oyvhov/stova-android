@@ -13,6 +13,8 @@ avkryssingsboksar i dei er inga bestilling.
 
 ## Historikk
 
+- 2026-11-03: [Sonos-kunst på Heim når andre rom brukar TV](2026-11-03-sonos-heim-tv-lyd.md), fullført med 24 grøne testar, lint og TV-bygg.
+
 - 2026-11-03: [Sonos: felles uttrykk](2026-11-03-sonos-felles-uttrykk.md), fullført med 121 grøne testar, visuell skjermkontroll, lint og TV-bygg.
 
 - 2026-11-03: [Sonos: spelar no over appane og romval i lista](2026-11-03-sonos-widget-gruppe.md), fullført med 259 grøne Heim-/Sonos-/transport-/designtestar, lint og TV-bygg. Ikkje installert på TV.

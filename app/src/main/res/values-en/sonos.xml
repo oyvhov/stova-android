@@ -15,7 +15,7 @@
     <string name="sonos_home_icon">Show Sonos in the top bar</string>
     <string name="sonos_background">Use album artwork as background</string>
     <string name="sonos_home_art">Sonos artwork on Home while music plays</string>
-    <string name="sonos_home_art_hint">Follows the last selected room. TV audio blocks the background. Applies to adult profiles that use images on Home.</string>
+    <string name="sonos_home_art_hint">TV audio in the selected room hides the artwork on Home.</string>
     <string name="sonos_open">Open Sonos</string>
     <string name="sonos_back">Back</string>
     <string name="sonos_rooms">Rooms</string>

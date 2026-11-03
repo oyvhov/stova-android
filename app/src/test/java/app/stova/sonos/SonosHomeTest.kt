@@ -37,14 +37,25 @@ class SonosHomeTest {
         assertNull(sonosWidgetRoom(prefs, SonosState(listOf(tv))))
         assertNull(sonosWidgetRoom(prefs.copy(showNowPlaying = false), SonosState(listOf(room))))
     }
-    @Test fun tvAudioBlocksHomeArtworkEvenWithStaleAlbumMetadataAndOtherMusicPlaying() {
+    @Test fun onlyTvAudioInTheSelectedRoomBlocksHomeArtwork() {
         val prefs = SonosPrefs(enabled = true, homeArtwork = true)
         listOf("""{"source":"TV","entity_picture":"/api/old-album"}""",
             """{"source":"tv","entity_picture":"/api/old-album"}""",
             """{"media_content_id":"x-sonos-htastream:RINCON_123:spdif","entity_picture":"/api/old-album"}""").forEach { attrs ->
             val tv = room.copy(entity = room.entity.copy(id = "media_player.soundbar", attributes = StovaJson.parseToJsonElement(attrs).jsonObject))
-            assertNull(sonosHomeRoom(prefs, adult, listOf(room, tv)))
+            assertEquals(room, sonosHomeRoom(prefs, adult, listOf(tv, room)))
+            assertEquals(room, sonosHomeRoom(prefs.copy(preferredRoom = room.id), adult, listOf(tv, room)))
+            assertNull(sonosHomeRoom(prefs.copy(preferredRoom = tv.id), adult, listOf(tv, room)))
         }
+    }
+
+    @Test fun selectedRoomAlsoFollowsTvAudioFromItsOwnGroupCoordinator() {
+        val tv = room.copy(entity = room.entity.copy(id = "media_player.tv",
+            attributes = StovaJson.parseToJsonElement("""{"source":"TV"}""").jsonObject))
+        val grouped = room.copy(entity = room.entity.copy(id = "media_player.grouped",
+            attributes = StovaJson.parseToJsonElement("""{"group_members":["media_player.tv","media_player.grouped"]}""").jsonObject))
+        val prefs = SonosPrefs(enabled = true, homeArtwork = true, preferredRoom = grouped.id)
+        assertNull(sonosHomeRoom(prefs, adult, listOf(room, tv, grouped)))
     }
 
     @Test fun widgetWaitsOneMinuteAfterPauseAndPrefersAnotherPlayingRoom() {

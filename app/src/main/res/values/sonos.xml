@@ -15,7 +15,7 @@
     <string name="sonos_home_icon">Vis Sonos i toppfeltet</string>
     <string name="sonos_background">Bruk albumkunst som bakgrunn</string>
     <string name="sonos_home_art">Sonos-kunst på Heim medan musikken spelar</string>
-    <string name="sonos_home_art_hint">Følgjer sist valde rom. TV-lyd sperrar bakgrunnen. Gjeld vaksne profilar som bruker bilete på Heim.</string>
+    <string name="sonos_home_art_hint">TV-lyd i valt rom skjuler omslaget på Heim.</string>
     <string name="sonos_open">Opne Sonos</string>
     <string name="sonos_back">Tilbake</string>
     <string name="sonos_rooms">Rom</string>
