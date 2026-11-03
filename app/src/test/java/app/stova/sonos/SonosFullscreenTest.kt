@@ -123,6 +123,8 @@ class SonosFullscreenTest {
                 onApplyGroup = { draft, done -> submitted = draft; done(true) })
         } }
         compose.onNodeWithTag("sonos-room-${leader.id}").performSemanticsAction(SemanticsActions.OnLongClick)
+        compose.onNodeWithText("Inspector Norse").assertIsDisplayed()
+        rail(leader.id).assertIsDisplayed()
         compose.onNodeWithTag("sonos-room-${leader.id}").assertIsSelected()
         compose.onNodeWithTag("sonos-room-${other.id}").performClick().assertIsSelected()
         compose.runOnIdle { assertNull(submitted) }

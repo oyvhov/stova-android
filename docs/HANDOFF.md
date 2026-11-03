@@ -1,3 +1,8 @@
+# Musikkdelen blir verande ved romval
+2026-11-03 (Codex): Flytta Bruk og Avbryt til toppen og fjerna forklaringsblokka. Omslag, låt, transport og volum er synlege under romval.
+Målretta Sonos- og designtestar og TV-bygg grøne. Installerte berre på Loftet og prøvde langt OK. Skjermbilete i `.superpowers/loftet-sonos-2026-11-03/romval-musikk.png`.
+Avslutta med Tilbake. Ingen avspeling eller gruppeendring.
+
 # Romval prøvd på Loftet
 2026-11-03 (Codex): Installerte TV-bygget frå `40b738f` med install-r berre på Loftet.
 Langt OK på Kjøkken opna romval i lista. Storestova vart merkt som koordinator og Kjøkken med hake. Tilbake avslutta utkastet utan Bruk.

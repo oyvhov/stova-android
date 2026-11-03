@@ -153,6 +153,23 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                 Text(stringResource(R.string.sonos_title), style = MaterialTheme.typography.headlineMedium)
                 SonosSeasonMark()
                 Spacer(Modifier.weight(1f))
+                draft?.let { edit ->
+                    Text(anchor?.name ?: stringResource(R.string.sonos_group),
+                        Modifier.weight(1f, fill = false), style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    StovaButton(stringResource(R.string.sonos_apply), {
+                        if (!busy) {
+                            groupAttempted = true
+                            onApplyGroup?.invoke(edit) { ok ->
+                                if (ok && draft?.anchorId == edit.anchorId) {
+                                    draft = null
+                                    restoreRoomAfterGroup = true
+                                }
+                            }
+                        }
+                    }, Modifier.focusRequester(groupApplyFocus), primary = true, enabled = canApply || busy, compact = true)
+                    StovaButton(stringResource(R.string.sonos_cancel), ::endGroup, Modifier.focusRequester(groupCancelFocus), compact = true)
+                }
                 if (room != null && draft == null) StovaButton(if (roomsOpen) stringResource(R.string.sonos_rooms_hide) else stringResource(R.string.sonos_rooms_show, room.name),
                     { focusAfterToggle = !roomsOpen; onRoomsOpen(!roomsOpen) }, Modifier.testTag("sonos-rooms-toggle"),
                     icon = StovaIcons.Rows, compact = true, quiet = true)
@@ -193,25 +210,7 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                 // Ordinary TV type fits on one screen. Large accessibility text may scroll;
                 // it must never be shrunk to preserve the normal-density layout.
                 val edit = draft
-                if (edit != null) Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Text(stringResource(R.string.sonos_group), style = MaterialTheme.typography.headlineSmall)
-                    if (anchor != null) Text(stringResource(R.string.sonos_group_inline_hint, anchor.name), color = colors.onSurfaceVariant)
-                    val changed = anchor?.available != true || anchor.members.toSet() != edit.initial
-                    if (changed || groupAttempted && actionFailed) Text(stringResource(if (changed) R.string.sonos_group_changed else R.string.sonos_action_failed),
-                        color = colors.error)
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        StovaButton(stringResource(R.string.sonos_apply), {
-                            if (!busy) {
-                            groupAttempted = true
-                            onApplyGroup?.invoke(edit) { ok -> if (ok && draft?.anchorId == edit.anchorId) {
-                                draft = null; restoreRoomAfterGroup = true
-                            } }
-                            }
-                        }, Modifier.focusRequester(groupApplyFocus), primary = true, enabled = canApply || busy)
-                        StovaButton(stringResource(R.string.sonos_cancel), ::endGroup, Modifier.focusRequester(groupCancelFocus))
-                    }
-                } else Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     val largeType = LocalDensity.current.fontScale >= 1.5f
                     // With the rooms hidden the freed width goes to the sleeve and the music, not to more controls.
                     val cover = if (roomsOpen) 190.dp else 236.dp
@@ -222,7 +221,10 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                         key(room.id, player?.id) { SonosCover(art, Modifier.size(cover), load) }
                         Column(Modifier.weight(1f)) { SonosPlayback(room, player, guarded, playbackFocus, rooms, playFocus) }
                     }
-                    if (actionFailed) Text(stringResource(R.string.sonos_action_failed), color = colors.error)
+                    val groupChanged = edit != null && (anchor?.available != true || anchor.members.toSet() != edit.initial)
+                    if (groupChanged || actionFailed && (edit == null || groupAttempted)) {
+                        Text(stringResource(if (groupChanged) R.string.sonos_group_changed else R.string.sonos_action_failed), color = colors.error)
+                    }
                     // The room's own speaker beside its volume; no words on screen, the rail speaks to TalkBack.
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         SonosSpeakerArt(room.speaker, rememberSonosVisual(room, state), Modifier.width(132.dp).height(56.dp),
@@ -232,7 +234,7 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                                 stringResource(R.string.sonos_volume_room, room.name), onAction, Modifier.weight(1f))
                         }
                     }
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (edit == null) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         StovaButton(stringResource(R.string.sonos_library), onBrowse, Modifier.focusProperties { left = rooms },
                             icon = StovaIcons.Rows, compact = true, quiet = true,
                             enabled = native?.available == true && native.supports(131072))
