@@ -3,6 +3,8 @@ package app.stova.discover
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,11 +17,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.stova.AppContainer
 import app.stova.R
 import app.stova.background.BackdropState
 import app.stova.background.rememberBackdropState
+import app.stova.core.ui.stepEntrance
 import app.stova.media.HandoffResult
 import app.stova.media.SpoleHandoff
 import app.stova.media.ui.SpoleMissingDialog
@@ -147,7 +151,9 @@ fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverSte
         }
     }
     val step = steps.last()
-    held.SaveableStateProvider(step.stateKey(steps.lastIndex)) {
+    val stepKey = step.stateKey(steps.lastIndex)
+    Box(Modifier.fillMaxSize().stepEntrance(stepKey, steps.lastIndex)) {
+    held.SaveableStateProvider(stepKey) {
         when (step) {
             DiscoverStep.Rows -> DiscoverContent(state,
                 onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) },
@@ -160,6 +166,7 @@ fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverSte
                 onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) })
             DiscoverStep.Search -> SearchStep(container, link, onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) })
         }
+    }
     }
     if (missing) SpoleMissingDialog { missing = false }
 }

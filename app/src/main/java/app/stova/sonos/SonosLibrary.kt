@@ -36,12 +36,27 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
     var retry by remember { mutableIntStateOf(0) }
     var choosing by remember { mutableStateOf<SonosMedia?>(null) }
     val first = remember { FocusRequester() }
+    val returnedTile = remember { FocusRequester() }
+    val grid = rememberLazyGridState()
+    val openerByDepth = remember { mutableMapOf<Int, Int>() }
+    var returnIndex by remember { mutableStateOf<Int?>(null) }
     val current = stack.lastOrNull()
     fun back() {
         if ((loading || error) && stack.isNotEmpty() && target !== stack.last()) {
             target = stack.last(); loading = false; error = false; retry = 0
-        } else if (stack.size > 1) { stack = stack.dropLast(1); target = stack.last(); loading = false; error = false; retry = 0 }
+        } else if (stack.size > 1) {
+            returnIndex = openerByDepth.remove(stack.lastIndex - 1)
+            stack = stack.dropLast(1); target = stack.last(); loading = false; error = false; retry = 0
+        }
         else onBack()
+    }
+    LaunchedEffect(stack.size) {
+        if (stack.size <= 1 && returnIndex == null) return@LaunchedEffect
+        val index = returnIndex?.takeIf { it in current?.children.orEmpty().indices }
+        grid.scrollToItem(index ?: 0)
+        withFrameNanos { }
+        if (index == null || !runCatching { returnedTile.requestFocus() }.getOrDefault(false)) first.requestFocus()
+        returnIndex = null
     }
     BackHandler(onBack = ::back)
     LaunchedEffect(target?.id, target?.type, retry) {
@@ -71,23 +86,31 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
             if (current?.playable == true) StovaButton(stringResource(R.string.ha_play), { choosing = current }, enabled = !busy && !loading)
         }
         if (failed) Text(stringResource(R.string.sonos_action_failed), color = MaterialTheme.colorScheme.error)
+        Box(Modifier.weight(1f).fillMaxWidth().stepEntrance(stack.size, stack.lastIndex)) {
         when {
-            loading -> Text(stringResource(R.string.sonos_loading))
+            loading && current == null -> Text(stringResource(R.string.sonos_loading))
             error -> { Text(stringResource(R.string.sonos_library_failed)); StovaButton(stringResource(R.string.custom_retry), { retry++ }) }
             current?.children.isNullOrEmpty() -> Text(stringResource(R.string.sonos_library_empty))
-            else -> LazyVerticalGrid(GridCells.Adaptive(150.dp), contentPadding = PaddingValues(8.dp),
+            else -> LazyVerticalGrid(GridCells.Adaptive(150.dp), state = grid, contentPadding = PaddingValues(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 itemsIndexed(current!!.children, key = { index, item -> "${item.type}/${item.id}/$index" }) { index, item ->
                     val source = remember { MutableInteractionSource() }
-                    Column(Modifier.focusOutline(source, MaterialTheme.shapes.large)
+                    val focus = if (index == returnIndex) Modifier.focusRequester(returnedTile) else Modifier
+                    Column(focus.focusOutline(source, MaterialTheme.shapes.large)
                         .clickable(source, null, enabled = item.expandable || item.playable, role = Role.Button) {
-                            if (item.expandable) { target = item; retry = 0 } else choosing = item
+                            if (!loading) {
+                                if (item.expandable) {
+                                    openerByDepth[stack.lastIndex] = index
+                                    target = item; retry = 0
+                                } else choosing = item
+                            }
                         }.padding(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SonosLibraryTile(item, index, thumbnail)
                         SonosLabels(item.title, null, MaterialTheme.typography.titleSmall, titleLines = 2)
                     }
                 }
             }
+        }
         }
     }
     SeasonalScene(Modifier.matchParentSize(), front = true, clock = seasonClock)

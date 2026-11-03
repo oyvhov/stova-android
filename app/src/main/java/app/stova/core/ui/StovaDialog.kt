@@ -95,7 +95,7 @@ private fun StovaOverlay(
     LaunchedEffect(exited) { if (exited) dismiss() }
     fun close() { if (still) dismiss() else visible.targetState = false }
     Dialog(
-        onDismissRequest = { if (!back()) close() },
+        onDismissRequest = { if (visible.targetState && !back()) close() },
         properties = DialogProperties(
             dismissOnBackPress = properties.dismissOnBackPress,
             dismissOnClickOutside = properties.dismissOnClickOutside,
@@ -105,10 +105,12 @@ private fun StovaOverlay(
             decorFitsSystemWindows = properties.decorFitsSystemWindows,
         ),
     ) {
-        AnimatedVisibility(visible, enter = fadeIn(motion.enter()), exit = fadeOut(motion.exit()), label = "dialog") {
+        AnimatedVisibility(visible, enter = if (still) EnterTransition.None else fadeIn(motion.enter()),
+            exit = if (still) ExitTransition.None else fadeOut(motion.exit()), label = "dialog") {
             Box(Modifier.fillMaxSize().onPreviewKeyEvent { event ->
                 // A panel with pages answers Back itself, one page at a time, before the window sees it.
-                if (properties.dismissOnBackPress && event.key in backKeys) {
+                if (!visible.targetState) true
+                else if (properties.dismissOnBackPress && event.key in backKeys) {
                     if (event.type == KeyEventType.KeyUp && !back()) close()
                     true
                 } else false
@@ -124,7 +126,8 @@ private fun StovaOverlay(
                     })
                 Box(
                     Modifier.pointerInput(Unit) { detectTapGestures { } }
-                        .animateEnterExit(enter = enter, exit = exit, label = "panel"),
+                        .animateEnterExit(enter = if (still) EnterTransition.None else enter,
+                            exit = if (still) ExitTransition.None else exit, label = "panel"),
                 ) { content() }
             }
         }

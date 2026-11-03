@@ -1,6 +1,5 @@
 package app.stova.sonos
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,25 +30,29 @@ import kotlin.math.sin
 /** Two independent D-pad targets: the music opens its page; the small button controls playback. */
 @Composable fun SonosNowPlaying(room: SonosRoom, player: SonosRoom, busy: Boolean, failed: Boolean,
     onOpen: () -> Unit, onPlayPause: () -> Unit, modifier: Modifier = Modifier,
-    artwork: @Composable (String, Modifier) -> Unit = { _, _ -> }) {
+    artwork: @Composable (String, Modifier) -> Unit = { _, _ -> },
+    loadArtwork: SonosArtLoader? = null) {
     val source = remember { MutableInteractionSource() }
     val playSource = remember { MutableInteractionSource() }
     val tv = room.tvAudio || player.tvAudio
     if (tv) return
     val shape = MaterialTheme.shapes.medium
-    val anchor = rememberPageAnchor()
+    val anchor = rememberPageAnchor("sonos-widget")
     val title = player.title ?: stringResource(R.string.sonos_playing)
     val subtitle = if (failed) stringResource(R.string.sonos_action_failed) else
         listOfNotNull(room.displayName, if (!player.playing) stringResource(R.string.sonos_paused) else player.artist).joinToString(" · ")
     val colors = MaterialTheme.colorScheme
-    Row(modifier.widthIn(max = 360.dp).then(anchor.modifier).background(colors.surface.copy(alpha = .72f), shape)
+    Row(modifier.widthIn(max = 360.dp).background(colors.surface.copy(alpha = .72f), shape)
         .border(1.dp, colors.outline.copy(alpha = .35f), shape), verticalAlignment = Alignment.CenterVertically) {
-        Row(Modifier.weight(1f).focusOutline(source, shape).clickable(source, null, role = Role.Button, onClick = { anchor.open(onOpen) })
+        Row(Modifier.weight(1f).then(anchor.modifier).focusOutline(source, shape).clickable(source, null, role = Role.Button, onClick = { anchor.open(onOpen) })
             .padding(6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.size(34.dp).clip(MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
                 Icon(StovaIcons.Play, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Crossfade(player.artwork, animationSpec = stovaMotion.fade(stovaMotion.ambient), label = "sonos-chip-art") { path ->
-                    if (path != null) artwork(path, Modifier.fillMaxSize())
+                key(room.id, player.artwork == null) {
+                    SonosArtworkFade(player.artwork, backdrop = false, load = loadArtwork ?: { path, artModifier, ready, _ ->
+                        artwork(path, artModifier)
+                        SideEffect { ready() }
+                    })
                 }
             }
             SonosLabels(title, subtitle, MaterialTheme.typography.titleSmall, Modifier.weight(1f),

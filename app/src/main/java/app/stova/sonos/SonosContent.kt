@@ -135,12 +135,12 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
             Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = .14f)))
         }
     }
+    val expanded = immersive && room != null
+    Box(Modifier.fillMaxSize().stepEntrance(expanded, if (expanded) 1 else 0)) {
     if (immersive && room != null) {
         BackHandler { leaveImmersive() }
-        SonosModeReveal("immersive") {
-            SonosImmersive(room, native, player, busy, actionFailed, backgroundArt, art, load, guarded, ::leaveImmersive)
-        }
-    } else SonosModeReveal("page") {
+        SonosImmersive(room, native, player, busy, actionFailed, backgroundArt, art, load, guarded, ::leaveImmersive)
+    } else {
     Box(Modifier.fillMaxSize()) {
         // Dark matte ink preserves contrast; no blur.
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(colors.background.copy(alpha = .97f), colors.background.copy(alpha = .82f), colors.background.copy(alpha = .72f)))))
@@ -249,6 +249,7 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     }
     }
     }
+    }
     if (more && room != null && !immersive) SonosOptionsDialog(room, native, player, busy, actionFailed, guarded) { more = false }
     LaunchedEffect(state.loading, state.rooms.isEmpty()) {
         if (!state.loading) { withFrameNanos { }
@@ -296,14 +297,6 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
         Icon(StovaIcons.Sonos, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         key(path == null) { SonosArtworkFade(path, backdrop = false, load) }
     }
-}
-
-/** Page and full screen arrive with a short fade and settle in the layer phase; no size animates. */
-@Composable private fun SonosModeReveal(mode: String, content: @Composable () -> Unit) {
-    val motion = stovaMotion
-    val reveal = remember(mode) { androidx.compose.animation.core.Animatable(if (motion.still) 1f else 0f) }
-    LaunchedEffect(reveal) { reveal.animateTo(1f, motion.enter()) }
-    Box(Modifier.fillMaxSize().graphicsLayer { alpha = reveal.value; val s = .985f + .015f * reveal.value; scaleX = s; scaleY = s }) { content() }
 }
 
 /** Status, title and artist; a new track crossfades in. TV audio says so and shows no stale track. */

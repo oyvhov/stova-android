@@ -6,8 +6,9 @@ med manuell kopling i `AppContainer`. Ein ny funksjon treng ikkje eit nytt ramme
 ## Finn rett stad å endre
 
 `navigation/PageAnchor.kt` finn posisjonen til den trykte kontrollen når
-brukaren opnar ei side. `StovaApp` brukar punktet i den felles
-sideovergangen. Planen for resten av appen ligg i
+brukaren opnar ei side. `PageTrail` lagrar opningspunkt og fokusnøkkel per
+steg. `StovaApp` brukar punktet i den felles sideovergangen og gir
+fokuset tilbake til opnaren når han framleis er tilgjengeleg. Planen ligg i
 [`2026-11-03-roersle-i-heile-stova.md`](superpowers/plans/2026-11-03-roersle-i-heile-stova.md).
 
 På Sonos-sida kan `SonosScreen` førehandshente eitt omslag frå den aktive,
@@ -190,7 +191,9 @@ dempinga av resten av rada er teken bort etter ønske frå eigaren (2026-11-01).
 `StovaMotion` eig varigheit og easing. Bruk berre laganimasjonar for alfa, skala og forskyving.
 Radflytting bruker `core/ui/SmoothScroll.kt`: 380 ms med mjuk start/stopp (sider 200 ms, små ting 150 ms), utan eit innleiande
 hopp. Eitt rullejobb eig overgangen; nye piler kan snu eller velje neste logiske rad undervegs.
-`SoftEntrance` tonar inn berre den nye innstillingssida, utan eit utgåande fokustre.
+`Modifier.stepEntrance` tonar inn berre det nye innhaldet i Oppdag, Sonos, Innstillingar og
+Smarthus. Retninga følgjer djupna i navigasjonen. Sonos-widgeten deler
+`SonosArtworkFade` med spelarsida, slik at gammal kunst held plassen medan neste omslag blir dekoda.
 `LocalReduceMotion` gir null varigheit og slår av parallax. Dialogar går gjennom `StovaDialog`; alle langt-OK-menyar
 (media, appar, rader, Smarthus-kort) går gjennom `StovaSheet`: eit panel frå høgre kant i full høgd med kunst, store
 hovudhandlingar og rolege `SheetAction`-rader. Panelet glir inn, men tonar bort der det står når det lukkar seg (å gli ut

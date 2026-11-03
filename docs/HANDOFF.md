@@ -1,3 +1,9 @@
+# Felles rørsle og returfokus
+2026-11-03 (Codex): La opningspunkt og returfokus i sidestabelen, med test for nøsta navigasjon og retur til Sonos-widgeten.
+Oppdag, Sonos-bibliotek, Innstillingar og Smarthus deler stegovergang. Widgeten held førre omslag til det nye er dekoda, og panel respekterer redusert rørsle.
+Planen skil mellom implementerte steg og oppfølging. Rask D-pad, frametid og samspel med ekte HA står att å prøve på eining.
+Den nye returfokustesten og begge designtestane er grøne. Skjermbilete frå Compose-testane er kontrollerte. Ingen installasjon på TV.
+
 # Overgangar i heile Stova: plan og pilot
 2026-11-03 (Codex): Skreiv planen `2026-11-03-roersle-i-heile-stova.md` og la han under Gjeld no. Han dekkjer sider, undernivå, panel, innhaldsbyte og D-pad.
 Piloten forankrar sideopning i Sonos-widgeten, Sonos-favoritten, toppfeltet, Alle appar og Oppdag-flisene. Redusert rørsle hoppar over animasjonen.

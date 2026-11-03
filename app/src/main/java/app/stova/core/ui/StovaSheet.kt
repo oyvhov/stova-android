@@ -71,8 +71,9 @@ fun StovaSheet(onDismissRequest: () -> Unit, content: @Composable ColumnScope.(S
         // Drawn, not clipped: a clip with square right corners would also cut away touches.
         Box(Modifier.fillMaxHeight().width(StovaLayout.SheetWidth).background(MaterialTheme.colorScheme.surface, shape)) {
             // The TV pivot would pull every focused row up a third of the panel and cut the artwork.
+            val stepMotion = Modifier.stepEntrance(pages.current, if (pages.current == null) 0 else 1)
             CompositionLocalProvider(LocalBringIntoViewSpec provides ScrollOnlyWhenHidden) { key(pages.current) {
-                Column(Modifier.fillMaxSize().softEntrance(pages.current).focusGroup()
+                Column(Modifier.fillMaxSize().then(stepMotion).focusGroup()
                     .verticalScroll(rememberScrollState())
                     .padding(start = StovaLayout.SheetPadding, end = StovaLayout.TvSafeEdge,
                         top = StovaLayout.SheetTop, bottom = StovaLayout.SheetPadding),

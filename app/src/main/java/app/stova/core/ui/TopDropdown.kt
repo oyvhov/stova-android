@@ -1,6 +1,7 @@
 package app.stova.core.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
@@ -48,8 +49,8 @@ fun TopDropdown(onDismiss: () -> Unit, width: Dp, gap: Dp = 10.dp, alignEnd: Boo
     }
     Popup(popupPositionProvider = position, onDismissRequest = onDismiss, properties = PopupProperties(focusable = true)) {
         val motion = stovaMotion
-        val shown = remember { MutableTransitionState(false).apply { targetState = true } }
-        AnimatedVisibility(shown, enter = fadeIn(motion.enter()) + scaleIn(motion.enter(), initialScale = .92f,
+        val shown = remember { MutableTransitionState(motion.still).apply { targetState = true } }
+        AnimatedVisibility(shown, enter = if (motion.still) EnterTransition.None else fadeIn(motion.enter()) + scaleIn(motion.enter(), initialScale = .92f,
             transformOrigin = TransformOrigin(if (alignEnd) 1f else 0f, 0f))) {
             Column(Modifier.width(width).clip(MaterialTheme.shapes.large)
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = StovaDropdown.SurfaceAlpha))

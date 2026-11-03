@@ -42,7 +42,7 @@ import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.PageHeader
 import app.stova.core.ui.StovaButton
 import app.stova.core.ui.StovaIcons
-import app.stova.core.ui.softEntrance
+import app.stova.core.ui.stepEntrance
 import app.stova.home.RowHeader
 import app.stova.media.ui.MediaCard
 import app.stova.media.ui.communityText
@@ -172,7 +172,7 @@ private fun PageNote(@StringRes text: Int) {
 @Composable
 internal fun DiscoverHero(title: DiscoverTitle?, modifier: Modifier = Modifier) {
     val locale = LocalLocale.current.platformLocale
-    Column(modifier.testTag("discover-hero").widthIn(max = HERO_WIDTH).fillMaxWidth().softEntrance(title?.key),
+    Column(modifier.testTag("discover-hero").widthIn(max = HERO_WIDTH).fillMaxWidth().stepEntrance(title?.key, 0),
         verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(title?.title.orEmpty(), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1, overflow = TextOverflow.Ellipsis)

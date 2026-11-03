@@ -39,17 +39,17 @@ fokuset finne att staden du kom frå.
    - [ ] Verifiser punkt, fokusretur og raskt OK → Tilbake på TV. Ta eit kort
      opptak av widget → Sonos → Heim, med og utan redusert rørsle.
 2. **Sidehistorikk og fordjuping**
-   - [ ] Knyt opningspunkt og returfokus til kvart steg i navigasjonen.
-     Prøv Heim → Appar → Sonos → Appar → Heim og tilsvarande for Oppdag.
-     Om ei flis er flytta, skjult eller ute av syne, returner til næraste
-     fornuftige kontroll.
-   - [ ] Bruk same stegvis overgang i Oppdag, Sonos-bibliotek,
+   - [x] Knyt opningspunkt og returfokus til kvart steg i navigasjonen.
+     Når opnaren manglar, bruker sida vanleg startfokus.
+   - [ ] Prøv Heim → Appar → Sonos → Appar → Heim og tilsvarande for Oppdag på TV.
+   - [x] Bruk same stegvise overgang i Oppdag, Sonos-bibliotek,
      Innstillingar og Smarthus. Sjå over skjermane som alt brukar lokal fade,
      slik at to overgangar ikkje spelar samtidig.
 3. **Panel og endringar i innhald**
-   - [ ] Samordne snøggmeny, kortmenyar og smarthuspanel. Skil mellom
-     forankra nedtrekk og større dialog. Prøv langt OK, Avbryt og returfokus.
-   - [ ] Gå over filmhero, Sonos-omslag, profilbyte, romval og oppdateringar
+   - [x] Bruk felles panel og dialog, og slå av overgangen ved redusert rørsle.
+   - [ ] Prøv langt OK, Avbryt og returfokus på TV.
+   - [x] La Sonos-widgeten halde på førre omslag til det neste er dekoda.
+   - [ ] Gå over filmhero, profilbyte, romval og oppdateringar
      frå Home Assistant. Prøv forseinka bilete, raske byte og fråkopling.
 4. **TV-kvalitet før utrulling**
    - [ ] Prøv normal og stor skrift, rask D-pad, gjenteken Tilbake og redusert

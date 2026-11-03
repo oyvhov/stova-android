@@ -4,9 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.ExitTransition
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -26,6 +24,7 @@ import androidx.compose.runtime.produceState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -82,7 +81,11 @@ fun StovaApp(container: AppContainer) {
 @Composable
 private fun MainShell(container: AppContainer, profile: Profile) {
     val scope = rememberCoroutineScope()
-    var current by rememberSaveable { mutableStateOf(Destination.HOME) }
+    var trail by rememberSaveable(stateSaver = PageTrailSaver) { mutableStateOf(PageTrail()) }
+    val current = trail.current.destination
+    val pageOpen = remember { PageOpenContext() }
+    val heldPages = rememberSaveableStateHolder()
+    fun openPage(destination: Destination) { trail = trail.open(destination, pageOpen.opening) }
     var smartHomeCardId by remember(profile.id) {mutableStateOf<String?>(null)}
     // The title a Discover card opened the page at; null opens the page at its rows.
     var discoverStart by remember(profile.id) { mutableStateOf<app.stova.discover.DiscoverTitle?>(null) }
@@ -91,28 +94,14 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     var verifiedAdultId by remember { mutableStateOf<String?>(null) }
     var askAdultPin by remember { mutableStateOf(false) }
 
-    // Apps opened from Settings returns there, and Discover opened from Apps returns to Apps; everything else walks
-    // home, and stops there. Back from Discover to Apps keeps where Apps itself came from.
-    var appsFromSettings by rememberSaveable { mutableStateOf(false) }
-    var discoverFromApps by rememberSaveable { mutableStateOf(false) }
-    var sonosFrom by rememberSaveable { mutableStateOf(Destination.HOME) }
     val sonosEnabled = household?.sonos?.enabled == true && household?.haBaseUrl != null && !profile.kid
-    val back: () -> Unit = {
-        current = when {
-            current == Destination.SONOS -> sonosFrom
-            current == Destination.DISCOVER && discoverFromApps -> Destination.APPS
-            current == Destination.APPS && appsFromSettings -> Destination.SETTINGS
-            else -> Destination.HOME
-        }
-        discoverFromApps = false
-        if (current != Destination.APPS) appsFromSettings = false
-    }
+    val back: () -> Unit = { trail = trail.back() }
     BackHandler(enabled = current != Destination.HOME, onBack = back)
     var homeToTop by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     LaunchedEffect(container) { container.homeRequests.collect { inFront ->
         // Home pressed while Home is on screen goes back to its top.
-        if (inFront && current == Destination.HOME) homeToTop++
-        appsFromSettings = false; discoverFromApps = false; current = Destination.HOME
+        if (inFront && trail.current.destination == Destination.HOME) homeToTop++
+        trail = trail.home()
     } }
     val switchProfile = {
         val profiles = file
@@ -156,8 +145,6 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     val toneStrength = androidx.compose.animation.core.animateFloatAsState(if (toneTarget != null) 1f else 0f,
         motion0.fade(motion0.ambient), label = "art-tone-strength")
     val artTone = remember { app.stova.core.theme.ArtToneState(toneColor, toneStrength) }
-    // Where the next page grows from: the control that opened it, or the middle of the screen.
-    var origin by remember { mutableStateOf(TransformOrigin.Center) }
     val motion = stovaMotion
     // No side rail: home is the whole screen, and Apps and Settings are pages that Back closes.
     Box(Modifier.fillMaxSize().testTag("screen-${current.name}")) {
@@ -165,28 +152,31 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         // page fills the screen. The leaving page cannot take focus while it fades, so a stray press
         // never lands on it, and the arriving page places focus as it always did.
         AnimatedContent(
-            current,
+            trail.current,
+            contentKey = { it.destination },
             transitionSpec = {
                 // A page opened from an icon grows out of it and shrinks back into it on Back;
                 // Home itself only fades, so the picture behind never jumps.
-                val home = targetState == Destination.HOME
-                val returning = home || targetState == Destination.APPS && initialState in setOf(Destination.SONOS, Destination.DISCOVER)
+                val returning = targetState.depth < initialState.depth
                 ContentTransform(
-                    if (motion.still) EnterTransition.None else fadeIn(motion.enter()) + if (home) scaleIn(motion.enter(), initialScale = PAGE_FROM)
-                        else scaleIn(motion.enter(), initialScale = PAGE_GROW_FROM, transformOrigin = origin),
-                    if (motion.still) ExitTransition.None else fadeOut(motion.exit()) + if (returning) scaleOut(motion.exit(), targetScale = PAGE_SHRINK_TO, transformOrigin = origin)
+                    if (motion.still) EnterTransition.None else fadeIn(motion.enter()) + if (returning) scaleIn(motion.enter(), initialScale = PAGE_FROM)
+                        else scaleIn(motion.enter(), initialScale = PAGE_GROW_FROM, transformOrigin = targetState.opening.origin),
+                    if (motion.still) ExitTransition.None else fadeOut(motion.exit()) + if (returning)
+                        scaleOut(motion.exit(), targetScale = PAGE_SHRINK_TO, transformOrigin = initialState.opening.origin)
                         else ExitTransition.None,
                     sizeTransform = null,
                 )
             },
             label = "page",
-        ) { destination ->
-            val leaving = transition.targetState != EnterExitState.Visible
+        ) { entry ->
+            val destination = entry.destination
+            val leaving = entry != trail.current
             Box(Modifier.fillMaxSize().then(if (leaving) Modifier.focusProperties { canFocus = false } else Modifier)) {
                 // Only the pages that show the backdrop take its tone.
                 val toned = destination == Destination.HOME || destination == Destination.SMART_HOME
                 androidx.compose.runtime.CompositionLocalProvider(app.stova.core.theme.LocalArtTone provides artTone.takeIf { toned },
-                    LocalPageOrigin provides { origin = it }) {
+                    LocalPageOpenContext provides pageOpen,
+                    LocalPageReturnFocus provides trail.returnFocus.takeUnless { leaving }) {
                 when (destination) {
                     Destination.HOME -> if (pipWorld) {
                         // A child's Home: Pip's world, or the films' own artwork behind the same rows.
@@ -243,7 +233,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             app.stova.home.LocalHomeArrival provides arrival) {
                         HomeScreen(
                             home, container.appArt, container.appCatalog,
-                            onOpenApps = { current = Destination.APPS },
+                            onOpenApps = { openPage(Destination.APPS) },
                             profile = profile, apps = container.apps,
                             onHomeChange = { prefs -> scope.launch { container.profiles.update(profile.id) { it.copy(home = prefs) } } },
                             onRefresh = {
@@ -257,7 +247,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                                 container.media.refresh(profile.id)
                             },
                             onPlaybackOpened = { container.media.playbackOpened(profile.id) },
-                            onOpenSonos = { if (sonosEnabled) { sonosFrom = Destination.HOME; current = Destination.SONOS } },
+                            onOpenSonos = { if (sonosEnabled) openPage(Destination.SONOS) },
                             onItemChanged = {
                                 container.spoleRows.refresh(profile.id, force = true)
                                 scope.launch { container.media.refresh(profile.id, 0) }
@@ -265,29 +255,31 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             haRepository = container.haRepository,
                             haConnection = container.haSocket,
                             // From a row, not a top bar icon: the page grows from the middle.
-                            onOpenDiscover = { discoverStart = null; current = Destination.DISCOVER },
-                            onOpenDiscoverTitle = { discoverStart = it; origin = TransformOrigin.Center; current = Destination.DISCOVER },
+                            onOpenDiscover = { discoverStart = null; openPage(Destination.DISCOVER) },
+                            onOpenDiscoverTitle = { discoverStart = it; openPage(Destination.DISCOVER) },
                             toTop = homeToTop,
                             aboveApps = if (widgetRoom == null || widgetPlayer == null) null else { modifier ->
                                 app.stova.sonos.SonosNowPlaying(widgetRoom, widgetPlayer, homeMusic.busy, homeMusic.failed,
                                     onOpen = {
                                         scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(preferredRoom = widgetRoom.id)) } }
-                                        sonosFrom = Destination.HOME; current = Destination.SONOS
+                                        openPage(Destination.SONOS)
                                     }, onPlayPause = { homeMusic.playPause(widgetRoom.id) }, modifier = modifier,
-                                    artwork = { path, artModifier -> app.stova.ha.cards.HaImage(path, musicImages, artModifier, contentScale = androidx.compose.ui.layout.ContentScale.Crop) })
+                                    loadArtwork = { path, artModifier, ready, failed ->
+                                        app.stova.ha.cards.HaImage(path, musicImages, artModifier,
+                                            contentScale = androidx.compose.ui.layout.ContentScale.Crop, onLoad = ready, onError = failed)
+                                    })
                             },
                             topBar = { chips ->
                                 TopBar(
                                     profile = profile,
-                                    onSettings = { current = Destination.SETTINGS },
-                                    onPageOrigin = { origin = it },
+                                    onSettings = { openPage(Destination.SETTINGS) },
                                     onProfile = switchProfile,
-                                    onSmartHome = if(household?.haBaseUrl!=null) {{smartHomeCardId=null;current=Destination.SMART_HOME}} else null,
-                                    onSonos = if (sonosEnabled && household?.sonos?.showHomeButton == true) ({ sonosFrom = Destination.HOME; current = Destination.SONOS }) else null,
+                                    onSmartHome = if(household?.haBaseUrl!=null) {{smartHomeCardId=null;openPage(Destination.SMART_HOME)}} else null,
+                                    onSonos = if (sonosEnabled && household?.sonos?.showHomeButton == true) ({ openPage(Destination.SONOS) }) else null,
                                     // Android's own settings are for adults only, as Settings is.
                                     systemMenu = if (profile.kid) null else rememberSystemMenu(),
                                     leading = {
-                                        val openCard: (String) -> Unit = {id->smartHomeCardId=id;origin=TransformOrigin.Center;current=Destination.SMART_HOME}
+                                        val openCard: (String) -> Unit = {id->smartHomeCardId=id;openPage(Destination.SMART_HOME)}
                                         app.stova.ha.ui.HomeStatusChips(chips,onOpenCard=openCard) { chip, close ->
                                             // The app's scope, so a change made just before Back still reaches the house.
                                             app.stova.ha.ui.ChipDropdownHost(chip, container.haRepository, profile, container.appScope, onDismiss = close)
@@ -298,20 +290,20 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         )
                         }
                     }
-                    Destination.APPS -> {
+                    Destination.APPS -> heldPages.SaveableStateProvider(Destination.APPS.name) {
                         // Only what the person may do reaches the page: Spole being asked again leaves the grid alone.
                         val discover = remember(profile.id) { container.discover.state(profile.id) }.collectAsStateWithLifecycle()
                         val discoverAccess by remember(discover) { derivedStateOf { discover.value?.access ?: app.stova.discover.SeerrAccess.NONE } }
                         AppsScreen(container.apps, profile, container.appArt, container.appCatalog, container.shortcuts, container.haSocket,
                             discoverAccess = discoverAccess,
-                            onOpenSonos = if (sonosEnabled) ({ sonosFrom = Destination.APPS; current = Destination.SONOS }) else null,
+                            onOpenSonos = if (sonosEnabled) ({ openPage(Destination.SONOS) }) else null,
                             // From a tile in the grid, as from Home's row: the page grows from the middle, and Back comes back here.
-                            onOpenDiscover = { discoverStart = null; discoverFromApps = true; current = Destination.DISCOVER })
+                            onOpenDiscover = { discoverStart = null; openPage(Destination.DISCOVER) })
                     }
                     Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId,backdrop=backdrop.shown)
                     Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile,
-                        onOpenSonos = { sonosFrom = Destination.SETTINGS; origin = TransformOrigin.Center; current = Destination.SONOS },
-                        onOpenApps = { appsFromSettings = true; origin = TransformOrigin.Center; current = Destination.APPS })
+                        onOpenSonos = { openPage(Destination.SONOS) },
+                        onOpenApps = { openPage(Destination.APPS) })
                     // Opened at the title a card showed, or at the rows; Back walks the page's own steps, then to where the
                     // page was opened from. With nothing to show it leaves the same way, but only while it is the page shown.
                     Destination.DISCOVER -> app.stova.discover.DiscoverScreen(container, profile,

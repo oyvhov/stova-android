@@ -1,6 +1,12 @@
 package app.stova.sonos
 
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,6 +23,11 @@ import app.stova.core.theme.StovaTheme
 import app.stova.home.HomeContent
 import app.stova.home.HomeRowKey
 import app.stova.home.HomeRowUi
+import app.stova.navigation.Destination
+import app.stova.navigation.LocalPageOpenContext
+import app.stova.navigation.LocalPageReturnFocus
+import app.stova.navigation.PageOpenContext
+import app.stova.navigation.PageTrail
 import app.stova.profiles.AppearancePrefs
 import app.stova.profiles.HomeRows
 import org.junit.Assert.assertTrue
@@ -34,6 +45,35 @@ class SonosHomeWidgetFocusTest {
 
     @Test fun widgetSitsAboveAppsAndDpadVisitsItsTwoControlsInScrollingHome() = checkWidget(HomeRows.SCROLLING)
     @Test fun widgetSitsAboveAppsAndDpadVisitsItsTwoControlsInDeckHome() = checkWidget(HomeRows.ONE)
+
+    @Test fun openingFromWidgetCapturesItsPositionAndBackRestoresFocus() {
+        val room = sonosPreviewRooms().first()
+        val openContext = PageOpenContext()
+        var trail by mutableStateOf(PageTrail())
+        compose.setContent {
+            StovaTheme(reduceMotion = true) {
+                val input = androidx.compose.ui.platform.LocalInputModeManager.current
+                SideEffect { input.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
+                CompositionLocalProvider(LocalPageOpenContext provides openContext, LocalPageReturnFocus provides trail.returnFocus) {
+                    if (trail.current.destination == Destination.HOME) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
+                            SonosNowPlaying(room, room, false, false,
+                                { trail = trail.open(Destination.SONOS, openContext.opening) }, {})
+                        }
+                    }
+                }
+            }
+        }
+        val title = compose.onNode(hasText(room.title!!) and hasClickAction())
+        title.requestFocus()
+        key(Key.DirectionCenter)
+        compose.runOnIdle {
+            assertTrue(trail.current.opening.focusKey == "sonos-widget")
+            assertTrue(trail.current.opening.origin != TransformOrigin.Center)
+            trail = trail.back()
+        }
+        title.assertIsFocused()
+    }
 
     private fun checkWidget(mode: HomeRows) {
         val room = sonosPreviewRooms().first()

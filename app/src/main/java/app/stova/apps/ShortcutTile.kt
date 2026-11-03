@@ -47,7 +47,7 @@ import coil3.request.ImageRequest
  */
 @Composable
 fun ShortcutTile(tile: FavoriteTile, onClick: () -> Unit, onLongClick: () -> Unit, modifier: Modifier = Modifier) {
-    val anchor = if (tile is FavoriteTile.Sonos) app.stova.navigation.rememberPageAnchor() else null
+    val anchor = if (tile is FavoriteTile.Sonos) app.stova.navigation.rememberPageAnchor("shortcut:${tile.key}") else null
     TileFrame(tile.label, tile.key.hashCode(), if (anchor == null) onClick else { { anchor.open(onClick) } },
         onLongClick, modifier.then(anchor?.modifier ?: Modifier)) { spec ->
         if (tile is FavoriteTile.SpoleProfile) {

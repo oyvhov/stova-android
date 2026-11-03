@@ -25,6 +25,7 @@ import app.stova.core.ui.SheetPages
 import app.stova.R
 import app.stova.core.ui.StovaButton
 import app.stova.core.ui.StovaDialog
+import app.stova.core.ui.stepEntrance
 import app.stova.ha.*
 
 sealed interface CardDialog {
@@ -89,6 +90,7 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
             @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
             CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides app.stova.core.ui.ScrollOnlyWhenHidden) {
             Column(Modifier.weight(1f).fillMaxWidth().focusRequester(first).focusGroup()
+                .stepEntrance(pages.current, if (pages.current == null) 0 else 1)
                 .then(if(dialog is CardDialog.Camera) Modifier else Modifier.verticalScroll(scroll)),
                 verticalArrangement=Arrangement.spacedBy(8.dp)) {
             when(dialog) {

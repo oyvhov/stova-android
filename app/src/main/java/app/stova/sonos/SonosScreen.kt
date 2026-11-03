@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.animation.core.Animatable
-import app.stova.core.theme.stovaMotion
+import app.stova.core.ui.stepEntrance
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -78,10 +77,7 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
             warmed = (listOf(next) + warmed.filterNot { it.target == next.target }).take(2)
         }, {})
     } }
-    val motion = stovaMotion
-    val pageAlpha = remember(libraryRoom?.id) { Animatable(if (motion.still) 1f else 0f) }
-    LaunchedEffect(pageAlpha) { pageAlpha.animateTo(1f, motion.enter()) }
-    Box(Modifier.fillMaxSize().graphicsLayer { alpha = pageAlpha.value }) {
+    Box(Modifier.fillMaxSize().stepEntrance(libraryRoom?.id, if (libraryRoom == null) 0 else 1)) {
     if (libraryRoom != null) SonosLibrary(repository, libraryRoom, busy, failed, { action ->
         if (!busy) { busy = true; failed = false
             scope.launch { try { failed = !repository.perform(libraryRoom.id, action) } finally { busy = false } }

@@ -14,7 +14,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.unit.dp
 import app.stova.core.theme.StovaLayout
-import app.stova.core.ui.softEntrance
+import app.stova.core.ui.stepEntrance
 
 internal val LocalSettingsSectionFocus = staticCompositionLocalOf<FocusRequester?> { null }
 internal val LocalSettingsPaneEntry = staticCompositionLocalOf<() -> Unit> { {} }
@@ -92,9 +92,10 @@ internal fun SettingsLayout(
             onCancelEntry = { enterSection = null }, onApps = onApps, appsSelected = appsShown, onAppsFocused = { appsShown = true })
         // Keep only the selected pane in the focus tree. An outgoing animated pane must not
         // compete for Up/Down while the user is already selecting the next section.
+        val stepMotion = Modifier.stepEntrance(selected to appsShown, history.size)
         key(selected, appsShown) {
             Column(
-                Modifier.weight(1f).fillMaxHeight().softEntrance(if (appsShown) null else selected)
+                Modifier.weight(1f).fillMaxHeight().then(stepMotion)
                     .onFocusChanged { paneFocused = it.hasFocus }
                     .focusRequester(pane)
                     .focusProperties {

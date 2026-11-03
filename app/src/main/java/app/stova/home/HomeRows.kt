@@ -66,7 +66,7 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
                     .then(if (index == row.items.size && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier)
                     .onFocusChanged { if (it.isFocused) { focusedId = null; onFocus(FocusedTarget.App(more)) } }
                 CompositionLocalProvider(LocalRowStyle provides style.copy(format = style.format ?: if (poster) RowFormat.POSTER else RowFormat.WIDE)) {
-                    val anchor = app.stova.navigation.rememberPageAnchor()
+                    val anchor = app.stova.navigation.rememberPageAnchor("home:discover")
                     val open = { anchor.open(onOpenMore) }
                     TileFrame(more, 0, open, open, modifier.then(anchor.modifier)) { spec ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -107,7 +107,7 @@ internal fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog,
                 val modifier = (if (index == row.tiles.size && focus != null) Modifier.focusRequester(focus) else Modifier)
                     .then(if (index == row.tiles.size && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier)
                     .onFocusChanged { if (it.isFocused) onFocused(allApps) }
-                val anchor = app.stova.navigation.rememberPageAnchor()
+                val anchor = app.stova.navigation.rememberPageAnchor("home:apps")
                 val open = { anchor.open(onOpenApps) }
                 TileFrame(allApps, 0, open, open, modifier.then(anchor.modifier)) { spec ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -134,7 +134,7 @@ internal fun EmptyHome(onOpenApps: () -> Unit) {
         Column(Modifier.widthIn(max = 520.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(stringResource(R.string.home_empty_title), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurface)
             Text(stringResource(R.string.home_empty_body), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            val anchor = app.stova.navigation.rememberPageAnchor()
+            val anchor = app.stova.navigation.rememberPageAnchor("home:empty-apps")
             StovaButton(stringResource(R.string.home_open_apps), { anchor.open(onOpenApps) },
                 Modifier.focusRequester(button).then(anchor.modifier), primary = true)
         }

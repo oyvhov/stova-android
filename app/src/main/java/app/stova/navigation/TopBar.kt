@@ -107,7 +107,7 @@ fun TopBar(
 private fun TopBarButton(icon: ImageVector, label: String, onClick: () -> Unit, onPageOrigin: (TransformOrigin) -> Unit = {},
     onLongClick: (() -> Unit)? = null, anchored: @Composable () -> Unit = {}) {
     val source = remember { MutableInteractionSource() }
-    val anchor = rememberPageAnchor(onPageOrigin)
+    val anchor = rememberPageAnchor("top:$label", onPageOrigin)
     val focused by source.collectIsFocusedAsState()
     val shape = MaterialTheme.shapes.extraLarge
     val motion = app.stova.core.theme.stovaMotion
