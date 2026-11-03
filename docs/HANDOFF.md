@@ -1,3 +1,8 @@
+# Felles Sonos-uttrykk installert på Loftet og Shield
+2026-11-03 (Codex): Installerte `5556f23` med install-r på begge TV-ane. Ingen avspeling, volum- eller gruppeendringar.
+Loftet: langt OK opna romval med korte romnamn, markeringar og musikkdelen synleg. Avslutta med Tilbake. Bilete i `.superpowers/sonos-felles-tv/125-romval.png`.
+Shield: spelarsida med omslag og korte romnamn kom fram først. Sonos mista HA-kontakten, også etter Prøv igjen og ny opning. Romval ikkje verifisert der. Bilete i `.superpowers/sonos-felles-tv/182-sonos.png`.
+
 # Sonos: felles uttrykk på tvers av appen
 2026-11-03 (Codex): Felles tittel og sekundærtekst på Heim, spelaren, fullskjerm, bibliotek og Fleire val. Kortare romnamn, ryddigare romval og færre repetisjonar.
 121 Sonos- og designtestar med skjermprøver, lint 0 feil, TV-bygg grønt. Såg over romval, Heim-widget og bibliotek under `app/build/screens/`.
