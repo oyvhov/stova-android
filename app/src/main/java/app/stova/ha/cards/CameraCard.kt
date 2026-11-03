@@ -56,6 +56,10 @@ data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader)
             .httpHeaders(NetworkHeaders.Builder().apply { if(sameOrigin && !token.isNullOrEmpty()) set("Authorization","Bearer $token") }.build())
             .memoryCachePolicy(CachePolicy.DISABLED).diskCachePolicy(CachePolicy.DISABLED).build()
     }
-    if(source!=null) AsyncImage(request,stringResource(R.string.ha_image),source.loader,modifier,contentScale=contentScale,
+    // Null means credentials are still loading (or the camera is paused), not a failed image.
+    // Coil reports a null model as an error; cover consumers would then remove the loader
+    // before the authenticated request could ever start.
+    if(source!=null && request!=null) AsyncImage(request,stringResource(R.string.ha_image),source.loader,modifier,contentScale=contentScale,
         onSuccess = { onLoad() }, onError = { onError() })
+    else if(source!=null) Box(modifier) // Keep the image's reserved space while authentication is pending.
 }

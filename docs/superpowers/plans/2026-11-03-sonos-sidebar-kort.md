@@ -39,5 +39,10 @@ tema/sesong integrert, TV-lyd aldri som musikkunst. Berre visuell testing på Lo
 - [x] Målretta Sonos/apps/home-testar, `DesignRulesTest`, `ThemePaletteTest`, skjermtestar,
   `lintDebug assembleDebug`. Les dei rendra bileta.
 - [ ] Loftet: root verifiserer visuelt (ingen lyd-, gruppe- eller lyshandlingar).
+- [x] TV-funn: `HaImage` må vente på autentisering før Coil får ein modell. Testen
+  `HaImageLoadingTest` feila før rettinga og er grøn etter; kameraplassen blir halden av medan
+  innlogginga ventar. Kamera-/Sonos-/design-testar, lint og TV-bygg grøne.
+- [ ] Ny bestilling: installer og prøv på Shield òg. Eigaren har no tillate Sonos-handlingar
+  medan han er borte, med volum på 0. Kontroller volum før test og rydd tilbake etterpå.
 
 Verifisering: [`../../verification/2026-11-03-sonos-sidebar-kort.md`](../../verification/2026-11-03-sonos-sidebar-kort.md).
