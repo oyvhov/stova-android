@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.first
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.*
 import app.stova.core.theme.StovaTheme
+import app.stova.profiles.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -103,6 +104,17 @@ class SonosScreensTest {
         compose.saveScreen("sonos-library")
     }
     @Test fun nowPlaying() = render()
+    private fun seasonal(choice: SeasonChoice, name: String) {
+        val rooms = sonosPreviewRooms()
+        compose.setContent { StovaTheme(reduceMotion = true,
+            appearance = choice.applyTo(AppearancePrefs(seasonalDecor = SeasonalDecor.CALM))) {
+            SonosContent(SonosState(rooms, loading = false), rooms.first().id, {}, {}, {}, {}, {},
+                artwork = { _, modifier -> SonosPreviewArtwork(modifier) })
+        } }
+        compose.saveScreen(name)
+    }
+    @Test fun christmas() = seasonal(SeasonChoice.CHRISTMAS, "sonos-christmas")
+    @Test fun halloween() = seasonal(SeasonChoice.HALLOWEEN, "sonos-halloween")
     @Test fun largeFont() = render(2f)
     @Test fun groupRooms() = render(group = true)
     @Test fun emptyRooms() = render(empty = true)

@@ -21,8 +21,10 @@ lydplanken framleis rapporterer det førre omslaget, eller eit anna rom spelar m
 ## Musikk, favorittar og rom
 
 Vel rom i venstre kolonne. Avspelingsknappane styrer musikken til gruppa, medan volum
-og demping gjeld det valde rommet. Kjelder, tilfeldig avspeling og gjentaking blir viste
-når spelaren støttar dei. Innhaldet i **Musikk og favorittar** kjem frå Sonos gjennom HA.
+og demping gjeld det valde rommet. Avspeling, volum og snarvegar får plass utan rulling
+ved vanleg TV-skrift. **Fleire val** samlar demping, kjelder, tilfeldig avspeling, gjentaking
+og hopping 15 sekund fram/attende når spelaren støttar det. Stor skrift kan framleis rulle.
+Høgre frå romlista går til avspelingsknappane; Venstre frå den første går tilbake til valt rom. Innhaldet i **Musikk og favorittar** kjem frå Sonos gjennom HA.
 Ei mappe opnar ei ny liste. Spelbart innhald kan startast eller leggjast til i køen
 når spelaren støttar dette. Tilbake går opp eitt nivå, også etter ein lastefeil.
 
@@ -30,6 +32,13 @@ når spelaren støttar dette. Tilbake går opp eitt nivå, også etter ein laste
 Koordinatoren blir verande. Om gruppa er endra frå ein annan app, må romvalet opnast
 att. Ein delvis mislukka operasjon stoppar vidare gruppeendringar og viser den faktiske
 tilstanden frå HA.
+
+## Tema og sesong
+
+Sonos-sida, biblioteket og dialogane følgjer profilen sitt tema, aksent, avrunding og
+fokus. Jul og Halloween bruker same sesongmerke og pynt som Heim; Av, Roleg og Max
+fungerer som elles i appen. Redusert rørsle stoppar pynt og høgtalaranimasjon.
+Albumkunst ligg bak eit slør i temafargen. Høgtalarane bevarer si matte produktfarge.
 
 ## Høgtalarane
 

@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.*
+import app.stova.home.SeasonalScene
+import app.stova.home.rememberSeasonalClock
 
 /** Loads one library picture. [fit] keeps logos and icons whole; [onLoad] removes the fallback mark under it. */
 internal typealias SonosThumbnail = @Composable (path: String, modifier: Modifier, fit: Boolean, onLoad: () -> Unit) -> Unit
@@ -53,9 +55,13 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
         }
         loading = false
     }
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(StovaLayout.TvSafeEdge), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    val seasonClock = rememberSeasonalClock()
+    SeasonalScene(Modifier.matchParentSize(), clock = seasonClock)
+    Column(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             StovaButton(stringResource(R.string.sonos_back), ::back, Modifier.focusRequester(first), icon = StovaIcons.ChevronLeft)
+            SonosSeasonMark()
             Column(Modifier.weight(1f)) {
                 Text(current?.title ?: stringResource(R.string.sonos_library), style = MaterialTheme.typography.headlineMedium)
                 Text(stringResource(R.string.sonos_play_in, room.name), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -81,6 +87,8 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
                 }
             }
         }
+    }
+    SeasonalScene(Modifier.matchParentSize(), front = true, clock = seasonClock)
     }
     LaunchedEffect(Unit) { withFrameNanos { }; first.requestFocus() }
     choosing?.let { item ->

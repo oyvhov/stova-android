@@ -57,4 +57,5 @@
     <string name="sonos_library_empty">Ingenting her enno. Legg til favorittar i Sonos-appen.</string>
     <string name="sonos_replace_queue">Spel startar dette innhaldet og erstattar køen i det valde rommet.</string>
     <string name="sonos_enqueue">Legg til i køen</string>
+    <string name="sonos_more">Fleire val</string>
 </resources>

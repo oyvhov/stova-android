@@ -57,4 +57,5 @@
     <string name="sonos_library_empty">Nothing here yet. Add favourites in the Sonos app.</string>
     <string name="sonos_replace_queue">Play starts this content and replaces the queue in the selected room.</string>
     <string name="sonos_enqueue">Add to queue</string>
+    <string name="sonos_more">More options</string>
 </resources>

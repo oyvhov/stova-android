@@ -8,12 +8,14 @@ avkryssingsboksar i dei er inga bestilling.
 
 | Plan | Står att |
 |---|---|
-| [Sonos: teikna høgtalarar med modell frå HA](2026-11-03-sonos-hoyttalarar.md) | Installert og visuelt prøvd på Loftet med verkelege modellar og favorittar. Rørsle under ekte musikk/TV-lyd står att (7b). |
+| [Sonos: teikna høgtalarar med modell frå HA](2026-11-03-sonos-hoyttalarar.md) | Installert og visuelt prøvd på Loftet med verkelege modellar og favorittar. Lydtest utsett: eigaren valde berre visuell testing. |
 | [Sonos gjennom Home Assistant](2026-11-03-sonos.md) | Implementert med Music Assistant, Heim-kunst og widget. Loftet: rom, omslag, bibliotek, gruppevising og widget prøvde; lydhandlingar, MA og TV-lyd på anlegget står att. |
 | [Oppdag i Stova: Seerr gjennom Spole](2026-11-01-oppdag.md) | Oppgåve 11 (TV-ane) ventar på eigaren; Spole-delen på greina `launcher-discover`. Spesifikasjon: [`../specs/2026-11-01-oppdag-design.md`](../specs/2026-11-01-oppdag-design.md). |
 | [Eineståande launcher: finpuss, Heim etter tid, fart og huset](2026-10-26-outstanding-launcher.md) | Steg 2–9. I steg 4 er punkt 8 (snøggmenyen på Innstillingar) gjort. |
 
 ## Historikk
+
+- 2026-11-03: [Sonos på éin skjerm, navigasjon og tema](2026-11-03-sonos-ein-skjerm.md), fullført, installert og visuelt prøvd på Loftet; 76 grøne testar.
 
 - 2026-11-01: [Spole-rader for personen og handlingar på korta](2026-11-01-spole-rows-and-actions.md), fullført og prøvd på Loftet; Spole-delen på greina `launcher-rows`, ikkje gitt ut.
 - 2026-10-31: [Spole-profilar: eigen profil for Eilev og ei Spole-flis med profilbiletet](2026-10-31-spole-profiles.md), fullført; Spole-delen på greina `launcher-profiles`. Eilev-flyten er ikkje prøvd på ei eining.

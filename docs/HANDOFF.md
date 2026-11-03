@@ -1,3 +1,9 @@
+# Sonos: hovudkontrollar på éin skjerm og same tema som Stova
+2026-11-03: Fullført nytt oppsett med fast musikkfelt, figur/volum og snarvegar; kjelder/demping/tilfeldig/gjenta/±15 s under Fleire val. Følgjer profilen sine temaroller og Heim si sesongpynt på sida og i biblioteket. Plan `2026-11-03-sonos-ein-skjerm.md` er ferdig.
+Kontroll: 76 målretta testar grøne (inkl. skjermar, DesignRules/ThemePalette og sesongtestar), lint 0 feil, tv-bygg grønt og installert på Loftet. Hovudkontrollane passar utan rulling; D-pad og fokusretur i Fleire val prøvde. Jul/Halloween/normal/stor skrift rendra lokalt; Halloween sett på TV.
+Eigaren sa «Berre visuell testing no». Ingen Sonos-/lyshandlingar sende. Eigaren bytte sjølv omslag og starta Inspector Norse ved 0 % volum; live oppdatering og høgtalarpuls er observerte i skjermopptak. Loftet står på Sonos-sida for vidare bilete, Heim-tenesta bound, krasjbuffer tom.
+Ingen uferdig kode. MA og aktiv TV-lyd/lydhandlingar er ikkje verifiserte på anlegget. Bilete i `.superpowers/sonos-one-screen-2026-11-03/`; verifisering i `docs/verification/2026-11-03-sonos-ein-skjerm.md`. Ingen push; brukaren si `.codex-remote-attachments/` urørt.
+
 # Sonos-design med Claude, installert og visuelt prøvd på Loftet
 2026-11-03: Claude Code gjorde høgtalarfigurar, animasjon og bibliotekfinpuss i `db81866`, `0e0bfe7` og `944aae0`; Codex tok gjennomgang og installasjon på Loftet etter eigaren si bestilling. Ingen push.
 Loftet: ekte Play:3/Playbar/Era 100/Play:1, gruppevising, fråkopla rom, omslag, favorittar/spelelister og Heim-widget kontrollerte med D-pad. Sonos er aktivert; MA og Heim-kunst er av. Ingen avspeling, volum- eller gruppeendringar. Heim-tenesta er bound; Loftet søv på Øyvind.

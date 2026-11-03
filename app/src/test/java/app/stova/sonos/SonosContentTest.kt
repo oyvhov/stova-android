@@ -13,6 +13,7 @@ import app.stova.TV_QUALIFIERS
 import app.stova.core.storage.StovaJson
 import app.stova.core.theme.StovaTheme
 import app.stova.ha.HaEntity
+import app.stova.profiles.*
 import kotlinx.serialization.json.jsonObject
 import org.junit.Assert.*
 import org.junit.Rule
@@ -28,6 +29,69 @@ class SonosContentTest {
     @get:Rule val compose = createComposeRule()
     private val room = SonosRoom(HaEntity("media_player.stova", "playing", StovaJson.parseToJsonElement(
         """{"media_title":"Northern Lights","media_artist":"Test Artist","supported_features":1048575,"volume_level":0.3}""").jsonObject, 0, 0), "Stova")
+
+    @Test fun seasonDecorationFollowsTheSameProfilePreferenceAsHome() {
+        var choice by mutableStateOf(SeasonChoice.HALLOWEEN)
+        var decor by mutableStateOf(SeasonalDecor.CALM)
+        compose.setContent { StovaTheme(reduceMotion = true, appearance = choice.applyTo(AppearancePrefs(seasonalDecor = decor))) {
+            SonosContent(SonosState(listOf(room), loading = false), room.id, {}, {}, {}, {}, {})
+        } }
+        compose.onNodeWithTag("season-mark", useUnmergedTree = true).assertIsDisplayed()
+        compose.runOnIdle { choice = SeasonChoice.CHRISTMAS }
+        compose.onNodeWithTag("season-mark", useUnmergedTree = true).assertIsDisplayed()
+        compose.runOnIdle { decor = SeasonalDecor.OFF }
+        compose.onNodeWithTag("season-mark", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test fun dailyControlsFitWithoutScrollingEvenWithLongMetadataAndAGroup() {
+        val detailed = room.copy(entity = room.entity.copy(attributes = StovaJson.parseToJsonElement("""{
+            "media_title":"Halloween Forest, Wind, Spooky Sounds and Northern Lights",
+            "media_artist":"A rather long artist name", "media_album_name":"A very long album name",
+            "media_duration":240, "volume_level":0.3, "supported_features":1048575,
+            "source_list":["TV","Radio"], "group_members":["media_player.stova","media_player.second"]
+        }""").jsonObject))
+        val second = detailed.copy(entity = detailed.entity.copy(id = "media_player.second"), name = "Kjøkken")
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SonosContent(SonosState(listOf(detailed, second), loading = false), detailed.id, {}, {}, {}, {}, {}, actionFailed = true, onBrowseMusicAssistant = {})
+        } }
+        val root = compose.onRoot().getUnclippedBoundsInRoot()
+        listOf(compose.onNodeWithTag("slider-sonos-${room.id}"), compose.onNodeWithText("Musikk og favorittar"),
+            compose.onNodeWithText("Grupper rom"), compose.onNodeWithText("Music Assistant"), compose.onNodeWithText("Fleire val")).forEach { node ->
+            node.assertIsDisplayed()
+            val bounds = node.getUnclippedBoundsInRoot()
+            assertTrue("Entire control must fit inside the TV safe area: $bounds", bounds.bottom <= root.bottom - 24.dp)
+        }
+        compose.onNodeWithText("TV", substring = false).assertDoesNotExist()
+    }
+
+    @Test fun moreOptionsOpenWithoutSendingActionsAndReturnFocusToTheirButton() {
+        var action: SonosAction? = null
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            val input = androidx.compose.ui.platform.LocalInputModeManager.current
+            SideEffect { input.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
+            SonosContent(SonosState(listOf(room), loading = false), room.id, {}, { action = it }, {}, {}, {})
+        } }
+        compose.onNodeWithText("Fleire val").performClick()
+        compose.onNodeWithText("Tilfeldig av").assertIsDisplayed()
+        assertNull(action)
+        compose.onNodeWithText("Lukk").performClick()
+        compose.onNodeWithText("Fleire val").assertIsFocused()
+        assertNull(action)
+    }
+
+    @Test fun rightFromTheLastRoomEntersPlaybackAndLeftReturnsToTheSelectedRoom() {
+        val rooms = (1..4).map { room.copy(entity = room.entity.copy(id = "media_player.room$it"), name = "Rom $it") }
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            val input = androidx.compose.ui.platform.LocalInputModeManager.current
+            SideEffect { input.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
+            SonosContent(SonosState(rooms, loading = false), rooms.last().id, {}, {}, {}, {}, {})
+        } }
+        compose.onNodeWithTag("sonos-room-${rooms.last().id}").assertIsFocused()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        compose.onNodeWithText("Førre spor").assertIsFocused()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
+        compose.onNodeWithTag("sonos-room-${rooms.last().id}").assertIsFocused()
+    }
 
     @Test fun nowPlayingChipHasSeparateOpenAndPlaybackActions() {
         var opened = false
