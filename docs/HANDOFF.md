@@ -1,3 +1,8 @@
+# Romval prøvd på Loftet
+2026-11-03 (Codex): Installerte TV-bygget frå `40b738f` med install-r berre på Loftet.
+Langt OK på Kjøkken opna romval i lista. Storestova vart merkt som koordinator og Kjøkken med hake. Tilbake avslutta utkastet utan Bruk.
+Skjermbilete: `.superpowers/loftet-sonos-2026-11-03/romval.png`. Ekte låtbyte og widget under avspeling vart ikkje prøvde; inga lyd, volum- eller gruppeendring.
+
 # Sonos: neste omslag, Heim-widget og romval
 2026-11-03 (Codex): `afb4b26` førehandshentar neste omslag i kopla MA-kø. Overtoninga ventar på dekoding også med vanleg Sonos, og Sonos-bakgrunnen er litt dempa.
 «Spelar no» rullar med apprada og held seg synleg i 60 sekund etter pause. Langt OK på rommet opnar gruppeval i lista, med merking, ei kort vipping og eksplisitt Bruk.
