@@ -28,12 +28,15 @@ gruppevalet var ei flat brytarliste. Medlemmane i ei gruppe var berre ei namneli
   grupper (då utan det store motivet, så sida ikkje veks), og høgtalar + modell i gruppedialogen.
 - [x] 6. Skjermtestar: galleri over alle former (`sonos-speakers`), gruppert side
   (`sonos-grouped`), avspeling, stor skrift og gruppedialog. Full suite, lint og bygg.
+- [x] 6b. Etter Codex-gjennomgang: Sub Mini som ståande sylinder med høgt senterhol (kontrollert
+  mot Sonos-faktaark/rettleiar), og klokka går berre når motivet har synleg areal
+  (`onVisibilityChanged`), med test for utrulling og retur.
 - [ ] 7. Loftet: installasjon og test med eigaren sine verkelege høgtalarar (Codex).
 
-Former: One/One SL/Play:1, Era 100, Era 300 (midje), Five/Play:5/Play:3, Beam, Arc/Arc Ultra,
+Former: One/One SL/Play:1, Era 100, Era 300 (timeglas, H160 × B260), Five/Play:5/Play:3, Beam, Arc/Arc Ultra,
 Ray (lameller), Playbar, Playbase, Move/Move 2 (smalnar), Roam (kapsel med rygg), Sub
-(gjennomgåande opning), Sub Mini (sylinder med spalte), Amp/Port/Connect og ukjend.
-Proporsjonane følgjer omtrentlege frontmål for produkta (kjende mål, ikkje slått opp på nytt hos
-Sonos i denne økta); svært lange lydplanker er korta så dei kan lesast på TV. Ingen
+(gjennomgåande opning), Sub Mini (ståande sylinder med høgt senterhol), Amp/Port/Connect og ukjend.
+Dette er stiliserte illustrasjonar, ikkje 3D-modellar. Sub Mini og Era 300 er kontrollerte mot
+Sonos sine faktaark/rettleiarar, Sub berre på mål (retninga på slissen er ikkje stadfesta i teksten); dei andre følgjer omtrentlege kjende frontmål; svært lange lydplanker er korta så dei kan lesast på TV. Ingen
 tredjepartsbilete er brukte; alt er teikna i kode.
 Verifisering: [`../../verification/2026-11-03-sonos-hoyttalarar.md`](../../verification/2026-11-03-sonos-hoyttalarar.md).

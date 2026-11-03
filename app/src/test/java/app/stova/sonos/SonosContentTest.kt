@@ -4,6 +4,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
 import app.stova.core.storage.StovaJson
@@ -124,6 +128,58 @@ class SonosContentTest {
         active(era.id, true)
         active(plain.id, false)
         active(tv.id, false)
+    }
+
+    /** Lay out, let the main looper deliver the throttled visibility callbacks, then recompose. */
+    private fun settle() {
+        repeat(3) {
+            compose.waitForIdle()
+            compose.mainClock.advanceTimeBy(200)
+            org.robolectric.shadows.ShadowLooper.idleMainLooper(200, java.util.concurrent.TimeUnit.MILLISECONDS)
+        }
+    }
+
+    @Test fun speakerStopsWhenScrolledOutOfSightAndResumesOnReturn() {
+        val scroll = androidx.compose.foundation.ScrollState(0)
+        compose.mainClock.autoAdvance = false
+        compose.setContent { StovaTheme(reduceMotion = false) {
+            androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.height(200.dp).verticalScroll(scroll)) {
+                SonosSpeakerArt(era.speaker, rememberSonosVisual(era, SonosState(listOf(era), loading = false)),
+                    androidx.compose.ui.Modifier.size(120.dp, 80.dp), "sonos-speaker-${era.id}")
+                androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.height(1000.dp))
+            }
+        } }
+        compose.mainClock.advanceTimeBy(200)
+        active(era.id, true)
+        compose.runOnIdle { scroll.dispatchRawDelta(600f) }
+        settle()
+        active(era.id, false)
+        compose.runOnIdle { scroll.dispatchRawDelta(-600f) }
+        settle()
+        active(era.id, true)
+    }
+
+    @Test fun speakerIsStillUnlessTheScreenIsResumed() {
+        val owner = object : androidx.lifecycle.LifecycleOwner {
+            val registry = androidx.lifecycle.LifecycleRegistry.createUnsafe(this)
+            override val lifecycle get() = registry
+        }
+        owner.registry.currentState = androidx.lifecycle.Lifecycle.State.STARTED
+        compose.mainClock.autoAdvance = false
+        compose.setContent { StovaTheme(reduceMotion = false) {
+            CompositionLocalProvider(androidx.lifecycle.compose.LocalLifecycleOwner provides owner) {
+                SonosSpeakerArt(era.speaker, rememberSonosVisual(era, SonosState(listOf(era), loading = false)),
+                    androidx.compose.ui.Modifier.size(120.dp, 80.dp), "sonos-speaker-${era.id}")
+            }
+        } }
+        compose.mainClock.advanceTimeBy(200)
+        active(era.id, false)
+        compose.runOnIdle { owner.registry.currentState = androidx.lifecycle.Lifecycle.State.RESUMED }
+        compose.mainClock.advanceTimeBy(200)
+        active(era.id, true)
+        compose.runOnIdle { owner.registry.currentState = androidx.lifecycle.Lifecycle.State.STARTED }
+        compose.mainClock.advanceTimeBy(200)
+        active(era.id, false)
     }
 
     @Test fun groupDialogShowsEachRoomsOwnSpeaker() {

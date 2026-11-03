@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -40,7 +41,10 @@ val SonosSpeakerActive = SemanticsPropertyKey<Boolean>("SonosSpeakerActive")
  */
 @Composable internal fun SonosSpeakerArt(speaker: SonosSpeaker, visual: SonosRoomVisual?, modifier: Modifier, tag: String,
     available: Boolean = true, waves: Boolean = false) {
-    val active = visual?.active == true
+    // A speaker scrolled out of the page, or clipped away by the window, does not tick. Visibility
+    // is judged from the clipped layout bounds when layout moves (scrolling), never per animation frame.
+    var visible by remember { mutableStateOf(true) }
+    val active = visual?.active == true && visible
     val playing = visual?.playing == true
     val phase = remember { mutableFloatStateOf(0f) }
     LaunchedEffect(active) {
@@ -55,7 +59,8 @@ val SonosSpeakerActive = SemanticsPropertyKey<Boolean>("SonosSpeakerActive")
             delay(StovaMotion.SpeakerFrameMillis)
         }
     }
-    Spacer(modifier.testTag(tag).semantics { this[SonosSpeakerActive] = active }.drawWithCache {
+    Spacer(modifier.testTag(tag).semantics { this[SonosSpeakerActive] = active }
+        .onVisibilityChanged(minFractionVisible = .01f) { visible = it }.drawWithCache {
         val shape = speakerGeometry(speaker.shape, size, waves)
         // Only the draw phase reads the clock: no recomposition or layout per frame.
         onDrawBehind { drawSpeaker(shape, if (active) phase.floatValue else null, playing, available) }
@@ -92,8 +97,10 @@ private fun form(shape: SonosShape) = when (shape) {
     SonosShape.PLAYBASE -> Form(9f, .2f, .22f, .14f, .18f)
     SonosShape.MOVE -> Form(.667f, .3f, .06f, .07f, .1f, taper = .07f)
     SonosShape.ROAM -> Form(.37f, .5f, .035f, .14f, .1f)
-    SonosShape.SUB -> Form(.97f, .14f, .05f, 0f, 0f, Texture.NONE)
-    SonosShape.SUB_MINI -> Form(.77f, .1f, .1f, 0f, 0f, Texture.NONE)
+    // Sub: 402 × 389 mm face with the acoustic slot through it.
+    SonosShape.SUB -> Form(1.03f, .14f, .05f, 0f, 0f, Texture.NONE)
+    // Sub Mini: an upright cylinder, Ø230 × 305 mm, flat top, a tall centre tunnel.
+    SonosShape.SUB_MINI -> Form(.754f, .08f, .11f, 0f, 0f, Texture.NONE)
     SonosShape.COMPONENT -> Form(3.4f, .16f, .3f, 0f, 0f, Texture.NONE)
     // No real model: a soft, generic shape drawn faintly, so it never passes for a One.
     SonosShape.UNKNOWN -> Form(.8f, .3f, .05f, .1f, .14f)
@@ -137,7 +144,7 @@ private fun speakerGeometry(shape: SonosShape, size: Size, waves: Boolean): Spea
     }
     val opening = when (shape) {
         SonosShape.SUB -> slot(frontRect, .66f, .15f)
-        SonosShape.SUB_MINI -> slot(frontRect, .86f, .075f)
+        SonosShape.SUB_MINI -> slot(frontRect, .19f, .5f, frontRect.height * .06f)
         else -> null
     }
     val ridge = if (shape == SonosShape.ROAM) Offset(frontRect.center.x - frontRect.width * .12f, frontRect.top + radius * .6f) to
@@ -145,7 +152,7 @@ private fun speakerGeometry(shape: SonosShape, size: Size, waves: Boolean): Spea
     val light = when (shape) {
         SonosShape.COMPONENT -> Offset(frontRect.left + frontRect.width * .1f, frontRect.center.y)
         SonosShape.SUB -> Offset(frontRect.center.x, frontRect.bottom - frontRect.height * .1f)
-        SonosShape.SUB_MINI -> Offset(frontRect.center.x, frontRect.top + frontRect.height * .2f)
+        SonosShape.SUB_MINI -> Offset(frontRect.right - frontRect.width * .14f, frontRect.bottom - frontRect.height * .14f)
         else -> Offset(frontRect.center.x, (frontRect.top + grilleRect.top) / 2)
     }
     val floor = Rect(body.left - bodyW * .05f, body.bottom - floorGap * .5f, body.right + bodyW * .05f, body.bottom + floorGap)
@@ -174,11 +181,12 @@ private fun outline(r: Rect, radius: Float, f: Form): Path {
     }
 }
 
-private fun slot(r: Rect, width: Float, height: Float): Path {
+private fun slot(r: Rect, width: Float, height: Float, drop: Float = 0f): Path {
     val h = r.height * height
     val w = r.width * width
-    val slot = Rect(r.center.x - w / 2, r.center.y - h / 2, r.center.x + w / 2, r.center.y + h / 2)
-    return Path().apply { addRoundRect(RoundRect(slot, CornerRadius(h / 2))) }
+    val y = r.center.y + drop
+    val slot = Rect(r.center.x - w / 2, y - h / 2, r.center.x + w / 2, y + h / 2)
+    return Path().apply { addRoundRect(RoundRect(slot, CornerRadius(min(w, h) / 2))) }
 }
 
 private fun DrawScope.drawSpeaker(g: SpeakerGeometry, phase: Float?, playing: Boolean, available: Boolean) {
