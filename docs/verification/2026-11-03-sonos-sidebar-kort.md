@@ -82,3 +82,18 @@ ingenting; ikkje-støtta avspeling er avslegen; widgetknappen held fokus og igno
 utan støtte er avslegen. Tre feila før rettinga (`Focused = 'true'`), alle seks er grøne etter.
 Målretta `app.stova.sonos.*`, `app.stova.ha.cards.*`, `DesignRulesTest`, `ThemePaletteTest` med
 skjermtestar: **193 testar, 0 feil**. `lintDebug` 0 feil, `assembleTv` grønt. Ikkje installert av Claude.
+
+## Høgre frå Heim-widgeten hoppar til mediebrikka (Shield), ikkje reprodusert
+
+Funn frå root: Høgre frå tittelen i «Spelar no» (bounds 206,55–688,153) landa på HA-mediebrikka
+(918–1100) og hoppa over spel/pause (679–775) og lysbrikka (787–904). Alle var fokuserbare.
+
+Forsøk (`SonosTopBarFocusTest`, heile `TopBar` med `SonosNowPlaying` og `HomeStatusChips` som på
+Heim, med nedtrekksbrikker, D-pad-tastar): vanleg rørsle (lyft og 1,02-zoom som på Shield),
+Heim si `focusRestorer().focusGroup()`-innpakning, brikker til venstre og Halloween. Høgre går
+tittel → spel/pause → lys → media, og Venstre same veg attende, i alle variantane. Feilen er
+**ikkje reprodusert**, så ingen produksjonskode er endra. Testane står att som regresjonsdekning.
+
+Merk: i testen sluttar tittelen der spel/pause byrjar (870 px), medan Shield-dumpen viser 9 px
+overlapp (688 mot 679). Neste spor: resultatet av Venstre frå mediebrikka på eininga, og om ein
+Send-TvRemote-Høgre kan gi tastrepetisjon (tre steg ville gi akkurat dette).
