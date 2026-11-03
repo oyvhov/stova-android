@@ -14,6 +14,14 @@ import androidx.compose.ui.unit.dp
  * language. The stroke colour is a placeholder; `Icon` tints it.
  */
 object StovaIcons {
+    /** Music rooms: a speaker with a pair of sound waves, matching Stova's own icon strokes. */
+    val Sonos by lazy { icon("sonos") {
+        moveTo(5f, 3f); lineTo(13f, 3f); lineTo(13f, 21f); lineTo(5f, 21f); close()
+        moveTo(11f, 15f); arcTo(2f, 2f, 0f, true, true, 7f, 15f); arcTo(2f, 2f, 0f, true, true, 11f, 15f)
+        moveTo(9f, 7f); lineTo(9.1f, 7f)
+        moveTo(17f, 8f); quadTo(20f, 12f, 17f, 16f)
+        moveTo(20f, 5f); quadTo(25f, 12f, 20f, 19f)
+    } }
     val Check by lazy { icon("check") { moveTo(4f, 12f); lineTo(9f, 17f); lineTo(20f, 6f) } }
     val Show by lazy { icon("show") {
         moveTo(3f, 12f); curveTo(8f, 3f, 16f, 3f, 21f, 12f); curveTo(16f, 21f, 8f, 21f, 3f, 12f); close()

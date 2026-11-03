@@ -27,7 +27,8 @@ data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader)
 }
 
 /** No bearer token crosses origins, no camera frames are cached, and paused/offscreen cards stop. */
-@Composable internal fun HaImage(path:String, source:HaImageSource?,modifier:Modifier=Modifier,refreshMillis:Long?=null,contentScale:ContentScale=ContentScale.Fit) {
+@Composable internal fun HaImage(path:String, source:HaImageSource?,modifier:Modifier=Modifier,refreshMillis:Long?=null,contentScale:ContentScale=ContentScale.Fit,
+    onLoad: () -> Unit = {}, onError: () -> Unit = {}) {
     val context=LocalContext.current
     val scope=rememberCoroutineScope()
     var token by remember(source,path) { mutableStateOf<String?>(null) }
@@ -55,5 +56,6 @@ data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader)
             .httpHeaders(NetworkHeaders.Builder().apply { if(sameOrigin && !token.isNullOrEmpty()) set("Authorization","Bearer $token") }.build())
             .memoryCachePolicy(CachePolicy.DISABLED).diskCachePolicy(CachePolicy.DISABLED).build()
     }
-    if(source!=null) AsyncImage(request,stringResource(R.string.ha_image),source.loader,modifier,contentScale=contentScale)
+    if(source!=null) AsyncImage(request,stringResource(R.string.ha_image),source.loader,modifier,contentScale=contentScale,
+        onSuccess = { onLoad() }, onError = { onError() })
 }

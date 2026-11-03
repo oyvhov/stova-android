@@ -55,7 +55,7 @@ import kotlinx.coroutines.flow.map
 @Composable
 fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog: AppCatalog,
     shortcuts: ShortcutCatalog? = null, haConnection: app.stova.ha.HaConnection? = null,
-    discoverAccess: SeerrAccess = SeerrAccess.NONE, onOpenDiscover: () -> Unit = {}) {
+    discoverAccess: SeerrAccess = SeerrAccess.NONE, onOpenDiscover: () -> Unit = {}, onOpenSonos: (() -> Unit)? = null) {
     val currentProfile by rememberUpdatedState(profile)
     val offers = shortcuts?.takeIf { !profile.kid }
     val arrangedFlow = remember(apps, offers, profile.id) {
@@ -137,6 +137,15 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
             }
         }
         header(R.string.apps_all)
+        if (onOpenSonos != null && !profile.kid) item(key = "stova:sonos") {
+            val label = stringResource(R.string.sonos_title)
+            TileFrame(label, 0, onOpenSonos, onOpenSonos) { spec ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(StovaIcons.Sonos, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurface)
+                    if (!spec.captions) Text(label, style = MaterialTheme.typography.titleSmall)
+                }
+            }
+        }
         items(arranged.all, key = { "all:${it.key}" }) { app ->
             AppTile(app, art, { catalog.launch(app) }, { onLong(app) }, iconOverride = profile.apps.iconOverrides[app.key])
         }

@@ -30,6 +30,7 @@ internal val HeroSize.textWidth: Dp get() = if (this == HeroSize.LARGE) 560.dp e
  val large=LocalDensity.current.fontScale>=1.5f
  val prefs=app.stova.core.theme.LocalAppearance.current
  if(prefs.heroSize==HeroSize.OFF) return
+ app.stova.sonos.LocalHomeSonos.current?.let { music -> app.stova.sonos.SonosHomeHero(music, modifier); return }
  val motion=stovaMotion
  Box(modifier.fillMaxWidth().padding(horizontal=StovaLayout.TvSafeEdge,vertical=16.dp),contentAlignment=Alignment.TopStart) {
   // The new title arrives at the backdrop's pace, once the old one has mostly left.

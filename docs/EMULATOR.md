@@ -47,6 +47,12 @@ Start med `adb -s emulator-5580 shell am start -n app.stova.debug/app.stova.ha.C
 `LargeControlPreviewActivity` bruker skriftstorleik 2.0, også inne i dialogvindauga.
 `--ez reduceMotion true` slår av rørsle i prøva. Ingen av desse endrar systeminnstillingar eller profilen.
 
+`app.stova.sonos.SonosPreviewActivity` viser den ekte Sonos-layouten med fire fiktive rom og
+eit teikna prøveomslag, utan tilkoplingar eller lagring. Start på **5580** med
+`adb -s emulator-5580 shell am start -n app.stova.debug/app.stova.sonos.SonosPreviewActivity`.
+`--ez largeFont true` prøver dobbel skrift, `--es mode empty` tomtilstanden og `--es mode error`
+fråkopling. Avspeling, volum og gruppeval endrar berre prøveverdiane i minnet.
+
 ## Ekte tenester
 
 Hopp over `-Demo` og legg til kontoane i Stova: Innstillingar → Smarthus og kontoar. Jellyfin og

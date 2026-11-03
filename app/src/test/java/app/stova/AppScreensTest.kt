@@ -512,7 +512,7 @@ class AppScreensTest {
 
     @Test fun mediaHeroAtDoubleFontSize() {
         renderMediaHome(fontScale = 2f)
-        rule.onAllNodesWithText("Demoarkiv")[0].assertIsDisplayed()
+        rule.onNodeWithText("Hald fram").assertIsDisplayed()
         rule.saveScreen("11-home-media-font-2")
     }
 

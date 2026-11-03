@@ -39,7 +39,7 @@ internal val SettingsSection.merged: SettingsSection get() = when (this) {
 
 /** Sections on the left, the chosen one on the right, as in Spole's TV settings. */
 @Composable
-fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewModel, onSwitchProfile: () -> Unit, onOpenApps: () -> Unit = {}) {
+fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewModel, onSwitchProfile: () -> Unit, onOpenApps: () -> Unit = {}, onOpenSonos: () -> Unit = {}) {
     if (profile.kid) {
         KidSettings(onSwitchProfile)
         return
@@ -54,6 +54,7 @@ fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewMode
             SettingsSection.SMART_HOME -> AccountsSettings(profile, container, overview = {
                 PageHeader(stringResource(shown.pageTitle), shown.icon, subtitle = stringResource(shown.hint), tint = shown.tone)
                 app.stova.ha.ui.HaSettings(container)
+                app.stova.sonos.SonosSettings(container, onOpenSonos)
             })
             SettingsSection.HOME_BUTTON -> {
                 HomeButtonSettings(container)

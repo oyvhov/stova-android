@@ -151,6 +151,24 @@ class StovaAppNavigationTest {
         rule.onNodeWithTag("screen-HOME").assertExists()
     }
 
+    @Test fun sonosIsOptInAndBackReturnsToHome() {
+        rule.onAllNodesWithText("Sonos").assertCountEquals(0)
+        val container = (rule.activity.application as StovaApplication).container
+        runBlocking { container.household.update { it.copy(sonos = app.stova.sonos.SonosPrefs(enabled = true)) } }
+        rule.waitForIdle()
+        rule.onAllNodesWithText("Sonos").assertCountEquals(0) // Still needs HA.
+        runBlocking { container.household.update { it.copy(haBaseUrl = "http://ha.local:8123") } }
+        rule.waitForIdle()
+        rule.onAllNodesWithText("Sonos")[0].performClick()
+        rule.onNodeWithTag("screen-SONOS").assertExists()
+        rule.waitForIdle()
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag("screen-HOME").assertExists()
+        runBlocking { container.household.update { it.copy(sonos = it.sonos.copy(enabled = false)) } }
+        rule.waitForIdle()
+        rule.onAllNodesWithText("Sonos").assertCountEquals(0)
+    }
+
     // Pages fade over each other. Once the fade has settled the old page is gone and focus is on the new one.
     @Test fun pageFadeSettlesWithTheOldPageGoneAndFocusOnTheNewOne() {
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Opne Appar").fetchSemanticsNodes().isNotEmpty() }

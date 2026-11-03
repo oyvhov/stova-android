@@ -71,10 +71,12 @@ fun TopBar(
     onProfile: () -> Unit,
     modifier: Modifier = Modifier,
     onSmartHome: (() -> Unit)? = null,
+    onSonos: (() -> Unit)? = null,
     /** Told where an icon sits on screen just before it opens its page, so the page can grow from it. */
     onPageOrigin: (TransformOrigin) -> Unit = {},
     /** Holding OK (or Menu) on Settings drops this device menu; null for kids and previews. */
     systemMenu: SystemMenu? = null,
+    nowPlaying: @Composable (Modifier) -> Unit = {},
     leading: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -87,10 +89,14 @@ fun TopBar(
         val decorated = appearance.seasonalDecor != app.stova.profiles.SeasonalDecor.OFF
         if (decorated) app.stova.home.SeasonalMark(appearance.season())
         val chipsLeft = appearance.chipPlacement == app.stova.profiles.ChipPlacement.LEFT
-        Box(Modifier.weight(1f), contentAlignment = if (chipsLeft) Alignment.CenterStart else Alignment.CenterEnd) { if (appearance.showHaChips) leading(rowScope) }
+        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp, if (chipsLeft) Alignment.Start else Alignment.End), verticalAlignment = Alignment.CenterVertically) {
+            nowPlaying(Modifier.weight(1f, fill = false))
+            if (appearance.showHaChips) Box(Modifier.weight(1f, fill = false)) { leading(rowScope) }
+        }
         if (decorated && appearance.showCountdown && androidx.compose.ui.platform.LocalDensity.current.fontScale < 1.5f)
             app.stova.home.SeasonalCountdown(appearance.season())
         Clock(Modifier.padding(end = 16.dp))
+        if (onSonos != null) TopBarButton(StovaIcons.Sonos, stringResource(R.string.sonos_title), onSonos, onPageOrigin)
         if(onSmartHome!=null && appearance.showSmartHomeButton) TopBarButton(StovaIcons.Home,stringResource(R.string.nav_smart_home),onSmartHome,onPageOrigin)
         var menuOpen by remember { mutableStateOf(false) }
         TopBarButton(StovaIcons.Settings, stringResource(R.string.nav_settings), onSettings, onPageOrigin,

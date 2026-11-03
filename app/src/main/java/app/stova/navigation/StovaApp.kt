@@ -94,8 +94,11 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     // home, and stops there. Back from Discover to Apps keeps where Apps itself came from.
     var appsFromSettings by rememberSaveable { mutableStateOf(false) }
     var discoverFromApps by rememberSaveable { mutableStateOf(false) }
+    var sonosFrom by rememberSaveable { mutableStateOf(Destination.HOME) }
+    val sonosEnabled = household?.sonos?.enabled == true && household?.haBaseUrl != null && !profile.kid
     val back: () -> Unit = {
         current = when {
+            current == Destination.SONOS -> sonosFrom
             current == Destination.DISCOVER && discoverFromApps -> Destination.APPS
             current == Destination.APPS && appsFromSettings -> Destination.SETTINGS
             else -> Destination.HOME
@@ -203,6 +206,12 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         }
                         val fixed by fixedFlow.collectAsStateWithLifecycle(initialValue = null)
                         val shift = remember { app.stova.home.HomeScrollShift() }
+                        val sonosPrefs = household?.sonos ?: app.stova.sonos.SonosPrefs()
+                        val homeMusic = app.stova.sonos.rememberSonosHome(container, profile, sonosPrefs, household?.haBaseUrl)
+                        val music = app.stova.sonos.sonosHomeRoom(sonosPrefs, profile, homeMusic.state.rooms, homeMusic.state.musicAssistant)
+                        val widgetRoom = app.stova.sonos.sonosWidgetRoom(sonosPrefs, homeMusic.state)
+                        var musicArtReady by remember(music?.artwork, profile.id) { mutableStateOf(false) }
+                        val musicImages = household?.haBaseUrl?.let { address -> remember(address) { app.stova.ha.cards.HaImageSource(address, container.haAuth, container.haImages) } }
                         val still = app.stova.core.theme.LocalReduceMotion.current
                         val ink = androidx.compose.material3.MaterialTheme.colorScheme.background
                         // As the rows take the screen the picture drifts up a little slower than them, grows
@@ -216,8 +225,10 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             drawRect(ink.copy(alpha = 0.35f * shift.progress()))
                         }) {
                             app.stova.background.ProfileBackdrop(profile.id,profile.appearance,spotlight,fixed,state=backdrop)
+                            app.stova.sonos.SonosHomeBackdrop(music, musicImages) { musicArtReady = it }
                         }
                         androidx.compose.runtime.CompositionLocalProvider(app.stova.home.LocalHomeScrollShift provides shift,
+                            app.stova.sonos.LocalHomeSonos provides music.takeIf { musicArtReady },
                             app.stova.home.LocalHomeArrival provides arrival) {
                         HomeScreen(
                             home, container.appArt, container.appCatalog,
@@ -252,8 +263,19 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                                     onPageOrigin = { origin = it },
                                     onProfile = switchProfile,
                                     onSmartHome = if(household?.haBaseUrl!=null) {{smartHomeCardId=null;current=Destination.SMART_HOME}} else null,
+                                    onSonos = if (sonosEnabled && household?.sonos?.showHomeButton == true) ({ sonosFrom = Destination.HOME; current = Destination.SONOS }) else null,
                                     // Android's own settings are for adults only, as Settings is.
                                     systemMenu = if (profile.kid) null else rememberSystemMenu(),
+                                    nowPlaying = { modifier ->
+                                        widgetRoom?.let { room -> app.stova.sonos.sonosPlaybackRoom(room, homeMusic.state)?.let { player ->
+                                            app.stova.sonos.SonosNowPlaying(room, player, homeMusic.busy, homeMusic.failed,
+                                                onOpen = {
+                                                    scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(preferredRoom = room.id)) } }
+                                                    sonosFrom = Destination.HOME; origin = TransformOrigin.Center; current = Destination.SONOS
+                                                }, onPlayPause = { homeMusic.playPause(room.id) }, modifier = modifier,
+                                                artwork = { path, artModifier -> app.stova.ha.cards.HaImage(path, musicImages, artModifier, contentScale = androidx.compose.ui.layout.ContentScale.Crop) })
+                                        } }
+                                    },
                                     leading = {
                                         val openCard: (String) -> Unit = {id->smartHomeCardId=id;origin=TransformOrigin.Center;current=Destination.SMART_HOME}
                                         app.stova.ha.ui.HomeStatusChips(chips,onOpenCard=openCard) { chip, close ->
@@ -272,17 +294,20 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         val discoverAccess by remember(discover) { derivedStateOf { discover.value?.access ?: app.stova.discover.SeerrAccess.NONE } }
                         AppsScreen(container.apps, profile, container.appArt, container.appCatalog, container.shortcuts, container.haSocket,
                             discoverAccess = discoverAccess,
+                            onOpenSonos = if (sonosEnabled) ({ sonosFrom = Destination.APPS; origin = TransformOrigin.Center; current = Destination.SONOS }) else null,
                             // From a tile in the grid, as from Home's row: the page grows from the middle, and Back comes back here.
                             onOpenDiscover = { discoverStart = null; discoverFromApps = true; origin = TransformOrigin.Center; current = Destination.DISCOVER })
                     }
                     Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId,backdrop=backdrop.shown)
                     Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile,
+                        onOpenSonos = { sonosFrom = Destination.SETTINGS; origin = TransformOrigin.Center; current = Destination.SONOS },
                         onOpenApps = { appsFromSettings = true; origin = TransformOrigin.Center; current = Destination.APPS })
                     // Opened at the title a card showed, or at the rows; Back walks the page's own steps, then to where the
                     // page was opened from. With nothing to show it leaves the same way, but only while it is the page shown.
                     Destination.DISCOVER -> app.stova.discover.DiscoverScreen(container, profile,
                         start = discoverStart?.let { app.stova.discover.DiscoverStep.Title(it.type, it.tmdbId, it) } ?: app.stova.discover.DiscoverStep.Rows,
                         onLeave = { if (current == Destination.DISCOVER) back() })
+                    Destination.SONOS -> app.stova.sonos.SonosScreen(container, profile, onBack = back)
                 }
                 }
             }

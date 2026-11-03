@@ -63,7 +63,8 @@ fun HomeScreen(
     val reduceMotion = LocalReduceMotion.current
     val rotationEnabled = vm.rotationEnabled()
     val heroEnabled = app.stova.core.theme.LocalAppearance.current.heroSize != HeroSize.OFF
-    LaunchedEffect(reduceMotion, rotationEnabled, heroEnabled) { vm.setSpotlightRotation(!reduceMotion && rotationEnabled && heroEnabled) }
+    val musicHero = app.stova.sonos.LocalHomeSonos.current != null
+    LaunchedEffect(reduceMotion, rotationEnabled, heroEnabled, musicHero) { vm.setSpotlightRotation(!reduceMotion && rotationEnabled && heroEnabled && !musicHero) }
     val context = LocalContext.current
     val handoff = remember(context) { SpoleHandoff(context) }
     var actions by remember { mutableStateOf<FocusedTarget.Media?>(null) }
