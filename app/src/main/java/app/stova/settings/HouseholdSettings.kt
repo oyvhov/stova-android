@@ -9,4 +9,5 @@ data class HouseholdSettings(
     val deviceId: String = "",
     val haBaseUrl: String? = null,
     val cinema: app.stova.ha.CinemaPrefs = app.stova.ha.CinemaPrefs(),
+    val sonos: app.stova.sonos.SonosPrefs = app.stova.sonos.SonosPrefs(),
 )

@@ -18,6 +18,27 @@ import java.io.File
 import org.junit.rules.TemporaryFolder
 
 class HaSocketTest {
+    @Test fun mediaBrowserUsesWebsocketAndPassesTheOpaqueMediaIdUnchanged() = runBlocking {
+        try {
+            enqueue(); val s = socket(); s.hold(); s.start()
+            withTimeout(5_000) { s.status.first { it == HaStatus.CONNECTED } }
+            val result = s.browseMedia("media_player.room", "favorites", "FV:2/31?opaque=yes")
+            assertEquals("Music", result?.get("title")?.jsonPrimitive?.content)
+            val request = received.single { it["type"]?.jsonPrimitive?.content == "media_player/browse_media" }
+            assertEquals("FV:2/31?opaque=yes", request["media_content_id"]?.jsonPrimitive?.content)
+            assertEquals("favorites", request["media_content_type"]?.jsonPrimitive?.content)
+        } finally { scope.cancel() }
+    }
+    @Test fun independentObserverDoesNotReplaceDashboardSubscription() = runBlocking {
+        try {
+            enqueue(); val s = socket(); s.watch(setOf("light.stove")); s.start(); connected(s)
+            val snapshot = withTimeout(5_000) { s.observeEntities(setOf("media_player.room")).first() }
+            assertTrue(snapshot.isEmpty())
+            assertEquals("on", s.entities.value["light.stove"]?.state)
+            withTimeout(5_000) { while (received.none { it["type"]?.jsonPrimitive?.content == "unsubscribe_events" }) delay(10) }
+            assertEquals(2, subscriptions().size)
+        } finally { scope.cancel() }
+    }
     @get:Rule val server = MockWebServer()
     @get:Rule val dir = TemporaryFolder()
     private val received = CopyOnWriteArrayList<JsonObject>()
@@ -36,6 +57,7 @@ class HaSocketTest {
                         ws.send("""[{"id":$id,"type":"result","success":true},{"id":$id,"type":"event","event":$event}]""")
                     }
                     "get_config" -> ws.send("""{"id":$id,"type":"result","success":true,"result":{"time_zone":"Europe/Oslo","components":$components}}""")
+                    "media_player/browse_media" -> ws.send("""{"id":$id,"type":"result","success":true,"result":{"title":"Music","children":[]}}""")
                     else -> ws.send("""{"id":$id,"type":"result","success":true,"result":[]} """)
                 }
             }

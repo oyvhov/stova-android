@@ -4,6 +4,7 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.json.*
 import okhttp3.*
@@ -23,6 +24,10 @@ interface HaConnection {
     fun entitySnapshots(entityIds: Set<String>): Flow<Map<String, HaEntity>> =
         entities.map { live -> live.filterKeys { it in entityIds } }.dropWhile { it.isEmpty() }
     fun watch(entityIds: Set<String>)
+    /** An independent, lifecycle-collected subscription; never replaces the dashboard's watch. */
+    fun observeEntities(entityIds: Set<String>): Flow<Map<String, HaEntity>> =
+        entities.map { live -> live.filterKeys { it in entityIds } }
+    suspend fun browseMedia(entityId: String, contentType: String? = null, contentId: String? = null): JsonObject? = null
     /** Pages that need live data while shown hold the connection; with no holder and no watched id the socket rests. */
     fun hold() {}
     fun release() {}
@@ -57,6 +62,11 @@ class HaSocket(
     private var socket: WebSocket? = null
     private var running = false
     private var holders = 0
+    private class Observer(val ids: Set<String>, val send: (Map<String, HaEntity>) -> Unit, val fail: () -> Unit) {
+        var subscription: Int? = null
+        var values: Map<String, HaEntity> = emptyMap()
+    }
+    private val observers = mutableSetOf<Observer>()
     private var resting: Job? = null
     private val demanded get() = watched.isNotEmpty() || holders > 0
     private var generation = 0
@@ -115,6 +125,30 @@ class HaSocket(
     override fun hold() = post { holders++; reconcileDemand() }
     override fun release() = post { holders = (holders - 1).coerceAtLeast(0); reconcileDemand() }
 
+    override fun observeEntities(entityIds: Set<String>): Flow<Map<String, HaEntity>> = callbackFlow {
+        if (entityIds.isEmpty()) { trySend(emptyMap()); close(); return@callbackFlow }
+        val observer = Observer(entityIds.toSet(), { trySend(it) }, { close(java.io.IOException("HA subscription failed")) })
+        post {
+            observers += observer; holders++
+            if (status.value == HaStatus.CONNECTED) subscribeObserver(observer)
+            reconcileDemand()
+        }
+        awaitClose { post {
+            observers -= observer; holders = (holders - 1).coerceAtLeast(0)
+            observer.subscription?.let { socket?.send(unsubscribe(nextId++, it)) }
+            reconcileDemand()
+        } }
+    }
+    private fun subscribeObserver(observer: Observer) {
+        observer.values = emptyMap()
+        observer.subscription = nextId++.also { socket?.send(subscribeEntities(it, observer.ids)) }
+    }
+    override suspend fun browseMedia(entityId: String, contentType: String?, contentId: String?): JsonObject? =
+        request { id -> buildJsonObject {
+            put("id", id); put("type", "media_player/browse_media"); put("entity_id", entityId)
+            if (contentType != null && contentId != null) { put("media_content_type", contentType); put("media_content_id", contentId) }
+        }.toString() }?.takeIf { it["success"]?.jsonPrimitive?.booleanOrNull == true }?.get("result") as? JsonObject
+
     private suspend fun reconcileDemand() {
         if (!running) return
         if (demanded) {
@@ -136,6 +170,7 @@ class HaSocket(
     }
     private fun disconnect() {
         generation++; socket?.cancel(); socket = null; subscription = null
+        observers.forEach { it.subscription = null; it.values = emptyMap() }
         pending.values.forEach { it.complete(null) }; pending.clear()
     }
     private suspend fun connect() {
@@ -161,6 +196,7 @@ class HaSocket(
                         "auth_ok" -> {
                             failures = 0; authFailures = 0; mutableStatus.value = HaStatus.CONNECTED
                             webSocket.send(supportedFeatures(nextId++)); resubscribe()
+                            observers.forEach(::subscribeObserver)
                         }
                         "auth_invalid" -> {
                             disconnect(); authFailures++
@@ -174,8 +210,17 @@ class HaSocket(
                             awaitingSnapshot = false
                             // Even an empty first response is authoritative: cached entities may have been deleted.
                             snapshots.value = WatchedEntities(watched, mutableEntities.value)
+                        } else {
+                            val observer = observers.find { it.subscription == message["id"]?.jsonPrimitive?.intOrNull } ?: continue
+                            val event = message["event"] as? JsonObject ?: continue
+                            observer.values = EntityStateDecoder.apply(observer.values, event).filterKeys { it in observer.ids }
+                            observer.send(observer.values)
                         }
-                        "result" -> message["id"]?.jsonPrimitive?.intOrNull?.let { pending.remove(it)?.complete(message) }
+                        "result" -> message["id"]?.jsonPrimitive?.intOrNull?.let { id ->
+                            pending.remove(id)?.complete(message)
+                            if (message["success"]?.jsonPrimitive?.booleanOrNull == false)
+                                observers.find { it.subscription == id }?.fail?.invoke()
+                        }
                     }
                 }
             }
