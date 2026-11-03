@@ -7,20 +7,26 @@ import kotlinx.serialization.json.*
 
 @Serializable data class HaEntityInfo(val name: String? = null, val room: String? = null, val hidden: Boolean = false,
     val originalName:String?=null,val disabled:Boolean=false,val icon:String?=null,val originalIcon:String?=null,
-    val platform:String?=null)
+    val platform:String?=null,
+    /** Device registry identity, kept only for Sonos players so the catalogue stays lean. */
+    val model:String?=null,val manufacturer:String?=null)
 @Serializable data class HaRegistry(val entities: Map<String, HaEntityInfo> = emptyMap())
 data class HaCatalogItem(val entity: HaEntity, val name: String, val room: String?, val hidden: Boolean)
 internal fun JsonObject.text(key: String) = (get(key) as? JsonPrimitive)?.contentOrNull
+private fun JsonObject.string(key: String) = (get(key) as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()?.takeIf(String::isNotEmpty)
 
 fun parseRegistry(areas: JsonArray, devices: JsonArray, entities: JsonArray): HaRegistry {
     val rooms = areas.filterIsInstance<JsonObject>().mapNotNull { j -> j.text("area_id")?.let { it to j.text("name") } }.toMap()
-    val deviceRooms = devices.filterIsInstance<JsonObject>().mapNotNull { j -> j.text("id")?.let { it to j.text("area_id") } }.toMap()
+    val deviceList = devices.filterIsInstance<JsonObject>().mapNotNull { j -> j.text("id")?.let { it to j } }.toMap()
+    val deviceRooms = deviceList.mapValues { (_, j) -> j.text("area_id") }
     return HaRegistry(entities.filterIsInstance<JsonObject>().mapNotNull { j ->
         val id = j.text("entity_id") ?: return@mapNotNull null
         val areaId = j.text("area_id") ?: deviceRooms[j.text("device_id")]
+        val device = deviceList[j.text("device_id")]?.takeIf { j.text("platform") == "sonos" }
         id to HaEntityInfo(j.text("name"), rooms[areaId],
             j.text("hidden_by") != null || j.text("disabled_by") != null || j.text("entity_category") in setOf("config", "diagnostic"),
-            originalName=j.text("original_name"),disabled=j.text("disabled_by")!=null,icon=j.text("icon"),originalIcon=j.text("original_icon"),platform=j.text("platform"))
+            originalName=j.text("original_name"),disabled=j.text("disabled_by")!=null,icon=j.text("icon"),originalIcon=j.text("original_icon"),platform=j.text("platform"),
+            model=device?.string("model"),manufacturer=device?.string("manufacturer"))
     }.toMap())
 }
 

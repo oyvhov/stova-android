@@ -55,13 +55,15 @@ class SonosPreviewActivity : ComponentActivity() {
     }
 }
 
-internal fun sonosPreviewRooms(): List<SonosRoom> = listOf("Stova", "Kjøkken", "Soverom", "Terrasse").mapIndexed { index, name ->
+/** Models as HA's device registry reports them; the last room has none, so it gets the neutral speaker. */
+internal fun sonosPreviewRooms(): List<SonosRoom> = listOf("Stova" to "Arc", "Kjøkken" to "Era 100", "Soverom" to "One SL",
+    "Terrasse" to "Move 2", "Kontor" to null).mapIndexed { index, (name, model) ->
     SonosRoom(HaEntity("media_player.room$index", if (index < 2) "playing" else "paused", StovaJson.parseToJsonElement("""{
       "media_title":"A Quiet Kind of Blue", "media_artist":"Evening Orchestra", "media_album_name":"Between the hills",
       "entity_picture":"preview-art", "volume_level":0.24, "media_position":112, "media_duration":284,
       "supported_features":3145727, "source":"Music", "source_list":["TV","Line-in"],
       "group_members":["media_player.room$index"]
-    }""").jsonObject, 0, 0), name)
+    }""").jsonObject, 0, 0), name, model = model, manufacturer = model?.let { "Sonos" })
 }
 
 /** A fixed illustrative album sleeve for screenshots, using the existing theme's paint colours. */

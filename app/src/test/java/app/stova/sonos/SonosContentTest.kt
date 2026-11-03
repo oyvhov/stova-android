@@ -95,4 +95,43 @@ class SonosContentTest {
         compose.onNodeWithText("Bruk").performClick()
         assertEquals(setOf(room.id, other.id), saved)
     }
+
+    private fun attrs(room: SonosRoom, vararg extra: Pair<String, String>) = room.copy(entity = room.entity.copy(attributes =
+        kotlinx.serialization.json.JsonObject(room.entity.attributes + extra.map { (k, v) -> k to kotlinx.serialization.json.JsonPrimitive(v) })))
+    private val era = room.copy(model = "Era 300", manufacturer = "Sonos")
+    private val plain = room.copy(entity = room.entity.copy(id = "media_player.loft", state = "paused"), name = "Loft")
+    private fun active(id: String, value: Boolean) =
+        compose.onNodeWithTag("sonos-speaker-$id", useUnmergedTree = true).assert(SemanticsMatcher.expectValue(SonosSpeakerActive, value))
+
+    @Test fun roomsShowTheirSpeakerAndModelOnlyWhenTheRegistryKnowsIt() {
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SonosContent(SonosState(listOf(era, plain), loading = false), era.id, {}, {}, {}, {}, {})
+        } }
+        compose.onAllNodesWithText("Era 300", useUnmergedTree = true).onFirst().assertExists()
+        compose.onNodeWithTag("sonos-speaker-${plain.id}", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("sonos-speaker-${era.id}", useUnmergedTree = true).assertExists()
+        // Reduced motion: the playing speaker stays still.
+        active(era.id, false)
+    }
+
+    @Test fun speakerMovesOnlyWhileMusicPlays() {
+        val tv = attrs(room.copy(entity = room.entity.copy(id = "media_player.tv"), name = "TV-rom"), "source" to "TV")
+        compose.mainClock.autoAdvance = false
+        compose.setContent { StovaTheme(reduceMotion = false) {
+            SonosContent(SonosState(listOf(era, plain, tv), loading = false), era.id, {}, {}, {}, {}, {})
+        } }
+        compose.mainClock.advanceTimeBy(500)
+        active(era.id, true)
+        active(plain.id, false)
+        active(tv.id, false)
+    }
+
+    @Test fun groupDialogShowsEachRoomsOwnSpeaker() {
+        val sub = room.copy(entity = room.entity.copy(id = "media_player.sub", state = "idle"), name = "Kjellar", model = "Sub Mini")
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SonosGroupDialog(era, listOf(era, sub), false, false, {}, {})
+        } }
+        compose.onAllNodesWithText("Sub Mini", substring = true, useUnmergedTree = true).onFirst().assertExists()
+        compose.onNodeWithTag("sonos-speaker-${sub.id}", useUnmergedTree = true).assertExists()
+    }
 }

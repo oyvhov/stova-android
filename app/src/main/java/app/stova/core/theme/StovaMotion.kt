@@ -60,6 +60,10 @@ object StovaMotion {
     const val FocusRingMillis = 120
     const val FocusZoomMillis = 180
     const val RowTravelMillis = 380
+    /** One slow breath of a Sonos speaker's light while music plays; never under reduced motion. */
+    const val SpeakerBreathMillis = 3600
+    /** The speaker's drawing updates at most this often; the breath is too slow to need every frame. */
+    const val SpeakerFrameMillis = 50L
     /** About 170 ms to rest from a standing start; quicker than any tween here, with no overshoot. */
     const val SettleStiffness = 800f
     /** Within 1 % of the distance after about 380 ms, matching [RowTravelMillis]. */

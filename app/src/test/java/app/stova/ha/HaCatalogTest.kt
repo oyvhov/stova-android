@@ -47,4 +47,16 @@ class HaCatalogTest {
         val item=entityCatalog(emptyList(),registry).single()
         assertTrue(item.hidden);assertEquals("Batteri",item.name);assertEquals("unavailable",item.entity.state)
     }
+    @Test fun sonosEntitiesCarryTheirDeviceModelOthersStayLean() {
+        val registry = parseRegistry(array("[]"),
+            array("""[{"id":"s","model":"Era 100","manufacturer":"Sonos"},{"id":"c","model":"Chromecast","manufacturer":"Google"},{"id":"m","model":42}]"""),
+            array("""[{"entity_id":"media_player.kitchen","platform":"sonos","device_id":"s"},{"entity_id":"media_player.cast","platform":"cast","device_id":"c"},
+                {"entity_id":"media_player.odd","platform":"sonos","device_id":"m"},{"entity_id":"media_player.lone","platform":"sonos"}]"""))
+        assertEquals("Era 100", registry.entities["media_player.kitchen"]?.model)
+        assertEquals("Sonos", registry.entities["media_player.kitchen"]?.manufacturer)
+        assertNull(registry.entities["media_player.cast"]?.model)
+        assertNull(registry.entities["media_player.lone"]?.model)
+        // A malformed registry value is not trusted as a name.
+        assertNull(registry.entities["media_player.odd"]?.model)
+    }
 }

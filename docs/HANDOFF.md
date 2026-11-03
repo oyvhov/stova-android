@@ -1,3 +1,8 @@
+# Sonos: teikna høgtalarar med modell frå HA
+2026-11-03 (Claude, på bestilling via Codex): høgtalarteikningar (One/Era/Five/Move/Roam/lydplanker/Sub/Amp, nøytral for ukjend) i romlista, ved volumet, i grupperekkja og gruppedialogen. Modell frå HA device-registeret (`HaEntityInfo.model/manufacturer`, berre Sonos). Lyset pustar berre medan musikk spelar. Plan `docs/superpowers/plans/2026-11-03-sonos-hoyttalarar.md`.
+Kontroll: 1097 testar, 0 feil; lint 0 feil; debug-APK bygd, ikkje installert. Skjermbilete i `docs/images/sonos-speakers.png` m.fl.
+Står att: Loftet (Codex) – verkelege modellstrengar, utsjånad og rørsle på TV. Ingen adb, installasjon eller push i denne økta.
+
 # Sonos, Music Assistant og «Spelar no»
 2026-11-03: Fullført lokalt i `e8fdc0b` og `7471694`: valfri Sonos-modul via HA, eiga side/ikon/Appar-flis, avspeling, romvolum, gruppering, favorittar og medieblaing; MA via eksplisitte spelarkoplingar. Ingen push eller publisering.
 Heim har valfri musikkunst og ein separat «Spelar no»-widget med rom, omslag, spel/pause og sideopning. TV-lyd sperrar Heim-kunst og er utelate frå widgeten. Etter siste tilbakemelding er knappane dempa, rom som spelar merkte og «Musikk i heile huset» fjerna.

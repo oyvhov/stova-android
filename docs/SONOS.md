@@ -31,6 +31,16 @@ Koordinatoren blir verande. Om gruppa er endra frå ein annan app, må romvalet 
 att. Ein delvis mislukka operasjon stoppar vidare gruppeendringar og viser den faktiske
 tilstanden frå HA.
 
+## Høgtalarane
+
+Kvart rom viser ei teikning av høgtalaren slik han faktisk ser ut, med modellnamnet ved volumet
+og i gruppevalet. Modellen kjem frå einingsregisteret i Home Assistant, ikkje frå namnet på
+rommet. Ukjende modellar får eit nøytralt motiv. Lyset på høgtalaren pustar sakte berre medan
+musikk faktisk spelar; det viser ikkje lydnivået. Det står stille ved pause, TV-lyd, fråkopling
+og med redusert rørsle.
+
+![Høgtalarformene](images/sonos-speakers.png)
+
 ## Music Assistant
 
 Legg til Music Assistant i Home Assistant, slå på **Bruk Music Assistant** i Stova og
