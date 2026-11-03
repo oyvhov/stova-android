@@ -39,7 +39,7 @@ med den nye knappen.
   økta medan Heim er framme utan at kortet blir sett.
 - På Appar-sida har kortet inga live-økt og viser ei roleg Sonos-flate.
 - Kortet startar Heim-økta på nytt når favoritten blir lagt til; det er same eine abonnement.
-- Ikkje prøvd på eining: fokus/rørsle på TV, ekte omslag, TV-lyd og fråkopla rom på anlegget.
+- Einingstestane under er gjorde med eigaren sitt løyve. Barneprofil/stor skrift og feilvariantar er dekte av kontrollerte testar, ikkje alle på begge TV-ane.
 
 ## Tilbake i biblioteket (funn frå Loftet)
 
@@ -123,3 +123,69 @@ og ID som siste utveg; like namn skilde med modell, så ID; ei lagra kopling bli
 tilstanden kjem, og med ID før. Feila ved kompilering før rettinga. Målretta `app.stova.sonos.*`,
 `app.stova.ha.cards.*`, `HaCatalogTest`, `DesignRulesTest`, `ThemePaletteTest` med skjermtestar:
 **206 testar, 0 feil**. `lintDebug` 0 feil, `assembleTv` grønt. Ikkje installert av Claude.
+
+## Ekte TV-ar: installasjon og kontroll (Codex)
+
+Eigaren utvida løyvet til installasjon på Shield og Sonos-handlingar medan han var borte, med volum 0.
+Siste produksjonskode `ffecfd0` er installert med `Install-Stova.ps1 -Tv` / `install -r` på Loftet
+(192.168.10.125) og NVIDIA Shield Android TV (192.168.10.182). Profilar, kontoar og eksisterande
+favorittar er bevarte. Ingen avinstallering, datatømming, force-stop, launcher-deaktivering eller push.
+
+- Sonos aktivert på Shield; same modul på Loftet. Sonos-favoritt lagt til sist før «Alle appar» på
+  begge. Ekte omslag fyller kortet, med låt/rom/status; OK opnar sida. På Loftet er langt OK,
+  flytt eitt steg til venstre og tilbake prøvd, med opphavleg rekkjefølgje elles bevart.
+- Romlista vist/gøymd, større omslag, fokus og daglege kontrollar utan rulling: blått tema på
+  Shield og Halloween på Loftet. Valet overlever biblioteket. Lydplanke er valt på begge.
+- Sonos-favoritten «2023» vart starta gjennom biblioteket: «Can't Tame Her», Zara Larsson.
+  Ekte spel/pause, førre spor, kjeldeval og live metadata/omslag prøvde. Spel/pause held fokus
+  på sida og i Heim-widgeten etter `aefca5e`. Maskinvare-Tilbake frå Playlists går til Favorites.
+- Volum 0 stadfesta på Kjøkken, Storestova og Lydplanke. Lydplanka hugsa først 10 % på TV-kjelda;
+  dette vart sett til 0 før lydtesten. Ingen test har auka volumet.
+- Gruppering: Lydplanke lagt til den eksisterande Kjøkken/Storestova-gruppa, tre medlemmer
+  observerte, så Lydplanke fjerna att. Kjøkken og Storestova er framleis grupperte som før.
+- Heim-kunst slått på mellombels: musikk tok over bakgrunn og hero. Bytte til TV gav vanleg
+  filmbakgrunn, TV-kort utan gammalt omslag og Sonos-side utan albumkunst, også medan valet stod på.
+- Platespelar er faktisk fråkopla og viser reservefigur/status. Ingen handling sendt til han.
+- Tom krasjbuffer på begge; Stova Heim-tenesta både aktivert og bound. Loftet fekk éin HA-feil
+  etter installasjonen. HA svarte HTTP 200 frå eininga; vanleg ut/inn av appen kopla til att.
+  Ingen innlogging endra. Dette var ein mellombels observasjon, ikkje ei bevist nettverksretting.
+- Under fokustesting med uiautomator hamna eitt OK i lys-popupen og slo Stova-lyset av. Det vart
+  straks sett på att, med lagra 74 % lysstyrke. Loftet-lyset vart ikkje endra. Vanleg D-pad med
+  berre skjermbilete mellom tastane fungerer; uiautomator som årsak er ei slutning, ikkje bevist.
+
+Lokale skjermbilete: `.superpowers/sonos-sidebar-card-2026-11-03/`:
+`shield-home-card-final-small.png`, `shield-focus-fixed-final-small.png`, `loftet-hidden-final.png`,
+`shield-widget-playing-final-small.png`, `shield-widget-paused-final-small.png`,
+`shield-home-art-playing-small.png`, `shield-tv-blocks-home-art-small.png` og `shield-tv-main-final-small.png`.
+Desse er faktiske skjermbilete; nokre Shield-bilete er skalerte ned frå 3840 × 2160 for lesing.
+
+Etter siste installasjon fekk også Shield ei tilkoplingsfeil utan transportfeil i `StovaHa`-loggen.
+Android-innstillingane på Shield er translucent og stoppar ikkje Stova, så det var ikkje nok å
+opne dei og gå tilbake. Full ut/inn via Spole si startside og HEIM kopla til att på begge einingane.
+Ingen avspeling i Spole. Årsaka til den mellombelse appøkta etter installasjon er ikkje fastslått;
+installasjons-/livssyklussporet står att dersom det kjem att ved normal bruk. Skjermbilete:
+`shield-ha-restarted-small.png`, `loftet-ha-final.png`. Øyvind er aktiv profil igjen på begge.
+
+### Music Assistant og sluttilstand
+
+På Shield er Music Assistant aktivert, og native Sonos Lydplanke er uttrykkeleg kopla til
+MA-spelaren «Lydplanke» (`media_player.lydplanke_2`). Dei andre romma er ikkje automatisk kopla.
+Dialogen viser no Sonos Kjøkken/Lydplanke/Platespelar/Storestova med rette namn. MA-biblioteket
+opnar Artists/Albums/Tracks/Playlists m.m.; Playlists → «2023 UP» viser ekte låtar og omslag.
+Spel → stadfest Spel starta «Can't Tame Her» med native romvolum 0; sida viste Spelar no,
+Zara Larsson, framdrift og ekte omslag. Pause fungerte, med fokus halde på knappen. Romlista
+gøymd etterpå: alle fire snarvegane, inkludert Music Assistant, innanfor same skjerm.
+Sjå `shield-ma-names-working-small.png`, `shield-ma-linked-small.png`, `shield-ma-library-small.png`,
+`shield-ma-playlists-small.png`, `shield-ma-playing-small.png`, `shield-sonos-complete-small.png`.
+
+Slutt: Lydplanke er pausa ved 0, Kjøkken/Storestova er pausa og grupperte som før, Platespelar
+fråkopla. Native kø og MA-kø på Lydplanke vart erstatta av testspelelister med eigaren sitt løyve.
+Heim-kunst er slått av att etter testen; Sonos-sidekunst og «Spelar no» er på. På Loftet er MA
+framleis av/ukopla; same installerte kode støttar oppsettet, men MA-avspeling vart prøvd frå Shield.
+Ingen andre MA-rom, kølegging, tilfeldig/gjenta eller høyrbar lyd er testa. Ingen nye krasj,
+og Heim-tenestene er bevarte. Testane verifiserer handling og status, ikkje lydkvalitet ved volum 0.
+
+Siste kontroll etter MA-pause: HA gjekk seinare frå pause til «Klar» på Lydplanke og tømde
+låttittel/omslag. Kortet viste då korrekt reserveflate; ingen musikk spelte. «På pause»-bileta er
+frå sjølve testen. Loftet si Sonos-side er kontrollert att etter oppvakning: live rom, 0 %, rett
+opphavleg gruppering, ingen tilkoplingsfeil (`loftet-last-sonos-check.png`).

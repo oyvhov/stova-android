@@ -4,7 +4,7 @@ Bestilling 3. november 2026, eigaren: «eg skal kunne gjemme høgtalarane som ei
 slik at det som spelar no får fokus», «Korleis er kortet på framsida, som ein kan setje inn i rad?
 Det skal vise status og coverart over heile» og «Tenk heilskapen gjennom heile Stova-appen».
 Bindande frå før: profesjonelt, det meste på éin skjerm, dempa knappar, ekte høgtalarfigurar,
-tema/sesong integrert, TV-lyd aldri som musikkunst. Berre visuell testing på Loftet.
+tema/sesong integrert, TV-lyd aldri som musikkunst. Først berre visuell testing; eigaren gav seinare løyve til installasjon på begge TV-ar og Sonos-handlingar ved volum 0.
 
 ## A. Romlista som sidemeny
 
@@ -38,14 +38,14 @@ tema/sesong integrert, TV-lyd aldri som musikkunst. Berre visuell testing på Lo
 
 - [x] Målretta Sonos/apps/home-testar, `DesignRulesTest`, `ThemePaletteTest`, skjermtestar,
   `lintDebug assembleDebug`. Les dei rendra bileta.
-- [ ] Loftet: root verifiserer visuelt (ingen lyd-, gruppe- eller lyshandlingar).
+- [x] Loftet: installert og prøvd visuelt med Halloween, ekte omslag, rommeny, kort og avspeling ved 0 etter utvida løyve.
 - [x] TV-funn: `HaImage` må vente på autentisering før Coil får ein modell. Testen
   `HaImageLoadingTest` feila før rettinga og er grøn etter; kameraplassen blir halden av medan
   innlogginga ventar. Kamera-/Sonos-/design-testar, lint og TV-bygg grøne.
 - [x] TV-funn: Tilbake frå ei favorittmappe hoppa til Sonos-rota. HA gir Favorites og kvar
   favorittmappe same id/type; mappeopning legg no alltid eitt nivå på stabelen
   (`SonosLibraryNavigationTest`, raud før, grøn etter). Lint og TV-bygg grøne.
-- [ ] Ny bestilling: installer og prøv på Shield òg. Eigaren har no tillate Sonos-handlingar
+- [x] Ny bestilling: installer og prøv på Shield òg. Eigaren har no tillate Sonos-handlingar
   medan han er borte, med volum på 0. Kontroller volum før test og rydd tilbake etterpå.
 
 Verifisering: [`../../verification/2026-11-03-sonos-sidebar-kort.md`](../../verification/2026-11-03-sonos-sidebar-kort.md).

@@ -8,13 +8,15 @@ avkryssingsboksar i dei er inga bestilling.
 
 | Plan | Står att |
 |---|---|
-| [Sonos: romliste som sidemeny og Sonos-kort i favorittrada](2026-11-03-sonos-sidebar-kort.md) | Implementert og skjermtesta lokalt; root verifiserer visuelt på Loftet. |
-| [Sonos: teikna høgtalarar med modell frå HA](2026-11-03-sonos-hoyttalarar.md) | Installert og visuelt prøvd på Loftet med verkelege modellar og favorittar. Lydtest utsett: eigaren valde berre visuell testing. |
-| [Sonos gjennom Home Assistant](2026-11-03-sonos.md) | Implementert med Music Assistant, Heim-kunst og widget. Loftet: rom, omslag, bibliotek, gruppevising og widget prøvde; lydhandlingar, MA og TV-lyd på anlegget står att. |
 | [Oppdag i Stova: Seerr gjennom Spole](2026-11-01-oppdag.md) | Oppgåve 11 (TV-ane) ventar på eigaren; Spole-delen på greina `launcher-discover`. Spesifikasjon: [`../specs/2026-11-01-oppdag-design.md`](../specs/2026-11-01-oppdag-design.md). |
 | [Eineståande launcher: finpuss, Heim etter tid, fart og huset](2026-10-26-outstanding-launcher.md) | Steg 2–9. I steg 4 er punkt 8 (snøggmenyen på Innstillingar) gjort. |
 
 ## Historikk
+
+- 2026-11-03: [Sonos gjennom Home Assistant](2026-11-03-sonos.md), fullført og installert på begge TV-ar. Native kontrollar og TV-kunst prøvde; Music Assistant-bibliotek og avspeling/pause prøvde på Shield ved 0. Fleire MA-rom og høyrbar lyd er ikkje prøvde.
+
+- 2026-11-03: [Sonos: sidemeny og favorittkort](2026-11-03-sonos-sidebar-kort.md), fullført og prøvd på Loftet og Shield, inkludert avspeling/gruppering ved 0 og sperring av TV-kunst. [Verifisering](../../verification/2026-11-03-sonos-sidebar-kort.md).
+- 2026-11-03: [Sonos-høgtalarar](2026-11-03-sonos-hoyttalarar.md), fullført; ekte modellar, musikkaktivitet og TV-lyd prøvde på TV-ane.
 
 - 2026-11-03: [Sonos på éin skjerm, navigasjon og tema](2026-11-03-sonos-ein-skjerm.md), fullført, installert og visuelt prøvd på Loftet; 76 grøne testar.
 

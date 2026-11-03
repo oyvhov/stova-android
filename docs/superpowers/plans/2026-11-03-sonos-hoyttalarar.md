@@ -34,8 +34,7 @@ gruppevalet var ei flat brytarliste. Medlemmane i ei gruppe var berre ei namneli
 - [x] 7. Loftet: tv-bygg installert og visuell kontroll med verkelege HA-data (Codex):
   Play:3, Playbar, Era 100 og Play:1, grupper, fråkopla rom, favorittar/spelelister,
   biblioteklogoar og Heim-widget. D-pad og langt OK prøvde. Sjå verifiseringsloggen.
-- Utsett 7b: rørsle under verkeleg musikk/TV-lyd er ikkje bestilt no. Eigaren svarte
-  «Berre visuell testing no» etter overleveringa; ingen lydhandlingar skal sendast.
+- [x] 7b: seinare løyve frå eigaren: ekte musikk ved 0, TV-lyd, gruppeendring og retur er prøvde på TV-ane 3. november. Sjå `docs/verification/2026-11-03-sonos-sidebar-kort.md`.
 
 Former: One/One SL/Play:1, Era 100, Era 300 (timeglas, H160 × B260), Five/Play:5/Play:3, Beam, Arc/Arc Ultra,
 Ray (lameller), Playbar, Playbase, Move/Move 2 (smalnar), Roam (kapsel med rygg), Sub
