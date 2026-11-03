@@ -42,6 +42,9 @@ tema/sesong integrert, TV-lyd aldri som musikkunst. Berre visuell testing på Lo
 - [x] TV-funn: `HaImage` må vente på autentisering før Coil får ein modell. Testen
   `HaImageLoadingTest` feila før rettinga og er grøn etter; kameraplassen blir halden av medan
   innlogginga ventar. Kamera-/Sonos-/design-testar, lint og TV-bygg grøne.
+- [x] TV-funn: Tilbake frå ei favorittmappe hoppa til Sonos-rota. HA gir Favorites og kvar
+  favorittmappe same id/type; mappeopning legg no alltid eitt nivå på stabelen
+  (`SonosLibraryNavigationTest`, raud før, grøn etter). Lint og TV-bygg grøne.
 - [ ] Ny bestilling: installer og prøv på Shield òg. Eigaren har no tillate Sonos-handlingar
   medan han er borte, med volum på 0. Kontroller volum før test og rydd tilbake etterpå.
 

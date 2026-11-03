@@ -49,9 +49,13 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
         if (target != null && target === stack.lastOrNull() && retry == 0) { loading = false; error = false; return@LaunchedEffect }
         loading = true; error = false
         val found = repository.browse(room.id, target)
-        if (found == null) error = true else {
-            stack = if (target == null) listOf(found) else if (stack.lastOrNull()?.id == found.id && stack.lastOrNull()?.type == found.type)
-                stack.dropLast(1) + found else stack + found
+        // Opening a folder is always one level deeper, whatever ids come back: HA's Sonos browser
+        // answers Favorites and each favourites folder alike (id "", type "favorites").
+        // Only reloading the very node already on top (by identity, not by id) replaces it.
+        if (found == null) error = true else stack = when {
+            target == null -> listOf(found)
+            target === stack.lastOrNull() -> stack.dropLast(1) + found
+            else -> stack + found
         }
         loading = false
     }

@@ -40,3 +40,23 @@ med den nye knappen.
 - På Appar-sida har kortet inga live-økt og viser ei roleg Sonos-flate.
 - Kortet startar Heim-økta på nytt når favoritten blir lagt til; det er same eine abonnement.
 - Ikkje prøvd på eining: fokus/rørsle på TV, ekte omslag, TV-lyd og fråkopla rom på anlegget.
+
+## Tilbake i biblioteket (funn frå Loftet)
+
+Funn: rot → Favorites → Tracks, og rot → Favorites → Playlists → spel, så Tilbake: sida hoppa til
+Sonos-rota i staden for Favorites (`.superpowers/sonos-sidebar-card-2026-11-03/favorites-back-step.png`).
+
+Årsak, frå primærkjelda `homeassistant/components/sonos/media_browser.py` (HA core, `dev`):
+`favorites_payload` og `favorites_folder_payload` returnerer begge `media_content_id=""` og
+`media_content_type="favorites"`. `SonosLibrary` bytte ut toppen av stabelen når svaret hadde
+same id/type som toppen, så «Tracks»/«Playlists» erstatta «Favorites».
+
+Retting: å opne ei mappe legg alltid eitt nivå på stabelen; berre ei omlasting av noden som alt
+ligg øvst (same objekt) erstattar han. Ingen ID-heuristikk.
+
+Testar først (`SonosLibraryNavigationTest`, HA-forma svar): Tilbake-tasten går Tracks → Favorites →
+rot → ut; topp-knappen etter spel frå Playlists går til Favorites; ei mislukka mappe som blir prøvd
+att, kjem øvst utan å erstatte foreldra. Alle tre feila før rettinga (Favorites var borte etter
+Tilbake) og er grøne etter. Målretta `app.stova.sonos.*`, `app.stova.ha.cards.*`, `DesignRulesTest`,
+`ThemePaletteTest` med skjermtestar: **187 testar, 0 feil**. `lintDebug` 0 feil, `assembleTv` grønt
+(`app/build/outputs/apk/tv/app-tv.apk`). Ikkje installert av Claude.
