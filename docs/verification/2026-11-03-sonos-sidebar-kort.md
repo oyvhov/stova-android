@@ -97,3 +97,29 @@ tittel → spel/pause → lys → media, og Venstre same veg attende, i alle var
 Merk: i testen sluttar tittelen der spel/pause byrjar (870 px), medan Shield-dumpen viser 9 px
 overlapp (688 mot 679). Neste spor: resultatet av Venstre frå mediebrikka på eininga, og om ein
 Send-TvRemote-Høgre kan gi tastrepetisjon (tre steg ville gi akkurat dette).
+
+### Oppfølging frå root (Shield)
+
+Høgre/Venstre/spel i toppfeltet virkar på Shield når ein ikkje tek uiautomator-dumpar mellom
+tastane. Root sin slutning (ikkje bevist): dumpane forstyrra fokus i toppfeltet. Widgeten held
+fokus ved spel og pause (`shield-widget-playing-final-small`, `paused-final-small`). HA på Loftet
+kom att gjennom vanleg livssyklus (systeminnstillingar og så HEIM); ingen innloggingsendring.
+
+## Namn i «Kople musikkspelarar» (Shield)
+
+Funn: dialogen viste rå ID-ar (`media_player.kjokken1`, `media_player.sonos_lydplanke`,
+`media_player.lydplanke_2`) fordi HA-registeret ikkje hadde namn, og `name()` berre brukte
+registernamn/originalnamn (`shield-ma-links-small.png`, `shield-ma-choices-small.png`).
+
+Retting: `musicAssistantNames` vel namnet personen gav i HA, så `friendly_name` frå tilstanden,
+så originalnamnet, så ID-en. Like namn får Sonos-modellen frå einingsregisteret, elles ID-en, så to
+spelarar aldri ser like ut. Dialogen abonnerer på tilstanden til berre Sonos- og MA-spelarane
+(`observeEntities`), berre medan han er RESUMED; ingen tenestekall, ingen polling av alle einingar.
+Koplingane er framleis eksplisitte val; lagra koplingar blir ikkje endra og blir viste med namn.
+Layouten er uendra.
+
+Testar først (`MusicAssistantTest`): venlege namn utan registernamn, registernamn vinn, originalnamn
+og ID som siste utveg; like namn skilde med modell, så ID; ei lagra kopling blir vist med namn når
+tilstanden kjem, og med ID før. Feila ved kompilering før rettinga. Målretta `app.stova.sonos.*`,
+`app.stova.ha.cards.*`, `HaCatalogTest`, `DesignRulesTest`, `ThemePaletteTest` med skjermtestar:
+**206 testar, 0 feil**. `lintDebug` 0 feil, `assembleTv` grønt. Ikkje installert av Claude.
