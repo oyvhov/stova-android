@@ -47,11 +47,11 @@ class SonosBusyFocusTest {
 
     @Test fun hiddenRoomsPlayButtonKeepsFocusWhileBusyAndIgnoresTheSecondOk() {
         page(roomsOpen = false)
-        compose.onNodeWithText("Pause").assertIsFocused()
+        compose.onNodeWithContentDescription("Pause").assertIsFocused()
         ok()
         assertEquals(listOf<SonosAction>(SonosAction.PlayPause), actions)
         assertTrue(busy)
-        compose.onNodeWithText("Pause").assertIsFocused()
+        compose.onNodeWithContentDescription("Pause").assertIsFocused()
         ok()
         assertEquals(1, actions.size)
         compose.onNodeWithTag("sonos-room-media_player.stova").assertDoesNotExist()
@@ -63,10 +63,10 @@ class SonosBusyFocusTest {
     @Test fun openRoomsTransportKeepsFocusWhileBusy() {
         page(roomsOpen = true)
         compose.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
-        compose.onNodeWithText("Førre spor").assertIsFocused()
+        compose.onNodeWithContentDescription("Førre spor").assertIsFocused()
         ok()
         assertEquals(listOf<SonosAction>(SonosAction.Previous), actions)
-        compose.onNodeWithText("Førre spor").assertIsFocused()
+        compose.onNodeWithContentDescription("Førre spor").assertIsFocused()
         ok()
         assertEquals(1, actions.size)
     }
@@ -84,8 +84,8 @@ class SonosBusyFocusTest {
 
     @Test fun unsupportedPlaybackStaysDisabled() {
         page(roomsOpen = false, features = 0)
-        compose.onNodeWithText("Pause").assertIsNotEnabled()
-        compose.onNodeWithText("Førre spor").assertIsNotEnabled()
+        compose.onNodeWithContentDescription("Pause").assertIsNotEnabled()
+        compose.onNodeWithContentDescription("Førre spor").assertIsNotEnabled()
     }
 
     @Test fun homeWidgetPlayKeepsFocusWhileBusyAndIgnoresRepeats() {

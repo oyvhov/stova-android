@@ -63,4 +63,6 @@
     <string name="sonos_card_buffering">Lastar</string>
     <string name="sonos_rooms_hide">Gøym rom</string>
     <string name="sonos_rooms_show">Rom · %1$s</string>
+    <string name="sonos_fullscreen">Fullskjerm</string>
+    <string name="sonos_fullscreen_exit">Avslutt fullskjerm</string>
 </resources>

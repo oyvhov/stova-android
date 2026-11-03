@@ -81,7 +81,7 @@ class SonosContentTest {
         assertFalse(open)
         compose.onNodeWithTag("sonos-room-${room.id}").assertDoesNotExist()
         // What plays takes focus; the selected room stays named on the button that brings the list back.
-        compose.onNodeWithText("Pause").assertIsFocused()
+        compose.onNodeWithContentDescription("Pause").assertIsFocused()
         compose.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
         compose.onNodeWithText("Rom · Stova").assertExists()
         compose.onNodeWithText("Rom · Stova").performClick()
@@ -135,7 +135,7 @@ class SonosContentTest {
         } }
         compose.onNodeWithTag("sonos-room-${rooms.last().id}").assertIsFocused()
         compose.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
-        compose.onNodeWithText("Førre spor").assertIsFocused()
+        compose.onNodeWithContentDescription("Førre spor").assertIsFocused()
         compose.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
         compose.onNodeWithTag("sonos-room-${rooms.last().id}").assertIsFocused()
     }
@@ -188,7 +188,7 @@ class SonosContentTest {
         compose.onNodeWithTag("sonos-room-${room.id}").assertIsFocused()
         compose.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithTag("sonos-room-${room.id}").assertIsNotFocused()
-        compose.onNodeWithText("Pause").performClick()
+        compose.onNodeWithContentDescription("Pause").performClick()
         assertEquals(SonosAction.PlayPause, action)
     }
 
@@ -196,7 +196,7 @@ class SonosContentTest {
         compose.setContent { StovaTheme {
             SonosContent(SonosState(listOf(room.copy(entity = room.entity.copy(state = "unavailable"))), loading = false), room.id, {}, {}, {}, {}, {})
         } }
-        compose.onNodeWithText("Spel").assertIsNotEnabled()
+        compose.onNodeWithContentDescription("Spel").assertIsNotEnabled()
     }
 
     @Test fun groupDraftDoesNothingBeforeApplyAndCoordinatorCannotBeRemoved() {
@@ -222,7 +222,7 @@ class SonosContentTest {
         compose.setContent { StovaTheme(reduceMotion = true) {
             SonosContent(SonosState(listOf(era, plain), loading = false), era.id, {}, {}, {}, {}, {})
         } }
-        compose.onAllNodesWithText("Era 300", useUnmergedTree = true).onFirst().assertExists()
+        compose.onAllNodesWithText("Era 300", substring = true, useUnmergedTree = true).onFirst().assertExists()
         compose.onNodeWithTag("sonos-speaker-${plain.id}", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("sonos-speaker-${era.id}", useUnmergedTree = true).assertExists()
         // Reduced motion: the playing speaker stays still.

@@ -149,6 +149,27 @@ class SonosScreensTest {
         } }
         compose.saveScreen(name)
     }
+    /** Full screen as it is lit: art, no art, TV audio, seasons and large type. */
+    private fun immersive(name: String, room: SonosRoom = sonosPreviewRooms().first(), choice: SeasonChoice = SeasonChoice.NONE,
+        scale: Float = 1f, backgroundArt: Boolean = true) {
+        compose.setContent { StovaTheme(reduceMotion = true, appearance = choice.applyTo(AppearancePrefs(seasonalDecor = SeasonalDecor.CALM))) {
+            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, scale)) {
+                SonosContent(SonosState(listOf(room), loading = false), room.id, {}, {}, {}, {}, {}, backgroundArt = backgroundArt,
+                    artwork = { _, modifier -> SonosPreviewArtwork(modifier) }, immersive = true)
+            }
+        } }
+        compose.saveScreen(name)
+    }
+    private fun attrs(room: SonosRoom, vararg extra: Pair<String, kotlinx.serialization.json.JsonElement>, drop: String? = null) = room.copy(entity =
+        room.entity.copy(attributes = kotlinx.serialization.json.JsonObject(room.entity.attributes.filterKeys { it != drop } + extra)))
+    @Test fun immersiveArt() = immersive("sonos-fullscreen")
+    @Test fun immersiveNoArt() = immersive("sonos-fullscreen-noart", attrs(sonosPreviewRooms()[1], drop = "entity_picture"))
+    @Test fun immersiveTv() = immersive("sonos-fullscreen-tv", attrs(sonosPreviewRooms().first(),
+        "source" to kotlinx.serialization.json.JsonPrimitive("TV")))
+    @Test fun immersiveThemeOnly() = immersive("sonos-fullscreen-themeonly", backgroundArt = false)
+    @Test fun immersiveChristmas() = immersive("sonos-fullscreen-christmas", choice = SeasonChoice.CHRISTMAS)
+    @Test fun immersiveHalloween() = immersive("sonos-fullscreen-halloween", choice = SeasonChoice.HALLOWEEN)
+    @Test fun immersiveLargeFont() = immersive("sonos-fullscreen-large", scale = 2f)
     @Test fun christmas() = seasonal(SeasonChoice.CHRISTMAS, "sonos-christmas")
     @Test fun halloween() = seasonal(SeasonChoice.HALLOWEEN, "sonos-halloween")
     @Test fun largeFont() = render(2f)

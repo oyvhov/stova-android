@@ -155,6 +155,18 @@ object StovaIcons {
         moveTo(18.5f, 6f); curveTo(22f, 9.5f, 22f, 14.5f, 18.5f, 18f)
     } }
     val Pause by lazy { icon("pause") { moveTo(8f, 4f); lineTo(8f, 20f); moveTo(16f, 4f); lineTo(16f, 20f) } }
+    /** Previous and next track: a bar and a triangle, matching [Play]. */
+    val Previous by lazy { icon("previous") { moveTo(6f, 5f); lineTo(6f, 19f); moveTo(19f, 5f); lineTo(9f, 12f); lineTo(19f, 19f); close() } }
+    val Next by lazy { icon("next") { moveTo(18f, 5f); lineTo(18f, 19f); moveTo(5f, 5f); lineTo(15f, 12f); lineTo(5f, 19f); close() } }
+    /** Full screen and back: four corners opening out, or folding in. */
+    val Expand by lazy { icon("expand") {
+        moveTo(4f, 9f); lineTo(4f, 4f); lineTo(9f, 4f); moveTo(15f, 4f); lineTo(20f, 4f); lineTo(20f, 9f)
+        moveTo(20f, 15f); lineTo(20f, 20f); lineTo(15f, 20f); moveTo(9f, 20f); lineTo(4f, 20f); lineTo(4f, 15f)
+    } }
+    val Collapse by lazy { icon("collapse") {
+        moveTo(9f, 4f); lineTo(9f, 9f); lineTo(4f, 9f); moveTo(15f, 4f); lineTo(15f, 9f); lineTo(20f, 9f)
+        moveTo(20f, 15f); lineTo(15f, 15f); lineTo(15f, 20f); moveTo(4f, 15f); lineTo(9f, 15f); lineTo(9f, 20f)
+    } }
     val Camera by lazy { icon("camera") { moveTo(3f, 7f); lineTo(16f, 7f); lineTo(16f, 17f); lineTo(3f, 17f); close(); moveTo(16f, 10f); lineTo(22f, 6f); lineTo(22f, 18f); lineTo(16f, 14f) } }
     val Wifi by lazy { icon("wifi") {
         moveTo(4.2f, 11.2f); arcTo(11f, 11f, 0f, false, true, 19.8f, 11.2f)

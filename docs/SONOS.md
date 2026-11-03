@@ -40,6 +40,19 @@ fokus. Jul og Halloween bruker same sesongmerke og pynt som Heim; Av, Roleg og M
 fungerer som elles i appen. Redusert rørsle stoppar pynt og høgtalaranimasjon.
 Albumkunst ligg bak eit slør i temafargen. Høgtalarane bevarer si matte produktfarge.
 
+## Fullskjerm og volum
+
+Knappen med fire hjørne øvst opnar **fullskjerm**: albumkunsten over heile skjermen, tittel og
+artist, spel/pause og spor som ikon, og ei tynn volumlinje. Rommet står diskret øvst. Tilbake
+(eller knappen øvst til høgre) går attende til Sonos-sida. Fullskjerm endrar ingenting i musikken.
+Er bakgrunnskunst av for profilen, står omslaget til høgre i staden; utan musikk, ved TV-lyd eller
+fråkopla står høgtalaren der, aldri gammal albumkunst.
+
+Volumet er ei tynn linje utan tekst: Venstre/Høgre endrar med 2 %, og endringa blir send når du
+slepp. TalkBack les «Volum · rom» og prosenten.
+
+![Fullskjerm](images/sonos-fullscreen.png)
+
 ## Romlista og Sonos-kortet
 
 Knappen **Gøym rom** øvst gøymer romlista, så omslaget og musikken får plassen og fokus går til

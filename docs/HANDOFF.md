@@ -1,3 +1,8 @@
+# Sonos: roleg volum, fullskjerm og mikrorørsle
+2026-11-03 (Claude Code, design): volumet er ei tynn tekstlaus skinne; spor og spel/pause er ikonknappar; ny fullskjerm (knapp med fire hjørne) med kunst kant til kant, tittel/artist, ikonkontrollar og volum; mikrorørsle i lag-/teiknefasen. Plan `2026-11-03-sonos-fullskjerm.md`, verifisering `docs/verification/2026-11-03-sonos-fullskjerm.md`.
+Kontroll: 1156 testar, 0 feil (skjermtestar inkl.); lint 0 feil; `assembleTv` grønt; ikkje installert.
+**Root må prøve på Loftet og Shield:** fullskjerm inn/ut og Tilbake (fokus på knappen), D-pad gjennom spor/spel/volum, volum ±2 % med éi sending, TV-lyd i fullskjerm (ingen kunst/framdrift), tema-only-profil, trykk-/fokusrespons og overgangar med ekte omslag.
+
 # Sonos ferdig installert og prøvd på Shield og Loftet
 2026-11-03 (Codex + Claude Code): siste produksjonskode `ffecfd0` installert med install-r på begge TV-ar; sonoskort i Øyvind si favorittrad, romliste kan gøymast, tema/omslag og kontrollar verifiserte. Claude gjorde design og fokus-/bibliotek-/MA-namnrettingar; Codex retta HaImage og prøvde ekte anlegg.
 Kontroll: full suite 1122 grøne før dei siste rettingane; siste målretta suite 206 grøne, DesignRules/ThemePalette, lint 0 feil og TV-bygg grønt. Native favorittar/spel/pause/gruppering og TV-sperring av Heim-kunst prøvde ved 0. MA Lydplanke kopla på Shield; «2023 UP» spela og pausa. Verifisering: `docs/verification/2026-11-03-sonos-sidebar-kort.md`.
