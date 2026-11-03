@@ -1,3 +1,8 @@
+# Siste Stova installert på Shield
+2026-11-03 (Codex): Bygde og installerte siste lokale kode `f963090` (`0.2.0-tv`) på Shield med `Install-Stova.ps1 -Tv` (`install -r`). SHA-256 på installert APK samsvarar med den lokale fila.
+Kontroll: `testDebugUnitTest lintDebug assembleTv` grønt (1075 bestått, 83 hoppa over, 0 feil; lint 0 feil). Stova opna på Shield, Heim-tenesta var framleis aktivert, og krasjbufferen viste ingen krasj.
+Ingen eiga Sonos-/HA-prøve på Shield i denne økta. Loftet vart ikkje endra. Ingen uferdig kode eller spørsmål.
+
 # Sonos-fullskjerm ferdig på Loftet – berre visuell prøve
 2026-11-03 (Claude Code + Codex): `a7ea298` gav tekstlaus volumstripe, ikonknappar, fullskjerm og mikrorørsle. Codex retta fokus på skjulte kontrollar ved gjenoppretting og held bakgrunnskunsten lasta gjennom modusbyte; begge regresjonar feila først.
 Verifisert: 1156 testar før sluttgjennomgangen; siste 113 målretta Sonos/DesignRules/ThemePalette-testar grøne, lint 0 feil og TV-bygg grønt. Siste APK installert med install-r berre på Loftet. Plan fullført, verifisering i `docs/verification/2026-11-03-sonos-fullskjerm.md`.
