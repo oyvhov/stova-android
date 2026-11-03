@@ -52,7 +52,48 @@ og vanleg side `sonos-playing`, `-large`, `-christmas`, `-halloween`, `-grouped`
 Retta etter første runde: TV-lyd viste framdrifta til førre låt; tema-only klemde spel/pause-skiva,
 så omslaget/høgtalaren står no til høgre.
 
-## Ikkje verifisert
+## Sluttgjennomgang og Loftet
 
-Rørsle i fart, fokusring/trykk-dupp med ekte fjernkontroll, og korleis ekte omslag ser ut under
-overgangane er ikkje sett på TV. Stor skrift i fullskjerm rullar.
+Codex retta to konkrete funn etter Claude sin implementasjon (`a7ea298`): gjenoppretta fullskjerm
+bad om fokus på kontrollar i den skjulte vanlege sida, og modusbyte lasta bakgrunnskunsten inn att
+med eit kort tomrom. Begge regresjonstestane feila først. Sida ber no berre om fokus medan ho er
+synleg, og `SonosContent` held den same bakgrunnskomposisjonen gjennom modusbytet.
+
+Siste kontroll etter rettingane:
+
+```powershell
+pwsh -NoProfile -File scripts/gradle.ps1 testDebugUnitTest --tests 'app.stova.sonos.*' --tests '*DesignRulesTest' --tests '*ThemePaletteTest' '-Pstova.screens=true' lintDebug assembleTv
+```
+
+**113 målretta testar, 0 feil, 0 hoppa over; lint 0 feil; TV-bygg grønt.** Heile pakken med 1156
+testar ovanfor vart køyrd før dei to avgrensa rettingane; full pakke er ikkje køyrd på nytt.
+
+Ny presisering frå eigaren: **berre Loftet, berre visuelt, ingen ekte lyd**. Siste APK installert
+med `Install-Stova.ps1 -Serial 192.168.10.125:5555 -Tv` (`install -r`, kontoar/profilar bevarte).
+Shield er ikkje endra i denne designrunden. Stova-emulatoren starta, men vart ikkje brukt til
+vidare prøving etter presiseringa.
+
+På Loftet, Øyvind/Halloween:
+
+- Pausa Kjøkken-spor «Halloween Night in the Forest» vart brukt med eksisterande kunst. Framdrifta
+  stod på 0:53/3:04 gjennom prøva. Ingen avspelings-, volum-, kjelde- eller gruppehandling vart utført.
+- Tekstlaus volumstripe, vanleg visning og gøymd romliste passar skjermen utan rulling.
+- D-pad inn i fullskjerm gir fokus til Spel; Høgre går til Neste og deretter volumstripa, utan
+  aktivering. Tilbake returnerer fokus til fullskjermknappen; neste Tilbake går til Heim.
+- Avslutt-ikonet og fråkopla Platespelar vart prøvde visuelt; valt rom vart sett attende til Kjøkken.
+- Langt trykk på fullskjermknappen med `hold:1500`, fokusrespons og modusovergang vart filma.
+  Første opptak viste den korte biletladinga; siste opptak viser kunst gjennom heile overgangen.
+- Etter første installasjon mista HA kontakten etter ei kort stund. Inn i Android-innstillingane
+  og Heim kopla opp att. Same kjende oppstartsproblem som før denne endringa; ikkje årsaksretta her.
+  Siste installasjon fekk den same ut/inn-opninga. Krasjbuffer var tom, og Heim-tenesta var bound.
+
+Ekte bilete/opptak i `.superpowers/sonos-immersive-2026-11-03/`:
+`loftet-final-normal.png`, `loftet-final-fullscreen.png`, `loftet-final-back.png`,
+`loftet-rooms-hidden.png`, `loftet-volume-focus.png`, `loftet-offline-fullscreen.png`,
+`loftet-final-motion.mp4` og `loftet-final-transition-frames.png`.
+
+## Avgrensingar
+
+Ingen ekte avspeling, låtbyte eller volumjustering i denne runden. TV-kunstsperra og overtoning
+ved låtbyte vart prøvde med kontrollerte data, utan å endre ei ekte lydkjelde. Stor skrift i
+fullskjerm kan rulle. Skjermane for jul, redusert rørsle og tema utan kunst er lokale skjermtestar.

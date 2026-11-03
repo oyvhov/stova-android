@@ -1,6 +1,5 @@
 package app.stova.sonos
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,7 +21,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.theme.StovaLayout
-import app.stova.core.theme.stovaMotion
 import app.stova.core.ui.StovaIcons
 import app.stova.home.SeasonalScene
 import app.stova.home.rememberSeasonalClock
@@ -45,13 +43,8 @@ import app.stova.home.rememberSeasonalClock
     val canPlay = room.available && player?.available == true && player.supports(if (player.playing) 1 else 16384)
     val largeType = LocalDensity.current.fontScale >= 1.5f
     LaunchedEffect(Unit) { withFrameNanos { }; if (canPlay) playFocus.requestFocus() else exitFocus.requestFocus() }
-    Box(Modifier.fillMaxSize().background(ink).testTag("sonos-immersive")) {
-        // A new sleeve crossfades; going to TV or silence removes the old one at once.
-        key(tv, art == null, backgroundArt) {
-            Crossfade(art.takeIf { backgroundArt }, animationSpec = stovaMotion.fade(stovaMotion.ambient), label = "sonos-immersive-art") { path ->
-                if (path != null) artwork(path, Modifier.fillMaxSize())
-            }
-        }
+    // SonosContent owns the shared backdrop so entering and leaving never reloads it.
+    Box(Modifier.fillMaxSize().testTag("sonos-immersive")) {
         // Theme ink where the words and controls sit; the middle of the sleeve stays clear.
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to ink.copy(alpha = .62f), .22f to ink.copy(alpha = .08f),
             .5f to ink.copy(alpha = .18f), 1f to ink.copy(alpha = .94f))))

@@ -1,7 +1,14 @@
+# Sonos-fullskjerm ferdig på Loftet – berre visuell prøve
+2026-11-03 (Claude Code + Codex): `a7ea298` gav tekstlaus volumstripe, ikonknappar, fullskjerm og mikrorørsle. Codex retta fokus på skjulte kontrollar ved gjenoppretting og held bakgrunnskunsten lasta gjennom modusbyte; begge regresjonar feila først.
+Verifisert: 1156 testar før sluttgjennomgangen; siste 113 målretta Sonos/DesignRules/ThemePalette-testar grøne, lint 0 feil og TV-bygg grønt. Siste APK installert med install-r berre på Loftet. Plan fullført, verifisering i `docs/verification/2026-11-03-sonos-fullskjerm.md`.
+Visuelt på Loftet: inn/ut, D-pad-fokus, Tilbake til fullskjermknappen og vidare Heim, gøym rom, fråkopla høgtalar og langt trykk/overgangar filma. Sluttbilete/opptak i `.superpowers/sonos-immersive-2026-11-03/loftet-final-*`. Kjøkken-sporet framleis pausa på 0:53, volum urørt; valt rom sett attende til Kjøkken. Krasjbuffer tom, Heim-tenesta bound.
+Gjeldande avgrensing frå eigaren: berre Loftet, ingen ekte lyd. Ingen avspeling/volum/kjelde/gruppering utført; Shield ikkje endra. TV-kunstsperre, låtbyte, jul/stor skrift/redusert rørsle kontrollerte lokalt. HA trong ut/inn via Android-innstillingar/Heim etter installasjon; kjent oppstartsproblem er dokumentert, ikkje retta her.
+Ingen uferdig kode eller spørsmål. Ingen push. `.codex-remote-attachments/` er urørt.
+
 # Sonos: roleg volum, fullskjerm og mikrorørsle
 2026-11-03 (Claude Code, design): volumet er ei tynn tekstlaus skinne; spor og spel/pause er ikonknappar; ny fullskjerm (knapp med fire hjørne) med kunst kant til kant, tittel/artist, ikonkontrollar og volum; mikrorørsle i lag-/teiknefasen. Plan `2026-11-03-sonos-fullskjerm.md`, verifisering `docs/verification/2026-11-03-sonos-fullskjerm.md`.
 Kontroll: 1156 testar, 0 feil (skjermtestar inkl.); lint 0 feil; `assembleTv` grønt; ikkje installert.
-**Root må prøve på Loftet og Shield:** fullskjerm inn/ut og Tilbake (fokus på knappen), D-pad gjennom spor/spel/volum, volum ±2 % med éi sending, TV-lyd i fullskjerm (ingen kunst/framdrift), tema-only-profil, trykk-/fokusrespons og overgangar med ekte omslag.
+**Ny presisering frå eigaren: berre Loftet, berre visuelt, ingen ekte lyd.** Root prøver fullskjerm inn/ut og Tilbake (fokus på knappen), D-pad utan aktivering av mediekontrollar, TV-lyd i fullskjerm (ingen kunst/framdrift), fokusrespons og overgangar med eksisterande omslag. Ikkje bruk Shield, start avspeling eller endre volum.
 
 # Sonos ferdig installert og prøvd på Shield og Loftet
 2026-11-03 (Codex + Claude Code): siste produksjonskode `ffecfd0` installert med install-r på begge TV-ar; sonoskort i Øyvind si favorittrad, romliste kan gøymast, tema/omslag og kontrollar verifiserte. Claude gjorde design og fokus-/bibliotek-/MA-namnrettingar; Codex retta HaImage og prøvde ekte anlegg.

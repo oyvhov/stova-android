@@ -8,11 +8,12 @@ avkryssingsboksar i dei er inga bestilling.
 
 | Plan | Står att |
 |---|---|
-| [Sonos: roleg volum, fullskjerm og mikrorørsle](2026-11-03-sonos-fullskjerm.md) | Implementert og skjermtesta lokalt (1156 testar, lint, TV-bygg). Steg 8: root prøver på Loftet og Shield. |
 | [Oppdag i Stova: Seerr gjennom Spole](2026-11-01-oppdag.md) | Oppgåve 11 (TV-ane) ventar på eigaren; Spole-delen på greina `launcher-discover`. Spesifikasjon: [`../specs/2026-11-01-oppdag-design.md`](../specs/2026-11-01-oppdag-design.md). |
 | [Eineståande launcher: finpuss, Heim etter tid, fart og huset](2026-10-26-outstanding-launcher.md) | Steg 2–9. I steg 4 er punkt 8 (snøggmenyen på Innstillingar) gjort. |
 
 ## Historikk
+
+- 2026-11-03: [Sonos: roleg volum, fullskjerm og mikrorørsle](2026-11-03-sonos-fullskjerm.md), fullført og installert på Loftet. Berre visuell prøve, utan avspeling eller volumendring. 1156 testar før sluttgjennomgang, 113 målretta etter; lint og TV-bygg grøne. [Verifisering](../../verification/2026-11-03-sonos-fullskjerm.md).
 
 - 2026-11-03: [Sonos gjennom Home Assistant](2026-11-03-sonos.md), fullført og installert på begge TV-ar. Native kontrollar og TV-kunst prøvde; Music Assistant-bibliotek og avspeling/pause prøvde på Shield ved 0. Fleire MA-rom og høyrbar lyd er ikkje prøvde.
 

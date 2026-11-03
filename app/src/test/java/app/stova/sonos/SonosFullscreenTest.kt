@@ -39,6 +39,7 @@ class SonosFullscreenTest {
     private var immersive by mutableStateOf(false)
     private var rooms by mutableStateOf(listOf<SonosRoom>())
     private var left = 0
+    private var artworkStarts = 0
 
     private fun page(vararg shown: SonosRoom, busy: Boolean = false, backgroundArt: Boolean = true) {
         rooms = shown.toList()
@@ -49,7 +50,10 @@ class SonosFullscreenTest {
             BackHandler { left++ }
             SonosContent(SonosState(rooms, loading = false), rooms.firstOrNull()?.id, {}, { actions += it }, {}, {}, {},
                 busy = busy, backgroundArt = backgroundArt, roomsOpen = false,
-                artwork = { path, modifier -> Box(modifier.testTag("art-$path")) },
+                artwork = { path, modifier ->
+                    DisposableEffect(path) { artworkStarts++; onDispose {} }
+                    Box(modifier.testTag("art-$path"))
+                },
                 immersive = immersive, onImmersive = { immersive = it })
         } }
     }
@@ -109,6 +113,28 @@ class SonosFullscreenTest {
     }
 
     // 2. Full screen.
+    @Test fun enteringFullScreenKeepsTheExistingBackgroundImageLoaded() {
+        page(room())
+        // The backdrop and the square cover are already loaded.
+        compose.runOnIdle { assertEquals(2, artworkStarts) }
+        compose.onNodeWithTag("sonos-fullscreen").performClick()
+        compose.onNodeWithTag("sonos-immersive").assertExists()
+        compose.runOnIdle { assertEquals("Changing the viewing mode must not reload its backdrop", 2, artworkStarts) }
+    }
+
+    @Test fun restoredFullScreenOnlyRequestsFocusFromItsOwnControls() {
+        val output = java.io.ByteArrayOutputStream()
+        val original = System.out
+        try {
+            System.setOut(java.io.PrintStream(output))
+            immersive = true
+            page(room())
+            compose.onNodeWithTag("sonos-play").assertIsFocused()
+            assertFalse(output.toString().contains("FocusRequester is not initialized"))
+            assertTrue(actions.isEmpty())
+        } finally { System.setOut(original) }
+    }
+
     @Test fun fullScreenEntersOnPlayAndBackReturnsToItsButtonWithoutTouchingMusic() {
         page(room())
         compose.onNodeWithTag("sonos-fullscreen").performClick()

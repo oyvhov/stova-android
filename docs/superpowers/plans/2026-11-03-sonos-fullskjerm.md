@@ -25,6 +25,11 @@ elementet på sida og tek merksemd frå omslaget. Tekstknappane for spor konkurr
   lag-fasen. Redusert rørsle: direkte byte.
 - [x] 6. Skjermtestar: vanleg/fullskjerm med kunst, utan kunst, TV, jul, Halloween, stor skrift.
 - [x] 7. Målretta Sonos/HA-kort/DesignRules/ThemePalette med skjermtestar, `lintDebug`, `assembleTv`.
-- [ ] 8. TV-ane: root prøver på Loftet og Shield.
+- [x] 8. Berre Loftet: visuell prøve av inn/ut, fjernkontrollfokus, fråkopla høgtalar og overgangar.
+  Ny presisering frå eigaren: ingen ekte lyd, inga avspeling eller volumendring; Shield skal ikkje brukast.
+  TV-kunstsperra er kontrollert i testane, utan å byte ekte lydkjelde.
+
+Sluttgjennomgang: retta fokus ved gjenoppretta fullskjerm og held bakgrunnskunsten lasta gjennom
+modusbyte. To regresjonar feila først; 113 målretta testar, lint og TV-bygg grøne etter rettingane.
 
 Verifisering: [`../../verification/2026-11-03-sonos-fullskjerm.md`](../../verification/2026-11-03-sonos-fullskjerm.md).

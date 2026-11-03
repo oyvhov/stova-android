@@ -56,6 +56,7 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     val moreFocus = remember { FocusRequester() }
     val playFocus = remember { FocusRequester() }
     val fullscreenFocus = remember { FocusRequester() }
+    val immersiveNow by rememberUpdatedState(immersive)
     var focusFullscreen by remember { mutableStateOf(false) }
     fun leaveImmersive() { focusFullscreen = true; onImmersive(false) }
     LaunchedEffect(immersive) {
@@ -82,18 +83,24 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     LaunchedEffect(more) {
         if (!more && restoreMore) { withFrameNanos { }; moreFocus.requestFocus(); restoreMore = false }
     }
+    // Keep the same loaded backdrop while the controls change viewing mode. Remounting the
+    // authenticated image here makes a visible empty frame even when the sleeve is cached.
+    Box(Modifier.fillMaxSize().background(colors.background)) {
+    val tvAudio = native?.tvAudio == true || room?.tvAudio == true || player?.tvAudio == true
+    val shownArt = player?.artwork?.takeIf { backgroundArt && !tvAudio && room?.available == true && player.available }
+    key(backgroundArt, tvAudio, shownArt == null) {
+        Crossfade(shownArt, animationSpec = stovaMotion.fade(stovaMotion.ambient), label = "sonos-art") { path ->
+            if (path != null) artwork(path, Modifier.fillMaxSize())
+        }
+    }
     if (immersive && room != null) {
         BackHandler { leaveImmersive() }
         SonosModeReveal("immersive") {
             SonosImmersive(room, native, player, busy, actionFailed, backgroundArt, artwork, guarded, ::leaveImmersive)
         }
     } else SonosModeReveal("page") {
-    Box(Modifier.fillMaxSize().background(colors.background)) {
-        // The square album fills the canvas too. Dark matte ink preserves contrast; no blur.
-        val shownArt = if (backgroundArt && native?.tvAudio != true && room?.tvAudio != true) player?.artwork else null
-        key(backgroundArt, native?.tvAudio == true || room?.tvAudio == true, shownArt == null) { Crossfade(shownArt, animationSpec = stovaMotion.fade(stovaMotion.ambient), label = "sonos-art") { path ->
-            if (path != null) artwork(path, Modifier.fillMaxSize())
-        } }
+    Box(Modifier.fillMaxSize()) {
+        // Dark matte ink preserves contrast; no blur.
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(colors.background.copy(alpha = .97f), colors.background.copy(alpha = .82f), colors.background.copy(alpha = .72f)))))
         val seasonClock = rememberSeasonalClock()
         SeasonalScene(Modifier.matchParentSize(), clock = seasonClock)
@@ -168,10 +175,16 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
         SeasonalScene(Modifier.matchParentSize(), front = true, clock = seasonClock)
     }
     }
+    }
     if (more && room != null && !immersive) SonosOptionsDialog(room, native, player, busy, actionFailed, guarded) { more = false }
     LaunchedEffect(state.loading, state.rooms.isEmpty()) {
         if (!state.loading) { withFrameNanos { }
-            if (roomsOpen || room == null) first.requestFocus() else if (canPlay) playFocus.requestFocus() else moreFocus.requestFocus() }
+            // Restoring full screen, or entering it during this frame, removes the page controls.
+            // The immersive view requests its own focus; never target the detached page here.
+            if (!immersiveNow) {
+                if (roomsOpen || room == null) first.requestFocus() else if (canPlay) playFocus.requestFocus() else moreFocus.requestFocus()
+            }
+        }
     }
 }
 
