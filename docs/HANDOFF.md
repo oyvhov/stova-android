@@ -1,3 +1,8 @@
+# Sonos-rettingane på Heim installerte på begge TV-ane
+2026-11-03 (Codex): Installerte TV-bygget frå `2b79657` med install-r på Loftet og Shield.
+SHA-256 samsvarar med lokal APK på begge. Installerte utan å opne appen eller starte avspeling.
+Ekte pause og Sonos-kunst med TV-lyd i eit anna rom står att å prøve.
+
 # Sonos-kunst og pause på Heim
 2026-11-03 (Codex): `811142b` avgrensa TV-sperra for bakgrunnskunst til valt rom og koordinatoren i same gruppe. 24 testar, lint og TV-bygg grøne.
 Widgeten held same rom i 60 sekund gjennom tomgang og pause, også når MA-køen slepper taket. 19 Sonos-/fokus-/designtestar, lint og TV-bygg grøne.
