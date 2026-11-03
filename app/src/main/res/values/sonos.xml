@@ -6,7 +6,7 @@
     <string name="sonos_ma_choose">Vel Music Assistant-spelar for %1$s</string>
     <string name="sonos_ma_none">Inga kopling</string>
     <string name="sonos_ma_empty">Ingen spelarar funne. Kontroller Sonos og Music Assistant i Home Assistant.</string>
-    <string name="sonos_widget">Vis «Spelar no» saman med widgetane</string>
+    <string name="sonos_widget">Vis «Spelar no» over appane</string>
     <string name="sonos_tv">TV-lyd</string>
     <string name="sonos_paused">På pause</string>
     <string name="sonos_title">Sonos</string>
@@ -36,6 +36,9 @@
     <string name="sonos_group">Grupper rom</string>
     <string name="sonos_group_hint">Dei valde romma følgjer musikken i %1$s. Endringane gjeld når du vel Bruk.</string>
     <string name="sonos_group_anchor">%1$s · spelar musikken</string>
+    <string name="sonos_group_inline_hint">Vel romma som skal følgje %1$s, og trykk Bruk.</string>
+    <string name="sonos_group_leader">Hovudrom</string>
+    <string name="sonos_group_selected">Med i gruppa</string>
     <string name="sonos_room_unavailable">%1$s · fråkopla</string>
     <string name="sonos_move_group">Blir flytta frå ei anna gruppe</string>
     <string name="sonos_group_changed">Gruppa er endra ein annan stad. Lukk og opne romvalet att.</string>

@@ -9,6 +9,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -113,6 +114,23 @@ class SonosFullscreenTest {
     }
 
     // 2. Full screen.
+    @Test fun longPressEditsGroupInTheRoomListAndOnlyApplySendsTheDraft() {
+        val leader = room(id = "media_player.a", name = "A")
+        val other = room(id = "media_player.b", name = "B")
+        var submitted: SonosGroupDraft? = null
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SonosContent(SonosState(listOf(leader, other), loading = false), leader.id, {}, {}, {}, {}, {},
+                onApplyGroup = { draft, done -> submitted = draft; done(true) })
+        } }
+        compose.onNodeWithTag("sonos-room-${leader.id}").performSemanticsAction(SemanticsActions.OnLongClick)
+        compose.onNodeWithTag("sonos-room-${leader.id}").assertIsSelected()
+        compose.onNodeWithTag("sonos-room-${other.id}").performClick().assertIsSelected()
+        compose.runOnIdle { assertNull(submitted) }
+        compose.onNodeWithText(compose.activity.getString(app.stova.R.string.sonos_apply)).performClick()
+        compose.runOnIdle { assertEquals(SonosGroupDraft(leader.id, setOf(leader.id), setOf(leader.id, other.id)), submitted) }
+        compose.onNodeWithTag("sonos-room-${other.id}").assertIsNotSelected()
+    }
+
     @Test fun backdropKeepsTheOldImageWhileTheNextDecodes() {
         var path by mutableStateOf<String?>("first")
         val callbacks = mutableMapOf<String, () -> Unit>()

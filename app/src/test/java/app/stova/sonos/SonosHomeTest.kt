@@ -46,4 +46,13 @@ class SonosHomeTest {
             assertNull(sonosHomeRoom(prefs, adult, listOf(room, tv)))
         }
     }
+
+    @Test fun widgetWaitsOneMinuteAfterPauseAndPrefersAnotherPlayingRoom() {
+        val paused = room.copy(entity = room.entity.copy(state = "paused", lastChanged = 10_000))
+        val other = room.copy(entity = room.entity.copy(id = "media_player.b"), name = "B")
+        val prefs = SonosPrefs(enabled = true, preferredRoom = paused.id)
+        assertEquals(paused, sonosWidgetRoom(prefs, SonosState(listOf(paused)), now = 69_999))
+        assertNull(sonosWidgetRoom(prefs, SonosState(listOf(paused)), now = 70_000))
+        assertEquals(other, sonosWidgetRoom(prefs, SonosState(listOf(paused, other)), now = 11_000))
+    }
 }

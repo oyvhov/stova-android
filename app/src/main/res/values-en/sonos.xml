@@ -6,7 +6,7 @@
     <string name="sonos_ma_choose">Choose Music Assistant player for %1$s</string>
     <string name="sonos_ma_none">No link</string>
     <string name="sonos_ma_empty">No players found. Check Sonos and Music Assistant in Home Assistant.</string>
-    <string name="sonos_widget">Show Now playing beside the widgets</string>
+    <string name="sonos_widget">Show Now playing above the apps</string>
     <string name="sonos_tv">TV audio</string>
     <string name="sonos_paused">Paused</string>
     <string name="sonos_title">Sonos</string>
@@ -36,6 +36,9 @@
     <string name="sonos_group">Group rooms</string>
     <string name="sonos_group_hint">Selected rooms follow the music in %1$s. Changes take effect when you choose Apply.</string>
     <string name="sonos_group_anchor">%1$s · playing the music</string>
+    <string name="sonos_group_inline_hint">Choose which rooms should follow %1$s, then select Apply.</string>
+    <string name="sonos_group_leader">Lead room</string>
+    <string name="sonos_group_selected">In the group</string>
     <string name="sonos_room_unavailable">%1$s · unavailable</string>
     <string name="sonos_move_group">Will move from another group</string>
     <string name="sonos_group_changed">The group changed elsewhere. Close and reopen the room selection.</string>

@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -35,6 +36,7 @@ fun HomeScreen(
     /** A title changed through Spole (watched, out of «Hald fram»): the rows ask again. */
     onItemChanged: () -> Unit = {},
     topBar: @Composable (List<ChipContent>) -> Unit = {},
+    aboveApps: (@Composable (Modifier) -> Unit)? = null,
     haRepository: HaRepository? = null,
     haConnection: HaConnection? = null,
     profile: app.stova.profiles.Profile? = null,
@@ -125,7 +127,7 @@ fun HomeScreen(
         shortcutActions = { tile, rowActions, dismiss ->
             if (profile != null && apps != null) ShortcutMenuHost(tile, apps, profile, openShortcut, rowActions, dismiss)
         },
-        onOpenDiscover = onOpenDiscover)
+        onOpenDiscover = onOpenDiscover, aboveApps = aboveApps)
     appMenu?.let { app -> if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog) { appMenu = null } }
     actions?.let { target ->
         ItemActionsMenu(target.item,

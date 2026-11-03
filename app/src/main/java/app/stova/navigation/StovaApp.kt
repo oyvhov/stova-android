@@ -209,7 +209,8 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         val sonosPrefs = household?.sonos ?: app.stova.sonos.SonosPrefs()
                         val homeMusic = app.stova.sonos.rememberSonosHome(container, profile, sonosPrefs, household?.haBaseUrl)
                         val music = app.stova.sonos.sonosHomeRoom(sonosPrefs, profile, homeMusic.state.rooms, homeMusic.state.musicAssistant)
-                        val widgetRoom = app.stova.sonos.sonosWidgetRoom(sonosPrefs, homeMusic.state)
+                        val widgetRoom = app.stova.sonos.rememberSonosWidgetRoom(sonosPrefs, homeMusic.state)
+                        val widgetPlayer = widgetRoom?.let { app.stova.sonos.sonosPlaybackRoom(it, homeMusic.state) }
                         var musicArtReady by remember(music?.artwork, profile.id) { mutableStateOf(false) }
                         val musicImages = household?.haBaseUrl?.let { address -> remember(address) { app.stova.ha.cards.HaImageSource(address, container.haAuth, container.haImages) } }
                         val still = app.stova.core.theme.LocalReduceMotion.current
@@ -264,6 +265,14 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             onOpenDiscover = { discoverStart = null; origin = TransformOrigin.Center; current = Destination.DISCOVER },
                             onOpenDiscoverTitle = { discoverStart = it; origin = TransformOrigin.Center; current = Destination.DISCOVER },
                             toTop = homeToTop,
+                            aboveApps = if (widgetRoom == null || widgetPlayer == null) null else { modifier ->
+                                app.stova.sonos.SonosNowPlaying(widgetRoom, widgetPlayer, homeMusic.busy, homeMusic.failed,
+                                    onOpen = {
+                                        scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(preferredRoom = widgetRoom.id)) } }
+                                        sonosFrom = Destination.HOME; origin = TransformOrigin.Center; current = Destination.SONOS
+                                    }, onPlayPause = { homeMusic.playPause(widgetRoom.id) }, modifier = modifier,
+                                    artwork = { path, artModifier -> app.stova.ha.cards.HaImage(path, musicImages, artModifier, contentScale = androidx.compose.ui.layout.ContentScale.Crop) })
+                            },
                             topBar = { chips ->
                                 TopBar(
                                     profile = profile,
@@ -274,16 +283,6 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                                     onSonos = if (sonosEnabled && household?.sonos?.showHomeButton == true) ({ sonosFrom = Destination.HOME; current = Destination.SONOS }) else null,
                                     // Android's own settings are for adults only, as Settings is.
                                     systemMenu = if (profile.kid) null else rememberSystemMenu(),
-                                    nowPlaying = { modifier ->
-                                        widgetRoom?.let { room -> app.stova.sonos.sonosPlaybackRoom(room, homeMusic.state)?.let { player ->
-                                            app.stova.sonos.SonosNowPlaying(room, player, homeMusic.busy, homeMusic.failed,
-                                                onOpen = {
-                                                    scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(preferredRoom = room.id)) } }
-                                                    sonosFrom = Destination.HOME; origin = TransformOrigin.Center; current = Destination.SONOS
-                                                }, onPlayPause = { homeMusic.playPause(room.id) }, modifier = modifier,
-                                                artwork = { path, artModifier -> app.stova.ha.cards.HaImage(path, musicImages, artModifier, contentScale = androidx.compose.ui.layout.ContentScale.Crop) })
-                                        } }
-                                    },
                                     leading = {
                                         val openCard: (String) -> Unit = {id->smartHomeCardId=id;origin=TransformOrigin.Center;current=Destination.SMART_HOME}
                                         app.stova.ha.ui.HomeStatusChips(chips,onOpenCard=openCard) { chip, close ->

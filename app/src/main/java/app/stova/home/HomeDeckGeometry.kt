@@ -18,7 +18,8 @@ internal data class HomeDeckGeometry(val slotHeight: Dp, val visibleRows: Int, v
 
 /** Fixed from preferences and text metrics. Artwork loading and scrolling never resize the deck. */
 @Composable
-internal fun homeDeckGeometry(rows: List<HomeRowUi>, home: HomePrefs, p: AppearancePrefs, width: Dp, height: Dp): HomeDeckGeometry {
+internal fun homeDeckGeometry(rows: List<HomeRowUi>, home: HomePrefs, p: AppearancePrefs, width: Dp, height: Dp,
+    aboveAppsHeight: Dp = 0.dp): HomeDeckGeometry {
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
     val body = MaterialTheme.typography.bodyMedium
@@ -39,7 +40,7 @@ internal fun homeDeckGeometry(rows: List<HomeRowUi>, home: HomePrefs, p: Appeara
         val captions = if (style.showsCardTitles(p)) (8 + 18 * density.fontScale).dp +
             (if (row is HomeRowUi.WatchNext && row.entries.any { !it.subtitle.isNullOrEmpty() }) (17 * density.fontScale).dp else 0.dp) else 0.dp
         val art = artworkDimensions(style.format ?: defaultRowFormat(row.key, p), style.size ?: p.cardSize).height.dp
-        (heading + captions + 8.dp) to art
+        (heading + captions + 8.dp + if (row is HomeRowUi.Apps) aboveAppsHeight else 0.dp) to art
     }
     val bottom = p.homeRowInset.dp.dp
     val overviewSpace = if (p.heroSize != HeroSize.OFF && p.showOverview && density.fontScale < 1.5f) 208.dp else 0.dp

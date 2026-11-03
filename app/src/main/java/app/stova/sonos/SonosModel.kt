@@ -52,6 +52,14 @@ fun sonosRooms(states: List<HaEntity>, registry: HaRegistry): List<SonosRoom> = 
 
 fun coordinator(room: SonosRoom, rooms: List<SonosRoom>) = rooms.find { it.id == room.coordinatorId }
 data class SonosGroupPlan(val coordinator: String, val join: List<String>, val leave: List<String>)
+data class SonosGroupDraft(val anchorId: String, val initial: Set<String>, val selected: Set<String> = initial) {
+    fun toggle(id: String) = if (id == anchorId) this else
+        copy(selected = if (id in selected) selected - id else selected + id)
+
+    fun canApply(anchor: SonosRoom, rooms: List<SonosRoom>) =
+        anchor.id == anchorId && anchor.members.toSet() == initial && selected != initial && groupPlan(anchor, rooms, selected) != null
+}
+
 fun groupPlan(anchor: SonosRoom, rooms: List<SonosRoom>, selected: Set<String>): SonosGroupPlan? {
     if (anchor.id != anchor.coordinatorId || anchor.id !in selected || !anchor.available) return null
     val known = rooms.filter { it.available }.map { it.id }.toSet()

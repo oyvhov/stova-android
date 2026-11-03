@@ -2,12 +2,19 @@ package app.stova.sonos
 
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.unit.Density
@@ -174,17 +181,29 @@ class SonosScreensTest {
     @Test fun halloween() = seasonal(SeasonChoice.HALLOWEEN, "sonos-halloween")
     @Test fun largeFont() = render(2f)
     @Test fun groupRooms() = render(group = true)
+    @Test fun inlineGroupRooms() {
+        val rooms = sonosPreviewRooms()
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SonosContent(SonosState(rooms, loading = false), rooms.first().id, {}, {}, {}, {}, {},
+                artwork = { _, modifier -> SonosPreviewArtwork(modifier) }, onApplyGroup = { _, _ -> })
+        } }
+        compose.onNodeWithTag("sonos-room-${rooms.first().id}").performSemanticsAction(SemanticsActions.OnLongClick)
+        compose.onNodeWithTag("sonos-room-${rooms[1].id}").performClick()
+        compose.saveScreen("sonos-group-inline")
+    }
     @Test fun emptyRooms() = render(empty = true)
     @Test fun homeWidget() {
         val room = sonosPreviewRooms().first()
         compose.setContent { StovaTheme(reduceMotion = true) {
-            androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(androidx.compose.material3.MaterialTheme.colorScheme.background)) {
-                app.stova.navigation.TopBar(app.stova.profiles.Profile("p", "Øyvind", app.stova.core.theme.AvatarColor.LIME), {}, {},
-                    onSonos = {}, nowPlaying = { modifier ->
+            val ctx = androidx.compose.ui.platform.LocalContext.current
+            val demoApp = app.stova.apps.InstalledApp("demo/.Main", "demo", ".Main", "Demo", true)
+            Box(Modifier.fillMaxSize().background(androidx.compose.material3.MaterialTheme.colorScheme.background)) {
+                SonosPreviewArtwork(Modifier.fillMaxSize().graphicsLayer { alpha = .38f })
+                app.stova.home.HomeContent(listOf(app.stova.home.HomeRowUi.Apps(app.stova.home.HomeRowKey.APPS, listOf(demoApp))),
+                    null, app.stova.home.HomeRowKey.APPS, app.stova.apps.AppArtCache(ctx),
+                    app.stova.apps.PackageManagerAppCatalog(ctx, emptySet()), {}, {}, {}, {},
+                    aboveApps = { modifier ->
                         SonosNowPlaying(room, room, false, false, {}, {}, modifier, artwork = { _, art -> SonosPreviewArtwork(art) })
-                    }, leading = {
-                        app.stova.ha.ui.HomeStatusChips(listOf(app.stova.ha.ui.ChipContent(app.stova.ha.cards.CardType.LIGHT, "3 lys"),
-                            app.stova.ha.ui.ChipContent(app.stova.ha.cards.CardType.CLIMATE, "21°")))
                     })
             }
         } }

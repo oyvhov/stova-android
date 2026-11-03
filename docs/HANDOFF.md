@@ -1,3 +1,9 @@
+# Sonos: neste omslag, Heim-widget og romval
+2026-11-03 (Codex): `afb4b26` førehandshentar neste omslag i kopla MA-kø. Overtoninga ventar på dekoding også med vanleg Sonos, og Sonos-bakgrunnen er litt dempa.
+«Spelar no» rullar med apprada og held seg synleg i 60 sekund etter pause. Langt OK på rommet opnar gruppeval i lista, med merking, ei kort vipping og eksplisitt Bruk.
+Verifisert: 259 målretta testar med skjermopptak, lint 0 feil, debug- og TV-bygg. Visuell kontroll i `app/build/screens/sonos-home-widget.png` og `sonos-group-inline.png`.
+Ikkje installert på Shield/Loftet. Emulator-5580 har ein konfigurert HA-konto og ikkje-demo-profil, og vart ikkje oppdatert. Ekte MA-kø, fysisk D-pad-langt trykk og gruppering står att til eiga TV-bestilling.
+
 # Siste Stova installert på Shield
 2026-11-03 (Codex): Bygde og installerte siste lokale kode `f963090` (`0.2.0-tv`) på Shield med `Install-Stova.ps1 -Tv` (`install -r`). SHA-256 på installert APK samsvarar med den lokale fila.
 Kontroll: `testDebugUnitTest lintDebug assembleTv` grønt (1075 bestått, 83 hoppa over, 0 feil; lint 0 feil). Stova opna på Shield, Heim-tenesta var framleis aktivert, og krasjbufferen viste ingen krasj.

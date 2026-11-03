@@ -76,7 +76,6 @@ fun TopBar(
     onPageOrigin: (TransformOrigin) -> Unit = {},
     /** Holding OK (or Menu) on Settings drops this device menu; null for kids and previews. */
     systemMenu: SystemMenu? = null,
-    nowPlaying: @Composable (Modifier) -> Unit = {},
     leading: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -90,7 +89,6 @@ fun TopBar(
         if (decorated) app.stova.home.SeasonalMark(appearance.season())
         val chipsLeft = appearance.chipPlacement == app.stova.profiles.ChipPlacement.LEFT
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp, if (chipsLeft) Alignment.Start else Alignment.End), verticalAlignment = Alignment.CenterVertically) {
-            nowPlaying(Modifier.weight(1f, fill = false))
             if (appearance.showHaChips) Box(Modifier.weight(1f, fill = false)) { leading(rowScope) }
         }
         if (decorated && appearance.showCountdown && androidx.compose.ui.platform.LocalDensity.current.fontScale < 1.5f)

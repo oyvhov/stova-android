@@ -2,11 +2,12 @@ package app.stova.sonos
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -36,6 +37,7 @@ import app.stova.core.ui.*
 import app.stova.ha.cards.rememberResumedNow
 import app.stova.home.SeasonalScene
 import app.stova.home.rememberSeasonalClock
+import kotlin.math.sin
 
 /** A controllable TV surface: no account, connection, network or storage work. */
 @Composable
@@ -47,7 +49,8 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     roomsOpen: Boolean = true, onRoomsOpen: (Boolean) -> Unit = {},
     /** The music alone on the screen; hoisted in [SonosScreen]. Back returns to this page. */
     immersive: Boolean = false, onImmersive: (Boolean) -> Unit = {},
-    preparedArtwork: String? = null, loadArtwork: SonosArtLoader? = null) {
+    preparedArtwork: String? = null, loadArtwork: SonosArtLoader? = null,
+    onApplyGroup: ((SonosGroupDraft, (Boolean) -> Unit) -> Unit)? = null) {
     val room = state.rooms.find { it.id == selectedId } ?: state.rooms.firstOrNull()
     val native = room?.let { coordinator(it, state.rooms) }
     val player = room?.let { sonosPlaybackRoom(it, state) }
@@ -57,6 +60,39 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     val moreFocus = remember { FocusRequester() }
     val playFocus = remember { FocusRequester() }
     val fullscreenFocus = remember { FocusRequester() }
+    val groupAnchorFocus = remember { FocusRequester() }
+    val groupCancelFocus = remember { FocusRequester() }
+    val groupApplyFocus = remember { FocusRequester() }
+    val roomList = rememberLazyListState()
+    var draft by remember { mutableStateOf<SonosGroupDraft?>(null) }
+    var groupAttempted by remember { mutableStateOf(false) }
+    var restoreRoomAfterGroup by remember { mutableStateOf(false) }
+    val anchor = draft?.let { edit -> state.rooms.find { it.id == edit.anchorId } }
+    val canApply = draft?.let { edit -> anchor?.let { edit.canApply(it, state.rooms) } } == true
+    val wobble = remember { androidx.compose.animation.core.Animatable(1f) }
+    val motion = stovaMotion
+    fun beginGroup(candidate: SonosRoom) {
+        val leader = coordinator(candidate, state.rooms)?.takeIf { it.available && it.supports(524288) } ?: return
+        if (busy || draft != null) return
+        groupAttempted = false
+        draft = SonosGroupDraft(leader.id, leader.members.toSet())
+        if (!roomsOpen) onRoomsOpen(true)
+    }
+    fun endGroup() { if (!busy) { draft = null; restoreRoomAfterGroup = true } }
+    BackHandler(enabled = draft != null) { endGroup() }
+    LaunchedEffect(draft?.anchorId, roomsOpen) {
+        val target = draft?.anchorId ?: room?.id?.takeIf { restoreRoomAfterGroup } ?: return@LaunchedEffect
+        if (!roomsOpen) return@LaunchedEffect
+        val index = state.rooms.indexOfFirst { it.id == target } + 1
+        if (index == 0) return@LaunchedEffect
+        if (roomList.layoutInfo.visibleItemsInfo.none { it.key == target }) roomList.scrollToItem(index)
+        withFrameNanos { }
+        if (draft != null) groupAnchorFocus.requestFocus() else { first.requestFocus(); restoreRoomAfterGroup = false }
+    }
+    LaunchedEffect(draft?.anchorId, motion.still) {
+        if (draft != null && !motion.still) { wobble.snapTo(0f); wobble.animateTo(1f, motion.fade(motion.ambient)) }
+        else wobble.snapTo(1f)
+    }
     val immersiveNow by rememberUpdatedState(immersive)
     var focusFullscreen by remember { mutableStateOf(false) }
     fun leaveImmersive() { focusFullscreen = true; onImmersive(false) }
@@ -117,12 +153,12 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                 Text(stringResource(R.string.sonos_title), style = MaterialTheme.typography.headlineMedium)
                 SonosSeasonMark()
                 Spacer(Modifier.weight(1f))
-                if (room != null) StovaButton(if (roomsOpen) stringResource(R.string.sonos_rooms_hide) else stringResource(R.string.sonos_rooms_show, room.name),
+                if (room != null && draft == null) StovaButton(if (roomsOpen) stringResource(R.string.sonos_rooms_hide) else stringResource(R.string.sonos_rooms_show, room.name),
                     { focusAfterToggle = !roomsOpen; onRoomsOpen(!roomsOpen) }, Modifier.testTag("sonos-rooms-toggle"),
                     icon = StovaIcons.Rows, compact = true, quiet = true)
-                if (room != null) SonosIconButton(StovaIcons.Expand, stringResource(R.string.sonos_fullscreen), { onImmersive(true) },
+                if (room != null && draft == null) SonosIconButton(StovaIcons.Expand, stringResource(R.string.sonos_fullscreen), { onImmersive(true) },
                     Modifier.focusRequester(fullscreenFocus).testTag("sonos-fullscreen"))
-                StovaButton(stringResource(R.string.sonos_back), onBack, compact = true, quiet = true)
+                if (draft == null) StovaButton(stringResource(R.string.sonos_back), onBack, compact = true, quiet = true)
             }
             if (room == null) {
                 Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -133,18 +169,49 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                 }
             } else Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 if (roomsOpen) SonosRoomsPanel {
-                LazyColumn(Modifier.width(220.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(4.dp)) {
+                LazyColumn(Modifier.width(220.dp).fillMaxHeight(), state = roomList, verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(4.dp)) {
                     item { Text(stringResource(R.string.sonos_rooms), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant) }
                     items(state.rooms, key = { it.id }) { item ->
-                        SonosRoomButton(item, rememberSonosVisual(item, state), item.id == room.id, { onSelect(item.id) },
-                            (if (item.id == room.id) Modifier.focusRequester(first) else Modifier)
-                                .focusProperties { right = if (playbackAvailable) playbackFocus else moreFocus })
+                        val edit = draft
+                        val isAnchor = edit?.anchorId == item.id
+                        val longClick = if (edit == null && onApplyGroup != null && item.available &&
+                            coordinator(item, state.rooms)?.let { it.available && it.supports(524288) } == true) ({ beginGroup(item) }) else null
+                        SonosRoomButton(item, rememberSonosVisual(item, state), if (edit == null) item.id == room.id else item.id in edit.selected,
+                            { if (edit == null) onSelect(item.id) else if (!busy && item.available) draft = edit.toggle(item.id) },
+                            Modifier.then(if (item.id == room.id) Modifier.focusRequester(first) else Modifier)
+                                .then(if (isAnchor) Modifier.focusRequester(groupAnchorFocus) else Modifier)
+                                .focusProperties { right = if (edit != null) if (canApply) groupApplyFocus else groupCancelFocus
+                                    else if (playbackAvailable) playbackFocus else moreFocus },
+                            onLongClick = longClick, editing = edit != null, anchor = isAnchor,
+                            rotation = { if (edit == null || motion.still || !item.available) 0f else {
+                                val t = wobble.value
+                                (sin(t * 4f * Math.PI).toFloat() * (1f - t) * 4f) * if (item.id.hashCode() % 2 == 0) 1f else -1f
+                            } })
                     }
                 }
                 }
                 // Ordinary TV type fits on one screen. Large accessibility text may scroll;
                 // it must never be shrunk to preserve the normal-density layout.
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                val edit = draft
+                if (edit != null) Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Text(stringResource(R.string.sonos_group), style = MaterialTheme.typography.headlineSmall)
+                    if (anchor != null) Text(stringResource(R.string.sonos_group_inline_hint, anchor.name), color = colors.onSurfaceVariant)
+                    val changed = anchor?.available != true || anchor.members.toSet() != edit.initial
+                    if (changed || groupAttempted && actionFailed) Text(stringResource(if (changed) R.string.sonos_group_changed else R.string.sonos_action_failed),
+                        color = colors.error)
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        StovaButton(stringResource(R.string.sonos_apply), {
+                            if (!busy) {
+                            groupAttempted = true
+                            onApplyGroup?.invoke(edit) { ok -> if (ok && draft?.anchorId == edit.anchorId) {
+                                draft = null; restoreRoomAfterGroup = true
+                            } }
+                            }
+                        }, Modifier.focusRequester(groupApplyFocus), primary = true, enabled = canApply || busy)
+                        StovaButton(stringResource(R.string.sonos_cancel), ::endGroup, Modifier.focusRequester(groupCancelFocus))
+                    }
+                } else Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     val largeType = LocalDensity.current.fontScale >= 1.5f
                     // With the rooms hidden the freed width goes to the sleeve and the music, not to more controls.
                     val cover = if (roomsOpen) 190.dp else 236.dp
@@ -169,7 +236,8 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                         StovaButton(stringResource(R.string.sonos_library), onBrowse, Modifier.focusProperties { left = rooms },
                             icon = StovaIcons.Rows, compact = true, quiet = true,
                             enabled = native?.available == true && native.supports(131072))
-                        StovaButton(stringResource(R.string.sonos_group), onGroup, icon = StovaIcons.Link, compact = true, quiet = true,
+                        StovaButton(stringResource(R.string.sonos_group), { if (onApplyGroup == null) onGroup() else beginGroup(room) },
+                            icon = StovaIcons.Link, compact = true, quiet = true,
                             enabled = native?.available == true && native.supports(524288))
                         StovaButton(stringResource(R.string.sonos_more), { restoreMore = true; more = true }, Modifier.focusRequester(moreFocus),
                             compact = true, quiet = true)
@@ -196,7 +264,8 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
 }
 
 @Composable
-private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Boolean, onClick: () -> Unit, modifier: Modifier) {
+private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Boolean, onClick: () -> Unit, modifier: Modifier,
+    onLongClick: (() -> Unit)?, editing: Boolean, anchor: Boolean, rotation: () -> Float) {
     val source = remember { MutableInteractionSource() }
     val colors = MaterialTheme.colorScheme
     // The chosen room's plate eases in; read only in the draw phase.
@@ -204,10 +273,12 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
         stovaMotion.fade(stovaMotion.quick), label = "sonos-room")
     Row(modifier.fillMaxWidth().testTag("sonos-room-${room.id}").focusOutline(source, MaterialTheme.shapes.medium)
         .clip(MaterialTheme.shapes.medium).drawBehind { drawRect(plate.value) }
-        .semantics { selected = active }.clickable(source, null, role = Role.Tab, onClick = onClick).padding(horizontal = 10.dp, vertical = 12.dp),
+        .semantics { selected = active }.combinedClickable(source, null, role = if (editing) Role.Checkbox else Role.Tab,
+            onLongClickLabel = if (onLongClick != null) stringResource(R.string.sonos_group) else null,
+            onLongClick = onLongClick, onClick = onClick).padding(horizontal = 10.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         // The speaker's light already says whether music plays; no separate play glyph.
-        SonosSpeakerArt(room.speaker, visual, Modifier.size(52.dp, 48.dp), "sonos-speaker-${room.id}", room.available)
+        SonosSpeakerArt(room.speaker, visual, Modifier.size(52.dp, 48.dp).graphicsLayer { rotationZ = rotation() }, "sonos-speaker-${room.id}", room.available)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(room.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             // Status, and the model when HA knows it: the one place on the page that names the speaker.
@@ -215,6 +286,9 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
                 room.speaker.label).joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
+        if (editing && active) Icon(if (anchor) StovaIcons.Link else StovaIcons.Check,
+            stringResource(if (anchor) R.string.sonos_group_leader else R.string.sonos_group_selected), Modifier.size(20.dp),
+            tint = colors.onSurface)
     }
 }
 

@@ -25,6 +25,7 @@ import app.stova.ha.cards.HaImageSource
 import app.stova.profiles.BackgroundSource
 import app.stova.profiles.Profile
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 fun sonosHomeRoom(prefs: SonosPrefs, profile: Profile, rooms: List<SonosRoom>, assistants: Map<String, SonosRoom> = emptyMap()): SonosRoom? {
     if (!prefs.enabled || !prefs.homeArtwork || profile.kid || profile.appearance.backgroundSource == BackgroundSource.THEME) return null
@@ -44,13 +45,34 @@ val LocalHomeSonos = compositionLocalOf<SonosRoom?> { null }
 
 data class SonosHomeSession(val state: SonosState, val busy: Boolean, val failed: Boolean, val playPause: (String) -> Unit)
 
-fun sonosWidgetRoom(prefs: SonosPrefs, state: SonosState): SonosRoom? {
+private fun pauseEnds(player: SonosRoom) = player.entity.lastChanged + 60_000L
+
+fun sonosWidgetRoom(prefs: SonosPrefs, state: SonosState, now: Long = System.currentTimeMillis()): SonosRoom? {
     if (!prefs.enabled || !prefs.showNowPlaying) return null
-    val rooms = state.rooms.filter { room ->
-        val player = sonosPlaybackRoom(room, state)
-        room.available && !room.tvAudio && player != null && !player.tvAudio && player.entity.state in setOf("playing", "paused", "buffering")
+    val rooms = state.rooms.mapNotNull { room ->
+        val player = sonosPlaybackRoom(room, state) ?: return@mapNotNull null
+        if (!room.available || !player.available || room.tvAudio || player.tvAudio) return@mapNotNull null
+        if (player.playing || player.entity.state == "paused" && now in player.entity.lastChanged until pauseEnds(player)) room to player
+        else null
     }
-    return rooms.find { it.id == prefs.preferredRoom } ?: rooms.firstOrNull { it.playing } ?: rooms.firstOrNull()
+    val playing = rooms.filter { it.second.playing }
+    val eligible = playing.ifEmpty { rooms }
+    return (eligible.find { it.first.id == prefs.preferredRoom } ?: eligible.firstOrNull())?.first
+}
+
+@Composable
+fun rememberSonosWidgetRoom(prefs: SonosPrefs, state: SonosState): SonosRoom? {
+    var expiredAt by remember { mutableLongStateOf(0L) }
+    val room = sonosWidgetRoom(prefs, state, maxOf(expiredAt, System.currentTimeMillis()))
+    val player = room?.let { sonosPlaybackRoom(it, state) }
+    val deadline = player?.takeIf { it.entity.state == "paused" }?.let(::pauseEnds)
+    LaunchedEffect(deadline) {
+        if (deadline != null) {
+            delay((deadline - System.currentTimeMillis()).coerceAtLeast(0L))
+            expiredAt = deadline
+        }
+    }
+    return room
 }
 
 /** One visible-Home subscription serves the widget and opt-in backdrop. */

@@ -7,6 +7,19 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class SonosModelTest {
+    @Test fun inlineGroupDraftKeepsAnchorAndRejectsAChangedGroup() {
+        val anchor = SonosRoom(HaEntity("media_player.a", "playing", kotlinx.serialization.json.JsonObject(emptyMap()), 0, 0), "A")
+        val other = anchor.copy(entity = anchor.entity.copy(id = "media_player.b"), name = "B")
+        val draft = SonosGroupDraft(anchor.id, setOf(anchor.id))
+        assertEquals(draft, draft.toggle(anchor.id))
+        assertFalse(draft.canApply(anchor, listOf(anchor, other)))
+        val edited = draft.toggle(other.id)
+        assertTrue(edited.canApply(anchor, listOf(anchor, other)))
+        assertFalse(edited.canApply(anchor, listOf(anchor)))
+        val changed = anchor.copy(entity = anchor.entity.copy(attributes = kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"group_members":["media_player.a","media_player.b"]}""").jsonObject))
+        assertFalse(edited.canApply(changed, listOf(changed, other)))
+    }
     @Test fun oldHouseholdFilesKeepSonosDisabled() {
         val settings = StovaJson.decodeFromString<app.stova.settings.HouseholdSettings>("{}")
         assertFalse(settings.sonos.enabled)

@@ -97,6 +97,7 @@ fun HomeContent(
     onOpenDiscover: () -> Unit = {},
     /** Counts the Home button pressed while Home is already on screen; each press goes back to the top. */
     toTop: Int = 0,
+    aboveApps: (@Composable (Modifier) -> Unit)? = null,
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
     val preview = LocalHomePreview.current
@@ -151,6 +152,7 @@ fun HomeContent(
     var activeRow by remember { mutableStateOf(restoreRow) }
     var viewerMoved by remember { mutableStateOf(false) }
     val topBarFocus = remember { FocusRequester() }
+    val widgetRequester = remember { FocusRequester() }
     val focusScope = rememberCoroutineScope()
     var rowNavigation by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var pendingRow by remember { mutableStateOf<HomeRowKey?>(null) }
@@ -178,7 +180,7 @@ fun HomeContent(
             if (runCatching { requesters[activeRow]?.requestFocus(FocusDirection.Enter) == true }.getOrDefault(false)) return@LaunchedEffect
         }
     }
-    fun focusRow(index: Int) {
+    fun focusRow(index: Int, enterFromAbove: Boolean = false) {
         rowNavigation?.cancel()
         navigationVersion++
         val version = navigationVersion
@@ -191,6 +193,8 @@ fun HomeContent(
                 withFrameNanos { }
                 listState.smoothScrollToItem(scrollIndex(index), motion)
                 repeat(12) {
+                    if (enterFromAbove && key == HomeRowKey.APPS && aboveApps != null &&
+                        runCatching { widgetRequester.requestFocus(FocusDirection.Enter) }.getOrDefault(false)) return@launch
                     if (runCatching { requesters[key]?.requestFocus(FocusDirection.Enter) == true }.getOrDefault(false)) return@launch
                     withFrameNanos { }
                 }
@@ -249,7 +253,7 @@ fun HomeContent(
             Modifier.weight(1f), field = {
             Box(Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
                 if (event.key != Key.DirectionDown) false else {
-                    if (event.type == KeyEventType.KeyDown) nextRow(-1, 1)?.let(::focusRow)
+                    if (event.type == KeyEventType.KeyDown) nextRow(-1, 1)?.let { focusRow(it, enterFromAbove = true) }
                     true
                 }
             }.focusRequester(topBarFocus).focusRestorer().onFocusChanged { state ->
@@ -261,8 +265,9 @@ fun HomeContent(
             val viewportHeight = maxHeight
             // The rows get the whole height; the hero and the first row share what the top field leaves.
             val room = maxHeight - lead
-            val geometry = if (deck) homeDeckGeometry(availableRows.orEmpty(), homePrefs, appearance, maxWidth, maxHeight) else null
             val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+            val widgetHeight = if (aboveApps != null) maxOf(54.dp, 40.dp * fontScale) else 0.dp
+            val geometry = if (deck) homeDeckGeometry(availableRows.orEmpty(), homePrefs, appearance, maxWidth, maxHeight, widgetHeight) else null
             val artworkHeight = availableRows.orEmpty().maxOfOrNull { row ->
                 val style = homePrefs.rowFormats[row.key] ?: RowStyle()
                 artworkDimensions(style.format ?: defaultRowFormat(row.key, appearance), style.size ?: appearance.cardSize).height
@@ -278,7 +283,7 @@ fun HomeContent(
             // The scrolling view opens like the deck, with only the first row at the bottom under a big
             // hero; moving down then scrolls the hero away. Large text keeps the fixed fraction.
             val scrollHeroSpace = if (!deck && fontScale < 1.5f && !availableRows.isNullOrEmpty()) {
-                val first = homeDeckGeometry(availableRows.take(1), homePrefs, appearance.copy(homeRows = HomeRows.ONE), maxWidth, room)
+                val first = homeDeckGeometry(availableRows.take(1), homePrefs, appearance.copy(homeRows = HomeRows.ONE), maxWidth, room, widgetHeight)
                 (room - first.height - first.bottom).coerceAtLeast(0.dp)
             } else null
             val heroHeight = if (appearance.heroSize == HeroSize.OFF) 0.dp else if (deckHeroSpace != null) {
@@ -335,7 +340,8 @@ fun HomeContent(
                         val lastStyle = homePrefs.rowFormats[availableRows.last().key] ?: RowStyle()
                         val lastArt = artworkDimensions(lastStyle.format ?: defaultRowFormat(availableRows.last().key, appearance), lastStyle.size ?: appearance.cardSize).height.dp
                         val lastRowHeight = appearance.rowSpacing.top.dp + (if (lastStyle.showTitle) 25.dp * fontScale + StovaLayout.SectionBottom else 0.dp) + lastArt +
-                            (if (lastStyle.showsCardTitles(appearance)) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp
+                            (if (lastStyle.showsCardTitles(appearance)) 8.dp + 18.dp * fontScale else 0.dp) + 4.dp +
+                            (if (availableRows.last() is HomeRowUi.Apps) widgetHeight else 0.dp)
                         // Even the last row can reach the top after the hero has scrolled away. Text can measure a
                         // little under its estimate, and the row above then peeked in at the screen's top edge.
                         val bottomSpace = (viewportHeight - lastRowHeight + 16.dp).coerceAtLeast(StovaLayout.TvSafeEdge)
@@ -357,6 +363,16 @@ fun HomeContent(
                                     CompositionLocalProvider(LocalBringIntoViewSpec provides rowSpec) {
                                         val rowRequester = remember(row.key) { requesters.getOrPut(row.key) { FocusRequester() } }
                                         val style = homePrefs.rowFormats[row.key] ?: RowStyle()
+                                        val widget = aboveApps.takeIf { row is HomeRowUi.Apps }
+                                        val widgetPresent by rememberUpdatedState(widget != null)
+                                        var widgetFocused by remember { mutableStateOf(false) }
+                                        LaunchedEffect(widgetPresent) {
+                                            if (!widgetPresent && widgetFocused) {
+                                                withFrameNanos { }
+                                                runCatching { rowRequester.requestFocus() }
+                                                widgetFocused = false
+                                            }
+                                        }
                                         var hasFocus by remember { mutableStateOf(false) }
                                         LaunchedEffect(movingRow, index) {
                                             if (movingRow == row.key) listState.scrollToItem(scrollIndex(index))
@@ -366,8 +382,12 @@ fun HomeContent(
                                                 if (event.type == KeyEventType.KeyDown) {
                                                     val step = if (event.key == Key.DirectionUp) -1 else 1
                                                     val from = pendingRow?.let { key -> currentRows.orEmpty().indexOfFirst { it.key == key } } ?: index
-                                                    val next = nextRow(from, step)
-                                                    if (next != null) focusRow(next) else if (step < 0) focusRow(-1)
+                                                    if (widget != null && step < 0 && !widgetFocused) widgetRequester.requestFocus(FocusDirection.Enter)
+                                                    else if (widgetFocused && step > 0 && widget != null) rowRequester.requestFocus()
+                                                    else {
+                                                        val next = nextRow(from, step)
+                                                        if (next != null) focusRow(next, enterFromAbove = step > 0) else if (step < 0) focusRow(-1)
+                                                    }
                                                 }
                                                 true
                                             }
@@ -395,10 +415,18 @@ fun HomeContent(
                                                 is HomeRowUi.Media -> MediaRow(row, requester, rowTarget, trackFocus, onMediaClick, { target ->
                                                     if (canEditRows) { menuMedia = target; rowMenu() } else onMediaLongClick(target)
                                                 }, rowRequester, onOpenMore = onOpenDiscover.takeIf { row.kind == MediaRowKind.DISCOVER })
-                                                is HomeRowUi.Apps -> AppsRow(row, art, catalog, requester, rowTarget, appIconOverrides, { app ->
-                                                    if (canEditRows) { menuApp = app; rowMenu() } else onAppLongClick(app)
-                                                }, rowRequester, onShortcutClick, { tile -> if (canEditRows) { menuShortcut = tile; rowMenu() } }, onOpenApps) {
-                                                    trackFocus(FocusedTarget.App(it))
+                                                is HomeRowUi.Apps -> Column {
+                                                    if (widget != null) Box(Modifier.height(widgetHeight).padding(start = StovaLayout.TvSafeEdge),
+                                                        contentAlignment = Alignment.CenterStart) {
+                                                        widget(Modifier.focusRequester(widgetRequester).onFocusChanged {
+                                                            if (widgetPresent) widgetFocused = it.hasFocus
+                                                        }.focusGroup())
+                                                    }
+                                                    AppsRow(row, art, catalog, requester, rowTarget, appIconOverrides, { app ->
+                                                        if (canEditRows) { menuApp = app; rowMenu() } else onAppLongClick(app)
+                                                    }, rowRequester, onShortcutClick, { tile -> if (canEditRows) { menuShortcut = tile; rowMenu() } }, onOpenApps) {
+                                                        trackFocus(FocusedTarget.App(it))
+                                                    }
                                                 }
                                             }
                                           }

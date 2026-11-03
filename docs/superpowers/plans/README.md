@@ -13,6 +13,8 @@ avkryssingsboksar i dei er inga bestilling.
 
 ## Historikk
 
+- 2026-11-03: [Sonos: spelar no over appane og romval i lista](2026-11-03-sonos-widget-gruppe.md), fullført med 259 grøne Heim-/Sonos-/transport-/designtestar, lint og TV-bygg. Ikkje installert på TV.
+
 - 2026-11-03: [Sonos: klargjer neste omslag](2026-11-03-sonos-neste-omslag.md), fullført og verifisert med kø- og skjermtestar. Ekte TV-kø ikkje prøvd.
 
 - 2026-11-03: [Sonos: roleg volum, fullskjerm og mikrorørsle](2026-11-03-sonos-fullskjerm.md), fullført og installert på Loftet. Berre visuell prøve, utan avspeling eller volumendring. 1156 testar før sluttgjennomgang, 113 målretta etter; lint og TV-bygg grøne. [Verifisering](../../verification/2026-11-03-sonos-fullskjerm.md).

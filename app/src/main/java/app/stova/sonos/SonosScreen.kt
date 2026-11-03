@@ -34,7 +34,6 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
     var state by remember(repository) { mutableStateOf(SonosState()) }
     var retry by remember { mutableIntStateOf(0) }
     var selected by rememberSaveable(profile.id) { mutableStateOf<String?>(null) }
-    var grouping by remember { mutableStateOf<String?>(null) }
     // Survives the library and coming back; per profile.
     var roomsOpen by rememberSaveable(profile.id) { mutableStateOf(true) }
     // Full screen is a way of looking, not a setting: it survives rotation and the library, not a new visit.
@@ -94,23 +93,21 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
         selected = id; failed = false
         scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(preferredRoom = id)) } }
     }, act,
-        { grouping = player?.id; failed = false }, { library = player?.id }, { retry++ }, busy, failed,
+        {}, { library = player?.id }, { retry++ }, busy, failed,
         backgroundArt = household?.sonos?.backgroundArt == true && profile.appearance.backgroundSource != app.stova.profiles.BackgroundSource.THEME,
         onBack = onBack, roomsOpen = roomsOpen, onRoomsOpen = { roomsOpen = it },
         preparedArtwork = warmed.firstOrNull { it.matches(queue) }?.path, loadArtwork = loadArt,
         immersive = immersive, onImmersive = { immersive = it },
-        onBrowseMusicAssistant = state.musicAssistant[player?.id]?.takeIf { it.available && it.supports(131072) }?.let { ma -> { library = ma.id } })
-    }
-    grouping?.let { id -> state.rooms.find { it.id == id }?.let { anchor ->
-        SonosGroupDialog(anchor, state.rooms, busy, failed, { chosen ->
+        onBrowseMusicAssistant = state.musicAssistant[player?.id]?.takeIf { it.available && it.supports(131072) }?.let { ma -> { library = ma.id } },
+        onApplyGroup = { draft, complete ->
             if (!busy) {
                 busy = true; failed = false
-                val expected = anchor.members.toSet()
                 scope.launch { try {
-                    val ok = repository.group(anchor.id, chosen, expected)
-                    failed = !ok; if (ok) grouping = null
+                    val ok = repository.group(draft.anchorId, draft.selected, draft.initial)
+                    failed = !ok
+                    complete(ok)
                 } finally { busy = false } }
             }
-        }, { grouping = null })
-    } }
+        })
+    }
 }
