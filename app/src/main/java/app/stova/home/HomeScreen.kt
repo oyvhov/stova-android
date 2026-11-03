@@ -40,6 +40,8 @@ fun HomeScreen(
     profile: app.stova.profiles.Profile? = null,
     apps: AppRepository? = null,
     onHomeChange: (HomePrefs) -> Unit = {},
+    /** A Sonos favourite in the row opens the Sonos page. */
+    onOpenSonos: () -> Unit = {},
     /** The tile at the end of the Oppdag row. */
     onOpenDiscover: () -> Unit = {},
     /** A Discover card: the title's page in Stova, opened with what the card showed. */
@@ -107,7 +109,7 @@ fun HomeScreen(
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
-    val openShortcut = rememberShortcutOpener(haConnection, profile, onPlaybackOpened) { missing = true }
+    val openShortcut = rememberShortcutOpener(haConnection, profile, onPlaybackOpened, onOpenSonos) { missing = true }
     HomeContent(rows, focused, initial, art, catalog, onOpenApps, vm::focus,
         onMediaClick = { openMedia(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { HomeChips(haRepository, topBar) },
         spotlight = if(profile==null) spotlight else backgroundForProfile(spotlight,profile.id,profile.appearance.backgroundFilter), appIconOverrides = profile?.apps?.iconOverrides.orEmpty(),

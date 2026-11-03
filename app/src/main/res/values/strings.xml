@@ -60,6 +60,8 @@
     <string name="sheet_library">Bibliotek</string>
     <string name="sheet_library_favorite">Bibliotek · i favorittane</string>
     <string name="sheet_scene">Smarthus</string>
+    <string name="sheet_sonos">Musikk</string>
+    <string name="sheet_sonos_favorite">Musikk · i favorittane</string>
     <string name="sheet_scene_favorite">Smarthus · i favorittane</string>
     <string name="shortcut_run">Køyr</string>
     <string name="shortcut_ran">%1$s er starta</string>

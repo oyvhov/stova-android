@@ -1,3 +1,7 @@
+# Sonos: romliste som sidemeny og Sonos-kort i favorittrada
+2026-11-03 (Claude Code): **Root må verifisere på Loftet (berre visuelt, ingen lyd-/gruppe-/lyshandlingar):** (1) Sonos-sida: «Gøym rom» gøymer lista, fokus til spel/pause, «Rom · <rom>» opnar att med fokus på rommet, alt på éin skjerm; valet hugsa etter biblioteket. (2) Appar: langt trykk på Sonos-flisa → «Legg til i favorittar»; på Heim viser kortet omslag, låt og «rom · status», også med widget og Heim-kunst av; TV-lyd/fråkopla utan gammal kunst; OK opnar Sonos utan spelehandling; flytt/fjern i menyen. (3) Barneprofil har ikkje kortet.
+Kontroll: 1122 testar, 0 feil; lint 0 feil; debug bygd (ikkje assembleTv, ikkje installert). Plan `2026-11-03-sonos-sidebar-kort.md`, verifisering `docs/verification/2026-11-03-sonos-sidebar-kort.md`. Ingen push; brukaren si `.codex-remote-attachments/` urørt.
+
 # Sonos: hovudkontrollar på éin skjerm og same tema som Stova
 2026-11-03: Fullført nytt oppsett med fast musikkfelt, figur/volum og snarvegar; kjelder/demping/tilfeldig/gjenta/±15 s under Fleire val. Følgjer profilen sine temaroller og Heim si sesongpynt på sida og i biblioteket. Plan `2026-11-03-sonos-ein-skjerm.md` er ferdig.
 Kontroll: 76 målretta testar grøne (inkl. skjermar, DesignRules/ThemePalette og sesongtestar), lint 0 feil, tv-bygg grønt og installert på Loftet. Hovudkontrollane passar utan rulling; D-pad og fokusretur i Fleire val prøvde. Jul/Halloween/normal/stor skrift rendra lokalt; Halloween sett på TV.

@@ -21,11 +21,12 @@ class AppsRowSource(
     private val session: ProfileSession,
     private val accounts: (String) -> Flow<List<MediaAccount>> = { flowOf(emptyList()) },
     private val haReady: Flow<Boolean> = flowOf(false),
+    private val sonosReady: Flow<Boolean> = flowOf(false),
 ) : HomeRowSource {
     override fun rows(profile: Profile): Flow<List<HomeRowUi>> =
-        combine(apps.arranged(session.active), session.active.map { it?.apps to (it?.kid ?: false) }, accounts(profile.id), haReady) {
-                arranged, (prefs, kid), owned, ha ->
-            val tiles = prefs?.let { favoriteTiles(it, arranged.favorites, owned, ha, kid) }.orEmpty()
+        combine(apps.arranged(session.active), session.active.map { it?.apps to (it?.kid ?: false) }, accounts(profile.id), haReady, sonosReady) {
+                arranged, (prefs, kid), owned, ha, sonos ->
+            val tiles = prefs?.let { favoriteTiles(it, arranged.favorites, owned, ha, kid, sonos) }.orEmpty()
             when {
                 tiles.isNotEmpty() -> listOf(HomeRowUi.Apps(HomeRowKey.APPS, arranged.favorites, tiles = tiles))
                 arranged.all.isEmpty() -> emptyList()

@@ -31,6 +31,8 @@ class ShortcutCatalog(
     val scenes: suspend () -> List<FavoriteTile.Scene> = { emptyList() },
     /** Spole's profiles, asked only when Spole is installed. */
     val spoleProfiles: suspend () -> List<FavoriteTile.SpoleProfile> = { emptyList() },
+    /** Sonos is on with Home Assistant set up: local settings only, never a question to the house. */
+    val sonosReady: Flow<Boolean> = flowOf(false),
 )
 
 /** The name and art a shortcut keeps in the profile, so Home can draw it without asking anyone. */
@@ -43,12 +45,13 @@ fun FavoriteTile.saved(): Shortcut = Shortcut(label, (this as? FavoriteTile.Libr
  */
 @Composable
 fun rememberShortcutOpener(haConnection: HaConnection?, profile: Profile?, onPlaybackOpened: () -> Unit = {},
-    onSpoleMissing: () -> Unit): (FavoriteTile) -> Unit {
+    onOpenSonos: () -> Unit = {}, onSpoleMissing: () -> Unit): (FavoriteTile) -> Unit {
     val context = LocalContext.current
     val handoff = remember(context) { SpoleHandoff(context) }
     val scope = rememberCoroutineScope()
     val opened by rememberUpdatedState(onPlaybackOpened)
     val missing by rememberUpdatedState(onSpoleMissing)
+    val sonos by rememberUpdatedState(onOpenSonos)
     val current by rememberUpdatedState(profile)
     // Read in composition, so a language change reaches the messages too.
     val ran by rememberUpdatedState(stringResource(R.string.shortcut_ran))
@@ -80,6 +83,7 @@ fun rememberShortcutOpener(haConnection: HaConnection?, profile: Profile?, onPla
                     Toast.makeText(context, (if (done) ran else failed).format(tile.label), Toast.LENGTH_SHORT).show()
                 }
             }
+            is FavoriteTile.Sonos -> sonos()
             is FavoriteTile.App -> Unit
         }
     } }

@@ -103,6 +103,42 @@ class SonosScreensTest {
         } }
         compose.saveScreen("sonos-library")
     }
+    @Test fun roomsHidden() {
+        val rooms = sonosPreviewRooms()
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SonosContent(SonosState(rooms, loading = false), rooms.first().id, {}, {}, {}, {}, {},
+                artwork = { _, modifier -> SonosPreviewArtwork(modifier) }, onBrowseMusicAssistant = {}, roomsOpen = false)
+        } }
+        compose.saveScreen("sonos-rooms-hidden")
+    }
+    /** The Sonos favourite among other favourites: music, paused with a failed picture, and TV audio. */
+    @Test fun favouriteCards() {
+        val rooms = sonosPreviewRooms()
+        fun state(room: SonosRoom) = SonosState(listOf(room), loading = false)
+        val playing = sonosCard(SonosPrefs(enabled = true), state(rooms[0]))
+        val paused = sonosCard(SonosPrefs(enabled = true), state(rooms[2]))
+        val tv = sonosCard(SonosPrefs(enabled = true), state(rooms[0].copy(entity = rooms[0].entity.copy(attributes =
+            kotlinx.serialization.json.JsonObject(rooms[0].entity.attributes + ("source" to kotlinx.serialization.json.JsonPrimitive("TV")))))))
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.fillMaxSize()
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.background).padding(48.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)) {
+                androidx.compose.material3.Text("Favorittappar", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(20.dp)) {
+                    listOf(playing to true, paused to false, tv to true).forEach { (card, loads) ->
+                        androidx.compose.runtime.CompositionLocalProvider(LocalSonosCard provides SonosCardSource(card) { path, modifier, onLoad, onError ->
+                            LaunchedEffect(path) { if (loads) onLoad() else onError() }
+                            if (loads) SonosPreviewArtwork(modifier)
+                        }) {
+                            app.stova.apps.ShortcutTile(app.stova.apps.FavoriteTile.Sonos("Sonos"), {}, {})
+                        }
+                    }
+                    app.stova.apps.ShortcutTile(app.stova.apps.FavoriteTile.Sonos("Sonos"), {}, {})
+                }
+            }
+        } }
+        compose.saveScreen("sonos-card")
+    }
     @Test fun nowPlaying() = render()
     private fun seasonal(choice: SeasonChoice, name: String) {
         val rooms = sonosPreviewRooms()

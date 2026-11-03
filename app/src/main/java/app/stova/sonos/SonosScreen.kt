@@ -32,6 +32,8 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
     var retry by remember { mutableIntStateOf(0) }
     var selected by rememberSaveable(profile.id) { mutableStateOf<String?>(null) }
     var grouping by remember { mutableStateOf<String?>(null) }
+    // Survives the library and coming back; per profile.
+    var roomsOpen by rememberSaveable(profile.id) { mutableStateOf(true) }
     var library by remember(repository) { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
@@ -70,7 +72,7 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
     }, act,
         { grouping = player?.id; failed = false }, { library = player?.id }, { retry++ }, busy, failed,
         backgroundArt = household?.sonos?.backgroundArt == true && profile.appearance.backgroundSource != app.stova.profiles.BackgroundSource.THEME,
-        artwork = artwork, onBack = onBack,
+        artwork = artwork, onBack = onBack, roomsOpen = roomsOpen, onRoomsOpen = { roomsOpen = it },
         onBrowseMusicAssistant = state.musicAssistant[player?.id]?.takeIf { it.available && it.supports(131072) }?.let { ma -> { library = ma.id } })
     }
     grouping?.let { id -> state.rooms.find { it.id == id }?.let { anchor ->

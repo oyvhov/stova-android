@@ -145,6 +145,7 @@ class AppContainer(
         },
         scenes = { if (household.current().haBaseUrl == null) emptyList() else app.stova.ha.haShortcutScenes(haSocket, haRepository::loadRegistry) },
         spoleProfiles = { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { app.stova.media.SpoleProfiles(context).list() } },
+        sonosReady = household.data.map { it.sonos.enabled && it.haBaseUrl != null }.distinctUntilChanged(),
     )
 
     /** The person's rows from Spole, for a profile that follows a Spole person and has no account here. */
@@ -153,7 +154,7 @@ class AppContainer(
     })
     /** Discover: Seerr through Spole, for the page and Home's row. */
     val discover = app.stova.discover.DiscoverRepository(app.stova.discover.SpoleDiscoverFetch(app.stova.discover.SpoleDiscover(appContext)))
-    val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session, shortcuts.accounts, shortcuts.haReady), app.stova.media.MediaRowSource(media), spoleRows,
+    val homeSources: List<HomeRowSource> = listOf(AppsRowSource(apps, session, shortcuts.accounts, shortcuts.haReady, shortcuts.sonosReady), app.stova.media.MediaRowSource(media), spoleRows,
         app.stova.discover.DiscoverRowSource(discover, session.active, mediaAccounts::forProfile, appScope), app.stova.watchnext.WatchNextRowSource(watchNext))
 
 

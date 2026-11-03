@@ -64,6 +64,53 @@ class SonosContentTest {
         compose.onNodeWithText("TV", substring = false).assertDoesNotExist()
     }
 
+    // A: the rooms are a side menu that can be hidden so the music takes the page.
+    @Test fun hidingTheRoomsFocusesPlaybackAndOpeningThemFocusesTheSelectedRoom() {
+        val kitchen = room.copy(entity = room.entity.copy(id = "media_player.kitchen", state = "paused"), name = "Kjøkken")
+        var open by mutableStateOf(true)
+        var selected: String? = null
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            val input = androidx.compose.ui.platform.LocalInputModeManager.current
+            SideEffect { input.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
+            SonosContent(SonosState(listOf(room, kitchen), loading = false), room.id, { selected = it }, {}, {}, {}, {},
+                roomsOpen = open, onRoomsOpen = { open = it })
+        } }
+        compose.onNodeWithTag("sonos-room-${kitchen.id}").performClick()
+        assertEquals(kitchen.id, selected)
+        compose.onNodeWithText("Gøym rom").performClick()
+        assertFalse(open)
+        compose.onNodeWithTag("sonos-room-${room.id}").assertDoesNotExist()
+        // What plays takes focus; the selected room stays named on the button that brings the list back.
+        compose.onNodeWithText("Pause").assertIsFocused()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
+        compose.onNodeWithText("Rom · Stova").assertExists()
+        compose.onNodeWithText("Rom · Stova").performClick()
+        assertTrue(open)
+        compose.onNodeWithTag("sonos-room-${room.id}").assertIsFocused()
+    }
+
+    @Test fun hiddenRoomsLeaveEveryDailyControlOnScreenAndAnEmptyPageHasNoToggle() {
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SonosContent(SonosState(listOf(room.copy(entity = room.entity.copy(attributes = StovaJson.parseToJsonElement("""{
+                "media_title":"Inspector Norse","media_artist":"Todd Terje","media_duration":480,"volume_level":0.3,"supported_features":1048575}""").jsonObject))),
+                loading = false), room.id, {}, {}, {}, {}, {}, roomsOpen = false, onBrowseMusicAssistant = {})
+        } }
+        val root = compose.onRoot().getUnclippedBoundsInRoot()
+        listOf(compose.onNodeWithTag("slider-sonos-${room.id}"), compose.onNodeWithText("Fleire val"), compose.onNodeWithText("Music Assistant")).forEach { node ->
+            node.assertIsDisplayed()
+            assertTrue(node.getUnclippedBoundsInRoot().bottom <= root.bottom - 24.dp)
+        }
+        compose.onNodeWithText("Gøym rom").assertDoesNotExist()
+    }
+
+    @Test fun emptyOrOfflinePageOffersNoRoomToggle() {
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SonosContent(SonosState(emptyList(), loading = false, failed = true), null, {}, {}, {}, {}, {}, roomsOpen = false)
+        } }
+        compose.onNodeWithText("Gøym rom").assertDoesNotExist()
+        compose.onNodeWithText("Rom", substring = true).assertDoesNotExist()
+    }
+
     @Test fun moreOptionsOpenWithoutSendingActionsAndReturnFocusToTheirButton() {
         var action: SonosAction? = null
         compose.setContent { StovaTheme(reduceMotion = true) {

@@ -59,8 +59,9 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
     val currentProfile by rememberUpdatedState(profile)
     val offers = shortcuts?.takeIf { !profile.kid }
     val arrangedFlow = remember(apps, offers, profile.id) {
-        val local = offers?.let { combine(it.accounts(profile.id), it.haReady) { owned, ha -> owned to ha } } ?: flowOf(emptyList<MediaAccount>() to false)
-        combine(apps.arranged(snapshotFlow { currentProfile }), local) { arranged, ready -> AppsPage(arranged, ready.first, ready.second) }
+        val local = offers?.let { combine(it.accounts(profile.id), it.haReady, it.sonosReady) { owned, ha, sonos -> Triple(owned, ha, sonos) } }
+            ?: flowOf(Triple(emptyList<MediaAccount>(), false, false))
+        combine(apps.arranged(snapshotFlow { currentProfile }), local) { arranged, ready -> AppsPage(arranged, ready.first, ready.second, ready.third) }
             .map<AppsPage, AppsPage?> { it }
     }
     // Null until the first scan: a grid laid out empty would anchor on "All apps" and then be
@@ -85,12 +86,12 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
     var shortcutMenu by remember(profile.id) { mutableStateOf<FavoriteTile?>(null) }
     var showHidden by remember { mutableStateOf(false) }
     var spoleMissing by remember { mutableStateOf(false) }
-    val openShortcut = rememberShortcutOpener(haConnection, profile) { spoleMissing = true }
+    val openShortcut = rememberShortcutOpener(haConnection, profile, onOpenSonos = { onOpenSonos?.invoke() }) { spoleMissing = true }
 
     val onLong: (InstalledApp) -> Unit = { app -> if (!profile.kid) menuFor = app }
     val page = loaded ?: return
     val arranged = page.apps
-    val favorites = favoriteTiles(profile.apps, arranged.favorites, page.accounts, page.haReady, profile.kid)
+    val favorites = favoriteTiles(profile.apps, arranged.favorites, page.accounts, page.haReady, profile.kid, page.sonosReady && onOpenSonos != null)
     val appearance = app.stova.core.theme.LocalAppearance.current
     val format = if (appearance.appStyle == app.stova.profiles.AppStyle.ICON)
         app.stova.profiles.RowFormat.ICON else app.stova.profiles.RowFormat.WIDE
@@ -139,7 +140,8 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
         header(R.string.apps_all)
         if (onOpenSonos != null && !profile.kid) item(key = "stova:sonos") {
             val label = stringResource(R.string.sonos_title)
-            TileFrame(label, 0, onOpenSonos, onOpenSonos) { spec ->
+            // A long press offers the same panel as any shortcut: add Sonos to the favourites, move or remove it.
+            TileFrame(label, 0, onOpenSonos, { shortcutMenu = FavoriteTile.Sonos(label) }) { spec ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(StovaIcons.Sonos, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurface)
                     if (!spec.captions) Text(label, style = MaterialTheme.typography.titleSmall)
@@ -186,7 +188,7 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
 private const val APPS_PER_ROW = 4
 
 /** The installed apps and the local facts that say which favourite shortcuts can show. */
-private data class AppsPage(val apps: ArrangedApps, val accounts: List<MediaAccount>, val haReady: Boolean)
+private data class AppsPage(val apps: ArrangedApps, val accounts: List<MediaAccount>, val haReady: Boolean, val sonosReady: Boolean = false)
 
 private fun LazyGridScope.header(title: Int) {
     item(key = "header:$title", span = { GridItemSpan(maxLineSpan) }) {

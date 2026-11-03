@@ -40,6 +40,22 @@ fokus. Jul og Halloween bruker same sesongmerke og pynt som Heim; Av, Roleg og M
 fungerer som elles i appen. Redusert rørsle stoppar pynt og høgtalaranimasjon.
 Albumkunst ligg bak eit slør i temafargen. Høgtalarane bevarer si matte produktfarge.
 
+## Romlista og Sonos-kortet
+
+Knappen **Gøym rom** øvst gøymer romlista, så omslaget og musikken får plassen og fokus går til
+spel/pause. Når lista er gøymd, står det valde rommet på knappen (**Rom · Stova**); trykk på han
+for å få lista attende med fokus på rommet. Valet blir hugsa når du opnar biblioteket og kjem
+attende.
+
+Sonos kan òg leggjast i favorittrada på Heim. Hald inne OK (eller Meny) på Sonos-flisa under
+**Appar** og vel **Legg til i favorittar**; flytt og fjern som andre favorittar. Kortet viser
+albumkunsten over heile flata, låt og «rom · status» (spelar, på pause, lastar, fråkopla eller
+TV-lyd). TV-lyd og fråkopla rom viser aldri gammal albumkunst, men høgtalaren til rommet. Heile
+kortet opnar Sonos-sida; det startar eller stoppar aldri noko. Kortet gjeld vaksne profilar og
+krev at Sonos er på med Home Assistant.
+
+![Sonos-kort i favorittrada](images/sonos-card.png)
+
 ## Høgtalarane
 
 Kvart rom viser ei teikning av høgtalaren slik han faktisk ser ut, med modellnamnet ved volumet

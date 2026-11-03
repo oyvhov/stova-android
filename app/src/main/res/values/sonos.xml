@@ -58,4 +58,9 @@
     <string name="sonos_replace_queue">Spel startar dette innhaldet og erstattar køen i det valde rommet.</string>
     <string name="sonos_enqueue">Legg til i køen</string>
     <string name="sonos_more">Fleire val</string>
+    <string name="sonos_card_status">%1$s · %2$s</string>
+    <string name="sonos_card_playing">Spelar</string>
+    <string name="sonos_card_buffering">Lastar</string>
+    <string name="sonos_rooms_hide">Gøym rom</string>
+    <string name="sonos_rooms_show">Rom · %1$s</string>
 </resources>

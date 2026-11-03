@@ -60,6 +60,8 @@
     <string name="sheet_library">Library</string>
     <string name="sheet_library_favorite">Library · in your favourites</string>
     <string name="sheet_scene">Smart home</string>
+    <string name="sheet_sonos">Music</string>
+    <string name="sheet_sonos_favorite">Music · in your favourites</string>
     <string name="sheet_scene_favorite">Smart home · in your favourites</string>
     <string name="shortcut_run">Run</string>
     <string name="shortcut_ran">%1$s started</string>

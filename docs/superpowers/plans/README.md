@@ -8,6 +8,7 @@ avkryssingsboksar i dei er inga bestilling.
 
 | Plan | Står att |
 |---|---|
+| [Sonos: romliste som sidemeny og Sonos-kort i favorittrada](2026-11-03-sonos-sidebar-kort.md) | Implementert og skjermtesta lokalt; root verifiserer visuelt på Loftet. |
 | [Sonos: teikna høgtalarar med modell frå HA](2026-11-03-sonos-hoyttalarar.md) | Installert og visuelt prøvd på Loftet med verkelege modellar og favorittar. Lydtest utsett: eigaren valde berre visuell testing. |
 | [Sonos gjennom Home Assistant](2026-11-03-sonos.md) | Implementert med Music Assistant, Heim-kunst og widget. Loftet: rom, omslag, bibliotek, gruppevising og widget prøvde; lydhandlingar, MA og TV-lyd på anlegget står att. |
 | [Oppdag i Stova: Seerr gjennom Spole](2026-11-01-oppdag.md) | Oppgåve 11 (TV-ane) ventar på eigaren; Spole-delen på greina `launcher-discover`. Spesifikasjon: [`../specs/2026-11-01-oppdag-design.md`](../specs/2026-11-01-oppdag-design.md). |

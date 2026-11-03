@@ -43,6 +43,7 @@ fun ShortcutActionsMenu(
 ) {
     val scene = tile is FavoriteTile.Scene
     val person = tile is FavoriteTile.SpoleProfile
+    val sonos = tile is FavoriteTile.Sonos
     val image = (tile as? FavoriteTile.Library)?.image ?: (tile as? FavoriteTile.SpoleProfile)?.image
     val tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
     val art: (@Composable BoxScope.() -> Unit)? = when {
@@ -57,6 +58,8 @@ fun ShortcutActionsMenu(
         when (pages.current) {
             null -> {
                 val kind = when {
+                    sonos && favorite -> R.string.sheet_sonos_favorite
+                    sonos -> R.string.sheet_sonos
                     scene && favorite -> R.string.sheet_scene_favorite
                     scene -> R.string.sheet_scene
                     person && favorite -> R.string.sheet_spole_profile_favorite
@@ -64,7 +67,7 @@ fun ShortcutActionsMenu(
                     favorite -> R.string.sheet_library_favorite
                     else -> R.string.sheet_library
                 }
-                SheetHeader(tile.label, stringResource(kind), if (scene) StovaIcons.Sun else StovaIcons.Rows, art = art)
+                SheetHeader(tile.label, stringResource(kind), when { scene -> StovaIcons.Sun; sonos -> StovaIcons.Sonos; else -> StovaIcons.Rows }, art = art)
                 val full = Modifier.fillMaxWidth()
                 StovaButton(stringResource(if (favorite) R.string.app_remove_favorite else R.string.app_add_favorite),
                     { onToggleFavorite(); onDismiss() }, full, primary = true, icon = StovaIcons.Star)

@@ -18,6 +18,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -40,7 +41,9 @@ import app.stova.home.rememberSeasonalClock
 fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> Unit, onAction: (SonosAction) -> Unit,
     onGroup: () -> Unit, onBrowse: () -> Unit, onRetry: () -> Unit,
     busy: Boolean = false, actionFailed: Boolean = false, backgroundArt: Boolean = true,
-    artwork: @Composable (String, Modifier) -> Unit = { _, _ -> }, onBack: () -> Unit = {}, onBrowseMusicAssistant: (() -> Unit)? = null) {
+    artwork: @Composable (String, Modifier) -> Unit = { _, _ -> }, onBack: () -> Unit = {}, onBrowseMusicAssistant: (() -> Unit)? = null,
+    /** The rooms are a side menu: hidden, the music takes the page. Hoisted so it survives the library. */
+    roomsOpen: Boolean = true, onRoomsOpen: (Boolean) -> Unit = {}) {
     val room = state.rooms.find { it.id == selectedId } ?: state.rooms.firstOrNull()
     val native = room?.let { coordinator(it, state.rooms) }
     val player = room?.let { sonosPlaybackRoom(it, state) }
@@ -48,10 +51,22 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     val first = remember { FocusRequester() }
     val playbackFocus = remember { FocusRequester() }
     val moreFocus = remember { FocusRequester() }
+    val playFocus = remember { FocusRequester() }
+    // Set by the side menu's button: where focus goes once the list has appeared or gone.
+    var focusAfterToggle by remember { mutableStateOf<Boolean?>(null) }
+    val canPlay = !busy && room?.available == true && player?.available == true && player.supports(if (player.playing) 1 else 16384)
+    val rooms = if (roomsOpen) first else FocusRequester.Default
     var more by remember(room?.id) { mutableStateOf(false) }
     var restoreMore by remember { mutableStateOf(false) }
     val playbackAvailable = !busy && room?.available == true && player?.available == true &&
         (player.supports(16) || player.supports(if (player.playing) 1 else 16384) || player.supports(32))
+    LaunchedEffect(roomsOpen) {
+        val opened = focusAfterToggle ?: return@LaunchedEffect
+        withFrameNanos { }
+        // Opened: the chosen room. Hidden: what plays now, or the next control that is always there.
+        if (opened) first.requestFocus() else if (canPlay) playFocus.requestFocus() else moreFocus.requestFocus()
+        focusAfterToggle = null
+    }
     LaunchedEffect(more) {
         if (!more && restoreMore) { withFrameNanos { }; moreFocus.requestFocus(); restoreMore = false }
     }
@@ -69,6 +84,9 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                 Text(stringResource(R.string.sonos_title), style = MaterialTheme.typography.headlineMedium)
                 SonosSeasonMark()
                 Spacer(Modifier.weight(1f))
+                if (room != null) StovaButton(if (roomsOpen) stringResource(R.string.sonos_rooms_hide) else stringResource(R.string.sonos_rooms_show, room.name),
+                    { focusAfterToggle = !roomsOpen; onRoomsOpen(!roomsOpen) }, Modifier.testTag("sonos-rooms-toggle"),
+                    icon = StovaIcons.Rows, compact = true, quiet = true)
                 StovaButton(stringResource(R.string.sonos_back), onBack, compact = true, quiet = true)
             }
             if (room == null) {
@@ -79,6 +97,7 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                     if (!state.loading) StovaButton(stringResource(R.string.custom_retry), onRetry, Modifier.focusRequester(first))
                 }
             } else Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                if (roomsOpen) SonosRoomsPanel {
                 LazyColumn(Modifier.width(220.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(4.dp)) {
                     item { Text(stringResource(R.string.sonos_rooms), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant) }
                     items(state.rooms, key = { it.id }) { item ->
@@ -87,16 +106,19 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                                 .focusProperties { right = if (playbackAvailable) playbackFocus else moreFocus })
                     }
                 }
+                }
                 // Ordinary TV type fits on one screen. Large accessibility text may scroll;
                 // it must never be shrunk to preserve the normal-density layout.
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     val largeType = LocalDensity.current.fontScale >= 1.5f
+                    // With the rooms hidden the freed width goes to the sleeve and the music, not to more controls.
+                    val cover = if (roomsOpen) 190.dp else 236.dp
                     if (largeType) {
                         SonosCover(player?.artwork.takeUnless { native?.tvAudio == true }, Modifier.size(160.dp), artwork)
-                        SonosPlayback(room, player, !busy, onAction, playbackFocus, first)
-                    } else Row(Modifier.heightIn(min = 222.dp), horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = Alignment.CenterVertically) {
-                        SonosCover(player?.artwork.takeUnless { native?.tvAudio == true }, Modifier.size(190.dp), artwork)
-                        Column(Modifier.weight(1f)) { SonosPlayback(room, player, !busy, onAction, playbackFocus, first) }
+                        SonosPlayback(room, player, !busy, onAction, playbackFocus, rooms, playFocus)
+                    } else Row(Modifier.heightIn(min = cover + 32.dp), horizontalArrangement = Arrangement.spacedBy(28.dp), verticalAlignment = Alignment.CenterVertically) {
+                        SonosCover(player?.artwork.takeUnless { native?.tvAudio == true }, Modifier.size(cover), artwork)
+                        Column(Modifier.weight(1f)) { SonosPlayback(room, player, !busy, onAction, playbackFocus, rooms, playFocus) }
                     }
                     if (actionFailed) Text(stringResource(R.string.sonos_action_failed), color = colors.error)
                     // A stable speaker/volume row stays in the same place for solo and grouped rooms.
@@ -116,7 +138,7 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                         }
                     }
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StovaButton(stringResource(R.string.sonos_library), onBrowse, Modifier.focusProperties { left = first },
+                        StovaButton(stringResource(R.string.sonos_library), onBrowse, Modifier.focusProperties { left = rooms },
                             icon = StovaIcons.Rows, compact = true, quiet = true,
                             enabled = !busy && native?.available == true && native.supports(131072))
                         StovaButton(stringResource(R.string.sonos_group), onGroup, icon = StovaIcons.Link, compact = true, quiet = true,
@@ -133,7 +155,8 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     }
     if (more && room != null) SonosOptionsDialog(room, native, player, busy, actionFailed, onAction) { more = false }
     LaunchedEffect(state.loading, state.rooms.isEmpty()) {
-        if (!state.loading) { withFrameNanos { }; first.requestFocus() }
+        if (!state.loading) { withFrameNanos { }
+            if (roomsOpen || room == null) first.requestFocus() else if (canPlay) playFocus.requestFocus() else moreFocus.requestFocus() }
     }
 }
 
@@ -162,7 +185,16 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
     }
 }
 
-@Composable private fun SonosPlayback(room: SonosRoom, player: SonosRoom?, enabled: Boolean, onAction: (SonosAction) -> Unit, entry: FocusRequester, rooms: FocusRequester) {
+/** The room list arrives with a short fade and slide in the layer phase; its width never animates. */
+@Composable private fun SonosRoomsPanel(content: @Composable () -> Unit) {
+    val motion = stovaMotion
+    val reveal = remember { androidx.compose.animation.core.Animatable(if (motion.still) 1f else 0f) }
+    LaunchedEffect(Unit) { reveal.animateTo(1f, motion.enter()) }
+    Box(Modifier.fillMaxHeight().graphicsLayer { alpha = reveal.value; translationX = -24.dp.toPx() * (1f - reveal.value) }) { content() }
+}
+
+@Composable private fun SonosPlayback(room: SonosRoom, player: SonosRoom?, enabled: Boolean, onAction: (SonosAction) -> Unit, entry: FocusRequester,
+    rooms: FocusRequester, playFocus: FocusRequester) {
     val ready = enabled && room.available && player?.available == true
     val previous = ready && player?.supports(16) == true
     val play = ready && player?.supports(if (player.playing) 1 else 16384) == true
@@ -179,7 +211,7 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             StovaButton(stringResource(R.string.ha_action_previous), { onAction(SonosAction.Previous) }, modifier = entryModifier(previous), enabled = previous, compact = true, quiet = true)
             StovaButton(stringResource(if (player?.playing == true) R.string.ha_pause else R.string.ha_play), { onAction(SonosAction.PlayPause) },
-                modifier = entryModifier(!previous && play), primary = player?.playing != true, icon = if (player?.playing == true) StovaIcons.Pause else StovaIcons.Play,
+                modifier = entryModifier(!previous && play).focusRequester(playFocus), primary = player?.playing != true, icon = if (player?.playing == true) StovaIcons.Pause else StovaIcons.Play,
                 enabled = play, compact = true)
             StovaButton(stringResource(R.string.ha_v2_next), { onAction(SonosAction.Next) }, modifier = entryModifier(!previous && !play && next), enabled = next, compact = true, quiet = true)
         }

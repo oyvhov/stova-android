@@ -58,4 +58,9 @@
     <string name="sonos_replace_queue">Play starts this content and replaces the queue in the selected room.</string>
     <string name="sonos_enqueue">Add to queue</string>
     <string name="sonos_more">More options</string>
+    <string name="sonos_card_status">%1$s · %2$s</string>
+    <string name="sonos_card_playing">Playing</string>
+    <string name="sonos_card_buffering">Loading</string>
+    <string name="sonos_rooms_hide">Hide rooms</string>
+    <string name="sonos_rooms_show">Rooms · %1$s</string>
 </resources>

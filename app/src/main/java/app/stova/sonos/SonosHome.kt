@@ -56,13 +56,13 @@ fun sonosWidgetRoom(prefs: SonosPrefs, state: SonosState): SonosRoom? {
 /** One visible-Home subscription serves the widget and opt-in backdrop. */
 @Composable
 fun rememberSonosHome(container: AppContainer, profile: Profile, prefs: SonosPrefs, address: String?): SonosHomeSession {
-    val enabled = prefs.enabled && (prefs.showNowPlaying || prefs.homeArtwork && profile.appearance.backgroundSource != BackgroundSource.THEME) && address != null && !profile.kid
+    // The widget, the opt-in backdrop and a Sonos favourite card all share this one subscription.
+    val enabled = sonosHomeWanted(prefs, profile, address, sonosCardFavorite(profile))
     val repository = remember(container, profile.id, address, prefs.musicAssistant, prefs.musicAssistantPlayers) { SonosRepository(container.haSocket,
         musicAssistantLinks = { container.household.current().sonos.let { if (it.musicAssistant) it.musicAssistantPlayers else emptyMap() } }) {
         val current = container.household.current()
-        current.sonos.enabled && current.haBaseUrl != null &&
-            container.session.active.value?.let { it.id == profile.id && !it.kid &&
-                (current.sonos.showNowPlaying || current.sonos.homeArtwork && it.appearance.backgroundSource != BackgroundSource.THEME) } == true
+        // Asked again at every (re)start: the active profile and its saved favourites decide, not a stale copy.
+        container.session.active.value?.let { it.id == profile.id && sonosHomeWanted(current.sonos, it, current.haBaseUrl, sonosCardFavorite(it)) } == true
     } }
     var state by remember(repository) { mutableStateOf(SonosState(loading = false)) }
     var busy by remember(repository) { mutableStateOf(false) }

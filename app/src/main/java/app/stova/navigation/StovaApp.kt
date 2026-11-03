@@ -227,7 +227,14 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             app.stova.background.ProfileBackdrop(profile.id,profile.appearance,spotlight,fixed,state=backdrop)
                             app.stova.sonos.SonosHomeBackdrop(music, musicImages) { musicArtReady = it }
                         }
+                        // The Sonos favourite card reads the same session as the widget and backdrop; pictures only through HaImage.
+                        val sonosCard = if (!app.stova.sonos.sonosCardFavorite(profile)) null else app.stova.sonos.SonosCardSource(
+                            app.stova.sonos.sonosCard(sonosPrefs, homeMusic.state)) { path, modifier, onLoad, onError ->
+                            app.stova.ha.cards.HaImage(path, musicImages, modifier, contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                onLoad = onLoad, onError = onError)
+                        }
                         androidx.compose.runtime.CompositionLocalProvider(app.stova.home.LocalHomeScrollShift provides shift,
+                            app.stova.sonos.LocalSonosCard provides sonosCard,
                             app.stova.sonos.LocalHomeSonos provides music.takeIf { musicArtReady },
                             app.stova.home.LocalHomeArrival provides arrival) {
                         HomeScreen(
@@ -246,6 +253,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                                 container.media.refresh(profile.id)
                             },
                             onPlaybackOpened = { container.media.playbackOpened(profile.id) },
+                            onOpenSonos = { if (sonosEnabled) { sonosFrom = Destination.HOME; origin = TransformOrigin.Center; current = Destination.SONOS } },
                             onItemChanged = {
                                 container.spoleRows.refresh(profile.id, force = true)
                                 scope.launch { container.media.refresh(profile.id, 0) }

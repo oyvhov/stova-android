@@ -30,8 +30,14 @@ sealed interface ShortcutKey {
         override val key get() = "spole:${if (kind == app.stova.media.model.ServerKind.JELLYFIN) "jellyfin" else "emby"}:$userId"
     }
 
+    /** The Sonos card: live music from the house, opening the Sonos page. One per profile. */
+    data object Sonos : ShortcutKey {
+        override val key get() = "stova:sonos"
+    }
+
     companion object {
         fun parse(key: String): ShortcutKey? = when {
+            key == Sonos.key -> Sonos
             key.startsWith("library:") -> key.removePrefix("library:").split(':')
                 .takeIf { it.size == 2 && it.all(String::isNotBlank) }?.let { Library(it[0], it[1]) }
             key.startsWith("ha:") -> key.removePrefix("ha:").takeIf { '.' in it }?.let(::Ha)

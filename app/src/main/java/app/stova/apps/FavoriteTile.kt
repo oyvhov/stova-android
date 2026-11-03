@@ -20,6 +20,11 @@ sealed interface FavoriteTile {
     data class SpoleProfile(override val key: String, override val label: String, val image: String?,
         val kind: app.stova.media.model.ServerKind, val userId: String, val kid: Boolean = false) : FavoriteTile
 
+    /** Sonos: drawn live from Home's one Sonos session, and opens the Sonos page; never plays by itself. */
+    data class Sonos(override val label: String) : FavoriteTile {
+        override val key get() = ShortcutKey.Sonos.key
+    }
+
     /** [icon] is Home Assistant's own, such as `mdi:movie-open`. */
     data class Scene(override val key: String, override val label: String, val entityId: String, val icon: String? = null) : FavoriteTile
 }
@@ -27,9 +32,10 @@ sealed interface FavoriteTile {
 /**
  * The favourites in the profile's order. [apps] are the favourite apps this profile may see. A
  * library shows while its account is on the profile, a scene while Home Assistant is set up, and
- * neither for a kid.
+ * neither for a kid. Sonos shows while the module is on with Home Assistant ([sonosReady]).
  */
-fun favoriteTiles(prefs: AppPrefs, apps: List<InstalledApp>, accounts: List<MediaAccount>, haReady: Boolean, kid: Boolean): List<FavoriteTile> {
+fun favoriteTiles(prefs: AppPrefs, apps: List<InstalledApp>, accounts: List<MediaAccount>, haReady: Boolean, kid: Boolean,
+    sonosReady: Boolean = false): List<FavoriteTile> {
     val appsByKey = apps.associateBy { it.key }
     val accountsById = accounts.associateBy { it.id }
     return prefs.favorites.mapNotNull { key ->
@@ -39,6 +45,7 @@ fun favoriteTiles(prefs: AppPrefs, apps: List<InstalledApp>, accounts: List<Medi
             is ShortcutKey.Library -> accountsById[shortcut.accountId]?.let { FavoriteTile.Library(key, saved.label, saved.image, it, shortcut.libraryId) }
             is ShortcutKey.Ha -> if (haReady) FavoriteTile.Scene(key, saved.label, shortcut.entityId, saved.chosenIcon ?: saved.icon) else null
             is ShortcutKey.SpoleProfile -> FavoriteTile.SpoleProfile(key, saved.label, saved.image, shortcut.kind, shortcut.userId)
+            ShortcutKey.Sonos -> if (sonosReady) FavoriteTile.Sonos(saved.label) else null
             null -> null
         }
     }
