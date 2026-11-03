@@ -45,9 +45,10 @@ import app.stova.core.ui.*
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
+        // Busy keeps the button focused and enabled; a second press while HA answers does nothing.
         Box(Modifier.size(44.dp).focusOutline(playSource, shape).clickable(playSource, null,
-            enabled = !busy && room.available && player.available && player.supports(if (player.playing) 1 else 16384),
-            role = Role.Button, onClick = onPlayPause), contentAlignment = Alignment.Center) {
+            enabled = room.available && player.available && player.supports(if (player.playing) 1 else 16384),
+            role = Role.Button) { if (!busy) onPlayPause() }, contentAlignment = Alignment.Center) {
             Icon(if (player.playing) StovaIcons.Pause else StovaIcons.Play,
                 stringResource(if (player.playing) R.string.ha_pause else R.string.ha_play), Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.onSurface)

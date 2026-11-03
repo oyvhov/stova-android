@@ -36,26 +36,26 @@ import app.stova.ha.cards.rememberResumedNow
                 verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (room.supports(8)) StovaButton(stringResource(if (room.muted) R.string.sonos_unmute else R.string.sonos_mute),
-                        { onAction(SonosAction.Mute(!room.muted)) }, enabled = room.available && !busy, compact = true)
+                        { onAction(SonosAction.Mute(!room.muted)) }, enabled = room.available, compact = true)
                     if (player != null) {
                         if (player.supports(32768)) StovaButton(stringResource(if (player.shuffle) R.string.sonos_shuffle_on else R.string.sonos_shuffle_off),
-                            { onAction(SonosAction.Shuffle(!player.shuffle)) }, primary = player.shuffle, enabled = player.available && !busy, compact = true)
+                            { onAction(SonosAction.Shuffle(!player.shuffle)) }, primary = player.shuffle, enabled = player.available, compact = true)
                         if (player.supports(262144)) StovaButton(stringResource(when (player.repeat) { "one" -> R.string.sonos_repeat_one; "all" -> R.string.sonos_repeat_all; else -> R.string.sonos_repeat_off }),
-                            { onAction(SonosAction.Repeat(when (player.repeat) { "off" -> "all"; "all" -> "one"; else -> "off" })) }, enabled = player.available && !busy, compact = true)
+                            { onAction(SonosAction.Repeat(when (player.repeat) { "off" -> "all"; "all" -> "one"; else -> "off" })) }, enabled = player.available, compact = true)
                     }
                 }
                 if (player != null && player.duration > 0 && player.supports(2)) {
                     val now by rememberResumedNow(1000, player.playing)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StovaButton(stringResource(R.string.sonos_seek_back), { onAction(SonosAction.Seek(player.position(now) - 15)) }, compact = true, enabled = player.available && !busy)
-                        StovaButton(stringResource(R.string.sonos_seek_forward), { onAction(SonosAction.Seek(player.position(now) + 15)) }, compact = true, enabled = player.available && !busy)
+                        StovaButton(stringResource(R.string.sonos_seek_back), { onAction(SonosAction.Seek(player.position(now) - 15)) }, compact = true, enabled = player.available)
+                        StovaButton(stringResource(R.string.sonos_seek_forward), { onAction(SonosAction.Seek(player.position(now) + 15)) }, compact = true, enabled = player.available)
                     }
                 }
                 if (native?.supports(2048) == true && native.sources.isNotEmpty()) {
                     Text(stringResource(R.string.ha_media_source), style = MaterialTheme.typography.titleSmall)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         native.sources.forEach { source -> StovaButton(source, { onAction(SonosAction.Source(source)) },
-                            primary = source == native.source, compact = true, enabled = native.available && !busy) }
+                            primary = source == native.source, compact = true, enabled = native.available) }
                     }
                 }
             }

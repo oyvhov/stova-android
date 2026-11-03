@@ -60,3 +60,25 @@ att, kjem øvst utan å erstatte foreldra. Alle tre feila før rettinga (Favorit
 Tilbake) og er grøne etter. Målretta `app.stova.sonos.*`, `app.stova.ha.cards.*`, `DesignRulesTest`,
 `ThemePaletteTest` med skjermtestar: **187 testar, 0 feil**. `lintDebug` 0 feil, `assembleTv` grønt
 (`app/build/outputs/apk/tv/app-tv.apk`). Ikkje installert av Claude.
+
+## Fokus medan ei Sonos-handling ventar (funn frå TV-ane)
+
+Funn: romlista gøymd, fokus på Pause, OK → `busy` slo av knappen, fokus hoppa til «Rom · …», og
+neste OK opna romlista i staden for å pause. Heim-widgeten mista fokus til lys-widgeten på same vis.
+
+Årsak: avspelingsknappane, widgetknappen og vala i «Fleire val» hadde `enabled = !busy && …`, så den
+fokuserte kontrollen vart avslått medan HA svara.
+
+Retting: tilgjenge og støtte avgjer `enabled`; ein ventande handling gjer det ikkje. Trykk medan
+`busy` blir ignorerte i kontrollen sjølv (`SonosContent` sin `guarded`, widgeten sin `onClick`), i
+tillegg til vakta i `SonosScreen`. Bibliotek, «Grupper rom» og Music Assistant opnar berre
+sider/dialogar og er ikkje lenger avslegne av `busy`. Volum var alt stabilt (glidaren held fokus og
+sender ingenting medan han er avslegen), så han er uendra. Utilgjengeleg eller ikkje-støtta
+avspeling er framleis avslegen.
+
+Testar først (`SonosBusyFocusTest`): Pause med lista gøymd held fokus og ignorerer andre OK, så
+virkar att når `busy` er over; «Førre spor» med lista open held fokus; volum held fokus og sender
+ingenting; ikkje-støtta avspeling er avslegen; widgetknappen held fokus og ignorerer gjentak; widget
+utan støtte er avslegen. Tre feila før rettinga (`Focused = 'true'`), alle seks er grøne etter.
+Målretta `app.stova.sonos.*`, `app.stova.ha.cards.*`, `DesignRulesTest`, `ThemePaletteTest` med
+skjermtestar: **193 testar, 0 feil**. `lintDebug` 0 feil, `assembleTv` grønt. Ikkje installert av Claude.
