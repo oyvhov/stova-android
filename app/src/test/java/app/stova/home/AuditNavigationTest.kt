@@ -58,7 +58,7 @@ class AuditNavigationTest {
         compose.onNodeWithText("Opne").performKeyInput {pressKey(Key.Enter)}
         assertEquals(1,opened);assertEquals(0,removed)
     }
-    @Test fun allAppsIsOneStepFromTheFirstFavourite() {
+    @Test fun favouriteRowMovesDirectlyBetweenApps() {
         var opened=0
         compose.setContent {StovaTheme(reduceMotion=true) {
             val context=LocalContext.current
@@ -67,8 +67,8 @@ class AuditNavigationTest {
         }}
         compose.onNode(hasContentDescription("Min app") and hasClickAction()).assertIsFocused()
             .performKeyInput {pressKey(Key.DirectionRight)}
-        compose.onNode(hasContentDescription("Alle appar") and hasClickAction()).assertIsFocused()
-            .performKeyInput {pressKey(Key.Enter)}
-        assertEquals(1,opened)
+        compose.onNode(hasContentDescription("Andre app") and hasClickAction()).assertIsFocused()
+        compose.onNodeWithContentDescription("Alle appar").assertDoesNotExist()
+        assertEquals(0,opened)
     }
 }

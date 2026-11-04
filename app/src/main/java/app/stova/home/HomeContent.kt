@@ -424,7 +424,7 @@ fun HomeContent(
                                                     }
                                                     AppsRow(row, art, catalog, requester, rowTarget, appIconOverrides, { app ->
                                                         if (canEditRows) { menuApp = app; rowMenu() } else onAppLongClick(app)
-                                                    }, rowRequester, onShortcutClick, { tile -> if (canEditRows) { menuShortcut = tile; rowMenu() } }, onOpenApps) {
+                                                    }, rowRequester, onShortcutClick, { tile -> if (canEditRows) { menuShortcut = tile; rowMenu() } }) {
                                                         trackFocus(FocusedTarget.App(it))
                                                     }
                                                 }

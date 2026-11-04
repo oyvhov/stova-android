@@ -1,3 +1,8 @@
+# Fast «Alle appar»-flis fjerna frå Heim
+2026-11-04 (Codex): Fjerna den faste flisa frå apprada. D-pad går direkte mellom favorittane. Appar kan opnast frå Innstillingar.
+138 testar, lint og TV-bygg grøne. Skjermbilete frå Compose stadfesta plasseringa.
+Installerte med install-r på Shield og Loftet, med samsvarande SHA-256. Appen vart ikkje opna på TV-ane.
+
 # Utbetringane installerte på Shield og Loftet
 2026-11-04 (Codex): Installerte TV-bygget med utbetringane frå `2df07ea` på begge TV-ane med install-r.
 SHA-256 samsvara med den lokale APK-en på begge einingane.

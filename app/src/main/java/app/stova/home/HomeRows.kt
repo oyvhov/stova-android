@@ -85,47 +85,22 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
 
 @Composable
 internal fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, iconOverrides: Map<String, IconOverride>, onLongClick: (InstalledApp) -> Unit, returnFocus: FocusRequester?,
-    onShortcut: (FavoriteTile) -> Unit = {}, onShortcutLongClick: (FavoriteTile) -> Unit = {}, onOpenApps: () -> Unit = {}, onFocused: (String) -> Unit) {
-    val allApps = stringResource(R.string.apps_all)
-    val tiles = row.tiles
-    val allAppsIndex = if (tiles.isEmpty()) 0 else 1
-    val restoredLabel = (restore as? FocusedTarget.App)?.label
-    val restoredTile = tiles.indexOfFirst { it.label == restoredLabel }
-    val index = when {
-        restoredLabel == allApps -> allAppsIndex
-        restoredTile > 0 -> restoredTile + 1
-        else -> 0
-    }
+    onShortcut: (FavoriteTile) -> Unit = {}, onShortcutLongClick: (FavoriteTile) -> Unit = {}, onFocused: (String) -> Unit) {
+    val index = row.tiles.indexOfFirst { it.label == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     Column {
         if (LocalRowStyle.current.showTitle) RowHeader(stringResource(if (row.favorites) R.string.row_favorite_apps else R.string.row_apps)) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
         LazyRow(Modifier.focusRestorer(), state = state,
             contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
             horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.spacingDp.dp)) {
-            items(tiles.size + 1, key = { i ->
-                if (i == allAppsIndex) "stova:all-apps" else tiles[if (i < allAppsIndex) i else i - 1].key
-            }) { i ->
+            itemsIndexed(row.tiles, key = { _, tile -> tile.key }) { i, tile ->
                 val modifier = (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
                     .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier)
+                    .onFocusChanged { if (it.isFocused) onFocused(tile.label) }
                 DrawnFocus(i == index && focus != null) {
-                    if (i == allAppsIndex) {
-                        val anchor = app.stova.navigation.rememberPageAnchor("home:apps")
-                        val open = { anchor.open(onOpenApps) }
-                        TileFrame(allApps, 0, open, open, modifier.then(anchor.modifier)
-                            .onFocusChanged { if (it.isFocused) onFocused(allApps) }) { spec ->
-                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                androidx.compose.material3.Icon(app.stova.core.ui.StovaIcons.Apps, null, Modifier.size(32.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                if (!spec.captions) Text(allApps, style = MaterialTheme.typography.titleSmall)
-                            }
-                        }
-                    } else {
-                        val tile = tiles[if (i < allAppsIndex) i else i - 1]
-                        val track = modifier.onFocusChanged { if (it.isFocused) onFocused(tile.label) }
-                        if (tile is FavoriteTile.App) AppTile(tile.app, art, onClick = { catalog.launch(tile.app) },
-                            onLongClick = { onLongClick(tile.app) }, modifier = track, iconOverride = iconOverrides[tile.key])
-                        else ShortcutTile(tile, onClick = { onShortcut(tile) }, onLongClick = { onShortcutLongClick(tile) }, modifier = track)
-                    }
+                    if (tile is FavoriteTile.App) AppTile(tile.app, art, onClick = { catalog.launch(tile.app) },
+                        onLongClick = { onLongClick(tile.app) }, modifier = modifier, iconOverride = iconOverrides[tile.key])
+                    else ShortcutTile(tile, onClick = { onShortcut(tile) }, onLongClick = { onShortcutLongClick(tile) }, modifier = modifier)
                 }
             }
         }

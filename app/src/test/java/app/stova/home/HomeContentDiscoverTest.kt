@@ -73,8 +73,7 @@ class HomeContentDiscoverTest {
         compose.onAllNodesWithText("Merk som sett").assertCountEquals(0)
     }
 
-    // Back from the page lands where the remote was: the tile reports itself as «Alle appar» does, and Home
-    // drawn again with that target puts focus on it.
+    // Home drawn again with the opener as its restore target gives focus back to the tile.
     @Test fun focusReturnsToTheOppdagTile() {
         var focused: FocusedTarget? = null
         var visit by mutableIntStateOf(0)

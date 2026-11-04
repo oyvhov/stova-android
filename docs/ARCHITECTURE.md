@@ -86,8 +86,8 @@ formatproporsjonane, også i Appar-rutenettet. Watch Next avgrensar undertittele
 `RowStyle.cardTitles` lèt ei rad ha eigne namn under korta (null følgjer profilen); `showsCardTitles`
 blir lese av kort, Watch Next og radgeometrien. Appar-sida følgjer alltid profilvalet. Heim har ingen radteljar.
 Appar-sida har fire banner per rad: `LocalArtworkScale` skalerer kortstorleiken frå Heim til breidda, medan ikon held storleiken sin. Rekkjefølgja er Favorittar, Spole-profilar, Oppdag (berre når Spole gir Seerr-tilgang), Alle appar (samla og alfabetisk), Bibliotek, Scenar og skript, Skjulte appar. Bibliotek og scenar kan vere lange lister, så dei står etter appane.
-«Alle appar» ligg rett etter første favoritt på Heim, eller først når rada er tom. Oppdag-rada startar med
-«Sjå alt» for å opne katalogen. Appar finst også i menyen i Innstillingar (ved Android), og
+Favorittrada på Heim viser dei valde appane og snarvegane. Oppdag-rada startar med
+«Sjå alt» for å opne katalogen. Appar finst i menyen i Innstillingar (ved Android), og
 `MainShell` sender Tilbake til sida som opna Appar. Fokus på «Appar» der viser `settings/AppsPane.kt` (kva OK
 opnar, tal på favorittar og skjulte appar) i staden for sida til seksjonen som sist var vald. Toppfeltet har ingen Appar-knapp. Sesongmerket står ved venstre kant.
 «Rullande oversikt» opnar med heroen over første rad (same geometri som éi rad). `HomeScrollShift`
