@@ -40,7 +40,7 @@ class SonosLibraryNavigationTest {
     private var leftLibrary = 0
     private val played = mutableListOf<SonosAction>()
 
-    private fun open() {
+    private fun fixture(): Pair<SonosRepository, SonosRoom> {
         val fake = FakeHaConnection()
         val room = SonosRoom(HaEntity("media_player.a", "playing", buildJsonObject { put("supported_features", 131072 or 512) }, 0, 0), "A")
         fake.entities.value = mapOf(room.id to room.entity)
@@ -59,6 +59,18 @@ class SonosLibraryNavigationTest {
         }
         val repository = SonosRepository(connection) { true }
         runBlocking { repository.observe().first { it.rooms.isNotEmpty() } }
+        return repository to room
+    }
+
+    @Test fun playerShelfIncludesThePlaylistsFromInsideFavorites() {
+        val (repository, room) = fixture()
+        val entries = runBlocking { repository.playerShelf(room.id) }
+        assertEquals(listOf("Northern Lights", "2023"), entries.map { it.title })
+        assertTrue(entries.all { it.playable })
+    }
+
+    private fun open() {
+        val (repository, room) = fixture()
         compose.setContent { StovaTheme(reduceMotion = true) {
             SonosLibrary(repository, room, false, false, { played += it }, { _, _, _, _ -> }) { leftLibrary++ }
         } }

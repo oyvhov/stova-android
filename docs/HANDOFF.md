@@ -1,3 +1,10 @@
+# Fullskjermvolum og Sonos-favorittar
+2026-11-04 (Codex): Midtstilte fullskjermspelaren. Eit lite bilete av høgtalarmodellen øvst til høgre opnar den loddrette volumkontrollen. Opp og Ned justerer, Tilbake lukkar og gir fokus attende.
+Spelarsida viser ei biletrad for Sonos-favorittar og spelelister og har eitt høgtalarmotiv per rom. Omslaget blir liggjande gjennom fullskjermskiftet medan dempinga endrar seg.
+Alle 1187 testar bestod før siste flytting av volumknappen. Siste runde: 126 målretta testar, TV-lint og TV-bygg grøne.
+Installerte berre på Loftet med install-r og samsvarande APK-hash. Kontrollerte ekte favorittbilete, fullskjerm og volum opna/lukka. Bilete i `.superpowers/loftet-sonos-2026-11-04/`.
+Loftet står i fullskjerm. Avspeling og volum vart ikkje endra. Låtbyte medan det spelar er ikkje kontrollert på TV i denne runden.
+
 # Overgangsbygget installert på Shield
 2026-11-04 (Codex): Installerte TV-bygget frå `7cc1837` på Shield med install-r.
 SHA-256 samsvara med APK-en som vart prøvd på Loftet.

@@ -170,6 +170,26 @@ class SonosScreensTest {
     private fun attrs(room: SonosRoom, vararg extra: Pair<String, kotlinx.serialization.json.JsonElement>, drop: String? = null) = room.copy(entity =
         room.entity.copy(attributes = kotlinx.serialization.json.JsonObject(room.entity.attributes.filterKeys { it != drop } + extra)))
     @Test fun immersiveArt() = immersive("sonos-fullscreen")
+    @Test fun immersiveVolumePopup() {
+        immersive("sonos-fullscreen")
+        compose.onNodeWithTag("sonos-volume-button").performClick()
+        val popup = compose.runOnIdle {
+            android.view.inspector.WindowInspector.getGlobalWindowViews().last { it !== compose.activity.window.decorView }
+        }
+        compose.saveScreen("sonos-fullscreen-volume", popup)
+    }
+    @Test fun favoritesOnPlayer() {
+        val rooms = sonosPreviewRooms()
+        val shelf = listOf("Kveldsmiks", "Favorittar", "Fredag", "Rolig jazz", "Heime", "På tur").mapIndexed { index, title ->
+            SonosMedia("favorite:$index", "favorite_item_id", title, "/shelf/$index", playable = true, mediaClass = "playlist")
+        }
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SonosContent(SonosState(rooms, loading = false), rooms.first().id, {}, {}, {}, {}, {},
+                artwork = { _, modifier -> SonosPreviewArtwork(modifier) }, shelf = shelf,
+                shelfThumbnail = { _, modifier, _, loaded -> SonosPreviewArtwork(modifier); SideEffect { loaded() } })
+        } }
+        compose.saveScreen("sonos-player-favorites")
+    }
     @Test fun immersiveNoArt() = immersive("sonos-fullscreen-noart", attrs(sonosPreviewRooms()[1], drop = "entity_picture"))
     @Test fun immersiveTv() = immersive("sonos-fullscreen-tv", attrs(sonosPreviewRooms().first(),
         "source" to kotlinx.serialization.json.JsonPrimitive("TV")))

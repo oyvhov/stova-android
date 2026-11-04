@@ -118,6 +118,29 @@ class SonosRepository(private val connection: HaConnection,
         return try { connection.browseMedia(target.id, media?.type, media?.id)?.let(::sonosMedia) }
         catch (e: CancellationException) { throw e } catch (_: Exception) { null }
     }
+
+    /** A shallow preview of Sonos favourites and the playlists inside them. */
+    internal suspend fun playerShelf(roomId: String): List<SonosMedia> {
+        val root = browse(roomId) ?: return emptyList()
+        val favoritesLink = root.children.firstOrNull { it.expandable && (it.type == "favorites" || it.id == "favorites") }
+        val favorites = if (favoritesLink != null) browse(roomId, favoritesLink)?.children.orEmpty()
+            else if (root.type == "favorites") root.children else emptyList()
+        val favoriteItems = favorites.flatMap { item ->
+            if (item.expandable && item.type == "favorites_folder") {
+                browse(roomId, item)?.children.orEmpty().ifEmpty { listOf(item) }
+            } else listOf(item)
+        }
+        val library = root.children.firstOrNull { it.expandable && it.type == "library" && it.id != "favorites" }
+        val localMedia = if (root.type == "library") root.children else library?.let { browse(roomId, it)?.children }.orEmpty()
+        val playlistsLink = (root.children + localMedia).firstOrNull {
+            it.expandable && (it.id == "playlists" || it.id == "SQ:" || it.type == "playlists")
+        }
+        val playlists = playlistsLink?.let { browse(roomId, it)?.children.orEmpty().ifEmpty { listOf(it) } }.orEmpty()
+        return (favoriteItems + playlists + root.children.filter { it.playable && it.mediaClass == "playlist" })
+            .filter { it.playable || it.expandable }
+            .distinctBy { it.type to it.id }
+            .sortedWith(compareByDescending<SonosMedia> { !it.artwork.isNullOrBlank() }.thenByDescending { it.mediaClass == "playlist" })
+    }
     private suspend fun guarded(block: suspend () -> Boolean): Boolean {
         if (!allowed() || !actionMutex.tryLock()) return false
         return try { block() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }

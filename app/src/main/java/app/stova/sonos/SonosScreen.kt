@@ -31,6 +31,8 @@ internal fun SonosScreen(container: AppContainer, profile: Profile, session: Son
     // Full screen is a way of looking, not a setting: it survives rotation and the library, not a new visit.
     var immersive by rememberSaveable(profile.id) { mutableStateOf(false) }
     var library by remember(repository) { mutableStateOf<String?>(null) }
+    var libraryStart by remember(repository) { mutableStateOf<SonosMedia?>(null) }
+    var shelfReturn by remember(repository) { mutableStateOf<SonosMedia?>(null) }
     var busy by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
     val owner = LocalLifecycleOwner.current
@@ -38,6 +40,22 @@ internal fun SonosScreen(container: AppContainer, profile: Profile, session: Son
     LaunchedEffect(allowed) { if (!allowed) onBack() }
     val room = state.rooms.find { it.id == (selected ?: prefs.preferredRoom) } ?: state.rooms.firstOrNull()
     val player = room?.let { coordinator(it, state.rooms) }
+    val shelfPlayer = player?.id?.takeIf { allowed && player.available && player.supports(131072) }
+    var shelf by remember(repository, shelfPlayer) { mutableStateOf(emptyList<SonosMedia>()) }
+    LaunchedEffect(repository, owner, shelfPlayer, immersive) {
+        if (shelfPlayer != null && !immersive && shelf.isEmpty()) owner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            shelf = repository.playerShelf(shelfPlayer)
+        }
+    }
+    val thumbnail: SonosThumbnail = { path, modifier, fit, onLoad ->
+        HaImage(path, images, modifier, contentScale = if (fit) ContentScale.Fit else ContentScale.Crop,
+            onLoad = onLoad, artworkSize = 320)
+    }
+    fun openLibrary(id: String?, start: SonosMedia? = null) {
+        libraryStart = start
+        shelfReturn = start
+        library = id
+    }
     val loadArt: SonosArtLoader = { path, modifier, loaded, failed ->
         SonosCoverImage(path, images, modifier, loaded, failed)
     }
@@ -71,19 +89,19 @@ internal fun SonosScreen(container: AppContainer, profile: Profile, session: Son
         if (!busy) { busy = true; failed = false
             scope.launch { try { failed = !repository.perform(libraryRoom.id, action) } finally { busy = false } }
         }
-    }, { path, modifier, fit, onLoad ->
-        HaImage(path, images, modifier, contentScale = if (fit) ContentScale.Fit else ContentScale.Crop, onLoad = onLoad)
-    }) { library = null }
+    }, thumbnail, start = libraryStart) { library = null }
     else SonosContent(state, room?.id, { id ->
         selected = id; failed = false
         scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(preferredRoom = id)) } }
     }, act,
-        {}, { library = player?.id }, onRetry, busy || session.busy, failed || session.failed,
+        {}, { openLibrary(player?.id) }, onRetry, busy || session.busy, failed || session.failed,
         backgroundArt = prefs.backgroundArt && profile.appearance.backgroundSource != app.stova.profiles.BackgroundSource.THEME,
         onBack = onBack, roomsOpen = roomsOpen, onRoomsOpen = { roomsOpen = it },
         preparedArtwork = warmed.firstOrNull { it.matches(queue) }?.path, loadArtwork = loadArt,
         immersive = immersive, onImmersive = { immersive = it },
-        onBrowseMusicAssistant = state.musicAssistant[player?.id]?.takeIf { it.available && it.supports(131072) }?.let { ma -> { library = ma.id } },
+        onBrowseMusicAssistant = state.musicAssistant[player?.id]?.takeIf { it.available && it.supports(131072) }?.let { ma -> { openLibrary(ma.id) } },
+        shelf = shelf, shelfThumbnail = thumbnail, shelfReturn = shelfReturn,
+        onShelfRestored = { shelfReturn = null }, onBrowseMedia = { openLibrary(shelfPlayer, it) },
         onApplyGroup = { draft, complete ->
             if (!busy) {
                 busy = true; failed = false

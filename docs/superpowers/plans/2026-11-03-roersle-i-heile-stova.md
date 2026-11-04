@@ -70,4 +70,6 @@ følgje dei same reglane for redusert rørsle og synlegheit.
 - [x] Vis låt og kontrollrom éin stad når widgeten er synleg.
 - [x] Gjer tid, framdrift og volum tydelegare i fullskjerm.
 - [x] Merk hovudrommet i romgrupperinga.
+- [x] Hald omslaget fast og ton dempinga mellom vanleg spelar og fullskjerm.
+- [x] Samle transporten i midten, opne volum under høgtalarknappen og ton inn bileta i favoritt- og spelelisterada.
 - [ ] Prøv den nye omslagsovergangen og returen frå Smarthus med fjernkontroll på Shield.

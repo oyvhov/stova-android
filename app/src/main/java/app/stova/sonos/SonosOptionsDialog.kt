@@ -15,20 +15,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.ui.StovaButton
-import app.stova.core.ui.StovaDialog
+import app.stova.core.ui.StovaActionDialog
 import app.stova.ha.cards.rememberResumedNow
 
 /** Secondary controls keep the main player within one TV viewport. Opening does nothing. */
 @Composable internal fun SonosOptionsDialog(room: SonosRoom, native: SonosRoom?, player: SonosRoom?, busy: Boolean, failed: Boolean,
     onAction: (SonosAction) -> Unit, onDismiss: () -> Unit) {
     val first = remember { FocusRequester() }
-    StovaDialog(onDismiss) {
+    StovaActionDialog(onDismiss) { close ->
         Column(Modifier.widthIn(max = 620.dp).fillMaxWidth().heightIn(max = 460.dp)
             .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large).padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 SonosLabels(stringResource(R.string.sonos_more), room.displayName, MaterialTheme.typography.headlineSmall, Modifier.weight(1f))
-                StovaButton(stringResource(R.string.ha_close), onDismiss, Modifier.focusRequester(first), compact = true, quiet = true)
+                StovaButton(stringResource(R.string.ha_close), close, Modifier.focusRequester(first), compact = true, quiet = true)
             }
             if (failed) Text(stringResource(R.string.sonos_action_failed), color = MaterialTheme.colorScheme.error)
             Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(4.dp),

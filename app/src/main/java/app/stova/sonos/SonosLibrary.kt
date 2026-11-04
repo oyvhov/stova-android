@@ -1,24 +1,35 @@
 package app.stova.sonos
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import app.stova.R
 import app.stova.core.theme.StovaLayout
+import app.stova.core.theme.stovaMotion
 import app.stova.core.ui.*
 import app.stova.home.SeasonalScene
 import app.stova.home.rememberSeasonalClock
@@ -28,9 +39,9 @@ internal typealias SonosThumbnail = @Composable (path: String, modifier: Modifie
 
 @Composable
 internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Boolean, failed: Boolean,
-    play: (SonosAction) -> Unit, thumbnail: SonosThumbnail, onBack: () -> Unit) {
+    play: (SonosAction) -> Unit, thumbnail: SonosThumbnail, start: SonosMedia? = null, onBack: () -> Unit) {
     var stack by remember(room.id) { mutableStateOf<List<SonosMedia>>(emptyList()) }
-    var target by remember(room.id) { mutableStateOf<SonosMedia?>(null) }
+    var target by remember(room.id, start) { mutableStateOf(start) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf(false) }
     var retry by remember { mutableIntStateOf(0) }
@@ -117,16 +128,56 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
     }
     LaunchedEffect(Unit) { withFrameNanos { }; first.requestFocus() }
     choosing?.let { item ->
-        StovaDialog({ choosing = null }) {
-            Column(Modifier.widthIn(max = 520.dp).background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(item.title, style = MaterialTheme.typography.headlineSmall)
-                Text(stringResource(R.string.sonos_replace_queue), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StovaButton(stringResource(R.string.ha_play), { play(SonosAction.PlayMedia(item)); choosing = null },
-                        icon = StovaIcons.Play, primary = true, enabled = !busy, compact = true)
-                    if (room.supports(2097152)) StovaButton(stringResource(R.string.sonos_enqueue),
-                        { play(SonosAction.PlayMedia(item, enqueue = true)); choosing = null }, enabled = !busy, compact = true)
-                    StovaButton(stringResource(R.string.sonos_cancel), { choosing = null }, compact = true, quiet = true)
+        SonosMediaActions(item, room, busy, play) { choosing = null }
+    }
+}
+
+@Composable
+internal fun SonosMediaActions(item: SonosMedia, room: SonosRoom, busy: Boolean, play: (SonosAction) -> Unit, close: () -> Unit) {
+    StovaActionDialog(close) { dismiss ->
+        Column(Modifier.widthIn(max = 520.dp).background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large).padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(item.title, style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.sonos_replace_queue), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                StovaButton(stringResource(R.string.ha_play), { play(SonosAction.PlayMedia(item)); dismiss() },
+                    icon = StovaIcons.Play, primary = true, enabled = !busy, compact = true)
+                if (room.supports(2097152)) StovaButton(stringResource(R.string.sonos_enqueue),
+                    { play(SonosAction.PlayMedia(item, enqueue = true)); dismiss() }, enabled = !busy, compact = true)
+                StovaButton(stringResource(R.string.sonos_cancel), dismiss, compact = true, quiet = true)
+            }
+        }
+    }
+}
+
+@Composable
+internal fun SonosShelf(media: List<SonosMedia>, thumbnail: SonosThumbnail, restore: SonosMedia?, onRestored: () -> Unit,
+    onOpen: (SonosMedia) -> Unit) {
+    val focus = remember { FocusRequester() }
+    val list = rememberLazyListState()
+    LaunchedEffect(restore) {
+        val index = media.indexOf(restore)
+        if (index < 0) return@LaunchedEffect
+        list.scrollToItem(index)
+        repeat(6) {
+            withFrameNanos { }
+            if (runCatching { focus.requestFocus() }.getOrDefault(false)) {
+                onRestored()
+                return@LaunchedEffect
+            }
+        }
+        onRestored()
+    }
+    Column(Modifier.fillMaxWidth().testTag("sonos-shelf").softEntrance(Unit), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(stringResource(R.string.sonos_favorites_playlists), style = MaterialTheme.typography.titleMedium)
+        LazyRow(state = list, horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(4.dp)) {
+            itemsIndexed(media, key = { _, item -> "${item.type}/${item.id}" }) { index, item ->
+                val source = remember { MutableInteractionSource() }
+                val modifier = if (item == restore) Modifier.focusRequester(focus) else Modifier
+                Column(modifier.width(88.dp).focusOutline(source, MaterialTheme.shapes.medium)
+                    .clickable(source, null, role = Role.Button) { onOpen(item) }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SonosLibraryTile(item, index, thumbnail)
+                    Text(item.title, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -140,11 +191,18 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
 @Composable private fun SonosLibraryTile(item: SonosMedia, index: Int, thumbnail: SonosThumbnail) {
     val path = item.artwork
     var loaded by remember(path) { mutableStateOf(false) }
+    val motion = stovaMotion
+    val opacity = animateFloatAsState(if (loaded) 1f else 0f, motion.fade(motion.quick), label = "sonos-library-cover")
     Box(Modifier.fillMaxWidth().aspectRatio(1f).clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center) {
-        if (!loaded) Icon(StovaIcons.Sonos, null, Modifier.size(56.dp).testTag("sonos-library-fallback-$index"),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (path != null) thumbnail(path, if (item.logoArtwork) Modifier.fillMaxSize().padding(24.dp) else Modifier.fillMaxSize(),
-            item.logoArtwork) { loaded = true }
+        AnimatedVisibility(!loaded, enter = EnterTransition.None,
+            exit = if (motion.still) ExitTransition.None else fadeOut(motion.exit())) {
+            Icon(StovaIcons.Sonos, null, Modifier.size(56.dp).testTag("sonos-library-fallback-$index"),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (path != null) {
+            val image = Modifier.fillMaxSize().graphicsLayer { alpha = opacity.value }
+            thumbnail(path, if (item.logoArtwork) image.padding(24.dp) else image, item.logoArtwork) { loaded = true }
+        }
     }
 }

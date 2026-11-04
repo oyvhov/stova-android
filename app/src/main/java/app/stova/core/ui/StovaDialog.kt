@@ -48,11 +48,20 @@ fun StovaDialog(
     properties: DialogProperties = DialogProperties(),
     onBack: () -> Boolean = { false },
     content: @Composable () -> Unit,
+) = StovaActionDialog(onDismissRequest, properties, onBack) { content() }
+
+/** Use the same exit for an action inside the dialog as for Back or a click outside. */
+@Composable
+internal fun StovaActionDialog(
+    onDismissRequest: () -> Unit,
+    properties: DialogProperties = DialogProperties(),
+    onBack: () -> Boolean = { false },
+    content: @Composable (close: () -> Unit) -> Unit,
 ) {
     val motion = stovaMotion
     StovaOverlay(onDismissRequest, properties, Alignment.Center,
         enter = scaleIn(motion.enter(), initialScale = PANEL_FROM),
-        exit = scaleOut(motion.exit(), targetScale = PANEL_TO), onBack = onBack) { content() }
+        exit = scaleOut(motion.exit(), targetScale = PANEL_TO), onBack = onBack, content = content)
 }
 
 /**
@@ -84,7 +93,7 @@ private fun StovaOverlay(
     exit: ExitTransition,
     onBack: () -> Boolean = { false },
     sideScrim: Boolean = false,
-    content: @Composable () -> Unit,
+    content: @Composable (close: () -> Unit) -> Unit,
 ) {
     val motion = stovaMotion
     val still = motion.still
@@ -128,7 +137,7 @@ private fun StovaOverlay(
                     Modifier.pointerInput(Unit) { detectTapGestures { } }
                         .animateEnterExit(enter = if (still) EnterTransition.None else enter,
                             exit = if (still) ExitTransition.None else exit, label = "panel"),
-                ) { content() }
+                ) { content(::close) }
             }
         }
     }

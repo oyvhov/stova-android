@@ -1,6 +1,7 @@
 package app.stova.sonos
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -49,6 +50,8 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     /** The music alone on the screen; hoisted in [SonosScreen]. Back returns to this page. */
     immersive: Boolean = false, onImmersive: (Boolean) -> Unit = {},
     preparedArtwork: String? = null, loadArtwork: SonosArtLoader? = null,
+    shelf: List<SonosMedia> = emptyList(), shelfThumbnail: SonosThumbnail = { _, _, _, _ -> },
+    shelfReturn: SonosMedia? = null, onShelfRestored: () -> Unit = {}, onBrowseMedia: (SonosMedia) -> Unit = {},
     onApplyGroup: ((SonosGroupDraft, (Boolean) -> Unit) -> Unit)? = null) {
     val room = state.rooms.find { it.id == selectedId } ?: state.rooms.firstOrNull()
     val native = room?.let { coordinator(it, state.rooms) }
@@ -63,6 +66,7 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     val groupCancelFocus = remember { FocusRequester() }
     val groupApplyFocus = remember { FocusRequester() }
     val roomList = rememberLazyListState()
+    val playerScroll = rememberScrollState()
     var draft by remember { mutableStateOf<SonosGroupDraft?>(null) }
     var groupAttempted by remember { mutableStateOf(false) }
     var restoreRoomAfterGroup by remember { mutableStateOf(false) }
@@ -106,6 +110,8 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     val canPlay = room?.available == true && player?.available == true && player.supports(if (player.playing) 1 else 16384)
     val rooms = if (roomsOpen) first else FocusRequester.Default
     var more by remember(room?.id) { mutableStateOf(false) }
+    var choosing by remember(native?.id) { mutableStateOf<SonosMedia?>(null) }
+    var returnFromChoice by remember(native?.id) { mutableStateOf<SonosMedia?>(null) }
     var restoreMore by remember { mutableStateOf(false) }
     val playbackAvailable = room?.available == true && player?.available == true &&
         (player.supports(16) || player.supports(if (player.playing) 1 else 16384) || player.supports(32))
@@ -129,28 +135,21 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
         SideEffect { ready() }
     }
     val shownArt = art.takeIf { backgroundArt }
+    val expanded = immersive && room != null
     key(room?.id, player?.id, shownArt == null) {
         if (shownArt != null) {
             SonosArtworkFade(shownArt, backdrop = true, load = load)
-            Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = .14f)))
+            SonosArtworkShade(expanded)
         }
     }
-    val expanded = immersive && room != null
+    val seasonClock = rememberSeasonalClock()
+    SeasonalScene(Modifier.matchParentSize(), clock = seasonClock)
     Box(Modifier.fillMaxSize().stepEntrance(expanded, if (expanded) 1 else 0)) {
     if (immersive && room != null) {
         BackHandler { leaveImmersive() }
         SonosImmersive(room, native, player, busy, actionFailed, backgroundArt, art, load, guarded, ::leaveImmersive)
     } else {
     Box(Modifier.fillMaxSize()) {
-        // Dark matte ink preserves contrast; no blur.
-        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
-            0f to colors.background.copy(alpha = .97f),
-            .46f to colors.background.copy(alpha = .82f),
-            .55f to colors.background.copy(alpha = .91f),
-            1f to colors.background.copy(alpha = .88f),
-        )))
-        val seasonClock = rememberSeasonalClock()
-        SeasonalScene(Modifier.matchParentSize(), clock = seasonClock)
         Column(Modifier.fillMaxSize().padding(horizontal = StovaLayout.TvSafeEdge, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -212,10 +211,10 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                 // Ordinary TV type fits on one screen. Large accessibility text may scroll;
                 // it must never be shrunk to preserve the normal-density layout.
                 val edit = draft
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Column(Modifier.weight(1f).verticalScroll(playerScroll).padding(4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     val largeType = LocalDensity.current.fontScale >= 1.5f
-                    // With the rooms hidden the freed width goes to the sleeve and the music, not to more controls.
-                    val cover = if (roomsOpen) 190.dp else 236.dp
+                    // Reserve the same space while Sonos fetches the shelf, so the controls stay put.
+                    val cover = if (roomsOpen) 164.dp else 204.dp
                     if (largeType) {
                         key(room.id, player?.id) { SonosCover(art, Modifier.size(160.dp), load) }
                         SonosPlayback(room, player, guarded, playbackFocus, rooms, playFocus)
@@ -227,13 +226,16 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                     if (groupChanged || actionFailed && (edit == null || groupAttempted)) {
                         Text(stringResource(if (groupChanged) R.string.sonos_group_changed else R.string.sonos_action_failed), color = colors.error)
                     }
-                    // The room's own speaker beside its volume; no words on screen, the rail speaks to TalkBack.
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        SonosSpeakerArt(room.speaker, rememberSonosVisual(room, state), Modifier.width(132.dp).height(56.dp),
-                            "sonos-stage-${room.id}", room.available, waves = true)
-                        room.volume?.let { volume ->
-                            SonosVolumeRail(room.id, volume, room.available && room.supports(4), busy,
-                                stringResource(R.string.sonos_volume_room, room.name), onAction, Modifier.weight(1f))
+                    room.volume?.let { volume ->
+                        SonosVolumeRail(room.id, volume, room.available && room.supports(4), busy,
+                            stringResource(R.string.sonos_volume_room, room.name), onAction, Modifier.fillMaxWidth())
+                    }
+                    if (shelf.isNotEmpty()) SonosShelf(shelf, shelfThumbnail, shelfReturn ?: returnFromChoice, {
+                        if (shelfReturn != null) onShelfRestored()
+                        returnFromChoice = null
+                    }) { item ->
+                        if (!busy) {
+                            if (item.expandable) onBrowseMedia(item) else if (item.playable) choosing = item
                         }
                     }
                     if (edit == null) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -251,21 +253,41 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                 }
             }
         }
-        SeasonalScene(Modifier.matchParentSize(), front = true, clock = seasonClock)
     }
     }
     }
+    SeasonalScene(Modifier.matchParentSize(), front = true, clock = seasonClock)
     }
     if (more && room != null && !immersive) SonosOptionsDialog(room, native, player, busy, actionFailed, guarded) { more = false }
+    choosing?.let { item ->
+        if (native != null && !immersive) SonosMediaActions(item, native, busy, guarded) {
+            choosing = null
+            returnFromChoice = item
+        }
+    }
     LaunchedEffect(state.loading, state.rooms.isEmpty()) {
         if (!state.loading) { withFrameNanos { }
             // Restoring full screen, or entering it during this frame, removes the page controls.
             // The immersive view requests its own focus; never target the detached page here.
-            if (!immersiveNow) {
+            if (!immersiveNow && shelfReturn !in shelf) {
                 if (roomsOpen || room == null) first.requestFocus() else if (canPlay) playFocus.requestFocus() else moreFocus.requestFocus()
             }
         }
     }
+}
+
+/** The artwork and its contrast layer stay in place when only the viewing mode changes. */
+@Composable private fun SonosArtworkShade(expanded: Boolean) {
+    val ink = MaterialTheme.colorScheme.background
+    val largeType = LocalDensity.current.fontScale >= 1.5f
+    val motion = stovaMotion
+    val matte = animateFloatAsState(if (expanded) .14f else .85f, motion.fade(motion.standard), label = "sonos-art-shade")
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
+        0f to ink.copy(alpha = .62f), .22f to ink.copy(alpha = if (largeType) .66f else .08f),
+        .48f to ink.copy(alpha = if (largeType) .78f else .18f),
+        .70f to ink.copy(alpha = .84f), 1f to ink.copy(alpha = .98f),
+    )))
+    Box(Modifier.fillMaxSize().graphicsLayer { alpha = matte.value }.background(ink))
 }
 
 @Composable
@@ -308,12 +330,13 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
 
 /** Status, title and artist; a new track crossfades in. TV audio says so and shows no stale track. */
 @Composable internal fun SonosTrackText(room: SonosRoom, player: SonosRoom?, tv: Boolean, largeType: Boolean, immersive: Boolean = false) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    val alignment = if (immersive) Alignment.CenterHorizontally else Alignment.Start
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp), horizontalAlignment = alignment) {
         Crossfade((if (tv) null else player?.title) to (if (tv) null else player?.artist),
             animationSpec = stovaMotion.fade(stovaMotion.standard), label = "sonos-track") { (title, artist) ->
             SonosLabels(if (tv) stringResource(R.string.sonos_tv) else title?.takeIf(String::isNotBlank) ?: stringResource(R.string.sonos_no_track),
                 artist, if (immersive && !largeType) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineSmall,
-                titleLines = if (largeType) 1 else 2, detailStyle = MaterialTheme.typography.titleMedium)
+                titleLines = if (largeType) 1 else 2, detailStyle = MaterialTheme.typography.titleMedium, alignment = alignment)
         }
         if (!room.available || player?.available != true) Text(stringResource(R.string.sonos_unavailable))
     }
@@ -337,10 +360,11 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
     }
 }
 
-@Composable internal fun SonosProgress(player: SonosRoom, prominent: Boolean = false) {
+@Composable internal fun SonosProgress(player: SonosRoom, prominent: Boolean = false, modifier: Modifier = Modifier) {
     val now by rememberResumedNow(1000, player.playing)
     val position = player.position(now)
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = if (prominent) Alignment.CenterHorizontally else Alignment.Start) {
         val colors = MaterialTheme.colorScheme
         LinearProgressIndicator(progress = { position.toFloat() / player.duration }, Modifier.fillMaxWidth(),
             color = if (prominent) colors.onSurface else colors.onSurfaceVariant,

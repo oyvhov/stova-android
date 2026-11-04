@@ -42,9 +42,10 @@ class SonosFullscreenTest {
     private var left = 0
     private var artworkStarts = 0
 
-    private fun page(vararg shown: SonosRoom, busy: Boolean = false, backgroundArt: Boolean = true, roomsOpen: Boolean = false) {
+    private fun page(vararg shown: SonosRoom, busy: Boolean = false, backgroundArt: Boolean = true, roomsOpen: Boolean = false,
+        reduceMotion: Boolean = true) {
         rooms = shown.toList()
-        compose.setContent { StovaTheme(reduceMotion = true) {
+        compose.setContent { StovaTheme(reduceMotion = reduceMotion) {
             val input = androidx.compose.ui.platform.LocalInputModeManager.current
             SideEffect { input.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
             // As the app: the page's own Back comes after Sonos is left.
@@ -119,6 +120,24 @@ class SonosFullscreenTest {
         compose.onNodeWithText("Inspector Norse").assertIsDisplayed()
         compose.onNodeWithText("Storestova", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithText("Din musikk").assertDoesNotExist()
+    }
+
+    @Test fun playlistArtIsOnThePlayerAndOpeningItDoesNotReplaceTheQueue() {
+        val current = room()
+        val playlist = SonosMedia("favorite:mix", "favorite_item_id", "Kveldsmiks", "/mix.jpg", playable = true, mediaClass = "playlist")
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SonosContent(SonosState(listOf(current), loading = false), current.id, {}, { actions += it }, {}, {}, {},
+                shelf = listOf(playlist), shelfThumbnail = { path, modifier, _, loaded ->
+                    Box(modifier.testTag(path))
+                    SideEffect { loaded() }
+                })
+        } }
+        compose.onNodeWithText("Favorittar og spelelister").assertIsDisplayed()
+        compose.onNodeWithTag("/mix.jpg", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithText("Kveldsmiks").performClick()
+        assertTrue(actions.isEmpty())
+        compose.onNodeWithText("Spel").performClick()
+        assertEquals(listOf<SonosAction>(SonosAction.PlayMedia(playlist)), actions)
     }
 
     @Test fun longPressEditsGroupInTheRoomListAndOnlyApplySendsTheDraft() {
@@ -212,6 +231,27 @@ class SonosFullscreenTest {
         assertTrue(actions.isEmpty())
     }
 
+    @Test fun fullScreenVolumeUsesTheRoomSpeakerAndBackKeepsTheDraft() {
+        page(room().copy(model = "Era 100"))
+        compose.onNodeWithTag("sonos-fullscreen").performClick()
+        val button = compose.onNodeWithTag("sonos-volume-button")
+        val exit = compose.onNodeWithTag("sonos-fullscreen-exit")
+        compose.onNodeWithTag("sonos-volume-speaker", useUnmergedTree = true).assertIsDisplayed()
+        assertTrue(button.getUnclippedBoundsInRoot().left > exit.getUnclippedBoundsInRoot().right)
+        rail().assertDoesNotExist()
+        key(Key.DirectionUp)
+        button.assertIsFocused()
+        button.performKeyInput { pressKey(Key.DirectionCenter) }
+        rail().assertIsFocused()
+        rail().performKeyInput { pressKey(Key.DirectionUp); pressKey(Key.DirectionUp); pressKey(Key.DirectionDown) }
+        rail().assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "32 %"))
+        rail().performKeyInput { pressKey(Key.Back) }
+        rail().assertDoesNotExist()
+        button.assertIsFocused()
+        assertTrue(immersive)
+        assertEquals(listOf<SonosAction>(SonosAction.Volume(32)), actions)
+    }
+
     @Test fun exitButtonLeavesFullScreenAndTransportStillWorksInside() {
         page(room())
         compose.onNodeWithTag("sonos-fullscreen").performClick()
@@ -220,6 +260,25 @@ class SonosFullscreenTest {
         compose.onNodeWithTag("sonos-fullscreen-exit").performClick()
         assertFalse(immersive)
         compose.onNodeWithTag("sonos-fullscreen").assertIsFocused()
+    }
+
+    @Test fun volumePanelLetsGoOfFocusWhileItGlidesOut() {
+        immersive = true
+        page(room(), reduceMotion = false)
+        val button = compose.onNodeWithTag("sonos-volume-button")
+        val panel = compose.onNodeWithTag("sonos-volume-panel", useUnmergedTree = true)
+        button.requestFocus()
+        button.performKeyInput { pressKey(Key.DirectionCenter) }
+        rail().assertIsFocused()
+        compose.mainClock.autoAdvance = false
+        rail().performKeyInput { pressKey(Key.Back) }
+        compose.mainClock.advanceTimeBy(64)
+        panel.assertExists()
+        rail().assertIsNotFocused()
+        compose.mainClock.advanceTimeBy(250)
+        panel.assertDoesNotExist()
+        button.assertIsFocused()
+        assertTrue(immersive)
     }
 
     @Test fun withoutPlaybackSupportFullScreenFocusesItsExit() {
