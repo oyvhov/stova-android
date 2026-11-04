@@ -1,3 +1,8 @@
+# Utbetringane installerte på Shield og Loftet
+2026-11-04 (Codex): Installerte TV-bygget med utbetringane frå `2df07ea` på begge TV-ane med install-r.
+SHA-256 samsvara med den lokale APK-en på begge einingane.
+Appen vart ikkje opna. Visuell prøve av dette bygget på TV står att.
+
 # Utbetringar 2–6 frå Shield-gjennomgangen
 2026-11-04 (Codex): Flytta Alle appar til etter første favoritt og la Sjå alt først i Oppdag-rada. Gav utsjånadskortet namn etter handlingane.
 Smarthus prioriterer eit tilgjengeleg kort. TV-lyd viser lydinnstillingar og gøymer gamle musikkdata og transportknappar.
