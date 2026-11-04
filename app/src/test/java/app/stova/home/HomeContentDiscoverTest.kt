@@ -27,7 +27,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
-/** Home's Oppdag row: Seerr's titles end in a tile that opens the page, and a card in Seerr cannot be played. */
+/** Home's Oppdag row: Seerr's titles follow a tile that opens the page, and a card in Seerr cannot be played. */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
 class HomeContentDiscoverTest {
@@ -45,13 +45,10 @@ class HomeContentDiscoverTest {
         }
     }
 
-    @Test fun discoverRowEndsWithAnOpenTile() {
+    @Test fun discoverRowStartsWithAnOpenTile() {
         var opened = 0
         show { opened++ }
-        // Right from the last card reaches the tile, as «Alle appar» ends the apps.
-        compose.onNode(hasContentDescription("Heat") and hasClickAction()).assertIsFocused()
-            .performKeyInput { pressKey(Key.DirectionRight) }
-        compose.onNode(hasContentDescription("Oppdag") and hasClickAction()).assertIsFocused().performClick()
+        compose.onNode(hasContentDescription("Sjå alt") and hasClickAction()).assertIsFocused().performClick()
         assertEquals(1, opened)
     }
 
@@ -64,6 +61,8 @@ class HomeContentDiscoverTest {
 
     @Test fun longPressOnADiscoverCardHasNoPlay() {
         show()
+        compose.onNode(hasContentDescription("Sjå alt") and hasClickAction()).assertIsFocused()
+            .performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNode(hasContentDescription("Heat") and hasClickAction()).assertIsFocused()
             .performKeyInput { pressKey(Key.Menu) }
         // The menu is open, without play and without what Spole does with a title in the library; its
@@ -88,13 +87,11 @@ class HomeContentDiscoverTest {
                 }
             }
         }
-        compose.onNode(hasContentDescription("Heat") and hasClickAction()).assertIsFocused()
-            .performKeyInput { pressKey(Key.DirectionRight) }
-        compose.onNode(hasContentDescription("Oppdag") and hasClickAction()).assertIsFocused()
-        assertEquals(FocusedTarget.App("Oppdag"), focused)
+        compose.onNode(hasContentDescription("Sjå alt") and hasClickAction()).assertIsFocused()
+        assertEquals(FocusedTarget.App("Sjå alt"), focused)
         // Home is drawn again, as after Back from the page.
         compose.runOnIdle { visit++ }
-        compose.onNode(hasContentDescription("Oppdag") and hasClickAction()).assertIsFocused()
+        compose.onNode(hasContentDescription("Sjå alt") and hasClickAction()).assertIsFocused()
         compose.onNode(hasContentDescription("Heat") and hasClickAction()).assertIsNotFocused()
     }
 }

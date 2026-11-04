@@ -41,12 +41,13 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
         onPauseOrDispose {job.cancel()}
     }
     val shown=entity
-    val artwork=shown?.attributes?.text("entity_picture")?.takeIf {config.type==CardType.MEDIA_PLAYER && config.size!=CardSize.S}
+    val artwork=shown?.takeUnless { it.isTvAudio }?.attributes?.text("entity_picture")
+        ?.takeIf {config.type==CardType.MEDIA_PLAYER && config.size!=CardSize.S}
     val leading:(@Composable (Modifier)->Unit)?=if(artwork!=null && images!=null) {
         {imageModifier -> HaImage(artwork,images,imageModifier,contentScale=ContentScale.Crop)}
     } else null
     val badge=if(unavailable || shown==null) null else when(config.type) {
-        CardType.MEDIA_PLAYER -> if(shown.state=="playing") entityStateLabel(shown) else null
+        CardType.MEDIA_PLAYER -> if(shown.state=="playing" && !shown.isTvAudio) entityStateLabel(shown) else null
         else -> null
     }
     fun panel() {if(entity!=null) openDialog(controlPanel(config.type,entity.id,config.hiddenModes))}
@@ -77,7 +78,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
                 else->null
             }
             if(config.type==CardType.MEDIA_PLAYER && service!=null) {
-                if(!locked && !pending && !unavailable && !editing) perform(ServiceCall("media_player",service))
+                if(!locked && !pending && !unavailable && !editing && shown?.isTvAudio != true) perform(ServiceCall("media_player",service))
                 true
             } else false
         }) {

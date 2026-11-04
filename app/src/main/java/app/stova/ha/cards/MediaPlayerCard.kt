@@ -19,11 +19,13 @@ import app.stova.R
 import app.stova.core.ui.StovaIcons
 import app.stova.core.ui.focusOutline
 import app.stova.ha.HaEntity
+import app.stova.ha.isTvAudio
 import app.stova.ha.text
 
 @Composable fun MediaPlayerCard(entity:HaEntity,locked:Boolean=false,perform:(ServiceCall)->Unit={},size:CardSize=CardSize.S) {
     // Read only inside the progress lambda: the tick redraws the bar, never the card.
-    val now=rememberResumedNow(1_000,active=entity.state=="playing")
+    val tvAudio = entity.isTvAudio
+    val now=rememberResumedNow(1_000,active=!tvAudio && entity.state=="playing")
     val duration=entity.attributes.number("media_duration")
     val position=entity.attributes.number("media_position")
     val updated=entity.attributes.text("media_position_updated_at")?.let {runCatching {app.stova.ha.haMillis(it)}.getOrNull()}
@@ -31,16 +33,16 @@ import app.stova.ha.text
     // What is playing leads with room of its own; round controls and a slim volume line sit below it.
     Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Column(verticalArrangement=Arrangement.spacedBy(2.dp)) {
-            Text(entity.attributes.text("media_title") ?: entityStateLabel(entity),
+            Text(if (tvAudio) stringResource(R.string.sonos_tv) else entity.attributes.text("media_title") ?: entityStateLabel(entity),
                 style=if(size==CardSize.L) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleLarge,
                 maxLines=if(size==CardSize.L) 3 else 1,overflow=TextOverflow.Ellipsis)
-            entity.attributes.text("media_artist")?.let {CardDetail(it)}
+            if (!tvAudio) entity.attributes.text("media_artist")?.let {CardDetail(it)}
         }
-        if(position!=null && duration!=null && duration>0) LinearProgressIndicator(
+        if(!tvAudio && position!=null && duration!=null && duration>0) LinearProgressIndicator(
             progress={((position+elapsed())/duration).toFloat().coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().height(3.dp),
             color=MaterialTheme.colorScheme.primary,trackColor=MaterialTheme.colorScheme.surfaceVariant,drawStopIndicator={})
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
-            listOf("media_play_pause","media_next_track").forEach {service ->
+            if (!tvAudio) listOf("media_play_pause","media_next_track").forEach {service ->
                 val source=remember {MutableInteractionSource()}
                 val playing=entity.state=="playing"
                 val label=stringResource(if(service=="media_next_track") R.string.ha_v2_next else if(playing) R.string.ha_pause else R.string.ha_play)

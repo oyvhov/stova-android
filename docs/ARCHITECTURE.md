@@ -19,7 +19,11 @@ køhandlinga finst. `HaImage` brukar ei avgrensa, sesjonsdelt minnebuffer for
 Sonos-omslag. `SonosArtworkFade` held det gamle biletet til det nye er
 dekoda, og overtonar i lagfasen. Eit rombyte eller TV-lyd fjernar den gamle
 kunsten med ein gong. Den delte Sonos-bakgrunnen får eit ekstra matt lag
-med 14 % temafarge.
+med 14 % temafarge. Standardspelaren dempar kunsten ekstra bak
+kontrollane og held same toppfelthøgd under romgruppering.
+`HaEntity.isTvAudio` blir delt med Smarthus, der TV-lyd viser volum
+og kjeldeval i detaljpanelet. Smarthus føretrekkjer eit tilgjengeleg
+kort ved opning.
 
 `SonosLabels` gir Sonos eit felles oppsett for tittel og sekundærtekst frå
 Heim til spelaren, biblioteket og Fleire val. Visingsnamnet tek bort eit
@@ -82,7 +86,8 @@ formatproporsjonane, også i Appar-rutenettet. Watch Next avgrensar undertittele
 `RowStyle.cardTitles` lèt ei rad ha eigne namn under korta (null følgjer profilen); `showsCardTitles`
 blir lese av kort, Watch Next og radgeometrien. Appar-sida følgjer alltid profilvalet. Heim har ingen radteljar.
 Appar-sida har fire banner per rad: `LocalArtworkScale` skalerer kortstorleiken frå Heim til breidda, medan ikon held storleiken sin. Rekkjefølgja er Favorittar, Spole-profilar, Oppdag (berre når Spole gir Seerr-tilgang), Alle appar (samla og alfabetisk), Bibliotek, Scenar og skript, Skjulte appar. Bibliotek og scenar kan vere lange lister, så dei står etter appane.
-Favorittrada sluttar med «Alle appar». Appar finst også i menyen i Innstillingar (ved Android), og
+«Alle appar» ligg rett etter første favoritt på Heim, eller først når rada er tom. Oppdag-rada startar med
+«Sjå alt» for å opne katalogen. Appar finst også i menyen i Innstillingar (ved Android), og
 `MainShell` sender Tilbake til sida som opna Appar. Fokus på «Appar» der viser `settings/AppsPane.kt` (kva OK
 opnar, tal på favorittar og skjulte appar) i staden for sida til seksjonen som sist var vald. Toppfeltet har ingen Appar-knapp. Sesongmerket står ved venstre kant.
 «Rullande oversikt» opnar med heroen over første rad (same geometri som éi rad). `HomeScrollShift`

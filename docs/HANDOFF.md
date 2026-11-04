@@ -1,3 +1,9 @@
+# Utbetringar 2–6 frå Shield-gjennomgangen
+2026-11-04 (Codex): Flytta Alle appar til etter første favoritt og la Sjå alt først i Oppdag-rada. Gav utsjånadskortet namn etter handlingane.
+Smarthus prioriterer eit tilgjengeleg kort. TV-lyd viser lydinnstillingar og gøymer gamle musikkdata og transportknappar.
+Sonos dempar kunsten bak kontrollane og held same høgd ved romgruppering. Skjermbilete frå Compose er kontrollerte. TV-prøve og installasjon står att.
+1178 testar, lint og TV-bygg grøne.
+
 # UX-gjennomgang på Shield
 2026-11-04 (Codex): Gjekk gjennom Heim, Appar, Oppdag, Innstillingar, Smarthus og Sonos med D-pad. Skjermbilete i den lokale mappa `.superpowers/shield-audit/`.
 Prioriter direkte tilgang til Alle appar, startfokus på eit brukbart Smarthus-kort og betre lesbarheit over Sonos-kunst. Tilbake gav fokus attende frå Appar og Oppdag-tittelen.

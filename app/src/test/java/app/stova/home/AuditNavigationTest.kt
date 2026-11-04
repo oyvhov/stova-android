@@ -58,11 +58,11 @@ class AuditNavigationTest {
         compose.onNodeWithText("Opne").performKeyInput {pressKey(Key.Enter)}
         assertEquals(1,opened);assertEquals(0,removed)
     }
-    @Test fun allAppsIsReachableAfterTheLastFavouriteWithTheRemote() {
+    @Test fun allAppsIsOneStepFromTheFirstFavourite() {
         var opened=0
         compose.setContent {StovaTheme(reduceMotion=true) {
             val context=LocalContext.current
-            HomeContent(listOf(HomeRowUi.Apps(HomeRowKey.APPS,listOf(app))),null,HomeRowKey.APPS,
+            HomeContent(listOf(HomeRowUi.Apps(HomeRowKey.APPS,listOf(app, app.copy(key = "demo/.Second", label = "Andre app")))),null,HomeRowKey.APPS,
                 AppArtCache(context),PackageManagerAppCatalog(context,emptySet()),{opened++},{},{},{})
         }}
         compose.onNode(hasContentDescription("Min app") and hasClickAction()).assertIsFocused()

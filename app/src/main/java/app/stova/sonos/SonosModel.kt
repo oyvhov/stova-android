@@ -26,8 +26,7 @@ data class SonosRoom(val entity: HaEntity, val name: String, val area: String? =
     val coordinatorId get() = members.first()
     val source get() = entity.attributes.text("source")
     /** TV can retain the previous album's picture; never infer music from artwork alone. */
-    val tvAudio get() = source?.trim().equals("TV", ignoreCase = true) ||
-        entity.attributes.text("media_content_id")?.startsWith("x-sonos-htastream:", ignoreCase = true) == true
+    val tvAudio get() = entity.isTvAudio
     val sources get() = entity.attributes.stringList("source_list")
     val duration get() = entity.attributes.number("media_duration")?.toInt()?.coerceAtLeast(0) ?: 0
     val shuffle get() = (entity.attributes["shuffle"] as? JsonPrimitive)?.booleanOrNull == true

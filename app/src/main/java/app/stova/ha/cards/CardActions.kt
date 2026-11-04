@@ -1,6 +1,7 @@
 package app.stova.ha.cards
 
 import app.stova.ha.HaEntity
+import app.stova.ha.isTvAudio
 import app.stova.profiles.Profile
 import kotlin.math.round
 import kotlinx.serialization.json.*
@@ -10,7 +11,7 @@ fun canControl(profile: Profile) = !profile.kid || profile.kidSmartHomeControl
 fun primaryAction(type: CardType, entity: HaEntity): ServiceCall? = when (type) {
     CardType.LIGHT -> ServiceCall("light", "toggle")
     CardType.TOGGLE -> ServiceCall("homeassistant", "toggle")
-    CardType.MEDIA_PLAYER -> ServiceCall("media_player", "media_play_pause")
+    CardType.MEDIA_PLAYER -> ServiceCall("media_player", "media_play_pause").takeUnless { entity.isTvAudio }
     CardType.SCENE -> ServiceCall(entity.id.substringBefore('.'), "turn_on")
     else -> null
 }

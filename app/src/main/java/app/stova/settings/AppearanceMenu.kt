@@ -41,7 +41,7 @@ enum class AppearanceCategory(@StringRes val title: Int, @StringRes val hint: In
     FOCUS(R.string.custom_focus, R.string.settings_summary_focus),
     TOP_BAR(R.string.custom_top_bar, R.string.settings_summary_top),
     ICONS(R.string.custom_icons, R.string.settings_summary_icons),
-    PROFILE(R.string.settings_profile, R.string.settings_summary_profile),
+    PROFILE(R.string.settings_appearance_profile, R.string.settings_summary_profile),
     /** The Home row list, folded in here so Home and its look share one section. */
     ROWS(R.string.settings_home_rows, R.string.settings_hint_home),
 }

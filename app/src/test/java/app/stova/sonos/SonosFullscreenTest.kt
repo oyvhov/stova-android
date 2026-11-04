@@ -129,8 +129,11 @@ class SonosFullscreenTest {
             SonosContent(SonosState(listOf(leader, other), loading = false), leader.id, {}, {}, {}, {}, {},
                 onApplyGroup = { draft, done -> submitted = draft; done(true) })
         } }
+        val title = compose.onNodeWithText("Inspector Norse")
+        val titleTop = title.getUnclippedBoundsInRoot().top
         compose.onNodeWithTag("sonos-room-${leader.id}").performSemanticsAction(SemanticsActions.OnLongClick)
-        compose.onNodeWithText("Inspector Norse").assertIsDisplayed()
+        title.assertIsDisplayed()
+        assertEquals(titleTop, title.getUnclippedBoundsInRoot().top)
         rail(leader.id).assertIsDisplayed()
         compose.onNodeWithTag("sonos-room-${leader.id}").assertIsSelected()
         compose.onNodeWithTag("sonos-room-${other.id}").performClick().assertIsSelected()

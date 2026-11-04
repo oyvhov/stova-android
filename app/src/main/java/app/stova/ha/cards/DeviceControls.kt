@@ -141,7 +141,7 @@ import kotlin.math.roundToInt
                 val previous=features and 16!=0
                 val playPause=(shown.state=="playing" && features and 1!=0) || (shown.state=="paused" && features and 16384!=0)
                 val next=features and 32!=0
-                val buttons=!attrs.text("source").equals("TV",true) && enabled && (previous || playPause || next)
+                val buttons=!shown.isTvAudio && enabled && (previous || playPause || next)
                 // As for a light: Up and Down go through the buttons, landing on play or pause where there is one.
                 val action=remember {FocusRequester()}
                 fun lands(here:Boolean)=if(here) Modifier.focusRequester(action) else Modifier
@@ -153,7 +153,7 @@ import kotlin.math.roundToInt
                         act(ServiceCall("media_player","volume_set",buildJsonObject {put("volume_level",it/100)}),true)
                     }
                 }
-                if(!attrs.text("source").equals("TV",true)) FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                if(!shown.isTvAudio) FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                     if(previous) StovaButton(stringResource(R.string.ha_action_previous),{act(ServiceCall("media_player","media_previous_track"))},lands(lead==0),enabled=enabled)
                     if(playPause)
                         StovaButton(stringResource(if(shown.state=="playing") R.string.ha_pause else R.string.ha_play),{act(ServiceCall("media_player","media_play_pause"))},lands(lead==1),enabled=enabled)

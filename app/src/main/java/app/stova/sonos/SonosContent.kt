@@ -143,11 +143,17 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     } else {
     Box(Modifier.fillMaxSize()) {
         // Dark matte ink preserves contrast; no blur.
-        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(colors.background.copy(alpha = .97f), colors.background.copy(alpha = .82f), colors.background.copy(alpha = .72f)))))
+        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
+            0f to colors.background.copy(alpha = .97f),
+            .46f to colors.background.copy(alpha = .82f),
+            .55f to colors.background.copy(alpha = .91f),
+            1f to colors.background.copy(alpha = .88f),
+        )))
         val seasonClock = rememberSeasonalClock()
         SeasonalScene(Modifier.matchParentSize(), clock = seasonClock)
         Column(Modifier.fillMaxSize().padding(horizontal = StovaLayout.TvSafeEdge, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Icon(StovaIcons.Sonos, null, Modifier.size(28.dp), tint = colors.onSurface)
                 Text(stringResource(R.string.sonos_title), style = MaterialTheme.typography.headlineMedium)
                 SonosSeasonMark()

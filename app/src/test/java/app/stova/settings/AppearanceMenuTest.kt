@@ -62,7 +62,7 @@ class AppearanceMenuTest {
     }
     @Test fun overviewFitsAllNineCategories() {
         render()
-        listOf("Tema", "Heim og hero", "Kort og rader", "Bakgrunn", "Fokus", "Toppfelt", "Ikon", "Profil", "Rader på Heim").forEach {
+        listOf("Tema", "Heim og hero", "Kort og rader", "Bakgrunn", "Fokus", "Toppfelt", "Ikon", "Kopier eller nullstill utsjånaden", "Rader på Heim").forEach {
             compose.onNode(hasText(it) and SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.Role,
                 androidx.compose.ui.semantics.Role.Button)).assertIsDisplayed()
         }

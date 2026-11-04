@@ -94,7 +94,11 @@ import kotlin.math.ceil
     var pendingCard by remember {mutableStateOf<String?>(null)}
     var navigationVersion by remember {mutableIntStateOf(0)}
     fun listIndex(id:String):Int = cells.firstOrNull { it.id == id }?.revealIndex ?: 0
-    val firstId=cards.find {it.id==initialFocusId}?.id ?: cells.firstOrNull()?.id
+    val availableIds = cards.filter { stateText(entities[it.entityId]) != StateText.Unavailable }.map { it.id }.toSet()
+    val firstId = initialFocusId?.takeIf { it in availableIds }
+        ?: cells.firstOrNull { it.id in availableIds }?.id
+        ?: initialFocusId?.takeIf { id -> cells.any { it.id == id } }
+        ?: cells.firstOrNull()?.id
     fun requestCard(id:String) {
         val target=cells.firstOrNull {it.id==id} ?: return
         navigation?.cancel()

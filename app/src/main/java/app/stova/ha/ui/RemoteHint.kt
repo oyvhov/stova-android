@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import app.stova.R
 import app.stova.ha.HaEntity
+import app.stova.ha.isTvAudio
 import app.stova.ha.cards.*
 
 @Composable internal fun remoteHint(card:CardConfig,entity:HaEntity?,readOnly:Boolean,kid:Boolean,editing:Boolean):String {
@@ -14,7 +15,11 @@ import app.stova.ha.cards.*
         card.type==CardType.LIGHT->if(entity?.state=="on") R.string.ha_action_hint_light_off else R.string.ha_action_hint_light_on
         card.type==CardType.TOGGLE->if(entity?.state=="on") R.string.ha_action_hint_toggle_off else R.string.ha_action_hint_toggle_on
         card.type==CardType.SCENE->R.string.ha_action_hint_scene
-        card.type==CardType.MEDIA_PLAYER->if(entity?.state=="playing") R.string.ha_action_hint_pause else R.string.ha_action_hint_play
+        card.type==CardType.MEDIA_PLAYER->when {
+            entity?.isTvAudio == true -> R.string.ha_action_hint_tv_audio
+            entity?.state == "playing" -> R.string.ha_action_hint_pause
+            else -> R.string.ha_action_hint_play
+        }
         card.type==CardType.CLIMATE->R.string.ha_action_hint_climate
         card.type==CardType.COVER->R.string.ha_action_hint_cover
         card.type==CardType.LOCK->R.string.ha_action_hint_lock

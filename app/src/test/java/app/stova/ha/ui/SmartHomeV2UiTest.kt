@@ -23,6 +23,38 @@ import org.robolectric.annotation.Config
 class SmartHomeV2UiTest {
     @get:Rule val compose=createComposeRule()
     private val adult=Profile("a","A",AvatarColor.LIME)
+    @Test fun initialFocusSkipsUnavailableCards() {
+        val light = HaEntity("light.a", "on", buildJsonObject {}, 0, 0)
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SmartHomeContent(adult, listOf(CardConfig("weather", CardType.WEATHER, "weather.a", name = "Ute"),
+                CardConfig("light", CardType.LIGHT, light.id, name = "Leselys")), mapOf(light.id to light), HaStatus.CONNECTED)
+        } }
+        compose.onNodeWithText("Leselys").assertIsFocused()
+    }
+    @Test fun tvAudioCardOpensControlsWithoutSendingAPlaybackCommand() {
+        val tv = HaEntity("media_player.tv", "playing", buildJsonObject {
+            put("media_content_id", "x-sonos-htastream:tv")
+            put("media_title", "Gammal låt")
+            put("volume_level", .25)
+        }, 0, 0)
+        var dialog: CardDialog? = null
+        val calls = mutableListOf<ServiceCall>()
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SmartHomeContent(adult, listOf(CardConfig("tv", CardType.MEDIA_PLAYER, tv.id, name = "Lydplanke")),
+                mapOf(tv.id to tv), HaStatus.CONNECTED, onDialog = { dialog = it }, onPerform = { call, _ -> calls += call })
+        } }
+        compose.onNodeWithText("TV-lyd").assertExists()
+        compose.onNodeWithText("Gammal låt").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Neste spor").assertDoesNotExist()
+        compose.onNodeWithText("Lydplanke").assertIsFocused().performKeyInput {
+            pressKey(Key.MediaPlayPause)
+            pressKey(Key.DirectionCenter)
+        }
+        compose.runOnIdle {
+            assertTrue(dialog is CardDialog.Controls)
+            assertTrue(calls.isEmpty())
+        }
+    }
     @Test fun menuOpensOnSizeSoTheFirstOkEntersTheSizeChoices() {
         compose.setContent { StovaTheme(reduceMotion=true) { SmartHomeContent(adult,
             listOf(CardConfig("a",CardType.SENSOR,"sensor.a")),emptyMap(),HaStatus.CONNECTED) } }
