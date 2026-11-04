@@ -1,3 +1,8 @@
+# Overgangsbygget prøvd på Loftet
+2026-11-04 (Codex): Installerte `7cc1837` på Loftet med install-r og verifiserte SHA-256 mot TV-APK-en.
+Opptaket viste Heim på toppen ved retur frå Smarthus, med fokus tilbake på ikonet. Sonos opna på Kjøkken. Såg Hovudrom-merket og tydelegare fullskjermkontrollar over det ekte omslaget.
+Låta stod pausa på 1:34 før og etter kontrollane, og widgeten var ute av syne. Widget-overgangen står att på fysisk TV. Bilete og opptak ligg i `.superpowers/loftet-flow/`.
+
 # Fem funn frå Shield-opptaket retta
 2026-11-04 (Codex): Heim startar på rett stad ved retur, og widget og Sonos deler avspelingsøkt og dekoda omslag. Omslaget glir begge vegar.
 Låtinfo er samla i widgeten når han er synleg. Fullskjerm har tydelegare kontrollar, og romgrupperinga viser «Hovudrom».
