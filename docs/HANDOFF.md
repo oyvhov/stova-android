@@ -1,3 +1,8 @@
+# Overgangsbygget installert på Shield
+2026-11-04 (Codex): Installerte TV-bygget frå `7cc1837` på Shield med install-r.
+SHA-256 samsvara med APK-en som vart prøvd på Loftet.
+Appen vart ikkje opna. Visuell prøve på Shield står att.
+
 # Sonos-widgeten prøvd på Loftet
 2026-11-04 (Codex): Prøvde widget → Sonos → widget med «Frozen» i den dempa gruppa Kjøkken og Storestova. Same omslag og låt på begge sider; opptaket viser omslaget på veg tilbake.
 Pause frå widgeten gav «På pause», og widgeten forsvann etter om lag eitt minutt med fokus tilbake i apprada. Opninga hadde for få opptaksrammer til å stadfeste kor jamt omslaget gled inn.
