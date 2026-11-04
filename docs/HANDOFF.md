@@ -1,3 +1,8 @@
+# Sonos-widgeten prøvd på Loftet
+2026-11-04 (Codex): Prøvde widget → Sonos → widget med «Frozen» i den dempa gruppa Kjøkken og Storestova. Same omslag og låt på begge sider; opptaket viser omslaget på veg tilbake.
+Pause frå widgeten gav «På pause», og widgeten forsvann etter om lag eitt minutt med fokus tilbake i apprada. Opninga hadde for få opptaksrammer til å stadfeste kor jamt omslaget gled inn.
+Begge rom fekk opphavleg dempetilstand tilbake. Kjøkken vart valt att og låta stod pausa på 2:16. Klipp i `.superpowers/loftet-flow/widget-test.mp4`.
+
 # Overgangsbygget prøvd på Loftet
 2026-11-04 (Codex): Installerte `7cc1837` på Loftet med install-r og verifiserte SHA-256 mot TV-APK-en.
 Opptaket viste Heim på toppen ved retur frå Smarthus, med fokus tilbake på ikonet. Sonos opna på Kjøkken. Såg Hovudrom-merket og tydelegare fullskjermkontrollar over det ekte omslaget.
