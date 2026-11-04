@@ -1,3 +1,8 @@
+# UX-gjennomgang på Shield
+2026-11-04 (Codex): Gjekk gjennom Heim, Appar, Oppdag, Innstillingar, Smarthus og Sonos med D-pad. Skjermbilete i den lokale mappa `.superpowers/shield-audit/`.
+Prioriter direkte tilgang til Alle appar, startfokus på eit brukbart Smarthus-kort og betre lesbarheit over Sonos-kunst. Tilbake gav fokus attende frå Appar og Oppdag-tittelen.
+Ingen kodeendring eller avspeling. Shield sett attende i kvile. Frametid, redusert rørsle og profilbyte står att å prøve.
+
 # Sonos-overgangen prøvd på begge TV-ane
 2026-11-04 (Codex): Opna Sonos frå toppfeltet på Shield og Loftet. Vanleg Tilbake gav fokus attende til Sonos-ikonet på begge.
 OK og Tilbake med 150 ms innlagd venting gav same retur. To syntetiske tastetrykk sende utan opphald lét Sonos stå ope på begge.
