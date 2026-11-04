@@ -1,3 +1,8 @@
+# Sonos-overgangen prøvd på begge TV-ane
+2026-11-04 (Codex): Opna Sonos frå toppfeltet på Shield og Loftet. Vanleg Tilbake gav fokus attende til Sonos-ikonet på begge.
+OK og Tilbake med 150 ms innlagd venting gav same retur. To syntetiske tastetrykk sende utan opphald lét Sonos stå ope på begge.
+Ingen avspeling eller volumendring. Begge vart sette attende i kvile. Widget-ruta, redusert rørsle og frametid står att på TV.
+
 # Overgangsbygget installert på begge TV-ane
 2026-11-04 (Codex): Installerte TV-bygget frå `c9ac683` på Shield og Loftet med install-r.
 SHA-256 samsvara med den lokale APK-en på begge TV-ane.
