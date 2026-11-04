@@ -1,3 +1,8 @@
+# Overgangsbygget installert på begge TV-ane
+2026-11-04 (Codex): Installerte TV-bygget frå `c9ac683` på Shield og Loftet med install-r.
+SHA-256 samsvara med den lokale APK-en på begge TV-ane.
+Appen vart ikkje opna, og inga avspeling vart starta. Visuell kontroll av overgangane og frametidsmåling står att.
+
 # Felles rørsle og returfokus
 2026-11-03 (Codex): La opningspunkt og returfokus i sidestabelen, med test for nøsta navigasjon og retur til Sonos-widgeten.
 Oppdag, Sonos-bibliotek, Innstillingar og Smarthus deler stegovergang. Widgeten held førre omslag til det nye er dekoda, og panel respekterer redusert rørsle.
