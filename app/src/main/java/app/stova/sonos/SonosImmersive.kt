@@ -45,8 +45,9 @@ import app.stova.home.rememberSeasonalClock
     // SonosContent owns the shared backdrop so entering and leaving never reloads it.
     Box(Modifier.fillMaxSize().testTag("sonos-immersive")) {
         // Theme ink where the words and controls sit; the middle of the sleeve stays clear.
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to ink.copy(alpha = .62f), .22f to ink.copy(alpha = .08f),
-            .5f to ink.copy(alpha = .18f), 1f to ink.copy(alpha = .94f))))
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
+            0f to ink.copy(alpha = .62f), .22f to ink.copy(alpha = .08f), .48f to ink.copy(alpha = .18f),
+            .70f to ink.copy(alpha = .84f), 1f to ink.copy(alpha = .98f))))
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to ink.copy(alpha = .55f), .6f to Color.Transparent)))
         val seasonClock = rememberSeasonalClock()
         SeasonalScene(Modifier.matchParentSize(), clock = seasonClock)
@@ -73,7 +74,7 @@ import app.stova.home.rememberSeasonalClock
             if (!largeType) Spacer(Modifier.weight(1f))
             Column(Modifier.fillMaxWidth(.6f), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 SonosTrackText(room, player, tv, largeType, immersive = true)
-                if (!tv && player != null && player.duration > 0) SonosProgress(player)
+                if (!tv && player != null && player.duration > 0) SonosProgress(player, prominent = true)
             }
             if (actionFailed) Text(stringResource(R.string.sonos_action_failed), color = colors.error)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
@@ -81,7 +82,7 @@ import app.stova.home.rememberSeasonalClock
                 Spacer(Modifier.weight(1f))
                 room.volume?.let { volume ->
                     SonosVolumeRail(room.id, volume, room.available && room.supports(4), busy,
-                        stringResource(R.string.sonos_volume_room, room.name), onAction, Modifier.width(340.dp))
+                        stringResource(R.string.sonos_volume_room, room.name), onAction, Modifier.width(340.dp), prominent = true)
                 }
             }
         }

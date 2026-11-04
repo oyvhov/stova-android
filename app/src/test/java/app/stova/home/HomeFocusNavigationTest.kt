@@ -22,7 +22,7 @@ import org.robolectric.annotation.Config
 @Config(sdk=[30],qualifiers=TV_QUALIFIERS)
 class HomeFocusNavigationTest {
     @get:Rule val compose=createComposeRule()
-    private fun render(apps:Boolean, middleRows:Int=0, emptyApps:Boolean=false, reduceMotion:Boolean=true, startOnApps:Boolean=false) {
+    private fun render(apps:Boolean, middleRows:Int=0, emptyApps:Boolean=false, reduceMotion:Boolean=true, startOnApps:Boolean=false, returnFocus:String?=null) {
         val account=MediaAccount("a","p",ServerKind.JELLYFIN,"s","Demo","https://demo.invalid","u","U")
         val media=HomeRowUi.Media(HomeRowKey.latestMovies("a"),account,MediaRowKind.LATEST_MOVIES,
             listOf(MediaItem("f","a",ItemType.MOVIE,"Film")),false)
@@ -31,9 +31,17 @@ class HomeFocusNavigationTest {
             List(middleRows) {media.copy(key=HomeRowKey("middle-$it"))}+media
         compose.setContent { StovaTheme(reduceMotion=reduceMotion) {
             val context=LocalContext.current
+            androidx.compose.runtime.CompositionLocalProvider(app.stova.navigation.LocalPageReturnFocus provides returnFocus) {
             HomeContent(rows,null,if(startOnApps) HomeRowKey.APPS else media.key,AppArtCache(context),PackageManagerAppCatalog(context,emptySet()),{},{},{},{},
                 topBar={TopBar(Profile("p","A",AvatarColor.LIME),{},{},onSmartHome={})})
+            }
         } }
+    }
+
+    @Test fun returnFromTopBarStartsAtTopEvenAfterLastMediaRow() {
+        render(apps=true, middleRows=20, returnFocus="top:Smarthus")
+        compose.onNodeWithText("Smarthus").assertIsFocused().assertIsDisplayed()
+        compose.onNodeWithContentDescription("Min app").assertIsDisplayed()
     }
 
     // Back from Spole the title just watched goes first in Continue; the row follows the card in focus.

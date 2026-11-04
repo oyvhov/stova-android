@@ -2,6 +2,7 @@ package app.stova.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ContentTransform
@@ -48,6 +49,7 @@ import app.stova.profiles.season
 import app.stova.profiles.ProfileGate
 import app.stova.profiles.leavingNeedsAdultPin
 import app.stova.settings.SettingsScreen
+import app.stova.sonos.*
 
 /** A page arrives from this scale: just enough to feel like it settles, never like it grows. */
 private const val PAGE_FROM = 0.98f
@@ -85,7 +87,11 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     val current = trail.current.destination
     val pageOpen = remember { PageOpenContext() }
     val heldPages = rememberSaveableStateHolder()
-    fun openPage(destination: Destination) { trail = trail.open(destination, pageOpen.opening) }
+    var sonosEntryRoom by remember(profile.id) { mutableStateOf<String?>(null) }
+    fun openPage(destination: Destination, roomId: String? = null) {
+        if (destination == Destination.SONOS) sonosEntryRoom = roomId
+        trail = trail.open(destination, pageOpen.opening)
+    }
     var smartHomeCardId by remember(profile.id) {mutableStateOf<String?>(null)}
     // The title a Discover card opened the page at; null opens the page at its rows.
     var discoverStart by remember(profile.id) { mutableStateOf<app.stova.discover.DiscoverTitle?>(null) }
@@ -146,11 +152,23 @@ private fun MainShell(container: AppContainer, profile: Profile) {
         motion0.fade(motion0.ambient), label = "art-tone-strength")
     val artTone = remember { app.stova.core.theme.ArtToneState(toneColor, toneStrength) }
     val motion = stovaMotion
+    val sonosPrefs = household?.sonos ?: SonosPrefs()
+    val address = household?.haBaseUrl
+    var sonosRetry by remember(profile.id) { androidx.compose.runtime.mutableIntStateOf(0) }
+    val sonos = rememberSonosSession(container, profile, sonosPrefs, address,
+        enabled = sonosEnabled && (current == Destination.SONOS ||
+            current == Destination.HOME && sonosHomeWanted(sonosPrefs, profile, address, sonosCardFavorite(profile))),
+        retry = sonosRetry)
+    val widgetRoom = rememberSonosWidgetRoom(sonosPrefs, sonos.state)
+    val widgetPlayer = widgetRoom?.let { sonosPlaybackRoom(it, sonos.state) }
+    val musicImages = address?.let { remember(it) { app.stova.ha.cards.HaImageSource(it, container.haAuth, container.haImages) } }
+    val covers = remember(profile.id, musicImages, sonosEnabled) { SonosCovers() }
     // No side rail: home is the whole screen, and Apps and Settings are pages that Back closes.
-    Box(Modifier.fillMaxSize().testTag("screen-${current.name}")) {
+    SharedTransitionLayout(Modifier.fillMaxSize().testTag("screen-${current.name}")) {
         // A short fade between pages, the arriving one settling from 0.98. Sizes never animate: every
         // page fills the screen. The leaving page cannot take focus while it fades, so a stray press
         // never lands on it, and the arriving page places focus as it always did.
+        val shared = this
         AnimatedContent(
             trail.current,
             contentKey = { it.destination },
@@ -158,10 +176,11 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                 // A page opened from an icon grows out of it and shrinks back into it on Back;
                 // Home itself only fades, so the picture behind never jumps.
                 val returning = targetState.depth < initialState.depth
+                val widget = (if (returning) initialState else targetState).opening.focusKey == SONOS_WIDGET_FOCUS
                 ContentTransform(
-                    if (motion.still) EnterTransition.None else fadeIn(motion.enter()) + if (returning) scaleIn(motion.enter(), initialScale = PAGE_FROM)
+                    if (motion.still) EnterTransition.None else fadeIn(motion.enter()) + if (widget) EnterTransition.None else if (returning) scaleIn(motion.enter(), initialScale = PAGE_FROM)
                         else scaleIn(motion.enter(), initialScale = PAGE_GROW_FROM, transformOrigin = targetState.opening.origin),
-                    if (motion.still) ExitTransition.None else fadeOut(motion.exit()) + if (returning)
+                    if (motion.still) ExitTransition.None else fadeOut(motion.exit()) + if (returning && !widget)
                         scaleOut(motion.exit(), targetScale = PAGE_SHRINK_TO, transformOrigin = initialState.opening.origin)
                         else ExitTransition.None,
                     sizeTransform = null,
@@ -169,12 +188,15 @@ private fun MainShell(container: AppContainer, profile: Profile) {
             },
             label = "page",
         ) { entry ->
+            val visibility = this
             val destination = entry.destination
             val leaving = entry != trail.current
             Box(Modifier.fillMaxSize().then(if (leaving) Modifier.focusProperties { canFocus = false } else Modifier)) {
                 // Only the pages that show the backdrop take its tone.
                 val toned = destination == Destination.HOME || destination == Destination.SMART_HOME
                 androidx.compose.runtime.CompositionLocalProvider(app.stova.core.theme.LocalArtTone provides artTone.takeIf { toned },
+                    LocalSonosCovers provides covers,
+                    LocalSonosCoverModifier provides { path -> shared.sonosCoverMotion(path, visibility) },
                     LocalPageOpenContext provides pageOpen,
                     LocalPageReturnFocus provides trail.returnFocus.takeUnless { leaving }) {
                 when (destination) {
@@ -199,13 +221,9 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         }
                         val fixed by fixedFlow.collectAsStateWithLifecycle(initialValue = null)
                         val shift = remember { app.stova.home.HomeScrollShift() }
-                        val sonosPrefs = household?.sonos ?: app.stova.sonos.SonosPrefs()
-                        val homeMusic = app.stova.sonos.rememberSonosHome(container, profile, sonosPrefs, household?.haBaseUrl)
-                        val music = app.stova.sonos.sonosHomeRoom(sonosPrefs, profile, homeMusic.state.rooms, homeMusic.state.musicAssistant)
-                        val widgetRoom = app.stova.sonos.rememberSonosWidgetRoom(sonosPrefs, homeMusic.state)
-                        val widgetPlayer = widgetRoom?.let { app.stova.sonos.sonosPlaybackRoom(it, homeMusic.state) }
-                        var musicArtReady by remember(music?.artwork, profile.id) { mutableStateOf(false) }
-                        val musicImages = household?.haBaseUrl?.let { address -> remember(address) { app.stova.ha.cards.HaImageSource(address, container.haAuth, container.haImages) } }
+                        val backdropRoom = sonosHomeRoom(sonosPrefs, profile, sonos.state.rooms, sonos.state.musicAssistant)
+                        val music = backdropRoom?.let { widgetPlayer?.takeIf { it.playing && !it.artwork.isNullOrBlank() } ?: it }
+                        var musicArtReady by remember(music?.artwork, profile.id) { mutableStateOf(covers[music?.artwork] != null) }
                         val still = app.stova.core.theme.LocalReduceMotion.current
                         val ink = androidx.compose.material3.MaterialTheme.colorScheme.background
                         // As the rows take the screen the picture drifts up a little slower than them, grows
@@ -223,13 +241,14 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         }
                         // The Sonos favourite card reads the same session as the widget and backdrop; pictures only through HaImage.
                         val sonosCard = if (!app.stova.sonos.sonosCardFavorite(profile)) null else app.stova.sonos.SonosCardSource(
-                            app.stova.sonos.sonosCard(sonosPrefs, homeMusic.state)) { path, modifier, onLoad, onError ->
+                            app.stova.sonos.sonosCard(sonosPrefs, sonos.state)) { path, modifier, onLoad, onError ->
                             app.stova.ha.cards.HaImage(path, musicImages, modifier, contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                                 onLoad = onLoad, onError = onError)
                         }
                         androidx.compose.runtime.CompositionLocalProvider(app.stova.home.LocalHomeScrollShift provides shift,
                             app.stova.sonos.LocalSonosCard provides sonosCard,
-                            app.stova.sonos.LocalHomeSonos provides music.takeIf { musicArtReady },
+                            LocalHomeSonos provides music.takeIf { musicArtReady },
+                            LocalHomeSonosWidget provides (widgetRoom != null && widgetPlayer != null),
                             app.stova.home.LocalHomeArrival provides arrival) {
                         HomeScreen(
                             home, container.appArt, container.appCatalog,
@@ -259,14 +278,13 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             onOpenDiscoverTitle = { discoverStart = it; openPage(Destination.DISCOVER) },
                             toTop = homeToTop,
                             aboveApps = if (widgetRoom == null || widgetPlayer == null) null else { modifier ->
-                                app.stova.sonos.SonosNowPlaying(widgetRoom, widgetPlayer, homeMusic.busy, homeMusic.failed,
+                                app.stova.sonos.SonosNowPlaying(widgetRoom, widgetPlayer, sonos.busy, sonos.failed,
                                     onOpen = {
                                         scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(preferredRoom = widgetRoom.id)) } }
-                                        openPage(Destination.SONOS)
-                                    }, onPlayPause = { homeMusic.playPause(widgetRoom.id) }, modifier = modifier,
+                                        openPage(Destination.SONOS, widgetRoom.id)
+                                    }, onPlayPause = { sonos.playPause(widgetRoom.id) }, modifier = modifier,
                                     loadArtwork = { path, artModifier, ready, failed ->
-                                        app.stova.ha.cards.HaImage(path, musicImages, artModifier,
-                                            contentScale = androidx.compose.ui.layout.ContentScale.Crop, onLoad = ready, onError = failed)
+                                        SonosCoverImage(path, musicImages, artModifier, ready, failed)
                                     })
                             },
                             topBar = { chips ->
@@ -309,7 +327,8 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                     Destination.DISCOVER -> app.stova.discover.DiscoverScreen(container, profile,
                         start = discoverStart?.let { app.stova.discover.DiscoverStep.Title(it.type, it.tmdbId, it) } ?: app.stova.discover.DiscoverStep.Rows,
                         onLeave = { if (current == Destination.DISCOVER) back() })
-                    Destination.SONOS -> app.stova.sonos.SonosScreen(container, profile, onBack = back)
+                    Destination.SONOS -> SonosScreen(container, profile, sonos, sonosPrefs, musicImages,
+                        allowed = sonosEnabled || household == null, entryRoom = sonosEntryRoom, onRetry = { sonosRetry++ }, onBack = back)
                 }
                 }
             }

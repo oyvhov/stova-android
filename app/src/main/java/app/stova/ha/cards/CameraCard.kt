@@ -3,6 +3,8 @@ package app.stova.ha.cards
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -11,6 +13,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import app.stova.R
 import app.stova.ha.*
 import coil3.ImageLoader
+import coil3.BitmapImage
 import coil3.compose.AsyncImage
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
@@ -30,7 +33,8 @@ data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader)
 
 /** No bearer token crosses origins, no camera frames are cached, and paused/offscreen cards stop. */
 @Composable internal fun HaImage(path:String, source:HaImageSource?,modifier:Modifier=Modifier,refreshMillis:Long?=null,contentScale:ContentScale=ContentScale.Fit,
-    onLoad: () -> Unit = {}, onError: () -> Unit = {}, artworkSize: Int? = null) {
+    onLoad: () -> Unit = {}, onError: () -> Unit = {}, artworkSize: Int? = null,
+    onBitmap: ((ImageBitmap) -> Unit)? = null) {
     val context=LocalContext.current
     val scope=rememberCoroutineScope()
     var token by remember(source,path) { mutableStateOf<String?>(null) }
@@ -67,6 +71,9 @@ data class HaImageSource(val base:String,val auth:HaAuth,val loader:ImageLoader)
     // Coil reports a null model as an error; cover consumers would then remove the loader
     // before the authenticated request could ever start.
     if(source!=null && request!=null) AsyncImage(request,stringResource(R.string.ha_image),source.loader,modifier,contentScale=contentScale,
-        onSuccess = { onLoad() }, onError = { onError() })
+        onSuccess = { success ->
+            (success.result.image as? BitmapImage)?.let { onBitmap?.invoke(it.bitmap.asImageBitmap()) }
+            onLoad()
+        }, onError = { onError() })
     else if(source!=null) Box(modifier) // Keep the image's reserved space while authentication is pending.
 }

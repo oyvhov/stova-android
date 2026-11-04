@@ -133,6 +133,7 @@ class SonosFullscreenTest {
         val titleTop = title.getUnclippedBoundsInRoot().top
         compose.onNodeWithTag("sonos-room-${leader.id}").performSemanticsAction(SemanticsActions.OnLongClick)
         title.assertIsDisplayed()
+        compose.onNodeWithText("Hovudrom", substring = true).assertIsDisplayed()
         assertEquals(titleTop, title.getUnclippedBoundsInRoot().top)
         rail(leader.id).assertIsDisplayed()
         compose.onNodeWithTag("sonos-room-${leader.id}").assertIsSelected()

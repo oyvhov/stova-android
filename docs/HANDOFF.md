@@ -1,3 +1,9 @@
+# Fem funn frå Shield-opptaket retta
+2026-11-04 (Codex): Heim startar på rett stad ved retur, og widget og Sonos deler avspelingsøkt og dekoda omslag. Omslaget glir begge vegar.
+Låtinfo er samla i widgeten når han er synleg. Fullskjerm har tydelegare kontrollar, og romgrupperinga viser «Hovudrom».
+Ein Compose-test sjekkar mellomrammene i begge retningar. 1181 testar, lint og TV-bygg grøne. Skjermbilete av fullskjerm og gruppering er kontrollerte.
+Opptak og visuell rapport ligg lokalt i `.superpowers/shield-flow/`. Fysisk prøve og installasjon av det nye bygget står att.
+
 # Fast «Alle appar»-flis fjerna frå Heim
 2026-11-04 (Codex): Fjerna den faste flisa frå apprada. D-pad går direkte mellom favorittane. Appar kan opnast frå Innstillingar.
 138 testar, lint og TV-bygg grøne. Skjermbilete frå Compose stadfesta plasseringa.

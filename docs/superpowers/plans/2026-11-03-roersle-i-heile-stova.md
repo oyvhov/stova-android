@@ -62,3 +62,12 @@ fokuset finne att staden du kom frå.
 
 Pip, sesongpynt og Sonos-indikatorar har framleis eigne motiv. Dei skal
 følgje dei same reglane for redusert rørsle og synlegheit.
+
+## Oppfølging etter Shield-opptaket 4. november
+
+- [x] Start Heim i rett rullestilling ved retur til toppfeltet eller Sonos-widgeten.
+- [x] Del Sonos-tilstand mellom Heim og spelaren og la det dekoda omslaget gli begge vegar.
+- [x] Vis låt og kontrollrom éin stad når widgeten er synleg.
+- [x] Gjer tid, framdrift og volum tydelegare i fullskjerm.
+- [x] Merk hovudrommet i romgrupperinga.
+- [ ] Prøv den nye omslagsovergangen og returen frå Smarthus med fjernkontroll på Shield.

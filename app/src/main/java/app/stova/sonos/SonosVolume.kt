@@ -33,7 +33,7 @@ import kotlinx.coroutines.delay
  * The draft belongs to one room ([id]): a pending change never follows to the next one.
  */
 @Composable internal fun SonosVolumeRail(id: String, volume: Int, enabled: Boolean, busy: Boolean, label: String,
-    onAction: (SonosAction) -> Unit, modifier: Modifier = Modifier) {
+    onAction: (SonosAction) -> Unit, modifier: Modifier = Modifier, prominent: Boolean = false) {
     var draft by remember(id) { mutableIntStateOf(volume) }
     var editing by remember(id) { mutableStateOf(false) }
     val send by rememberUpdatedState(onAction)
@@ -78,8 +78,8 @@ import kotlinx.coroutines.delay
         // Only the draw phase reads the animated values: no layout or recomposition per frame.
         Canvas(Modifier.weight(1f).height(18.dp)) {
             val y = size.height / 2
-            val line = 3.dp.toPx()
-            drawLine(colors.onSurface.copy(alpha = .18f), Offset(0f, y), Offset(size.width, y), line, StrokeCap.Round)
+            val line = (if (prominent) 4.dp else 3.dp).toPx()
+            drawLine(colors.onSurface.copy(alpha = if (prominent) .45f else .18f), Offset(0f, y), Offset(size.width, y), line, StrokeCap.Round)
             val x = size.width * level.value.coerceIn(0f, 1f)
             if (x > 0f) drawLine(tint, Offset(0f, y), Offset(x, y), line, StrokeCap.Round)
             drawCircle(tint, (4.dp + 3.dp * thumb.value).toPx(), Offset(x, y))

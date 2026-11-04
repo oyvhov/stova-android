@@ -1,25 +1,35 @@
 package app.stova.sonos
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
 import app.stova.apps.AppArtCache
 import app.stova.apps.InstalledApp
 import app.stova.apps.PackageManagerAppCatalog
 import app.stova.core.theme.StovaTheme
+import app.stova.core.theme.stovaMotion
 import app.stova.home.HomeContent
 import app.stova.home.HomeRowKey
 import app.stova.home.HomeRowUi
@@ -73,6 +83,70 @@ class SonosHomeWidgetFocusTest {
             trail = trail.back()
         }
         title.assertIsFocused()
+    }
+
+    @Test fun decodedCoverRemainsVisibleAndMovesInBothDirections() {
+        val room = sonosPreviewRooms().first()
+        val path = checkNotNull(room.artwork)
+        val covers = SonosCovers()
+        val bitmap = android.graphics.Bitmap.createBitmap(4, 4, android.graphics.Bitmap.Config.ARGB_8888)
+        bitmap.eraseColor(android.graphics.Color.MAGENTA)
+        covers.store(path, bitmap.asImageBitmap())
+        var player by mutableStateOf(false)
+        lateinit var window: android.view.View
+        compose.setContent {
+            val view = LocalView.current
+            SideEffect { window = view.rootView }
+            StovaTheme {
+                val motion = stovaMotion
+                SharedTransitionLayout(Modifier.fillMaxSize()) {
+                    val shared = this
+                    AnimatedContent(player, transitionSpec = {
+                        (fadeIn(motion.enter()) togetherWith fadeOut(motion.exit())).using(null)
+                    }) { showingPlayer ->
+                        val visibility = this
+                        CompositionLocalProvider(LocalSonosCovers provides covers,
+                            LocalSonosCoverModifier provides { shared.sonosCoverMotion(it, visibility) }) {
+                            val load: SonosArtLoader = { art, modifier, ready, failed ->
+                                SonosCoverImage(art, null, modifier, ready, failed)
+                            }
+                            Box(Modifier.fillMaxSize(), contentAlignment = if (showingPlayer) Alignment.Center else Alignment.TopStart) {
+                                if (showingPlayer) SonosCover(path, Modifier.size(150.dp), load)
+                                else SonosNowPlaying(room, room, false, false, {}, {}, loadArtwork = load)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        fun coverX(): Float = compose.runOnIdle {
+            val pixels = android.graphics.Bitmap.createBitmap(window.width, window.height, android.graphics.Bitmap.Config.ARGB_8888)
+            window.draw(android.graphics.Canvas(pixels))
+            var count = 0
+            var total = 0L
+            for (y in 0 until pixels.height step 6) for (x in 0 until pixels.width step 6) {
+                val pixel = pixels.getPixel(x, y)
+                if (pixel == android.graphics.Color.MAGENTA) { count++; total += x }
+            }
+            pixels.recycle()
+            assertTrue("The decoded cover is visible", count > 0)
+            total.toFloat() / count
+        }
+        val start = coverX()
+        compose.mainClock.autoAdvance = false
+        compose.runOnIdle { player = true }
+        compose.mainClock.advanceTimeBy(96)
+        val opening = coverX()
+        compose.mainClock.advanceTimeBy(320)
+        val end = coverX()
+        assertTrue("The cover travels from the widget to the player", start < opening && opening < end)
+        compose.runOnIdle { player = false }
+        val closing = List(6) {
+            compose.mainClock.advanceTimeBy(32)
+            coverX()
+        }
+        assertTrue("The cover travels back to the widget ($end → $closing → $start)",
+            closing.any { start + 10 < it && it < end - 10 })
     }
 
     private fun checkWidget(mode: HomeRows) {

@@ -8,7 +8,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -20,7 +19,6 @@ import app.stova.R
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.stovaMotion
 import app.stova.core.ui.StovaIcons
-import app.stova.ha.cards.HaImage
 import app.stova.ha.cards.HaImageSource
 import app.stova.profiles.BackgroundSource
 import app.stova.profiles.Profile
@@ -43,8 +41,10 @@ fun sonosHomeRoom(prefs: SonosPrefs, profile: Profile, rooms: List<SonosRoom>, a
 }
 
 val LocalHomeSonos = compositionLocalOf<SonosRoom?> { null }
+internal val LocalHomeSonosWidget = compositionLocalOf { false }
 
-data class SonosHomeSession(val state: SonosState, val busy: Boolean, val failed: Boolean, val playPause: (String) -> Unit)
+internal data class SonosSession(val repository: SonosRepository, val state: SonosState,
+    val busy: Boolean, val failed: Boolean, val playPause: (String) -> Unit)
 
 private const val WidgetPauseMillis = 60_000L
 internal data class SonosWidgetHold(val roomId: String, val expiresAt: Long? = null)
@@ -101,30 +101,29 @@ fun rememberSonosWidgetRoom(prefs: SonosPrefs, state: SonosState): SonosRoom? {
     return selection.room
 }
 
-/** One visible-Home subscription serves the widget and opt-in backdrop. */
+/** Heim and the player share the subscription, including during navigation between them. */
 @Composable
-fun rememberSonosHome(container: AppContainer, profile: Profile, prefs: SonosPrefs, address: String?): SonosHomeSession {
-    // The widget, the opt-in backdrop and a Sonos favourite card all share this one subscription.
-    val enabled = sonosHomeWanted(prefs, profile, address, sonosCardFavorite(profile))
+internal fun rememberSonosSession(container: AppContainer, profile: Profile, prefs: SonosPrefs, address: String?,
+    enabled: Boolean, retry: Int): SonosSession {
     val repository = remember(container, profile.id, address, prefs.musicAssistant, prefs.musicAssistantPlayers) { SonosRepository(container.haSocket,
         musicAssistantLinks = { container.household.current().sonos.let { if (it.musicAssistant) it.musicAssistantPlayers else emptyMap() } }) {
         val current = container.household.current()
-        // Asked again at every (re)start: the active profile and its saved favourites decide, not a stale copy.
-        container.session.active.value?.let { it.id == profile.id && sonosHomeWanted(current.sonos, it, current.haBaseUrl, sonosCardFavorite(it)) } == true
+        // Recheck the active profile and address before any network work.
+        current.sonos.enabled && current.haBaseUrl == address && address != null &&
+            container.session.active.value?.let { it.id == profile.id && !it.kid } == true
     } }
-    var state by remember(repository) { mutableStateOf(SonosState(loading = false)) }
+    var state by remember(repository, enabled) { mutableStateOf(SonosState(loading = enabled)) }
     var busy by remember(repository) { mutableStateOf(false) }
     var failed by remember(repository) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(enabled, repository, lifecycle) {
-        state = SonosState(loading = false)
+    LaunchedEffect(enabled, repository, lifecycle, retry) {
         if (enabled) lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             try { repository.observe().collect { state = it } }
-            finally { state = SonosState(loading = false) }
+            finally { state = SonosState() }
         }
     }
-    return SonosHomeSession(if (enabled) state else SonosState(loading = false), busy, failed) { id ->
+    return SonosSession(repository, state, busy, failed) { id ->
         if (enabled && !busy) { busy = true; failed = false
             scope.launch { try { failed = !repository.perform(id, SonosAction.PlayPause) } finally { busy = false } }
         }
@@ -136,14 +135,14 @@ fun rememberSonosHome(container: AppContainer, profile: Profile, prefs: SonosPre
 fun SonosHomeBackdrop(room: SonosRoom?, images: HaImageSource?, onReady: (Boolean) -> Unit) {
     val path = room?.artwork
     val ink = MaterialTheme.colorScheme.background
-    var ready by remember(path, images) { mutableStateOf(false) }
+    val covers = LocalSonosCovers.current
+    var ready by remember(path, images) { mutableStateOf(covers?.get(path) != null) }
     val alpha = animateFloatAsState(if (ready) 1f else 0f, stovaMotion.fade(stovaMotion.ambient), label = "sonos-home-art")
     LaunchedEffect(ready, path) { onReady(path != null && ready) }
     if (path != null) Box(Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha.value }) {
         // Opaque base only becomes visible after successful decoding; a failed URL keeps Home intact.
         Box(Modifier.fillMaxSize().background(ink))
-        HaImage(path, images, Modifier.fillMaxSize(), contentScale = ContentScale.Crop,
-            onLoad = { ready = true }, onError = { ready = false })
+        SonosCoverImage(path, images, Modifier.fillMaxSize(), ready = { ready = true }, failed = { ready = false })
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(ink.copy(alpha = .88f), ink.copy(alpha = .55f)))))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(ink.copy(alpha = .1f), ink.copy(alpha = .85f)))))
     }

@@ -131,7 +131,7 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     val shownArt = art.takeIf { backgroundArt }
     key(room?.id, player?.id, shownArt == null) {
         if (shownArt != null) {
-            SonosArtworkFade(shownArt, backdrop = true, load)
+            SonosArtworkFade(shownArt, backdrop = true, load = load)
             Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = .14f)))
         }
     }
@@ -291,9 +291,10 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
             else -> null
         }
         val detail = listOfNotNull(status?.let { stringResource(it) }, room.speaker.label).joinToString(" · ")
-        SonosLabels(room.displayName, detail, MaterialTheme.typography.titleMedium, Modifier.weight(1f))
+        val roomDetail = if (anchor) stringResource(R.string.sonos_group_leader) else detail
+        SonosLabels(room.displayName, roomDetail, MaterialTheme.typography.titleMedium, Modifier.weight(1f))
         if (editing && active) Icon(if (anchor) StovaIcons.Link else StovaIcons.Check,
-            stringResource(if (anchor) R.string.sonos_group_leader else R.string.sonos_group_selected), Modifier.size(20.dp),
+            if (anchor) null else stringResource(R.string.sonos_group_selected), Modifier.size(20.dp),
             tint = colors.onSurface)
     }
 }
@@ -301,7 +302,7 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
 @Composable internal fun SonosCover(path: String?, modifier: Modifier, load: SonosArtLoader) {
     Box(modifier.clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
         Icon(StovaIcons.Sonos, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        key(path == null) { SonosArtworkFade(path, backdrop = false, load) }
+        key(path == null) { SonosArtworkFade(path, backdrop = false, sharedCover = true, load = load) }
     }
 }
 
@@ -336,13 +337,16 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
     }
 }
 
-@Composable internal fun SonosProgress(player: SonosRoom) {
+@Composable internal fun SonosProgress(player: SonosRoom, prominent: Boolean = false) {
     val now by rememberResumedNow(1000, player.playing)
     val position = player.position(now)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        LinearProgressIndicator(progress = { position.toFloat() / player.duration }, Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onSurfaceVariant,
-            trackColor = MaterialTheme.colorScheme.outlineVariant, drawStopIndicator = {})
-        Text(stringResource(R.string.sonos_progress, mediaTime(position), mediaTime(player.duration)), style = MaterialTheme.typography.bodySmall)
+        val colors = MaterialTheme.colorScheme
+        LinearProgressIndicator(progress = { position.toFloat() / player.duration }, Modifier.fillMaxWidth(),
+            color = if (prominent) colors.onSurface else colors.onSurfaceVariant,
+            trackColor = if (prominent) colors.onSurface.copy(alpha = .45f) else colors.outlineVariant, drawStopIndicator = {})
+        Text(stringResource(R.string.sonos_progress, mediaTime(position), mediaTime(player.duration)),
+            style = if (prominent) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodySmall)
 
     }
 }

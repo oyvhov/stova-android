@@ -13,7 +13,6 @@ import app.stova.core.ui.stepEntrance
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import app.stova.AppContainer
 import app.stova.ha.cards.HaImage
@@ -22,17 +21,11 @@ import app.stova.profiles.Profile
 import kotlinx.coroutines.launch
 
 @Composable
-fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
-    val household by container.household.data.collectAsStateWithLifecycle(initialValue = null)
-    val allowed = household?.sonos?.enabled == true && household?.haBaseUrl != null && !profile.kid
-    val repository = remember(container, profile.id, household?.sonos?.musicAssistant, household?.sonos?.musicAssistantPlayers) { SonosRepository(container.haSocket,
-        musicAssistantLinks = { container.household.current().sonos.let { if (it.musicAssistant) it.musicAssistantPlayers else emptyMap() } }) {
-        val settings = container.household.current()
-        settings.sonos.enabled && settings.haBaseUrl != null && container.session.active.value?.let { it.id == profile.id && !it.kid } == true
-    } }
-    var state by remember(repository) { mutableStateOf(SonosState()) }
-    var retry by remember { mutableIntStateOf(0) }
-    var selected by rememberSaveable(profile.id) { mutableStateOf<String?>(null) }
+internal fun SonosScreen(container: AppContainer, profile: Profile, session: SonosSession, prefs: SonosPrefs,
+    images: HaImageSource?, allowed: Boolean, entryRoom: String?, onRetry: () -> Unit, onBack: () -> Unit) {
+    val repository = session.repository
+    val state = session.state
+    var selected by rememberSaveable(profile.id) { mutableStateOf(entryRoom) }
     // Survives the library and coming back; per profile.
     var roomsOpen by rememberSaveable(profile.id) { mutableStateOf(true) }
     // Full screen is a way of looking, not a setting: it survives rotation and the library, not a new visit.
@@ -42,16 +35,11 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
     var failed by remember { mutableStateOf(false) }
     val owner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
-    LaunchedEffect(repository, allowed, owner, retry, household?.haBaseUrl) {
-        if (!allowed) { state = SonosState(loading = false); return@LaunchedEffect }
-        owner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { repository.observe().collect { state = it } }
-    }
-    LaunchedEffect(allowed, household) { if (household != null && !allowed) onBack() }
-    val room = state.rooms.find { it.id == (selected ?: household?.sonos?.preferredRoom) } ?: state.rooms.firstOrNull()
+    LaunchedEffect(allowed) { if (!allowed) onBack() }
+    val room = state.rooms.find { it.id == (selected ?: prefs.preferredRoom) } ?: state.rooms.firstOrNull()
     val player = room?.let { coordinator(it, state.rooms) }
-    val images = household?.haBaseUrl?.let { remember(it) { HaImageSource(it, container.haAuth, container.haImages) } }
     val loadArt: SonosArtLoader = { path, modifier, loaded, failed ->
-        HaImage(path, images, modifier, contentScale = ContentScale.Crop, onLoad = loaded, onError = failed, artworkSize = 1280)
+        SonosCoverImage(path, images, modifier, loaded, failed)
     }
     val act: (SonosAction) -> Unit = { action ->
         if (!busy && room != null) {
@@ -73,9 +61,10 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
         }
     }
     candidate?.let { next -> key(next) {
-        loadArt(next.path, Modifier.size(1.dp).graphicsLayer { alpha = 0f }.clearAndSetSemantics {}, {
-            warmed = (listOf(next) + warmed.filterNot { it.target == next.target }).take(2)
-        }, {})
+        HaImage(next.path, images, Modifier.size(1.dp).graphicsLayer { alpha = 0f }.clearAndSetSemantics {},
+            contentScale = ContentScale.Crop, artworkSize = 1280, onLoad = {
+                warmed = (listOf(next) + warmed.filterNot { it.target == next.target }).take(2)
+            })
     } }
     Box(Modifier.fillMaxSize().stepEntrance(libraryRoom?.id, if (libraryRoom == null) 0 else 1)) {
     if (libraryRoom != null) SonosLibrary(repository, libraryRoom, busy, failed, { action ->
@@ -89,8 +78,8 @@ fun SonosScreen(container: AppContainer, profile: Profile, onBack: () -> Unit) {
         selected = id; failed = false
         scope.launch { container.household.update { it.copy(sonos = it.sonos.copy(preferredRoom = id)) } }
     }, act,
-        {}, { library = player?.id }, { retry++ }, busy, failed,
-        backgroundArt = household?.sonos?.backgroundArt == true && profile.appearance.backgroundSource != app.stova.profiles.BackgroundSource.THEME,
+        {}, { library = player?.id }, onRetry, busy || session.busy, failed || session.failed,
+        backgroundArt = prefs.backgroundArt && profile.appearance.backgroundSource != app.stova.profiles.BackgroundSource.THEME,
         onBack = onBack, roomsOpen = roomsOpen, onRoomsOpen = { roomsOpen = it },
         preparedArtwork = warmed.firstOrNull { it.matches(queue) }?.path, loadArtwork = loadArt,
         immersive = immersive, onImmersive = { immersive = it },

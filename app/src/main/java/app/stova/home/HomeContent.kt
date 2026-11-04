@@ -145,8 +145,17 @@ fun HomeContent(
     }
     val requestedRow = availableRows?.firstOrNull { it.key == initial && matchesRestore(it) }?.key
         ?: availableRows?.firstOrNull(::matchesRestore)?.key ?: initial
-    val restoreRow = if (deck) requestedRow?.takeIf { key -> availableRows.orEmpty().any { it.key == key } }
-        ?: availableRows?.firstOrNull()?.key else requestedRow
+    val opener = app.stova.navigation.LocalPageReturnFocus.current
+    val returningToTop = opener?.startsWith("top:") == true
+    val returningToWidget = opener == app.stova.sonos.SONOS_WIDGET_FOCUS && aboveApps != null &&
+        availableRows.orEmpty().any { it.key == HomeRowKey.APPS }
+    val restoreRow = when {
+        returningToTop -> null
+        returningToWidget -> HomeRowKey.APPS
+        deck -> requestedRow?.takeIf { key -> availableRows.orEmpty().any { it.key == key } }
+            ?: availableRows?.firstOrNull()?.key
+        else -> requestedRow
+    }
     val firstItem = remember { FocusRequester() }
     var placedRow by remember { mutableStateOf<HomeRowKey?>(null) }
     var activeRow by remember { mutableStateOf(restoreRow) }
@@ -162,6 +171,7 @@ fun HomeContent(
     fun scrollIndex(index: Int) = if (deck || index == 0) index else index + 1
     val initialRow = availableRows.orEmpty().indexOfFirst { it.key == (activeRow ?: restoreRow) }.coerceAtLeast(0)
     val listState = key(appearance.homeRows) { rememberLazyListState(initialFirstVisibleItemIndex = scrollIndex(initialRow)) }
+    LaunchedEffect(returningToTop) { if (returningToTop) listState.requestScrollToItem(0) }
     LaunchedEffect(focusReturn) {
         if (focusReturn == 0) return@LaunchedEffect
         val index = availableRows.orEmpty().indexOfFirst { it.key == returnRow }
@@ -323,7 +333,7 @@ fun HomeContent(
                             if (restoreRow == null || restoreRow == placedRow || (placedRow != null && viewerMoved)) return@LaunchedEffect
                             // A row inserted above the visible ones is not composed yet: bring it in first.
                             availableRows.indexOfFirst { it.key == restoreRow }.takeIf { it >= 0 }?.let { listState.scrollToItem(scrollIndex(it)) }
-                            if (preview) return@LaunchedEffect
+                            if (preview || returningToWidget) return@LaunchedEffect
                             // Lazy rows compose during layout, after this effect starts; allow the requester to attach.
                             repeat(10) {
                                 if (runCatching { firstItem.requestFocus(FocusDirection.Enter) }.getOrDefault(false)) { placedRow = restoreRow; return@LaunchedEffect }

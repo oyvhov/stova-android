@@ -37,7 +37,7 @@ import kotlin.math.sin
     val tv = room.tvAudio || player.tvAudio
     if (tv) return
     val shape = MaterialTheme.shapes.medium
-    val anchor = rememberPageAnchor("sonos-widget")
+    val anchor = rememberPageAnchor(SONOS_WIDGET_FOCUS)
     val title = player.title ?: stringResource(R.string.sonos_playing)
     val subtitle = if (failed) stringResource(R.string.sonos_action_failed) else
         listOfNotNull(room.displayName, if (!player.playing) stringResource(R.string.sonos_paused) else player.artist).joinToString(" · ")
@@ -49,7 +49,7 @@ import kotlin.math.sin
             Box(Modifier.size(34.dp).clip(MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
                 Icon(StovaIcons.Play, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 key(room.id, player.artwork == null) {
-                    SonosArtworkFade(player.artwork, backdrop = false, load = loadArtwork ?: { path, artModifier, ready, _ ->
+                    SonosArtworkFade(player.artwork, backdrop = false, sharedCover = true, load = loadArtwork ?: { path, artModifier, ready, _ ->
                         artwork(path, artModifier)
                         SideEffect { ready() }
                     })

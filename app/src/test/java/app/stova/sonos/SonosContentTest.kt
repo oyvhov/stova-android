@@ -175,6 +175,16 @@ class SonosContentTest {
         compose.onNodeWithText("Test Artist").assertIsDisplayed()
     }
 
+    @Test fun whenTheWidgetIsVisibleTheMusicHeroDoesNotRepeatItsLabels() {
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            CompositionLocalProvider(LocalHomeSonos provides room, LocalHomeSonosWidget provides true) {
+                app.stova.home.HeroPanel(null, androidx.compose.ui.Modifier)
+                SonosNowPlaying(room, room, false, false, {}, {})
+            }
+        } }
+        compose.onAllNodesWithText("Northern Lights").assertCountEquals(1)
+    }
+
     @Test fun playButtonSendsAnActionAndRemoteCanReachRoomSelection() {
         var action: SonosAction? = null
         compose.setContent { StovaTheme(reduceMotion = true) {
