@@ -1,3 +1,9 @@
+# Heim og Sonos i fullskjerm
+2026-11-05 (Codex): Oppdaterte Heim-biletet og tok Sonos i fullskjerm på Shield etter ny bestilling; `output/screenshots/Shield-2026-11-05/01-Heim.png` og `06-Sonos-fullskjerm.png`.
+Begge PNG-filer er 3840 × 2160 og visuelt kontrollerte; skal visast direkte i samtalen, utan ZIP.
+Sonos viste framleis Changes av David Bowie, pausa ved 0:21 / 3:34 etter navigasjonen. Shield er tilbake på Heim i same profil; ingen kode, installering eller bygg/testar.
+Meldinga frå eigaren slutta etter «og»; har spurt kva tredje side han vil ha. Dette namnet manglar enno. Ingen emulator eller Loftet brukt.
+
 # Fem nye skjermbilete frå Shield
 2026-11-05 (Codex): Tok nye PNG-bilete av Heim, Appar, Oppdag, Smarthus og Sonos på Shield, etter bestilling frå eigaren.
 Alle fem er 3840 × 2160 og visuelt kontrollerte; ligg i `output/screenshots/Shield-2026-11-05/`. Eigaren vil ha bileta direkte i samtalen, utan ZIP.
