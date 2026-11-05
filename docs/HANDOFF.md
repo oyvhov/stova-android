@@ -1,3 +1,10 @@
+# Biletevising og ustabilt fjernsamband
+2026-11-05 (Codex): Eigaren fekk ikkje opna lokale bilete-lenkjer og stadfesta at samtalen/ChatGPT-appen koplar frå. Alle PNG-filer er gyldige, og Shield er tilkopla.
+Laga `output/screenshots/Shield-2026-11-05/Heim.jpg` og `Sonos-fullskjerm.jpg`, 1600 × 900 / 172 og 140 kB, og viste begge via bileteverktøyet. Brukaren har enno ikkje stadfesta om desse kan sjåast.
+App-loggen har gjentekne pubsub-brot med retur etter 6–13 s. Read-only sjekk av Codex-loggdatabasen fann åtte `remote control connection closed` 18:09–18:13 lokal tid; årsaka er ikkje avklart. Ingen registrerte Windows-kvile- eller nettverksprofilbyte siste to timar.
+`open_in_codex` for PNG returnerte berre queued; ikkje hevda at panelet vart synleg. OpenAI Docs-rettleiinga om Remote connections og Troubleshooting er lesen.
+Ingen appkode, installering, innstillingar eller TV-tilstand endra; ingen bygg/testar. Biletevising og stabil fjernkopling er framleis uverifiserte hos brukaren.
+
 # Nytt Sonos-omslag: Paradise
 2026-11-05 (Codex): Eigaren bad om eit finare omslag/song. Valde «Paradise» av Coldplay og tok `output/screenshots/Shield-2026-11-05/09-Sonos-fullskjerm-Coldplay-Paradise.png`, 3840 × 2160, visuelt kontrollert.
 Shield står på Sonos i fullskjerm, Kjøkken i den eksisterande gruppa med Storestova, pausa ved 0:00 / 4:38. Ingen volum- eller gruppeendringar.
