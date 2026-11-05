@@ -105,9 +105,9 @@ fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit,
     }
     // The profile's background choice holds here too: the theme's own surface shows no title's picture.
     val themeSurface = LocalAppearance.current.backgroundSource == BackgroundSource.THEME
-    Box(modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize()) {
         BackdropLayer(hero?.backdrop.takeUnless { themeSurface }, state = backdrop)
-        Column(Modifier.fillMaxSize().padding(top = StovaLayout.TvSafeEdge)) {
+        Column(modifier.fillMaxSize().padding(top = StovaLayout.TvSafeEdge)) {
             PageHeader(stringResource(R.string.discover_title), StovaIcons.Discover, Modifier.padding(horizontal = StovaLayout.TvSafeEdge),
                 subtitle = stringResource(R.string.discover_subtitle)) {
                 StovaButton(stringResource(R.string.discover_search), onOpenSearch, icon = StovaIcons.Search, compact = true)

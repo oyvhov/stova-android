@@ -151,9 +151,9 @@ fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, relate
     // Back up from the related rows the whole head comes into sight, not just the button that takes focus.
     val head = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
-    Box(modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize()) {
         BackdropLayer(shown.backdrop.takeUnless { themeSurface }, state = backdrop)
-        Column(Modifier.fillMaxSize().onFocusChanged { holds.value = it.hasFocus }.verticalScroll(rememberScrollState())
+        Column(modifier.fillMaxSize().onFocusChanged { holds.value = it.hasFocus }.verticalScroll(rememberScrollState())
             .padding(vertical = StovaLayout.TvSafeEdge)) {
             Row(Modifier.padding(horizontal = StovaLayout.TvSafeEdge).bringIntoViewRequester(head)
                 .onFocusChanged { if (it.hasFocus) scope.launch { head.bringIntoView() } },

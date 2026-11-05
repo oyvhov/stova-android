@@ -152,7 +152,9 @@ fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverSte
     }
     val step = steps.last()
     val stepKey = step.stateKey(steps.lastIndex)
-    Box(Modifier.fillMaxSize().stepEntrance(stepKey, steps.lastIndex)) {
+    // The picture must never inherit the arriving controls' zero-alpha first frame.
+    val entrance = Modifier.stepEntrance(stepKey, steps.lastIndex)
+    Box(Modifier.fillMaxSize()) {
     held.SaveableStateProvider(stepKey) {
         when (step) {
             DiscoverStep.Rows -> DiscoverContent(state,
@@ -160,11 +162,11 @@ fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverSte
                 onOpenSearch = { steps = steps + DiscoverStep.Search },
                 onOpenRequest = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it.asDiscoverTitle()) },
                 onRetry = { link?.let { container.appScope.launch { container.discover.refresh(profile.id, it, force = true) } } },
-                backdrop = backdrop)
-            is DiscoverStep.Title -> TitleStep(container, profile.id, link, step, state?.access ?: SeerrAccess.NONE, backdrop,
+                modifier = entrance, backdrop = backdrop)
+            is DiscoverStep.Title -> TitleStep(container, profile.id, link, step, state?.access ?: SeerrAccess.NONE, backdrop, entrance,
                 onOpenSpole = { openInSpole(step.type, step.tmdbId) },
                 onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) })
-            DiscoverStep.Search -> SearchStep(container, link, onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) })
+            DiscoverStep.Search -> SearchStep(container, link, modifier = entrance, onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) })
         }
     }
     }
@@ -182,7 +184,7 @@ private const val SEARCH_DEBOUNCE_MILLIS = 400L
  * finds both again without asking Spole twice.
  */
 @Composable
-private fun SearchStep(container: AppContainer, link: SpoleLink?, onOpenTitle: (DiscoverTitle) -> Unit) {
+private fun SearchStep(container: AppContainer, link: SpoleLink?, modifier: Modifier = Modifier, onOpenTitle: (DiscoverTitle) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
     var page by rememberSaveable(stateSaver = DiscoverPageSaver) { mutableStateOf<DiscoverPage?>(null) }
     // The query [page] answers.
@@ -210,7 +212,7 @@ private fun SearchStep(container: AppContainer, link: SpoleLink?, onOpenTitle: (
             }
         }
     }
-    DiscoverSearchContent(query, page, answered, loading, failed, onQuery = { query = it }, onOpenTitle = onOpenTitle, onMore = more@{
+    DiscoverSearchContent(query, page, answered, loading, failed, onQuery = { query = it }, onOpenTitle = onOpenTitle, modifier = modifier, onMore = more@{
         val shown = page ?: return@more
         val person = link ?: return@more
         val words = answered ?: return@more
@@ -237,7 +239,7 @@ private enum class TitleSheet { REQUEST, WITHDRAW }
  */
 @Composable
 private fun TitleStep(container: AppContainer, profileId: String, link: SpoleLink?, step: DiscoverStep.Title, access: SeerrAccess,
-    backdrop: BackdropState, onOpenSpole: () -> Unit, onOpenTitle: (DiscoverTitle) -> Unit) {
+    backdrop: BackdropState, modifier: Modifier, onOpenSpole: () -> Unit, onOpenTitle: (DiscoverTitle) -> Unit) {
     var details by remember { mutableStateOf<DiscoverDetails?>(null) }
     // Null until Spole has answered for the related rows, so Back from a related title knows when its card can be found.
     var related by remember { mutableStateOf<List<DiscoverRow>?>(null) }
@@ -275,7 +277,7 @@ private fun TitleStep(container: AppContainer, profileId: String, link: SpoleLin
     // A step saved without its card has only Seerr's page to show, once it comes.
     val title = step.fallback ?: DiscoverTitle(step.type, step.tmdbId, "", null, null, null, null, SeerrStatus.UNKNOWN, null, emptyList())
     DiscoverTitleContent(title, details, related, access, busy, onRequest = { if (!busy) sheet = TitleSheet.REQUEST },
-        onWithdraw = { if (!busy) sheet = TitleSheet.WITHDRAW }, onOpenSpole = onOpenSpole, onOpenTitle = onOpenTitle, backdrop = backdrop)
+        onWithdraw = { if (!busy) sheet = TitleSheet.WITHDRAW }, onOpenSpole = onOpenSpole, onOpenTitle = onOpenTitle, modifier = modifier, backdrop = backdrop)
     val page = details
     when (sheet) {
         TitleSheet.REQUEST -> if (page != null) RequestSheet(page, onSend = { seasons ->

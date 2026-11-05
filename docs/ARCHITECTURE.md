@@ -12,6 +12,10 @@ fokuset tilbake til opnaren når han framleis er tilgjengeleg. Heim vel
 startposisjon ut frå opnaren før den første lista blir lagd ut. Planen ligg i
 [`2026-11-03-roersle-i-heile-stova.md`](superpowers/plans/2026-11-03-roersle-i-heile-stova.md).
 
+Oppdag legg `stepEntrance` berre på kontrollkolonnen i rader, tittel og søk.
+`BackdropLayer` ligg utanfor dette laget og deler `BackdropState` gjennom
+steghistorikken; kunsten får aldri alfa null frå kontrollane sin inngang.
+
 På Sonos-sida førehandshentar `SonosScreen` eitt omslag medan sporet spelar.
 Ein kopla Music Assistant-kø blir lesen gjennom den tilgjengelege køhandlinga.
 For vanleg Sonos les `SonosRepository` den aktive køen `Q:0` gjennom HA sitt

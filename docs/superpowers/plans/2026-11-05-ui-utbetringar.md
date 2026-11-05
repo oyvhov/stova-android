@@ -5,7 +5,7 @@ Bestilt av eigaren 2026-11-05: rett funna i UI-rapporten og gjer det mogleg
 Bevar hovudoppsett, roleg løft/lys og plasseringa av Sonos-favorittane.
 Ingen glas/blur eller endring av verkelege lys-, varme- eller lydverdiar.
 
-- [ ] 1. Oppdag held bakgrunnskunst utanfor inngangsanimasjonen for kontrollane. Ingen svart mellomrom ved opning/retur eller medan neste bilete blir henta. Regresjonstest som les faktiske mellomrammer.
+- [x] 1. Oppdag held bakgrunnskunst utanfor inngangsanimasjonen for kontrollane. Regresjonstest les lys og geometri i mellomrammer ved opning/retur; eksisterande dekodingstestar vernar kunsten medan neste bilete blir henta. Endeleg skjermopptak ligg i steg 6.
 - [ ] 2. Lesbar omtale over lyse bilete og rolegare kunst bak aktive medierader. Lange kortnamn kan lesast ved fokus i Heim, søk og Sonos, utan tittelramme eller flytting av rada.
 - [ ] 3. Felles fråkopla status med sist kjende verdiar og relevant Prøv igjen. Ingen kontrollsending utan samband, heller ikkje frå eit ope panel. Legg til viser forklaring/retry i staden for tom flate. Sonos har klar veg til ny tilkopling.
 - [ ] 4. Vedvarande flyttemodus for favorittar på Heim og i Appar: piler flyttar fleire plassar, OK lagrar og Tilbake avbryt. Same nøkkel held fokus. Kortare app-/snarvegmeny med sjeldnare val samla; radinnstillingar tek ikkje over heile menyen.
