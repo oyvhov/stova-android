@@ -75,13 +75,13 @@ internal fun StovaActionDialog(
 internal fun StovaSheetWindow(
     onDismissRequest: () -> Unit,
     onBack: () -> Boolean,
-    content: @Composable () -> Unit,
+    content: @Composable (close: () -> Unit) -> Unit,
 ) {
     val motion = stovaMotion
     StovaOverlay(onDismissRequest, DialogProperties(), Alignment.CenterEnd,
         enter = slideInHorizontally(motion.enter()) { it } + fadeIn(motion.enter()),
         exit = fadeOut(motion.exit()),
-        onBack = onBack, sideScrim = true) { content() }
+        onBack = onBack, sideScrim = true, content = content)
 }
 
 @Composable

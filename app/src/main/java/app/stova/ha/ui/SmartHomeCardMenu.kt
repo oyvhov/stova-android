@@ -24,10 +24,11 @@ import kotlinx.coroutines.launch
     var hidden by remember(card.id) {mutableStateOf(card.hiddenModes)}
     val modes=(hvacModes+presets).distinct()
     val scope=rememberCoroutineScope()
-    fun save(updated:CardConfig) {onConfigure(updated);onDismiss()}
+    var removeOnClose by remember(card.id) {mutableStateOf(false)}
     val sizeLabel={size:CardSize -> when(size) {CardSize.S->R.string.ha_v2_size_s;CardSize.M->R.string.ha_v2_size_m;CardSize.L->R.string.ha_v2_size_l}}
     val styleLabel={style:ChipStyle -> when(style) {ChipStyle.ICON_AND_VALUE->R.string.ha_chip_icon_and_value;ChipStyle.ICON_ONLY->R.string.ha_chip_icon_only}}
-    StovaSheet(onDismiss) {pages ->
+    StovaActionSheet({if(removeOnClose) onRemove(card);onDismiss()}) {pages, close ->
+        fun save(updated:CardConfig) {onConfigure(updated);close()}
         when(pages.current) {
             null -> {
                 SheetHeader(label,stringResource(cardTypeLabel(card.type)),cardIcon(card.type,override=card.icon))
@@ -38,14 +39,14 @@ import kotlinx.coroutines.launch
                 // On Home already: the pill's own page, with how it looks and the way off Home.
                 if(card.onHome) SheetAction(stringResource(R.string.ha_home_pill),StovaIcons.Home,{limit=false;pages.open("pill")},
                     Modifier.focusRequester(pages.opener("pill")),value=stringResource(styleLabel(card.chipStyle)),opensPage=true)
-                else SheetAction(stringResource(R.string.ha_show_home),StovaIcons.Home,{scope.launch {if(onHome(card)) onDismiss() else limit=true}})
+                else SheetAction(stringResource(R.string.ha_show_home),StovaIcons.Home,{scope.launch {if(onHome(card)) close() else limit=true}})
                 if(limit) Text(stringResource(R.string.ha_home_limit),Modifier.padding(horizontal=14.dp),color=MaterialTheme.colorScheme.onSurfaceVariant)
                 SheetAction(stringResource(R.string.ha_move),StovaIcons.Focus,{pages.open("move")},Modifier.focusRequester(pages.opener("move")),opensPage=true)
                 SheetAction(stringResource(R.string.ha_v2_rename),StovaIcons.Edit,{pages.open("name")},Modifier.focusRequester(pages.opener("name")),opensPage=true)
                 SheetAction(stringResource(R.string.ha_v2_icon),StovaIcons.Palette,{pages.open("icon")},Modifier.focusRequester(pages.opener("icon")),opensPage=true)
                 SheetAction(stringResource(if(card.favorite) R.string.ha_v2_favorite_remove else R.string.ha_v2_favorite_add),StovaIcons.Star,
                     {save(card.copy(favorite=!card.favorite))})
-                SheetAction(stringResource(R.string.ha_remove),StovaIcons.Hide,{onRemove(card);onDismiss()},danger=true)
+                SheetAction(stringResource(R.string.ha_remove),StovaIcons.Hide,{removeOnClose=true;close()},danger=true)
             }
             "size" -> {
                 SheetHeader(stringResource(R.string.ha_v2_size),label,StovaIcons.Rows)
@@ -64,15 +65,15 @@ import kotlinx.coroutines.launch
                 SheetHeader(stringResource(R.string.ha_home_pill),label,StovaIcons.Home)
                 ChipStyle.entries.forEach {style ->
                     SheetAction(stringResource(styleLabel(style)),if(style==ChipStyle.ICON_ONLY) cardIcon(card.type,override=card.icon) else StovaIcons.Rows,
-                        {scope.launch {if(onChipStyle(card,style)) onDismiss() else limit=true}},chosen=card.chipStyle==style)
+                        {scope.launch {if(onChipStyle(card,style)) close() else limit=true}},chosen=card.chipStyle==style)
                 }
                 if(limit) Text(stringResource(R.string.ha_home_limit),Modifier.padding(horizontal=14.dp),color=MaterialTheme.colorScheme.onSurfaceVariant)
-                SheetAction(stringResource(R.string.ha_hide_home),StovaIcons.Hide,{scope.launch {onHome(card);onDismiss()}})
+                SheetAction(stringResource(R.string.ha_hide_home),StovaIcons.Hide,{scope.launch {onHome(card);close()}})
             }
             "move" -> {
                 SheetHeader(stringResource(R.string.ha_move),label,StovaIcons.Focus)
-                SheetAction(stringResource(R.string.ha_move_earlier),StovaIcons.ChevronLeft,{onMove(card,-1);onDismiss()})
-                SheetAction(stringResource(R.string.ha_move_later),StovaIcons.ChevronRight,{onMove(card,1);onDismiss()})
+                SheetAction(stringResource(R.string.ha_move_earlier),StovaIcons.ChevronLeft,{onMove(card,-1);close()})
+                SheetAction(stringResource(R.string.ha_move_later),StovaIcons.ChevronRight,{onMove(card,1);close()})
             }
             "name" -> {
                 SheetHeader(stringResource(R.string.ha_v2_rename),label,StovaIcons.Edit)

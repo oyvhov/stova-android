@@ -50,9 +50,9 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
 @Composable internal fun AddCardDialog(connection:HaConnection,onAdd:suspend (HaEntity,CardType)->Unit,onDone:()->Unit,
     existing:Set<String> = emptySet(),registryLoader:suspend ()->HaRegistry? = {connection.registry()}) {
     val rooms=remember {RoomSetupState()}
-    StovaDialog(onDone,onBack=rooms::back) {
+    StovaActionDialog(onDone,onBack=rooms::back) {close ->
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(app.stova.core.theme.StovaLayout.TvSafeEdge)) {
-            AddCardFlow(connection,onAdd,onDone,existing,registryLoader,roomState=rooms)
+            AddCardFlow(connection,onAdd,close,existing,registryLoader,roomState=rooms)
         }
     }
 }

@@ -28,7 +28,7 @@ import app.stova.ha.cards.*
 internal fun DashboardLayoutDialog(prefs: DashboardPrefs, onChange: (DashboardPrefs) -> Unit, onDismiss: () -> Unit) {
     var draft by remember { mutableStateOf(prefs) }
     fun change(value: DashboardPrefs) { draft = value; onChange(value) }
-    StovaDialog(onDismiss) {
+    StovaActionDialog(onDismiss) {close ->
         Column(Modifier.widthIn(max = 560.dp).fillMaxWidth().heightIn(max = 440.dp)
             .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.large).padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -51,7 +51,7 @@ internal fun DashboardLayoutDialog(prefs: DashboardPrefs, onChange: (DashboardPr
                 Text(stringResource(R.string.ha_layout_hint), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            StovaButton(stringResource(R.string.ha_done), onDismiss, compact = true)
+            StovaButton(stringResource(R.string.ha_done), close, compact = true)
         }
     }
 }

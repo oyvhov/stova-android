@@ -26,6 +26,24 @@ class ControlPanelTest {
     private fun panel(dialog:CardDialog,e:HaEntity,locked:Boolean=false) {
         compose.setContent {StovaTheme {CardDialogHost(dialog,mapOf(e.id to e),FakeHaConnection(),null,locked,{c,_->calls+=c},{})}}
     }
+    @Test fun closeButtonUsesTheSameExitAsBack() {
+        val light=entity("light.a",attrs="""{"brightness":128,"supported_color_modes":["brightness"]}""")
+        var open by mutableStateOf(true)
+        compose.setContent {StovaTheme {
+            CardDialogHost(if(open) CardDialog.Brightness(light.id) else null,mapOf(light.id to light),FakeHaConnection(),null,false,
+                {c,_->calls+=c},{open=false})
+        }}
+        compose.waitForIdle()
+        compose.mainClock.autoAdvance=false
+        compose.onNodeWithText("Lukk").performClick()
+        compose.mainClock.advanceTimeBy(64)
+        assertTrue(open)
+        compose.onNodeWithText("Lukk").assertExists()
+        compose.mainClock.advanceTimeBy(250)
+        assertFalse(open)
+        compose.onNodeWithText("Lukk").assertDoesNotExist()
+        assertTrue(calls.isEmpty())
+    }
     @Test fun thePanelKeepsItsSizeWhileAChangeIsSentAndWhenItFails() {
         val light=entity("light.a",attrs="""{"brightness":128,"supported_color_modes":["brightness"]}""")
         val answer=kotlinx.coroutines.CompletableDeferred<Boolean>()

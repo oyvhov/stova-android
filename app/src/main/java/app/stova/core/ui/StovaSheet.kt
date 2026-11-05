@@ -61,12 +61,16 @@ class SheetPages internal constructor() {
  * large buttons and calm rows below. Pages replace the content inside the same panel.
  * Focus enters the first control of each page; the held OK that opened it chooses nothing.
  */
-@OptIn(ExperimentalFoundationApi::class) // LocalBringIntoViewSpec, the TV pivot hook
 @Composable
-fun StovaSheet(onDismissRequest: () -> Unit, content: @Composable ColumnScope.(SheetPages) -> Unit) {
+fun StovaSheet(onDismissRequest: () -> Unit, content: @Composable ColumnScope.(SheetPages) -> Unit) =
+    StovaActionSheet(onDismissRequest) {pages, _ -> content(pages)}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun StovaActionSheet(onDismissRequest: () -> Unit, content: @Composable ColumnScope.(SheetPages, close: () -> Unit) -> Unit) {
     val pages = remember { SheetPages() }
     val page = remember { FocusRequester() }
-    StovaSheetWindow(onDismissRequest, onBack = pages::back) {
+    StovaSheetWindow(onDismissRequest, onBack = pages::back) {close ->
         val shape = MaterialTheme.shapes.extraLarge.copy(topEnd = ZeroCornerSize, bottomEnd = ZeroCornerSize)
         // Drawn, not clipped: a clip with square right corners would also cut away touches.
         Box(Modifier.fillMaxHeight().width(StovaLayout.SheetWidth).background(MaterialTheme.colorScheme.surface, shape)) {
@@ -81,7 +85,7 @@ fun StovaSheet(onDismissRequest: () -> Unit, content: @Composable ColumnScope.(S
                     // The way back sits above the page for touch and for Up; focus starts on the page itself.
                     if (pages.current != null) SheetAction(stringResource(R.string.custom_back), StovaIcons.ChevronLeft, { pages.back() })
                     Column(Modifier.fillMaxWidth().focusRequester(page).focusGroup(),
-                        verticalArrangement = Arrangement.spacedBy(StovaLayout.SheetGap)) { content(pages) }
+                        verticalArrangement = Arrangement.spacedBy(StovaLayout.SheetGap)) { content(pages, close) }
                 }
             } }
         }

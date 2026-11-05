@@ -24,7 +24,7 @@ import androidx.compose.ui.focus.focusRequester
 import app.stova.core.ui.SheetPages
 import app.stova.R
 import app.stova.core.ui.StovaButton
-import app.stova.core.ui.StovaDialog
+import app.stova.core.ui.StovaActionDialog
 import app.stova.core.ui.stepEntrance
 import app.stova.ha.*
 
@@ -62,7 +62,7 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
     val first=remember(dialog) {FocusRequester()}
     val close=remember(dialog) {FocusRequester()}
     var panelStatus by remember(dialog) {mutableStateOf<String?>(null)}
-    StovaDialog(onDismiss,onBack=pages::back) {
+    StovaActionDialog(onDismiss,onBack=pages::back) {dismiss ->
         val windowHeight=with(LocalDensity.current) {LocalWindowInfo.current.containerSize.height.toDp()}
         val scroll=rememberScrollState()
         LaunchedEffect(pages.current) {
@@ -113,7 +113,7 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
                 Text(panelStatus ?: stringResource(hint),Modifier.weight(1f),style=MaterialTheme.typography.labelMedium,
                     color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 StovaButton(stringResource(if(pages.current==null) R.string.ha_close else R.string.custom_back),
-                    {if(!pages.back()) onDismiss()},Modifier.focusRequester(close),compact=true,quiet=true)
+                    {if(!pages.back()) dismiss()},Modifier.focusRequester(close),compact=true,quiet=true)
             }
         }
     }

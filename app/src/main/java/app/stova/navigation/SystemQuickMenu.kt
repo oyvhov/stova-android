@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.theme.StovaDropdown
 import app.stova.core.ui.StovaIcons
-import app.stova.core.ui.TopDropdown
+import app.stova.core.ui.TopActionDropdown
 import app.stova.core.ui.focusOutline
 import app.stova.homebutton.HomeButtonService
 import app.stova.system.*
@@ -73,9 +73,10 @@ fun performSystemAction(context: Context, action: SystemAction) {
 /** A small card that drops from the Settings icon. Back or a chosen row closes it. */
 @Composable
 internal fun SystemQuickMenu(menu: SystemMenu, onDismiss: () -> Unit) {
+    var chosen by remember {mutableStateOf<SystemAction?>(null)}
     val status by produceState<SystemStatus?>(null, menu) { value = runCatching { menu.status() }.getOrNull() }
     // Below the icon and the name it shows while focused (one label line under the 48 dp icon).
-    TopDropdown(onDismiss, 332.dp, gap = 26.dp, alignEnd = true) {
+    TopActionDropdown({onDismiss();chosen?.let(menu.perform)}, 332.dp, gap = 26.dp, alignEnd = true) {close ->
         val now = status
         if (now != null) {
             Column(Modifier.padding(horizontal = 18.dp, vertical = 6.dp)) {
@@ -88,7 +89,7 @@ internal fun SystemQuickMenu(menu: SystemMenu, onDismiss: () -> Unit) {
         }
         val first = remember { FocusRequester() }
         LaunchedEffect(Unit) { withFrameNanos { }; runCatching { first.requestFocus() } }
-        fun choose(action: SystemAction) { onDismiss(); menu.perform(action) }
+        fun choose(action: SystemAction) { chosen=action;close() }
         MenuRow({ NetworkIcon(now?.network) }, stringResource(R.string.system_network), null, Modifier.focusRequester(first)) {
             choose(SystemAction.NETWORK)
         }

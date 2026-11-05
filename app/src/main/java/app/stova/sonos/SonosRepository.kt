@@ -53,6 +53,12 @@ class SonosRepository(private val connection: HaConnection,
         if (!allowed()) return null
         val room = rooms.find { it.id == roomId } ?: return null
         if (sonosQueueTarget(room, SonosState(rooms, musicAssistant = currentAssistants())) != expected) return null
+        if (expected.position != null) {
+            val native = coordinator(room, rooms) ?: return null
+            val queue = browse(native.id, SonosMedia("Q:0", "playlist", "")) ?: return null
+            if (sonosQueueTarget(room, SonosState(rooms, musicAssistant = currentAssistants())) != expected) return null
+            return nextNativeSonosArtwork(expected, queue, native.repeat == "all")
+        }
         return connection.serviceResponse("music_assistant", "get_queue", expected.player)?.let { nextSonosArtwork(expected, it) }
     }
     suspend fun perform(roomId: String, action: SonosAction): Boolean = guarded {

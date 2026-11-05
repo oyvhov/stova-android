@@ -32,11 +32,11 @@ class SystemQuickMenuTest {
     private val done = mutableListOf<SystemAction>()
     private var settings = 0
 
-    private fun render(current: SystemStatus = status, menu: Boolean = true) {
+    private fun render(current: SystemStatus = status, menu: Boolean = true, reduceMotion: Boolean = true) {
         compose.setContent {
             val input = LocalInputModeManager.current
             SideEffect { input.requestInputMode(InputMode.Keyboard) }
-            StovaTheme(reduceMotion = true) {
+            StovaTheme(reduceMotion = reduceMotion) {
                 TopBar(Profile("p", "A", AvatarColor.LIME), { settings++ }, {},
                     systemMenu = if (menu) SystemMenu({ current }) { done += it } else null)
             }
@@ -44,6 +44,20 @@ class SystemQuickMenuTest {
     }
     private val settingsIcon get() = compose.onNode(hasText("Innstillingar") and hasClickAction())
     private fun row(label: String) = compose.onNode(hasText(label) and hasClickAction())
+
+    @Test fun choosingARowLetsThePopupLeaveBeforeOpeningAndroidSettings() {
+        render(reduceMotion = false)
+        settingsIcon.performTouchInput { longClick() }
+        row("Nettverk").assertIsFocused()
+        compose.mainClock.autoAdvance = false
+        row("Nettverk").performClick()
+        compose.mainClock.advanceTimeBy(64)
+        compose.onNodeWithText("SHIELD Android TV").assertExists()
+        assertEquals(emptyList<SystemAction>(), done)
+        compose.mainClock.advanceTimeBy(250)
+        compose.onNodeWithText("SHIELD Android TV").assertDoesNotExist()
+        assertEquals(listOf(SystemAction.NETWORK), done)
+    }
 
     @Test fun holdingOkOnSettingsOpensASmallMenuWithTheDevicesRealStatus() {
         render()

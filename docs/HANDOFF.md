@@ -1,3 +1,9 @@
+# Omslag på førehand og Smartheim-overgangar
+2026-11-05 (Codex): Naturleg «Dance Monkey» → «Bad Things» på Loftet viste om lag 0,9 s overtoning utan bortfall. Fann at førehandshenting berre støtta MA, og la til den vanlege Sonos-køen gjennom HA-biblioteket.
+Smartheim-panel, kortmeny og topp-popupane bruker same utgang for handlingar og Tilbake. Fokusretur er kontrollert i testane. Vêrtonen og mediaikon/-volum endrar seg i teikne-/lagfasen.
+1197 testar, lint og TV-bygg grøne. Bygget er installert på Loftet med samsvarande APK-hash. «Next cover decoded» kom 09:07:58 medan «Unintended» stod på 0:51/3:57.
+Pågår: naturleg låtbyte med det førehandshenta omslaget og fysisk visuell prøve av Smartheim/popupane. Skjermbilete og opptak i `.superpowers/loftet-omslag-2026-11-05/`.
+
 # Fullskjermvolum og Sonos-favorittar
 2026-11-04 (Codex): Midtstilte fullskjermspelaren. Eit lite bilete av høgtalarmodellen øvst til høgre opnar den loddrette volumkontrollen. Opp og Ned justerer, Tilbake lukkar og gir fokus attende.
 Spelarsida viser ei biletrad for Sonos-favorittar og spelelister og har eitt høgtalarmotiv per rom. Omslaget blir liggjande gjennom fullskjermskiftet medan dempinga endrar seg.

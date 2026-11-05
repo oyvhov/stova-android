@@ -12,11 +12,16 @@ fokuset tilbake til opnaren når han framleis er tilgjengeleg. Heim vel
 startposisjon ut frå opnaren før den første lista blir lagd ut. Planen ligg i
 [`2026-11-03-roersle-i-heile-stova.md`](superpowers/plans/2026-11-03-roersle-i-heile-stova.md).
 
-På Sonos-sida kan `SonosScreen` førehandshente eitt omslag frå den aktive,
-kopla Music Assistant-køen medan sporet spelar. `SonosQueueArtwork` sjekkar
-spelar, kø og aktiv spor-ID, og den ferdig dekoda kunsten blir brukt først
-når det aktuelle sporet startar. `HaSocket.serviceResponse` sjekkar at
-køhandlinga finst. `HaImage` brukar ei avgrensa, sesjonsdelt minnebuffer for
+På Sonos-sida førehandshentar `SonosScreen` eitt omslag medan sporet spelar.
+Ein kopla Music Assistant-kø blir lesen gjennom den tilgjengelege køhandlinga.
+For vanleg Sonos les `SonosRepository` den aktive køen `Q:0` gjennom HA sitt
+mediebibliotek. `SonosQueueArtwork` sjekkar spelar, kø, aktiv spor-ID og den
+éinbaserte køposisjonen. Tilfeldig rekkjefølgje og gjenta eitt spor gjer ingen
+native førehandsførespurnad. Ferdig dekoda kunst blir brukt først når akkurat
+det sporet startar. Loggmerket `StovaSonosArt` viser dekoding og bruk av det
+førebudde omslaget utan adresser, spor-ID-ar eller token.
+`HaSocket.serviceResponse` sjekkar at køhandlinga finst.
+`HaImage` brukar ei avgrensa, sesjonsdelt minnebuffer for
 Sonos-omslag. `SonosArtworkFade` held det gamle biletet til det nye er
 dekoda, og overtonar i lagfasen. Eit rombyte eller TV-lyd fjernar den gamle
 kunsten med ein gong. Dempinga endrar seg i grafikklaget mellom vanleg
@@ -33,6 +38,13 @@ flatene og bruker same dialogovergang når du vel ei handling eller går tilbake
 `HaEntity.isTvAudio` blir delt med Smarthus, der TV-lyd viser volum
 og kjeldeval i detaljpanelet. Smarthus føretrekkjer eit tilgjengeleg
 kort ved opning.
+
+Smarthus bruker `StovaActionDialog` og `StovaActionSheet` når ein knapp inne
+i panelet lukkar det. Same korte utgang gjeld for Lukk, Avbryt og Tilbake.
+`TopDropdown` og `TopActionDropdown` deler inn- og utgang ved brikka eller
+innstillingsknappen. Handlingsval som opnar Android-innstillingar, og sletting
+av eit Smarthus-kort, skjer etter utgangen. Fokuset går tilbake til opningsbrikka
+eller Oppsett-knappen. Vêrtonen og volumfyllinga blir endra i teikne-/lagfasen.
 
 `SonosLabels` gir Sonos eit felles oppsett for tittel og sekundærtekst frå
 Heim til spelaren, biblioteket og Fleire val. Visingsnamnet tek bort eit

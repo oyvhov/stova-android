@@ -71,6 +71,15 @@ import kotlin.math.ceil
     var lightsToTurnOff by remember {mutableStateOf<List<String>?>(null)}
     val summaryFocus=remember {FocusRequester()}
     val headerFocus=remember {FocusRequester()}
+    val layoutFocus=remember {FocusRequester()}
+    var restoreLayout by remember {mutableStateOf(false)}
+    LaunchedEffect(layoutOpen) {
+        if(!layoutOpen && restoreLayout) {
+            withFrameNanos { }
+            layoutFocus.requestFocus()
+            restoreLayout=false
+        }
+    }
     LaunchedEffect(cards.isEmpty(),covered,status) {
         if(cards.isEmpty() && !covered && !profile.kid && status!=HaStatus.NOT_CONFIGURED) {
             withFrameNanos { };runCatching {headerFocus.requestFocus(FocusDirection.Enter)}
@@ -209,8 +218,8 @@ import kotlin.math.ceil
                 iconModifier=Modifier.testTag("page-icon-smart-home"),metadata={HaStatusLabel(status)})
             DashboardSummary(cards,entities,canControl(profile),summaryFocus,Modifier.weight(1f)) {lightsToTurnOff=it}
             if(!profile.kid && status!=HaStatus.NOT_CONFIGURED) {
-                if(cards.isNotEmpty()) StovaButton(stringResource(R.string.ha_layout), { restoreId=focusedId; layoutOpen=true },
-                    icon=StovaIcons.Rows,compact=true,quiet=true)
+                if(cards.isNotEmpty()) StovaButton(stringResource(R.string.ha_layout), { restoreId=null; layoutOpen=true },
+                    Modifier.focusRequester(layoutFocus),icon=StovaIcons.Rows,compact=true,quiet=true)
                 if(cards.isNotEmpty()) StovaButton(stringResource(if(editing) R.string.ha_done else R.string.ha_edit),
                     {editing=!editing;restoreId=focusedId ?: firstId},icon=if(editing) StovaIcons.Check else StovaIcons.Edit,compact=true,quiet=!editing)
                 StovaButton(stringResource(R.string.ha_add_card),onAdd,icon=StovaIcons.Plus,compact=true)
@@ -288,14 +297,14 @@ import kotlin.math.ceil
     }
     lightsToTurnOff?.let {ids ->
         fun dismiss() {lightsToTurnOff=null;runCatching {summaryFocus.requestFocus()}}
-        StovaDialog(::dismiss) {
+        StovaActionDialog(::dismiss) {close ->
             val cancelFocus=remember {FocusRequester()}
             Column(Modifier.widthIn(max=480.dp).background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                 Text(stringResource(R.string.ha_action_all_lights,ids.size),style=MaterialTheme.typography.titleLarge)
-                StovaButton(stringResource(R.string.ha_cancel),::dismiss,Modifier.focusRequester(cancelFocus))
+                StovaButton(stringResource(R.string.ha_cancel),close,Modifier.focusRequester(cancelFocus))
                 StovaButton(stringResource(R.string.ha_action_yes_off),{
                     if(canControl(profile)) ids.filter {entities[it]?.state=="on" && it !in pending}.forEach {onPerform(ServiceCall("light","turn_off"),it)}
-                    dismiss()
+                    close()
                 },enabled=canControl(profile))
             }
             LaunchedEffect(Unit) {cancelFocus.requestFocus()}
@@ -308,7 +317,7 @@ import kotlin.math.ceil
             hvacModes=attrs?.strings("hvac_modes").orEmpty(),presets=attrs?.strings("preset_modes").orEmpty(),
             onDismiss={menuId=null})
     }
-    if(layoutOpen) DashboardLayoutDialog(profile.smartHome,onLayoutChange) {layoutOpen=false}
+    if(layoutOpen) DashboardLayoutDialog(profile.smartHome,onLayoutChange) {restoreLayout=true;layoutOpen=false}
     }
 }
 

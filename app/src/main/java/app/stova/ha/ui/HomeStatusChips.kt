@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,6 +21,8 @@ import androidx.compose.ui.semantics.Role
 import app.stova.core.ui.focusOutline
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextOverflow
@@ -80,9 +83,18 @@ private fun climateMode(mode:String)=when(mode) {
     Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
         withinHomeRoom(chips) {if(it.iconOnly) ChipStyle.ICON_ONLY.room else ChipStyle.ICON_AND_VALUE.room}.forEach {chip->
             val source=remember(chip.cardId) {MutableInteractionSource()}
+            val opener=remember(chip.cardId) {FocusRequester()}
+            var restore by remember(chip.cardId) {mutableStateOf(false)}
+            LaunchedEffect(open) {
+                if(open==null && restore) {
+                    androidx.compose.runtime.withFrameNanos { }
+                    opener.requestFocus()
+                    restore=false
+                }
+            }
             val focused by source.collectIsFocusedAsState()
             val drops=dropdown!=null && chip.cardId!=null && chip.icon in QuickTypes
-            val action=if((onOpenCard!=null || drops) && chip.cardId!=null) Modifier.focusOutline(source,MaterialTheme.shapes.medium)
+            val action=if((onOpenCard!=null || drops) && chip.cardId!=null) Modifier.focusRequester(opener).focusOutline(source,MaterialTheme.shapes.medium)
                 .clickable(source,indication=null,role=Role.Button) {if(drops) open=chip.cardId else onOpenCard?.invoke(chip.cardId)} else Modifier
             val lit=chip.glow?.takeIf {it.alpha>0f}
             val surface=MaterialTheme.colorScheme.surface
@@ -102,7 +114,7 @@ private fun climateMode(mode:String)=when(mode) {
                 Icon(icon,label.takeIf {chip.iconOnly},Modifier.size(16.dp),tint=lit?.color ?: MaterialTheme.colorScheme.onSurfaceVariant)
                 if(!chip.iconOnly) Text(label,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurface,maxLines=1,overflow=TextOverflow.Ellipsis)
                 // Anchored to the chip, so the card drops from right under it.
-                if(drops && open==chip.cardId) dropdown!!(chip) {open=null}
+                if(drops && open==chip.cardId) dropdown!!(chip) {restore=true;open=null}
             }
             if(focused && open!=chip.cardId) chip.name?.let {name->
                 Box(Modifier.matchParentSize().clearAndSetSemantics {}) {

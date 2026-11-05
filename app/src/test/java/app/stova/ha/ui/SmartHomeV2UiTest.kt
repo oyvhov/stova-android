@@ -203,6 +203,30 @@ class SmartHomeV2UiTest {
         compose.runOnIdle {assertEquals(CardSize.L,card.size)}
         compose.onNodeWithText("Leselys").assertIsFocused()
     }
+    @Test fun closingLayoutReturnsToTheLayoutButton() {
+        compose.setContent {StovaTheme {SmartHomeContent(adult,
+            listOf(CardConfig("a",CardType.SENSOR,"sensor.a",name="Ute")),emptyMap(),HaStatus.CONNECTED)}}
+        val opener=compose.onNodeWithText("Oppsett")
+        opener.performSemanticsAction(SemanticsActions.RequestFocus)
+        opener.performKeyInput {pressKey(Key.DirectionCenter)}
+        compose.onNodeWithText("Ferdig").performClick()
+        opener.assertIsFocused()
+    }
+    @Test fun removingACardWaitsForItsMenuToFade() {
+        var cards by mutableStateOf(listOf(CardConfig("a",CardType.SENSOR,"sensor.a",name="Ute")))
+        compose.setContent {StovaTheme {SmartHomeContent(adult,cards,emptyMap(),HaStatus.CONNECTED,
+            onRemove={removed -> cards=cards.filterNot {it.id==removed.id}})}}
+        compose.onNodeWithText("Ute").performKeyInput {pressKey(Key.Menu)}
+        compose.onNodeWithText("Fjern").assertExists()
+        compose.mainClock.autoAdvance=false
+        compose.onNodeWithText("Fjern").performClick()
+        compose.mainClock.advanceTimeBy(64)
+        assertEquals(1,cards.size)
+        compose.onNodeWithText("Fjern").assertExists()
+        compose.mainClock.advanceTimeBy(250)
+        assertTrue(cards.isEmpty())
+        compose.onNodeWithText("Fjern").assertDoesNotExist()
+    }
     @Test fun roomSectionsAndFavoritesAreVisible() {
         val cards=listOf(CardConfig("a",CardType.SENSOR,"sensor.a",favorite=true),CardConfig("b",CardType.SENSOR,"sensor.b"))
         compose.setContent {StovaTheme {SmartHomeContent(adult.copy(smartHome=DashboardPrefs(grouping=DashboardGrouping.ROOM)),cards,emptyMap(),HaStatus.CONNECTED,registry=HaRegistry(mapOf("sensor.b" to HaEntityInfo(room="Stove"))))}}

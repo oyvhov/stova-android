@@ -73,3 +73,10 @@ følgje dei same reglane for redusert rørsle og synlegheit.
 - [x] Hald omslaget fast og ton dempinga mellom vanleg spelar og fullskjerm.
 - [x] Samle transporten i midten, opne volum under høgtalarknappen og ton inn bileta i favoritt- og spelelisterada.
 - [ ] Prøv den nye omslagsovergangen og returen frå Smarthus med fjernkontroll på Shield.
+
+## Oppfølging på Loftet 5. november
+
+- [x] Ta opp eit naturleg låtbyte og kontroller mellomrammene for bortfall av kunst.
+- [x] Førehandshent neste omslag også frå den vanlege Sonos-køen når neste spor er kjent.
+- [x] Bruk same inn- og utgang for Smartheim-panel, handlingsknappar og popupane frå toppfeltet, med fokusretur.
+- [ ] Verifiser målretta testar, designreglar, TV-bygg og dei endra flatene på Loftet.

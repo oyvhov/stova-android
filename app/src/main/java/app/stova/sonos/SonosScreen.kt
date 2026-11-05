@@ -82,8 +82,13 @@ internal fun SonosScreen(container: AppContainer, profile: Profile, session: Son
         HaImage(next.path, images, Modifier.size(1.dp).graphicsLayer { alpha = 0f }.clearAndSetSemantics {},
             contentScale = ContentScale.Crop, artworkSize = 1280, onLoad = {
                 warmed = (listOf(next) + warmed.filterNot { it.target == next.target }).take(2)
+                android.util.Log.d("StovaSonosArt", "Next cover decoded")
             })
     } }
+    val prepared = warmed.firstOrNull { it.matches(queue) }
+    LaunchedEffect(prepared?.target) {
+        if (prepared != null) android.util.Log.d("StovaSonosArt", "Prepared cover selected")
+    }
     Box(Modifier.fillMaxSize().stepEntrance(libraryRoom?.id, if (libraryRoom == null) 0 else 1)) {
     if (libraryRoom != null) SonosLibrary(repository, libraryRoom, busy, failed, { action ->
         if (!busy) { busy = true; failed = false
@@ -97,7 +102,7 @@ internal fun SonosScreen(container: AppContainer, profile: Profile, session: Son
         {}, { openLibrary(player?.id) }, onRetry, busy || session.busy, failed || session.failed,
         backgroundArt = prefs.backgroundArt && profile.appearance.backgroundSource != app.stova.profiles.BackgroundSource.THEME,
         onBack = onBack, roomsOpen = roomsOpen, onRoomsOpen = { roomsOpen = it },
-        preparedArtwork = warmed.firstOrNull { it.matches(queue) }?.path, loadArtwork = loadArt,
+        preparedArtwork = prepared?.path, loadArtwork = loadArt,
         immersive = immersive, onImmersive = { immersive = it },
         onBrowseMusicAssistant = state.musicAssistant[player?.id]?.takeIf { it.available && it.supports(131072) }?.let { ma -> { openLibrary(ma.id) } },
         shelf = shelf, shelfThumbnail = thumbnail, shelfReturn = shelfReturn,

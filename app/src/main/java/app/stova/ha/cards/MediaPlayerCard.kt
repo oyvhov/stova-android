@@ -1,8 +1,11 @@
 package app.stova.ha.cards
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.semantics.contentDescription
@@ -12,10 +15,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextOverflow
 import app.stova.R
+import app.stova.core.theme.stovaMotion
 import app.stova.core.ui.StovaIcons
 import app.stova.core.ui.focusOutline
 import app.stova.ha.HaEntity
@@ -23,6 +29,7 @@ import app.stova.ha.isTvAudio
 import app.stova.ha.text
 
 @Composable fun MediaPlayerCard(entity:HaEntity,locked:Boolean=false,perform:(ServiceCall)->Unit={},size:CardSize=CardSize.S) {
+    val motion=stovaMotion
     // Read only inside the progress lambda: the tick redraws the bar, never the card.
     val tvAudio = entity.isTvAudio
     val now=rememberResumedNow(1_000,active=!tvAudio && entity.state=="playing")
@@ -44,20 +51,28 @@ import app.stova.ha.text
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
             if (!tvAudio) listOf("media_play_pause","media_next_track").forEach {service ->
                 val source=remember {MutableInteractionSource()}
+                val pressed by source.collectIsPressedAsState()
+                val scale=animateFloatAsState(if(pressed) .94f else 1f,motion.settle(),label="ha-media-press")
                 val playing=entity.state=="playing"
                 val label=stringResource(if(service=="media_next_track") R.string.ha_v2_next else if(playing) R.string.ha_pause else R.string.ha_play)
-                Box(Modifier.size(36.dp).focusOutline(source,CircleShape).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant)
+                Box(Modifier.size(36.dp).focusOutline(source,CircleShape).graphicsLayer {scaleX=scale.value;scaleY=scale.value}
+                    .clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable(source,indication=null,enabled=!locked,onClick={perform(ServiceCall("media_player",service))}),contentAlignment=Alignment.Center) {
-                    Icon(if(service=="media_next_track") HaIcons.Next else if(playing) StovaIcons.Pause else StovaIcons.Play,label,Modifier.size(20.dp),tint=MaterialTheme.colorScheme.onSurface)
+                    Crossfade(if(service=="media_next_track") HaIcons.Next else if(playing) StovaIcons.Pause else StovaIcons.Play,
+                        animationSpec=motion.fade(),label="ha-media-icon") {icon ->
+                        Icon(icon,label,Modifier.size(20.dp),tint=MaterialTheme.colorScheme.onSurface)
+                    }
                 }
             }
             Spacer(Modifier.weight(1f))
             entity.attributes.number("volume_level")?.let {level ->
+                val fill=animateFloatAsState(level.toFloat().coerceIn(0f,1f),motion.settle(),label="ha-media-level")
                 val volume=stringResource(R.string.ha_v2_volume,(level*100).toInt())
                 Icon(StovaIcons.Speaker,null,Modifier.size(16.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
                 Box(Modifier.width(56.dp).height(4.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant)
                     .semantics {contentDescription=volume}) {
-                    Box(Modifier.fillMaxHeight().fillMaxWidth(level.toFloat().coerceIn(0f,1f)).background(MaterialTheme.colorScheme.onSurfaceVariant))
+                    Box(Modifier.fillMaxSize().graphicsLayer {scaleX=fill.value;transformOrigin=TransformOrigin(0f,.5f)}
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant))
                 }
                 CardDetail(stringResource(R.string.ha_volume_level,(level*100).toInt()))
             }

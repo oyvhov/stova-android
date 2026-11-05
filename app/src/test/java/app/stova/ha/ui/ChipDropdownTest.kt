@@ -30,6 +30,25 @@ class ChipDropdownTest {
     private fun entity(id: String, state: String, attrs: String = "{}") = HaEntity(id, state, StovaJson.parseToJsonElement(attrs).jsonObject, 0, 0)
     private val lamp = entity("light.stova", "on", """{"brightness":127.5,"supported_color_modes":["brightness"]}""")
 
+    @Test fun backLetsTheDropdownFadeThenRestoresTheOpeningChip() {
+        compose.setContent { StovaTheme {
+            val scope = rememberCoroutineScope()
+            HomeStatusChips(listOf(ChipContent(CardType.LIGHT, "", R.string.ha_on, cardId = "lamp")), onOpenCard = {}) { _, close ->
+                TopDropdown(close, 320.dp) { ChipDropdown(CardType.LIGHT, "Stova", lamp, false, { true }, scope) }
+            }
+        } }
+        compose.onNodeWithText("På").performClick()
+        val card = compose.onNode(hasText("Stova") and hasClickAction())
+        card.assertIsFocused()
+        compose.mainClock.autoAdvance = false
+        card.performKeyInput { pressKey(Key.Back) }
+        compose.mainClock.advanceTimeBy(64)
+        compose.onNodeWithText("50 %").assertExists()
+        compose.mainClock.advanceTimeBy(250)
+        compose.onNodeWithText("50 %").assertDoesNotExist()
+        compose.onNodeWithText("På").assertIsFocused()
+    }
+
     @Test fun aLightSetsItsBrightnessAndOkSwitchesIt() {
         val control = quickControl(CardType.LIGHT, lamp)!!
         assertEquals(50.0, control.value)
