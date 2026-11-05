@@ -1,6 +1,10 @@
 package app.stova.ha.cards
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.input.key.Key
@@ -65,5 +69,33 @@ class HaCardTest {
         compose.mainClock.advanceTimeBy(100); assertTrue(calls.isEmpty())
         compose.mainClock.advanceTimeBy(400); compose.waitForIdle()
         assertEquals(listOf(brightnessCall(52)),calls)
+    }
+    @Test fun repeatsFromAClosedPanelCannotToggleTheCard() {
+        val calls=mutableListOf<ServiceCall>()
+        var suspended by mutableStateOf(false)
+        lateinit var view:android.view.View
+        compose.setContent {StovaTheme(reduceMotion=true) {
+            view=androidx.compose.ui.platform.LocalView.current
+            val input=androidx.compose.ui.platform.LocalInputModeManager.current
+            SideEffect {input.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard)}
+            HaCard(CardConfig("1",CardType.LIGHT,"light.stove"),entity("off"),false,{calls+=it},{},inputSuspended=suspended)
+        }}
+        val card=compose.onNodeWithText("light.stove")
+        card.requestFocus()
+        compose.runOnIdle {suspended=true}
+        compose.waitForIdle()
+        compose.runOnIdle {suspended=false}
+        compose.waitForIdle()
+        fun key(action:Int,repeat:Int=0) {
+            compose.runOnIdle {
+                val now=android.os.SystemClock.uptimeMillis()
+                view.dispatchKeyEvent(android.view.KeyEvent(now,now,action,android.view.KeyEvent.KEYCODE_DPAD_CENTER,repeat))
+            }
+        }
+        key(android.view.KeyEvent.ACTION_DOWN,4)
+        key(android.view.KeyEvent.ACTION_UP)
+        assertTrue("A repeat from the opening press must not become a new toggle",calls.isEmpty())
+        card.performKeyInput {pressKey(Key.DirectionCenter)}
+        assertEquals(listOf(ServiceCall("light","toggle")),calls)
     }
 }

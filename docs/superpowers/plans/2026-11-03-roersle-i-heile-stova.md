@@ -79,4 +79,5 @@ følgje dei same reglane for redusert rørsle og synlegheit.
 - [x] Ta opp eit naturleg låtbyte og kontroller mellomrammene for bortfall av kunst.
 - [x] Førehandshent neste omslag også frå den vanlege Sonos-køen når neste spor er kjent.
 - [x] Bruk same inn- og utgang for Smartheim-panel, handlingsknappar og popupane frå toppfeltet, med fokusretur.
-- [ ] Verifiser målretta testar, designreglar, TV-bygg og dei endra flatene på Loftet.
+- [x] Verifiser målretta testar, designreglar, TV-bygg og dei endra flatene på Loftet.
+- [x] Stopp gjenteken OK frå eit tidlegare panel ved kortet, og prøv langt trykk igjen etter at Loftet-lyset er sett attende til Av.

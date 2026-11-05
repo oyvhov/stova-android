@@ -45,6 +45,8 @@ i panelet lukkar det. Same korte utgang gjeld for Lukk, Avbryt og Tilbake.
 innstillingsknappen. Handlingsval som opnar Android-innstillingar, og sletting
 av eit Smarthus-kort, skjer etter utgangen. Fokuset går tilbake til opningsbrikka
 eller Oppsett-knappen. Vêrtonen og volumfyllinga blir endra i teikne-/lagfasen.
+`CardFrame` tek berre imot eit nytt OK-trykk frå ein fersk tast-ned-hending.
+Gjentaking og lausriven tast-opp etter eit panelbyte utløyser aldri kortet.
 
 `SonosLabels` gir Sonos eit felles oppsett for tittel og sekundærtekst frå
 Heim til spelaren, biblioteket og Fleire val. Visingsnamnet tek bort eit

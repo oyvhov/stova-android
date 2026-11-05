@@ -56,13 +56,16 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
         .then(if(wash!=null) Modifier.background(wash) else Modifier)
         .onPreviewKeyEvent {event -> when {
             event.key==Key.Menu -> {if(event.type==KeyEventType.KeyDown && event.nativeKeyEvent.repeatCount==0) onMenu?.invoke();true}
-            focused && event.key in listOf(Key.DirectionCenter,Key.Enter,Key.NumPadEnter) -> {
-                if(event.type==KeyEventType.KeyDown && !held) {
+            event.key in confirmKeys -> {
+                if(inputSuspended) {
+                    longPress?.cancel();held=false;consumed=true
+                } else if(event.type==KeyEventType.KeyDown && !held && event.nativeKeyEvent.repeatCount==0 && !event.nativeKeyEvent.isLongPress) {
                     held=true;consumed=false
                     longPress=scope.launch {delay(timeout);consumed=true;latestLongClick()}
                 } else if(event.type==KeyEventType.KeyUp) {
-                    longPress?.cancel();held=false
-                    if(!consumed) latestClick()
+                    val click=held && !consumed && !event.nativeKeyEvent.isCanceled
+                    longPress?.cancel();held=false;consumed=true
+                    if(click) latestClick()
                 }
                 true
             }

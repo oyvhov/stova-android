@@ -57,10 +57,11 @@ import app.stova.ha.text
                 val label=stringResource(if(service=="media_next_track") R.string.ha_v2_next else if(playing) R.string.ha_pause else R.string.ha_play)
                 Box(Modifier.size(36.dp).focusOutline(source,CircleShape).graphicsLayer {scaleX=scale.value;scaleY=scale.value}
                     .clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable(source,indication=null,enabled=!locked,onClick={perform(ServiceCall("media_player",service))}),contentAlignment=Alignment.Center) {
+                    .clickable(source,indication=null,enabled=!locked,onClick={perform(ServiceCall("media_player",service))})
+                    .semantics {contentDescription=label},contentAlignment=Alignment.Center) {
                     Crossfade(if(service=="media_next_track") HaIcons.Next else if(playing) StovaIcons.Pause else StovaIcons.Play,
                         animationSpec=motion.fade(),label="ha-media-icon") {icon ->
-                        Icon(icon,label,Modifier.size(20.dp),tint=MaterialTheme.colorScheme.onSurface)
+                        Icon(icon,null,Modifier.size(20.dp),tint=MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
