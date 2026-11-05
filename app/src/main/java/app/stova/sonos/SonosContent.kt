@@ -179,7 +179,6 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                     icon = StovaIcons.Rows, compact = true, quiet = true)
                 if (room != null && draft == null) SonosIconButton(StovaIcons.Expand, stringResource(R.string.sonos_fullscreen), { onImmersive(true) },
                     Modifier.focusRequester(fullscreenFocus).testTag("sonos-fullscreen"))
-                if (draft == null) StovaButton(stringResource(R.string.sonos_back), onBack, compact = true, quiet = true)
             }
             if (room == null) {
                 Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -325,9 +324,7 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
         val detail = listOfNotNull(status?.let { stringResource(it) }, room.speaker.label).joinToString(" · ")
         val roomDetail = if (anchor) stringResource(R.string.sonos_group_leader) else detail
         SonosLabels(room.displayName, roomDetail, MaterialTheme.typography.titleMedium, Modifier.weight(1f))
-        if (editing && active) Icon(if (anchor) StovaIcons.Link else StovaIcons.Check,
-            if (anchor) null else stringResource(R.string.sonos_group_selected), Modifier.size(20.dp),
-            tint = colors.onSurface)
+        app.stova.core.ui.SelectionMark(active, icon = if (editing && anchor) StovaIcons.Link else StovaIcons.Check)
     }
 }
 

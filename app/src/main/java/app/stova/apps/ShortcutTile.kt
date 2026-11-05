@@ -58,7 +58,7 @@ fun ShortcutTile(tile: FavoriteTile, onClick: () -> Unit, onLongClick: () -> Uni
             // Live from Home's one Sonos session; elsewhere (the Apps page) a quiet Sonos plate.
             val live = app.stova.sonos.LocalSonosCard.current
             app.stova.sonos.SonosFavoriteCard(live?.card ?: app.stova.sonos.SonosCard.Empty, Modifier.fillMaxSize(), compact = spec.iconStyle,
-                image = live?.image ?: { _, _, _, _ -> })
+                captioned = spec.captions, image = live?.image ?: { _, _, _, _ -> })
             return@TileFrame
         }
         val image = (tile as? FavoriteTile.Library)?.image

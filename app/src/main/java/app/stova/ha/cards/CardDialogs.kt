@@ -106,13 +106,7 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
             }
             }
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(16.dp)) {
-                val hint=when {
-                    pages.current!=null->R.string.ha_panel_choice_hint
-                    locked || dialog is CardDialog.Graph || dialog is CardDialog.Camera ||
-                        (dialog is CardDialog.Controls && dialog.type==CardType.WEATHER)->R.string.ha_panel_browse_hint
-                    else->R.string.ha_panel_remote_hint
-                }
-                Text(panelStatus ?: stringResource(hint),Modifier.weight(1f),style=MaterialTheme.typography.labelMedium,
+                Text(panelStatus.orEmpty(),Modifier.weight(1f),style=MaterialTheme.typography.labelMedium,
                     color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 StovaButton(stringResource(if(pages.current==null) R.string.ha_close else R.string.custom_back),
                     {if(!pages.back()) dismiss()},Modifier.focusRequester(close),compact=true,quiet=true)

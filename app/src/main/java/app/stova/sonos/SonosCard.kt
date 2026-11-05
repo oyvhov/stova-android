@@ -71,7 +71,7 @@ val LocalSonosCard = compositionLocalOf<SonosCardSource?> { null }
  * The card holds no buttons: pressing it opens Sonos, so it never starts or stops anything.
  */
 @Composable
-fun SonosFavoriteCard(card: SonosCard, modifier: Modifier, compact: Boolean = false, image: SonosCardImage) {
+fun SonosFavoriteCard(card: SonosCard, modifier: Modifier, compact: Boolean = false, captioned: Boolean = false, image: SonosCardImage) {
     val colors = MaterialTheme.colorScheme
     val path = card.artwork
     var loaded by remember(path) { mutableStateOf(false) }
@@ -99,8 +99,11 @@ fun SonosFavoriteCard(card: SonosCard, modifier: Modifier, compact: Boolean = fa
                         else -> R.string.sonos_ready
                     }))
             }
-            SonosLabels(card.title ?: stringResource(R.string.sonos_title), detail, MaterialTheme.typography.titleSmall,
-                Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp))
+            val textModifier=Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)
+            val title=card.title ?: if(captioned) null else stringResource(R.string.sonos_title)
+            if(title!=null) SonosLabels(title, detail, MaterialTheme.typography.titleSmall,textModifier)
+            else if(detail!=null) androidx.compose.material3.Text(detail,textModifier,style=MaterialTheme.typography.bodySmall,
+                maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis,color=colors.onSurfaceVariant)
         }
     }
 }

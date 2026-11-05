@@ -113,6 +113,7 @@ class SonosCardTest {
     @Test fun withoutALiveSessionTheTileIsAQuietSonosMark() {
         compose.setContent { StovaTheme(reduceMotion = true) { ShortcutTile(FavoriteTile.Sonos("Sonos"), {}, {}) } }
         compose.onNodeWithTag("sonos-card-fallback", useUnmergedTree = true).assertExists()
+        assertEquals(1,compose.onAllNodesWithText("Sonos",useUnmergedTree=true).fetchSemanticsNodes().size)
     }
 
     @Test fun tvCardNeverAsksForAPicture() {

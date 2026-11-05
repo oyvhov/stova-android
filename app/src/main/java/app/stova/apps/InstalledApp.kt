@@ -8,4 +8,5 @@ data class InstalledApp(
     val label: String,
     val tv: Boolean,
     val lastUpdateTime: Long = 0,
+    val development: Boolean = false,
 )

@@ -62,7 +62,7 @@ class AppearanceMenuTest {
     }
     @Test fun overviewFitsAllNineCategories() {
         render()
-        listOf("Tema", "Heim og hero", "Kort og rader", "Bakgrunn", "Fokus", "Toppfelt", "Ikon", "Kopier eller nullstill utsjånaden", "Rader på Heim").forEach {
+        listOf("Tema", "Hovudfelt på Heim", "Kort og rader", "Bakgrunn", "Fokus", "Toppfelt", "Ikon", "Kopier eller nullstill utsjånaden", "Rader på Heim").forEach {
             compose.onNode(hasText(it) and SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.Role,
                 androidx.compose.ui.semantics.Role.Button)).assertIsDisplayed()
         }
@@ -147,7 +147,7 @@ class AppearanceMenuTest {
     @Test fun homeLayoutScreen() {
         assumeScreensEnabled()
         render()
-        compose.onNode(hasText("Heim og hero") and hasClickAction()).performClick()
+        compose.onNode(hasText("Hovudfelt på Heim") and hasClickAction()).performClick()
         compose.onNodeWithText("Synlege rader").assertIsFocused()
         compose.saveScreen("menu-home-layout")
     }

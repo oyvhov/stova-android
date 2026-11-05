@@ -169,16 +169,16 @@
     <string name="appearance_reduce_motion">Reduser rørsle</string>
     <string name="about_version">Stova %1$s</string>
 
-    <string name="settings_home_button">Home-knappen</string>
-    <string name="home_button_service_label">Stova Home-knapp</string>
-    <string name="home_button_service_description">Sender Home-knappen på fjernkontrollen til Stova. Les ikkje innhald på skjermen og lagrar ingen tastetrykk.</string>
+    <string name="settings_home_button">Heim-knappen</string>
+    <string name="home_button_service_label">Stova Heim-knapp</string>
+    <string name="home_button_service_description">Sender Heim-knappen på fjernkontrollen til Stova. Les ikkje innhald på skjermen og lagrar ingen tastetrykk.</string>
     <string name="hb_service_on">Tilgjengetenesta er på.</string>
-    <string name="hb_service_off">Tilgjengetenesta er av. Slå på «Stova Home-knapp» i tilgjengeinnstillingane.</string>
+    <string name="hb_service_off">Tilgjengetenesta er av. Slå på «Stova Heim-knapp» i tilgjengeinnstillingane.</string>
     <string name="hb_open_accessibility">Opne tilgjengeinnstillingar</string>
-    <string name="hb_override">Home-knappen opnar Stova</string>
+    <string name="hb_override">Heim-knappen opnar Stova</string>
     <string name="hb_override_hint">Krev at tilgjengetenesta er på</string>
     <string name="hb_crash_title">Stova kræsja</string>
-    <string name="hb_crash">Home-knappen går til systemlauncheren fordi Stova kræsja. Slå på att?</string>
+    <string name="hb_crash">Heim-knappen går til systemlauncheren fordi Stova kræsja. Slå på att?</string>
     <string name="hb_crash_reset">Slå på att</string>
     <string name="hb_adb_title">Med adb (valfritt)</string>
     <string name="hb_adb_body">adb shell cmd package set-home-activity %1$s/app.stova.MainActivity</string>
@@ -239,7 +239,7 @@
     <string name="watch_next_needs_access">Treng tilgang</string>
     <string name="watch_next_blocked">Ikkje tilgjengeleg på denne eininga</string>
     <string name="watch_next_grant">Gi tilgang</string>
-    <string name="watch_next_age_limit">Berre titlar med kjend aldersgrense til og med %1$d år, same grense som heroen.</string>
+    <string name="watch_next_age_limit">Berre titlar med kjend aldersgrense til og med %1$d år, same grense som hovudfeltet.</string>
     <string name="home_backdrop_rotation">Bakgrunnsrotasjon</string>
     <string name="nav_smart_home">Smarthus</string>
     <string name="ha_address">Adresse</string>
@@ -415,9 +415,9 @@
     <string name="appearance_choice_hint">→ eller OK byter verdi. ← går tilbake til menyen. Opp/ned vel neste rad.</string>
     <string name="appearance_choice_value">%1$s</string>
     <string name="appearance_background">Bakgrunn</string>
-    <string name="appearance_hero_size">Herostorleik</string>
-    <string name="appearance_overview">Omtale i heroen</string>
-    <string name="appearance_genres">Sjangrar i heroen</string>
+    <string name="appearance_hero_size">Storleik på hovudfeltet</string>
+    <string name="appearance_overview">Omtale i hovudfeltet</string>
+    <string name="appearance_genres">Sjangrar i hovudfeltet</string>
     <string name="appearance_spotlight_time">Spotlight-tid</string>
     <string name="appearance_row_spacing">Radavstand</string>
     <string name="appearance_card_size">Kortstorleik</string>
@@ -568,7 +568,7 @@
     <!-- System -->
     <string name="nav_system_settings">Android</string>
     <string name="row_apps">Appar</string>
-    <string name="hb_accessibility_path">Finn ho under Enhetsinnstillingar → Tilgjengelegheit → Stova Home-knapp, og slå ho på.</string>
+    <string name="hb_accessibility_path">Finn ho under Einingsinnstillingar → Tilgjengelegheit → Stova Heim-knapp, og slå ho på.</string>
     <string name="spole_update_for_links">Opna Spole. Oppdater Spole for å gå rett til tittelen.</string>
     <!-- Tilpassing v3 -->
     <string name="custom_row_section">Rada</string>
@@ -609,7 +609,7 @@
     <string name="custom_copy">Kopier utsjånad frå profil</string>
     <string name="custom_copy_hint">Vel profilen du vil kopiere frå. Fast bakgrunn vel du på nytt i ditt eige bibliotek.</string>
     <string name="custom_profile_hint">Utsjånaden gjeld berre denne profilen.</string>
-    <string name="custom_home_hero">Heim og hero</string>
+    <string name="custom_home_hero">Hovudfelt på Heim</string>
     <string name="custom_cards_rows">Kort og rader</string>
     <string name="custom_focus">Fokus</string>
     <string name="custom_top_bar">Toppfelt</string>
@@ -653,10 +653,10 @@
     <string name="custom_row_source">Vis servernamn</string>
     <string name="custom_home_appearance">Utsjånad på framsida</string>
     <string name="custom_home_appearance_hint">Hero, kort, bakgrunn, fokus og toppfelt</string>
-    <string name="custom_hero_year">Vis årstal i heroen</string>
-    <string name="custom_hero_age">Vis aldersgrense i heroen</string>
-    <string name="custom_hero_ratings">Vis vurderingar i heroen</string>
-    <string name="custom_hero_new_season">Vis ny sesong i heroen</string>
+    <string name="custom_hero_year">Vis årstal i hovudfeltet</string>
+    <string name="custom_hero_age">Vis aldersgrense i hovudfeltet</string>
+    <string name="custom_hero_ratings">Vis vurderingar i hovudfeltet</string>
+    <string name="custom_hero_new_season">Vis ny sesong i hovudfeltet</string>
     <string name="icon_tile_background">Bakgrunn på appkort</string>
     <string name="settings_appearance_intro">Rader, bakgrunn og utsjånad på Heim. Vala blir lagra for denne profilen.</string>
     <string name="settings_section_look">Heim og utsjånad</string>
@@ -767,12 +767,12 @@
     <string name="background_max_age">Høgaste aldersgrense</string>
     <string name="background_age_years">Til og med %1$d år</string>
     <string name="background_age_unlimited">Utan grense</string>
-    <string name="background_age_hint">Gjeld bakgrunn og hero, også faste bilete, og «Hald fram i andre appar». Titlar utan kjend aldersgrense blir skjulte. Utan treff blir temabakgrunnen brukt.</string>
+    <string name="background_age_hint">Gjeld bakgrunn og hovudfelt, også faste bilete, og «Hald fram i andre appar». Titlar utan kjend aldersgrense blir skjulte. Utan treff blir temabakgrunnen brukt.</string>
     <string name="kids_hours">Barnetid</string>
     <string name="kids_hours_libraries">Barnebibliotek</string>
     <string name="kids_hours_from">Barnetid frå</string>
     <string name="kids_hours_to">Barnetid til</string>
-    <string name="kids_hours_hint">I barnetida, kvar dag, viser heroen berre barnebiblioteka. Resten av døgnet blir dei haldne utanfor.</string>
+    <string name="kids_hours_hint">I barnetida, kvar dag, viser hovudfeltet berre barnebiblioteka. Resten av døgnet blir dei haldne utanfor.</string>
     <string name="kids_hours_need_libraries">Vel bakgrunnsbibliotek over, så kan kvelden halde barnebiblioteka utanfor.</string>
     <string name="kids_hello_morning">God morgon, %1$s!</string>
     <string name="kids_hello_day">Hei, %1$s!</string>

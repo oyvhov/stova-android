@@ -127,8 +127,8 @@ class AppearanceSettingsTest {
         compose.setContent { StovaTheme(appearance = prefs) {
             Column(Modifier.verticalScroll(rememberScrollState())) { AppearanceSettingsContent(prefs) { prefs = it } }
         } }
-        val choices = listOf("Herostorleik", "Logo eller tittel", "Omtale i heroen", "Sjangrar i heroen", "Radavstand",
-            "Vis årstal i heroen", "Vis aldersgrense i heroen", "Vis vurderingar i heroen", "Vis ny sesong i heroen",
+        val choices = listOf("Storleik på hovudfeltet", "Logo eller tittel", "Omtale i hovudfeltet", "Sjangrar i hovudfeltet", "Radavstand",
+            "Vis årstal i hovudfeltet", "Vis aldersgrense i hovudfeltet", "Vis vurderingar i hovudfeltet", "Vis ny sesong i hovudfeltet",
             "Kortstorleik", "Titlar under kort", "Appstil", "Siste filmar",
             "Aksentfarge", "Fokuseffekt", "Klokkeformat", "Framdriftsstrek", "Bakgrunnskjelde",
             "Titlar til bakgrunnen", "Roleg bakgrunnsrørsle", "Vis dato", "Plassering av HA-brikker", "Vis HA-brikker", "Vis julenedteljing",
@@ -167,7 +167,7 @@ class AppearanceSettingsTest {
         compose.setContent { StovaTheme(appearance = prefs) {
             Column(Modifier.verticalScroll(rememberScrollState())) { AppearanceSettingsContent(prefs) { prefs = it } }
         } }
-        listOf("Tema", "Heim og hero", "Kort og rader", "Bakgrunn", "Fokus", "Toppfelt", "Ikon", "Profil").forEach {
+        listOf("Tema", "Hovudfelt på Heim", "Kort og rader", "Bakgrunn", "Fokus", "Toppfelt", "Ikon", "Profil").forEach {
             compose.onAllNodesWithText(it)[0].performScrollTo().assertExists()
         }
     }

@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -67,12 +68,14 @@ internal fun roomCards(cards: List<CardConfig>, registry: HaRegistry, room: Smar
             rooms.forEach { room ->
                 val source = remember(room) { MutableInteractionSource() }
                 val chosen = room == selected
+                val plate=androidx.compose.animation.animateColorAsState(if(chosen) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                    app.stova.core.theme.stovaMotion.fade(app.stova.core.theme.stovaMotion.quick),label="smart-home-room")
                 val shape = MaterialTheme.shapes.medium
                 Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     .then(if (chosen) Modifier.focusRequester(selectedFocus) else Modifier)
                     .semantics { this.selected = chosen }
                     .focusOutline(source, shape).clip(shape)
-                    .background(if (chosen) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent)
+                    .drawBehind {drawRect(plate.value)}
                     .onPreviewKeyEvent { event ->
                         if (event.key != Key.DirectionRight) false else {
                             if (event.type == KeyEventType.KeyDown) onChoose(room)
@@ -88,6 +91,7 @@ internal fun roomCards(cards: List<CardConfig>, registry: HaRegistry, room: Smar
                         color = if (chosen) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(counts[room].toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    SelectionMark(chosen)
                 }
             }
         }

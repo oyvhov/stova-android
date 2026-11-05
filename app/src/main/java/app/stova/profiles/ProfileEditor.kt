@@ -52,6 +52,8 @@ fun ProfileEditor(
     val valid = name.trim().length in 1..MAX_NAME
 
     Column(modifier.width(520.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        if(onCancel!=null) Text(stringResource(if(initial==null) R.string.profile_add else R.string.profile_edit),
+            style=MaterialTheme.typography.headlineSmall)
         RemoteTextField(
             value = name,
             onValueChange = { name = it.take(MAX_NAME) },

@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
+import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
@@ -14,6 +15,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
+import app.stova.R
 
 /**
  * TV apps first (`LEANBACK_LAUNCHER`), then ordinary launcher apps for sideloaded phone apps.
@@ -33,8 +35,13 @@ class PackageManagerAppCatalog(
                     val activity = info.activityInfo
                     val pkg = activity.packageName
                     if (pkg in excluded || !seen.add(pkg)) continue
-                    add(InstalledApp("$pkg/${activity.name}", pkg, activity.name, info.loadLabel(pm).toString(), tv, pm.getPackageInfo(pkg, 0).lastUpdateTime))
+                    add(InstalledApp("$pkg/${activity.name}", pkg, activity.name, info.loadLabel(pm).toString(), tv, pm.getPackageInfo(pkg, 0).lastUpdateTime,
+                        development = activity.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0))
                 }
+            }
+        }.let { apps -> disambiguateAppLabels(apps, AppVariantLabels(context.getString(R.string.app_variant_development),
+            context.getString(R.string.app_variant_tv), context.getString(R.string.app_variant_mobile))) { name, variant ->
+                context.getString(R.string.app_variant_name, name, variant)
             }
         }
     }
