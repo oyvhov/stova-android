@@ -1,3 +1,10 @@
+# Smartheim finpussa og popup-utgangar retta på Shield
+2026-11-05 (Codex): Reinare toppfelt, midtstilt hovudavlesing, tynn slider med gripepunkt, rolege valrader med hake, overtoning av kortverdiar og mjukt lysfyll. Kortmenyen gjentek ikkje tittelen.
+Dialogen held heilskjermsramma, og topp-popupen held mål og anker heilt til fjerning. Raude/grøne regresjonstestar fangar den tidlegare krympinga. Sluttopptaka viser ingen svart stripe i dei kontrollerte lukkingane.
+Full køyring: 1115 bestod / 86 skjermtestar hoppa over. Deretter 327 målretta bestod / 8 hoppa over; siste tittelretting har 31 grøne meny-/design-/palett-testar. Lint og TV-bygg grøne.
+Siste APK installert på Shield med install-r og samsvarande SHA-256 `172c41e3e75750c7e2e486e6bc4fdea2e32f79fd36511ddc77359232be773bba`. Ekte opptak på 51,1 s i `.superpowers/shield-menu-popup-fix-2026-11-05/Smarthus-Shield-2026-11-05.mp4`. Ingen lys-, varme- eller lydval stadfesta; sluttvising Smarthus.
+MENY står att: Android leverer ikkje injisert KEYCODE_MENU til aktiviteten, heller ikkje utan dei to eksterne tastemapparane. Alle tilgjengetenester er tilbake ordrett. Eigaren kan ikkje prøve fysisk knapp no; Stova si slepphandsaming er testa, fysisk retting er ikkje stadfesta. Ingen uferdig kode.
+
 # Shield installert og Smartheim filma
 2026-11-05 (Codex): Installerte TV-APK-en frå `64a70c0` på Shield med install-r og samsvarande SHA-256. Same testa kode som på Loftet.
 Filma ekte Smartheim, Oppsett, kortmeny, varmepumpepanel og Drift, retur til Heim og den vesle innstillingsmenyen. Brukte D-pad og nokre peikartrykk. Ingen kontrollval vart stadfesta.

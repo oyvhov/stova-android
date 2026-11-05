@@ -8,7 +8,7 @@ Behald Stova sitt tema, dei lagra korta og oppsettet. Ingen glas eller blur.
 - [x] Rett tastemottaket og hald vindaugsramma stabil gjennom utgangen.
 - [x] Forenkle Smartheim-hierarkiet og kontrollpanelet etter ekte skjermbilete.
 - [x] Køyr testar, designreglar, lint og TV-bygg; installer på Shield.
-- [ ] Prøv panel, Oppsett og topp-popup; kontroller opptaksrammer og fokusretur utan å endre lys, varme eller lyd.
+- [x] Prøv panel, Oppsett og topp-popup; kontroller opptaksrammer og fokusretur utan å endre lys, varme eller lyd.
 - [ ] Verifiser og eventuelt rett den fysiske MENY-knappen når eigaren kan prøve han.
 
 Utgangspunkt: `.superpowers/shield-menu-popup-fix-2026-11-05/` har ekte
@@ -38,3 +38,12 @@ til aktiviteten. Prøva utan kvar av dei to tastemapparane, og utan begge,
 gav same resultat. Alle tilgjengetenestene er sette tilbake ordrett.
 Eigaren kan ikkje prøve den fysiske knappen no. Stova si slepphandsaming
 er testa, men den fysiske MENY-feilen må framleis reknast som uverifisert.
+
+Sluttprøve på ekte Shield: Oppsett, Rediger → kortmeny → Storleik → tilbake,
+varmepumpe → Drift → tilbake → Førehandsval → tilbake, Heim → topp-popup
+med eit ekte HID-hald på OK → tilbake → Smarthus. D-pad og nokre peikartrykk;
+ingen kontrollval vart stadfesta. Lysstyrke 80 % og måltemperatur 22,5° før
+og etter. Alle tilgjengetenestene er tilbake som før undersøkinga.
+Utgangsrammer frå dialog og topp-popup viser uttoning på staden utan den
+svarte stripa. Klipt video: `.superpowers/shield-menu-popup-fix-2026-11-05/Smarthus-Shield-2026-11-05.mp4`,
+51,1 s, 1080p H.264 / 30 fps utan lyd. Råopptak og før-/etterbilete ligg ved.
