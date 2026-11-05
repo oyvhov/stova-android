@@ -1,3 +1,10 @@
+# Samla UI-retting og romikon frå Home Assistant
+2026-11-05 (Codex): Fullført alle sju stega i `docs/superpowers/plans/2026-11-05-ui-utbetringar.md`: kontinuerleg favorittflytting, lesbarheit, fråkopla tilstandar, kortare menyar, heil applogo og flate romlister med HA-ikon.
+Oppdag måtte òg halde sjølve biletekomposisjonen levande (`DiscoverStage`); nytt opptak av to opningar/returar har ingen svarte blackdetect-segment. Native materiale og 13 validerte kjeldefiler i `.superpowers/ui-fixes-2026-11-05/`; samla resultat i `docs/verification/2026-11-05-ui-utbetringar.md`.
+Full sluttkontroll med skjermtestar: 1 245 bestått, 0 hoppa over; design/palett, lint og debug-/TV-bygg grøne. Siste TV-APK installert og kontrollert på Shield: SHA-256 `5b48e64bc026ccb3ecd28a16055e22fdee2be4971c9d6f4c865f6e423fb9f8a6`.
+HA-ikon sett i Smarthus, på valt rom, i Legg til og på Sonos. Ingen lyd-/lys-/varmekommandoar eller endra rekkjefølgje på den ekte profilen; Shield står på Sonos/Kjøkken, pausa, i same Øyvind-profil. Ingen emulator, Loftet, push eller publisering.
+Ingen uferdig kode. Fysisk MENY, TalkBack og aktivt låtbyte er ikkje prøvde i denne økta; større skrift, redusert rørsle og sambandsbrot er prøvde med kontrollerte UI-data.
+
 # UI-rapport levert som PDF
 2026-11-05 (Codex): Eigaren fekk ikkje opna HTML-rapporten. Laga `output/pdf/Stova-UI-rapport.pdf`, 28 sider / 3,7 MB, med alle 29 skjermbileta, vurderingane og stillbilete frå opptaka.
 Alle 28 sider renderte med Poppler og visuelt inspiserte i fem kontaktark; tekstuttrekk stadfestar alle 12 flytar og avgrensingane. Ingen klipping/overlapping observert. Byggeskript og kontrollbilete i `.superpowers/ui-audit-2026-11-05/`.
