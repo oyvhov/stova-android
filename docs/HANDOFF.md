@@ -1,3 +1,10 @@
+# Nye skjermbilete frå Shield
+2026-11-05 (Codex, 20:38 lokal tid): Tok tre nye, ekte skjermbilete: `output/screenshots/Shield-2026-11-05-2035/01-Heim.png`, `02-Sonos.png` og `03-Sonos-fullskjerm.png`.
+Alle tre PNG-filer er 3840 × 2160 og visuelt kontrollerte. Heim viser Superman med Spole først i apprada; begge Sonos-visingane viser Paradise / Coldplay og dei nye høgtalarbileta.
+Shield er tilbake på Heim i same profil. Sonos var pausa ved 0:00 / 4:38; ingen avspeling, volum, grupper eller innstillingar endra. Loftet og emulatorar urørte.
+Ingen appkode, installering, bygg eller testar i denne reine skjermbiletøkta. Ingen uferdig fangst eller spørsmål.
+Bileta skal leverast kvar for seg direkte i samtalen, utan ZIP. Vising av vedlegga på mobilen er ikkje stadfesta.
+
 # Nye Shield-bilete: Heim og Sonos
 2026-11-05 (Codex, 20:21 lokal tid): Tok tre nye, ekte 3840 × 2160-skjermbilete på Shield etter bestilling: `output/screenshots/Shield-nye-2026-11-05/01-Heim.png`, `02-Sonos.png` og `03-Sonos-fullskjerm.png`.
 Venta på ferdig bakgrunn/omslag og favorittar. Alle tre er visuelt kontrollerte, utan opne menyar eller volumdialog; Heim viser The Worst Person in the World, Sonos viser Paradise / Coldplay med dei nye høgtalarbileta.
