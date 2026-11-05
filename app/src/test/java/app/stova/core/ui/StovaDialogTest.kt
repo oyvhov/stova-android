@@ -119,6 +119,17 @@ class StovaDialogTest {
         compose.onNodeWithText("Lukk").assertDoesNotExist()
     }
 
+    @Test fun theWindowKeepsItsFullSizeUntilItIsRemovedAfterTheExit() {
+        // Keep the dismissed composition for a frame, as a real window teardown does.
+        compose.setContent { StovaTheme { StovaDialog({ dismissed++ }) { StovaButton("Lukk", {}) } } }
+        val before = compose.onNode(isDialog()).getUnclippedBoundsInRoot()
+        pressBack()
+        compose.waitForIdle()
+        assertEquals(1, dismissed)
+        assertEquals("An empty wrap-content window must not shrink into a shadow band", before,
+            compose.onNode(isDialog()).getUnclippedBoundsInRoot())
+    }
+
     @Test fun reducedMotionClosesOnBackAtOnce() {
         show(reduceMotion = true)
         compose.waitForIdle()

@@ -62,6 +62,29 @@ class SmartHomeV2UiTest {
         compose.onNodeWithText("Storleik").assertIsFocused().performKeyInput {pressKey(Key.DirectionCenter)}
         compose.onNodeWithText("S · 1 × 1").assertIsFocused()
     }
+    @Test fun nativeMenuOpensOnceOnReleaseWithoutChangingTheDevice() {
+        lateinit var view: android.view.View
+        var calls = 0
+        val light = HaEntity("light.a", "on", buildJsonObject {}, 0, 0)
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            view = androidx.compose.ui.platform.LocalView.current
+            val input = androidx.compose.ui.platform.LocalInputModeManager.current
+            SideEffect { input.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard) }
+            SmartHomeContent(adult, listOf(CardConfig("a", CardType.LIGHT, light.id, name = "Leselys")),
+                mapOf(light.id to light), HaStatus.CONNECTED, onPerform = { _, _ -> calls++ })
+        } }
+        compose.onNodeWithText("Leselys").assertIsFocused()
+        fun menu(action: Int, repeat: Int = 0) = compose.runOnIdle {
+            val now = android.os.SystemClock.uptimeMillis()
+            view.rootView.dispatchKeyEvent(android.view.KeyEvent(now, now, action, android.view.KeyEvent.KEYCODE_MENU, repeat))
+        }
+        menu(android.view.KeyEvent.ACTION_DOWN)
+        compose.onNodeWithText("Storleik").assertDoesNotExist()
+        menu(android.view.KeyEvent.ACTION_DOWN, 1)
+        menu(android.view.KeyEvent.ACTION_UP)
+        compose.onNodeWithText("Storleik").assertIsFocused()
+        assertEquals(0, calls)
+    }
     @Test fun aClimateCardChoosesWhichModeButtonsItsPanelShows() {
         val pump=HaEntity("climate.a","heat",buildJsonObject {
             putJsonArray("hvac_modes") {add("off");add("heat");add("cool")};putJsonArray("preset_modes") {add("heat_8_15")}},0,0)

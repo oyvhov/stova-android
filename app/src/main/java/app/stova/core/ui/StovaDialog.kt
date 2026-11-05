@@ -114,7 +114,11 @@ private fun StovaOverlay(
             decorFitsSystemWindows = properties.decorFitsSystemWindows,
         ),
     ) {
-        AnimatedVisibility(visible, enter = if (still) EnterTransition.None else fadeIn(motion.enter()),
+        // Dialog uses a wrap-content native window with elevation. Keep its transparent frame
+        // full screen even after AnimatedVisibility removes its last child; otherwise the native
+        // window briefly collapses to a shadow strip before onDismissRequest tears it down.
+        Box(Modifier.fillMaxSize()) {
+        AnimatedVisibility(visible, modifier = Modifier.fillMaxSize(), enter = if (still) EnterTransition.None else fadeIn(motion.enter()),
             exit = if (still) ExitTransition.None else fadeOut(motion.exit()), label = "dialog") {
             Box(Modifier.fillMaxSize().onPreviewKeyEvent { event ->
                 // A panel with pages answers Back itself, one page at a time, before the window sees it.
@@ -139,6 +143,7 @@ private fun StovaOverlay(
                             exit = if (still) ExitTransition.None else exit, label = "panel"),
                 ) { content(::close) }
             }
+        }
         }
     }
 }

@@ -41,10 +41,11 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
     var held by remember {mutableStateOf(false)}
     var consumed by remember {mutableStateOf(false)}
     var longPress by remember {mutableStateOf<Job?>(null)}
+    var menuHeld by remember {mutableStateOf(false)}
     val latestClick by rememberUpdatedState(onClick)
     val latestLongClick by rememberUpdatedState(onLongClick)
     val windowFocused=LocalWindowInfo.current.isWindowFocused
-    LaunchedEffect(focused,windowFocused,inputSuspended) {if(!focused || !windowFocused || inputSuspended) {longPress?.cancel();held=false;consumed=true}}
+    LaunchedEffect(focused,windowFocused,inputSuspended) {if(!focused || !windowFocused || inputSuspended) {longPress?.cancel();held=false;consumed=true;menuHeld=false}}
     DisposableEffect(Unit) {onDispose {longPress?.cancel()}}
     val shape = MaterialTheme.shapes.large
     val lit=glow!=null && glow.alpha>0f
@@ -55,7 +56,17 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
         .focusOutline(source,shape).then(if(editing) Modifier.border(1.dp,MaterialTheme.colorScheme.outline,shape) else Modifier).clip(shape).background(fill)
         .then(if(wash!=null) Modifier.background(wash) else Modifier)
         .onPreviewKeyEvent {event -> when {
-            event.key==Key.Menu -> {if(event.type==KeyEventType.KeyDown && event.nativeKeyEvent.repeatCount==0) onMenu?.invoke();true}
+            event.key==Key.Menu -> {
+                if(!inputSuspended && onMenu!=null) {
+                    if(event.type==KeyEventType.KeyDown && event.nativeKeyEvent.repeatCount==0) menuHeld=true
+                    else if(event.type==KeyEventType.KeyUp) {
+                        val open=menuHeld && !event.nativeKeyEvent.isCanceled
+                        menuHeld=false
+                        if(open) onMenu()
+                    }
+                }
+                true
+            }
             event.key in confirmKeys -> {
                 if(inputSuspended) {
                     longPress?.cancel();held=false;consumed=true
