@@ -206,7 +206,7 @@ private fun ProfileDetail(container: AppContainer, other: Profile, onKidApps: ()
 }
 
 @Composable
-private fun EditorDialog(onDismiss: () -> Unit, content: @Composable () -> Unit) {
+internal fun EditorDialog(onDismiss: () -> Unit, content: @Composable () -> Unit) {
     StovaDialog(onDismiss) {
         Column(
             Modifier.background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.extraLarge)

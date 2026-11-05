@@ -34,13 +34,16 @@ fun AppMenuHost(app: InstalledApp, apps: AppRepository, profile: Profile, art: A
     }
 }
 
-/** The app's own TV banner across the panel; an app without one shows its icon on the raised surface. */
+/** Preserve the whole app identity, including wide wordmarks in a compact square header. */
 @Composable
 private fun BoxScope.AppSheetArt(app: InstalledApp, art: AppArtCache) {
     val banner by produceState<ImageBitmap?>(null, app.key, app.lastUpdateTime) { value = art.banner(app) }
     val icon by produceState<ImageBitmap?>(null, app.key, app.lastUpdateTime) { value = art.icon(app) }
-    banner?.let { Image(it, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize()) }
-        ?: icon?.let { Image(it, contentDescription = null, modifier = Modifier.align(Alignment.Center).size(SheetIconSize)) }
+    AppSheetImage(banner, icon)
 }
 
-private val SheetIconSize = 88.dp
+@Composable
+internal fun BoxScope.AppSheetImage(banner: ImageBitmap?, icon: ImageBitmap?) {
+    banner?.let { Image(it, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.matchParentSize().padding(4.dp)) }
+        ?: icon?.let { Image(it, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.matchParentSize().padding(8.dp)) }
+}

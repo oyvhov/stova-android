@@ -85,4 +85,13 @@ class SonosShelfFocusTest {
     }
     @Test fun allFooterButtonsFitWithRoomsVisible()=buttonsFit(true)
     @Test fun allFooterButtonsFitWithRoomsHidden()=buttonsFit(false)
+    @Test @Config(fontScale=1.6f) fun largerTextStillReachesTheFirstFavouriteAndFooterWithTheRemote() {
+        show()
+        compose.onNodeWithTag("slider-sonos-${room.id}").requestFocus()
+        down()
+        compose.onNodeWithText("Favoritt 0").assertIsFocused().assertIsDisplayed()
+        down()
+        compose.onNodeWithText("Musikk og favorittar").assertIsFocused().assertIsDisplayed()
+        assertTrue(actions.isEmpty())
+    }
 }

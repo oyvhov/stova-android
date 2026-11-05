@@ -304,14 +304,11 @@ private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Bo
     onLongClick: (() -> Unit)?, editing: Boolean, anchor: Boolean, rotation: () -> Float) {
     val source = remember { MutableInteractionSource() }
     val colors = MaterialTheme.colorScheme
-    // The chosen room's plate eases in; read only in the draw phase.
-    val plate = androidx.compose.animation.animateColorAsState(if (active) colors.surfaceVariant else colors.surface,
-        stovaMotion.fade(stovaMotion.quick), label = "sonos-room")
-    Row(modifier.fillMaxWidth().testTag("sonos-room-${room.id}").focusOutline(source, MaterialTheme.shapes.medium)
-        .clip(MaterialTheme.shapes.medium).drawBehind { drawRect(plate.value) }
+    Row(modifier.fillMaxWidth().testTag("sonos-room-${room.id}").focusOutline(source, MaterialTheme.shapes.small)
+        .clip(MaterialTheme.shapes.small)
         .semantics { selected = active }.combinedClickable(source, null, role = if (editing) Role.Checkbox else Role.Tab,
             onLongClickLabel = if (onLongClick != null) stringResource(R.string.sonos_group) else null,
-            onLongClick = onLongClick, onClick = onClick).padding(horizontal = 10.dp, vertical = 12.dp),
+            onLongClick = onLongClick, onClick = onClick).padding(horizontal = 10.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         // The speaker's light already says whether music plays; no separate play glyph.
         SonosSpeakerArt(room.speaker, visual, Modifier.size(52.dp, 48.dp).graphicsLayer { rotationZ = rotation() }, "sonos-speaker-${room.id}", room.available)

@@ -4,7 +4,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class AppLabelsTest {
-    private val labels=AppVariantLabels("Utvikling","TV","Mobil")
+    private val labels=AppVariantLabels("Utvikling","TV","Mobil","Android")
     private fun named(apps: List<InstalledApp>)=disambiguateAppLabels(apps,labels) {name,variant -> "$name · $variant"}
     private fun app(pkg:String,tv:Boolean=true,development:Boolean=false)=InstalledApp("$pkg/.Main",pkg,".Main","Spole",tv,development=development)
     @Test fun developmentBuildIsDistinctWhileTheOrdinaryNameAndLaunchKeysStayStable() {
@@ -18,5 +18,7 @@ class AppLabelsTest {
         val ambiguous=named(listOf(app("org.alpha.player"),app("org.beta.player")))
         assertEquals(2,ambiguous.map {it.label}.distinct().size)
         assertEquals("Spole",named(listOf(app("app.spole"))).single().label)
+        assertEquals(listOf("Spole · TV","Spole · Android"),
+            named(listOf(app("tv.emby.embyatv"),app("com.mb.android"))).map {it.label})
     }
 }

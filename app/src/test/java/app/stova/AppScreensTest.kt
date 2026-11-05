@@ -289,6 +289,7 @@ class AppScreensTest {
     @Test fun customizationMoveRow() {
         renderMediaHome(waitForBackdrop=true,appearance=AppearancePrefs(seasonChoice=SeasonChoice.NONE))
         rule.onAllNodes(hasContentDescription("Fjordlys") and hasClickAction())[0].performKeyInput { pressKey(androidx.compose.ui.input.key.Key.Menu) }
+        rule.onNodeWithText("Rada").performClick()
         rule.onNodeWithText("Flytt rada").performClick()
         rule.saveScreen("tilpassing-flyttemodus")
     }
@@ -343,12 +344,20 @@ class AppScreensTest {
         if (prefs.iconPack != null && prefs.iconColor == IconColor.ACCENT) {
             val theme = prefs.seasonal(java.time.LocalDate.of(2026,10,25))
             val accent = app.stova.core.theme.stovaColorScheme(theme.visualTheme, theme.accent).primary
-            val expected = accent.toArgb()
+            val colors = app.stova.core.theme.stovaColorScheme(theme.visualTheme, theme.accent)
+            val raw = accent.toArgb()
+            val focused = ColorUtils.compositeColors(ColorUtils.setAlphaComponent(colors.onSurface.toArgb(),
+                (app.stova.core.theme.StovaFocus.ArtworkSurfaceAlpha * 255).toInt()), raw)
             val bounds = rule.onNode(hasContentDescription("Spole") and hasClickAction()).fetchSemanticsNode().boundsInRoot
             var tinted = 0
             // Ignore the focus ring: count accent pixels only within the artwork interior.
             for (y in bounds.top.toInt()+16 until bounds.bottom.toInt()-16) for (x in bounds.left.toInt()+16 until bounds.right.toInt()-16) {
-                if (bitmap.getPixel(x,y) == expected) tinted++
+                val pixel=bitmap.getPixel(x,y)
+                if (listOf(raw,focused).any { expected ->
+                    kotlin.math.abs(android.graphics.Color.red(pixel)-android.graphics.Color.red(expected))<=2 &&
+                    kotlin.math.abs(android.graphics.Color.green(pixel)-android.graphics.Color.green(expected))<=2 &&
+                    kotlin.math.abs(android.graphics.Color.blue(pixel)-android.graphics.Color.blue(expected))<=2
+                }) tinted++
             }
             assertTrue("The Spole supplement must actually be decoded and tinted ($tinted pixels)", tinted > 120)
         }

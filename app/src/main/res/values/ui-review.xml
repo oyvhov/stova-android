@@ -4,6 +4,7 @@
     <string name="app_variant_development">Utvikling</string>
     <string name="app_variant_tv">TV</string>
     <string name="app_variant_mobile">Mobil</string>
+    <string name="app_variant_android">Android</string>
     <string name="app_variant_name">%1$s · %2$s</string>
     <string name="favorite_move">Flytt</string>
     <string name="favorite_move_hint">← → Flytt · OK Ferdig · Tilbake Avbryt</string>

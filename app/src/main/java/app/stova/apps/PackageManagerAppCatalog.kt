@@ -40,7 +40,7 @@ class PackageManagerAppCatalog(
                 }
             }
         }.let { apps -> disambiguateAppLabels(apps, AppVariantLabels(context.getString(R.string.app_variant_development),
-            context.getString(R.string.app_variant_tv), context.getString(R.string.app_variant_mobile))) { name, variant ->
+            context.getString(R.string.app_variant_tv), context.getString(R.string.app_variant_mobile), context.getString(R.string.app_variant_android))) { name, variant ->
                 context.getString(R.string.app_variant_name, name, variant)
             }
         }

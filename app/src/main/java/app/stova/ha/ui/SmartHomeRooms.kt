@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.res.stringResource
@@ -68,9 +69,11 @@ internal fun roomCards(cards: List<CardConfig>, registry: HaRegistry, room: Smar
             rooms.forEach { room ->
                 val source = remember(room) { MutableInteractionSource() }
                 val chosen = room == selected
+                val iconAlpha=androidx.compose.animation.core.animateFloatAsState(if(chosen) 0f else 1f,
+                    app.stova.core.theme.stovaMotion.fade(app.stova.core.theme.stovaMotion.quick),label="room-symbol")
                 val plate=androidx.compose.animation.animateColorAsState(if(chosen) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
                     app.stova.core.theme.stovaMotion.fade(app.stova.core.theme.stovaMotion.quick),label="smart-home-room")
-                val shape = MaterialTheme.shapes.medium
+                val shape = MaterialTheme.shapes.small
                 Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     .then(if (chosen) Modifier.focusRequester(selectedFocus) else Modifier)
                     .semantics { this.selected = chosen }
@@ -85,13 +88,13 @@ internal fun roomCards(cards: List<CardConfig>, registry: HaRegistry, room: Smar
                     .clickable(source, indication = null, role = Role.Tab) { onChoose(room) }
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Icon(when (room) { SmartHomeRoom.All -> StovaIcons.Home; SmartHomeRoom.Favourites -> StovaIcons.Star
-                        else -> StovaIcons.Rows }, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(roomLabel(room), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
-                        color = if (chosen) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Box(Modifier.size(18.dp),contentAlignment=Alignment.Center) {
+                        Icon(when (room) { SmartHomeRoom.All -> StovaIcons.Home; SmartHomeRoom.Favourites -> StovaIcons.Star
+                            else -> StovaIcons.Rows }, null, Modifier.size(18.dp).graphicsLayer {alpha=iconAlpha.value}, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        SelectionMark(chosen)
+                    }
+                    ArtworkCaption(roomLabel(room),source,Modifier.weight(1f))
                     Text(counts[room].toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    SelectionMark(chosen)
                 }
             }
         }

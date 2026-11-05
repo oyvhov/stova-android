@@ -68,7 +68,7 @@ import kotlin.math.ceil
     val cards=remember(allCards,registry,selectedRoom) {roomCards(allCards,registry,selectedRoom)}
     BoxWithConstraints(Modifier.fillMaxSize()) {
     SmartHomeAtmosphere(backdrop,allCards.firstOrNull {it.type==CardType.WEATHER}?.let {entities[it.entityId]?.state})
-    val railWidth=if(LocalDensity.current.fontScale>=1.5f) 168.dp else 144.dp
+    val railWidth=if(LocalDensity.current.fontScale>=1.5f) 208.dp else 168.dp
     val railFocus=remember {FocusRequester()}
     val availableColumns = dashboardColumns((maxWidth - StovaLayout.TvSafeEdge * 2 - railWidth - StovaLayout.Gutter - 8.dp).value,
         profile.smartHome.density, LocalDensity.current.fontScale)

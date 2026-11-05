@@ -1,6 +1,6 @@
 package app.stova.apps
 
-internal data class AppVariantLabels(val development: String, val tv: String, val mobile: String)
+internal data class AppVariantLabels(val development: String, val tv: String, val mobile: String, val android: String)
 
 internal fun disambiguateAppLabels(apps: List<InstalledApp>, labels: AppVariantLabels,
     format: (String, String) -> String): List<InstalledApp> {
@@ -19,7 +19,9 @@ internal fun disambiguateAppLabels(apps: List<InstalledApp>, labels: AppVariantL
         val detail=if(same.size==1) tag else {
             // A package suffix is the last resort when two apps advertise identical identities.
             val suffix=app.packageName.substringAfterLast('.')
-            if(same.count {it.packageName.substringAfterLast('.')==suffix}==1) suffix
+            if(app.packageName.startsWith("tv.") && same.count {it.packageName.startsWith("tv.")}==1) labels.tv
+            else if(suffix=="android" && same.count {it.packageName.substringAfterLast('.')==suffix}==1) labels.android
+            else if(same.count {it.packageName.substringAfterLast('.')==suffix}==1) suffix
             else app.packageName
         }
         app.copy(label=format(app.label,detail))

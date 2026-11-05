@@ -33,6 +33,18 @@ class SmartHomeRoomsTest {
     private fun show(reduceMotion:Boolean=true)=compose.setContent {StovaTheme(reduceMotion=reduceMotion) {
         SmartHomeContent(adult,cards,entities,HaStatus.CONNECTED,registry=registry,onPerform={_,_->calls++},onConfigure={calls++},onLayoutChange={calls++})
     }}
+    @Test @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun ordinaryRoomNamesFitWithoutBreakingWords() {
+        show()
+        for(label in listOf("Alle rom","Kjøkken","Småstova")) {
+            val layouts=mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+            compose.onNode(hasText(label) and hasAnyAncestor(SemanticsMatcher.expectValue(
+                androidx.compose.ui.semantics.SemanticsProperties.Role,androidx.compose.ui.semantics.Role.Tab)),useUnmergedTree=true)
+                .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) {it(layouts)}
+            assertEquals(label,1,layouts.single().lineCount)
+            assertFalse(label,layouts.single().hasVisualOverflow)
+        }
+    }
     @Test fun selectingARoomChangesOnlyTheVisibleCardsAndEntersItsFirstCard() {
         show()
         room("Kjøkken").requestFocus().performKeyInput {pressKey(Key.DirectionCenter)}

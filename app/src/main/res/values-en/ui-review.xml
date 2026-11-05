@@ -4,6 +4,7 @@
     <string name="app_variant_development">Development</string>
     <string name="app_variant_tv">TV</string>
     <string name="app_variant_mobile">Mobile</string>
+    <string name="app_variant_android">Android</string>
     <string name="app_variant_name">%1$s · %2$s</string>
     <string name="favorite_move">Move</string>
     <string name="favorite_move_hint">← → Move · OK Done · Back Cancel</string>
