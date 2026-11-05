@@ -44,9 +44,10 @@ object RatingColors {
 /** Shared calm focus, sized to stay within the TV gutters and menu spacing. */
 /** Focus must read from the sofa: the card grows clearly, its neighbours step back. No glow. */
 object StovaFocus {
-    const val ArtworkScale = 1.06f
+    const val ArtworkScale = 1.04f
     const val ControlScale = 1.02f
-    const val SurfaceAlpha = 0.16f
+    const val SurfaceAlpha = 0.12f
+    const val ArtworkSurfaceAlpha = 0.06f
     val Lift = 2.dp
 }
 

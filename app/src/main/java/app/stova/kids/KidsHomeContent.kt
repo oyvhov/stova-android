@@ -6,7 +6,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
@@ -63,6 +62,7 @@ import app.stova.core.theme.KidsColors
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.stovaMotion
 import app.stova.core.ui.StovaIcons
+import app.stova.core.ui.focusOutline
 import app.stova.core.ui.smoothScrollToItem
 import app.stova.home.FocusedTarget
 import app.stova.home.HomeRowUi
@@ -268,11 +268,8 @@ private fun Header(profile: Profile, greeting: String, showGreeting: Boolean, on
     Row(Modifier.padding(start = StovaLayout.TvSafeEdge, top = 28.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         val source = remember { MutableInteractionSource() }
-        var focused by remember { mutableStateOf(false) }
         val label = stringResource(R.string.nav_profile)
-        Box(Modifier.size(64.dp).graphicsLayer { scaleX = if (focused) 1.1f else 1f; scaleY = scaleX }
-            .border(if (focused) 4.dp else 0.dp, KidsColors.Focus, CircleShape)
-            .onFocusChanged { focused = it.isFocused }
+        Box(Modifier.size(64.dp).focusOutline(source, CircleShape, zoom = true)
             .clickable(source, indication = null, role = Role.Button, onClick = onProfile)
             .semantics { text = androidx.compose.ui.text.AnnotatedString(label) }, contentAlignment = Alignment.Center) {
             AvatarBadge(profile, 58.dp)
@@ -396,24 +393,17 @@ private fun KidsCard(width: Dp, height: Dp, title: String, onClick: () -> Unit, 
         val edge = with(density) { StovaLayout.TvSafeEdge.toPx() }
         sight.bringIntoView(Rect(-edge, 0f, with(density) { width.toPx() } + edge, with(density) { height.toPx() }))
     }
-    val scale by animateFloatAsState(if (focused) 1.09f else 1f, spring(dampingRatio = 0.6f, stiffness = 380f), label = "card")
     val source = remember { MutableInteractionSource() }
     Box(modifier.size(width, height)
         .bringIntoViewRequester(sight)
+        .focusOutline(source, CardShape, zoom = true)
         .onFocusChanged { focused = it.isFocused }
-        .onGloballyPositioned { if (focused) onMoved(scaledBounds(it.boundsInRoot(), 1.09f)) }
-        .graphicsLayer { scaleX = scale; scaleY = scale }
+        .onGloballyPositioned { if (focused) onMoved(it.boundsInRoot()) }
         .clickable(source, indication = null, role = Role.Button, onClick = onClick)
         .semantics { contentDescription = title }) {
         LaunchedEffect(focused) { if (focused) onFocused() }
         Box(Modifier.fillMaxSize().clip(CardShape).background(KidsColors.CardBack), content = content)
-        if (focused) Box(Modifier.fillMaxSize().border(5.dp, KidsColors.Focus, CardShape))
     }
-}
-
-private fun scaledBounds(bounds: Rect, scale: Float): Rect {
-    val c = bounds.center
-    return Rect(c.x - bounds.width * scale / 2, c.y - bounds.height * scale / 2, c.x + bounds.width * scale / 2, c.y + bounds.height * scale / 2)
 }
 
 /** The picture a card shows: a wide one in a wide card, a poster in the others, and the other kind when that is all there is. */

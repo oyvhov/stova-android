@@ -644,7 +644,7 @@
     <string name="custom_show_smart_home">Show Smart home button</string>
     <string name="custom_show_profile">Show profile picture</string>
     <string name="custom_back">Back</string>
-    <string name="custom_focus_lift">Gentle lift</string>
+    <string name="custom_focus_lift">Gentle lift and light</string>
     <string name="custom_edit_heading">Edit heading</string>
     <string name="custom_heading_name">Custom heading</string>
     <string name="custom_heading_default">Default: %1$s. Leave blank to use the default heading.</string>

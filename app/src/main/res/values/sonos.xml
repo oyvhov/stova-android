@@ -29,7 +29,7 @@
     <string name="sonos_no_track">Vel noko å lytte til</string>
     <string name="sonos_action_failed">Handlinga vart ikkje fullført. Kontroller romma og prøv att.</string>
     <string name="sonos_library">Musikk og favorittar</string>
-    <string name="sonos_favorites_playlists">Favorittar og spelelister</string>
+    <string name="sonos_favorites_playlists">Favorittar</string>
     <string name="sonos_group">Grupper rom</string>
     <string name="sonos_group_hint">Dei valde romma følgjer musikken i %1$s. Endringane gjeld når du vel Bruk.</string>
     <string name="sonos_group_anchor">%1$s · spelar musikken</string>

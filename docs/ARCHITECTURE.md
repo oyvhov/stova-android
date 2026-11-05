@@ -33,7 +33,14 @@ når Stova kjenner han. `SonosVolumePopup` opnar ein loddrett skyveknapp
 under knappen. Ved lukking blir volumutkastet sendt og fokuset går tilbake.
 På den vanlege spelarsida hentar `SonosRepository.playerShelf` favorittar
 og spelelister frå same medietre som biblioteket. Bileta tonar inn når
-dei er lasta. `SonosMediaActions` stadfestar avspeling eller kø frå begge
+dei er lasta. Rada heiter «Favorittar» og teiknar fokus berre på omslaget,
+med tittelen utanfor. Ned inn i rada rullar til første favoritt og gir han
+fokus; eksplisitt retur frå bibliotek/dialog bevarer opnaren. Opp går til
+volum, eller første tilgjengelege kontroll over rada. Favorittar og
+botnknappar ligg i spelarfeltet ved sida av romlista som før. Mindre
+mellomrom og fast omslagshøgd gir plass utan rulling ved vanleg skrift;
+stor tilgjengeskrift kan framleis rulle.
+`SonosMediaActions` stadfestar avspeling eller kø frå begge
 flatene og bruker same dialogovergang når du vel ei handling eller går tilbake.
 `HaEntity.isTvAudio` blir delt med Smarthus, der TV-lyd viser volum
 og kjeldeval i detaljpanelet. Smarthus føretrekkjer eit tilgjengeleg
@@ -229,7 +236,13 @@ Logoar som lastar eller feilar har tittel som reserve. Spotlight-byte endrar ikk
 Fokus tilbake til topplinja rullar også lista til toppen, så heroen kan hentast fram sjølv etter
 oppstart direkte på ei medierad.
 
-Fokus endrar berre kortet som har fokus (løft og skala). Resten av rada og titlane under korta står som før;
+`focusOutline` deler fokusuttrykket for bilete og kontrollar, også i barneprofilen.
+Standard «Svakt løft og lys» kombinerer 2 dp løft, 4 % bilet-/2 % kontrollskala
+og mjukt overflatelys. Redusert rørsle held lyset utan forskyving/skala.
+Berre vindauget som eig input får teikna fokus; opningsknappen bak ein
+dialog/popup mistar markeringa til vindauget får fokus att. Tydeleg ramme
+og sterk fokusmarkering er framleis uttrykkelege tilgjengeval.
+Fokus endrar berre kortet som har fokus. Resten av rada og titlane under korta står som før;
 dempinga av resten av rada er teken bort etter ønske frå eigaren (2026-11-01).
 
 `StovaMotion` eig varigheit og easing. Bruk berre laganimasjonar for alfa, skala og forskyving.

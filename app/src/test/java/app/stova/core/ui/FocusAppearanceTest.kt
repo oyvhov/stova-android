@@ -42,7 +42,7 @@ class FocusAppearanceTest {
         compose.mainClock.advanceTimeBy(300)
         val art = compose.onNodeWithTag("art").fetchSemanticsNode().boundsInRoot
         val menu = compose.onNodeWithTag("menu").fetchSemanticsNode().boundsInRoot
-        org.junit.Assert.assertTrue("artwork grows clearly, by about 6 %", art.width > before.width * 1.05f && art.width < before.width * 1.07f)
+        org.junit.Assert.assertTrue("artwork grows gently, by about 4 %", art.width > before.width * 1.03f && art.width < before.width * 1.05f)
         org.junit.Assert.assertTrue("menus use the same calm treatment", menu.width > before.width && menu.width < art.width)
         org.junit.Assert.assertTrue("focus lifts the artwork", art.top < before.top)
     }

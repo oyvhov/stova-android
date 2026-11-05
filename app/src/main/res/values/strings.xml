@@ -644,7 +644,7 @@
     <string name="custom_show_smart_home">Vis Smarthus-knapp</string>
     <string name="custom_show_profile">Vis profilbilete</string>
     <string name="custom_back">Tilbake</string>
-    <string name="custom_focus_lift">Svakt løft</string>
+    <string name="custom_focus_lift">Svakt løft og lys</string>
     <string name="custom_edit_heading">Endre overskrift</string>
     <string name="custom_heading_name">Eigen overskrift</string>
     <string name="custom_heading_default">Standard: %1$s. Tomt felt bruker standardoverskrifta.</string>

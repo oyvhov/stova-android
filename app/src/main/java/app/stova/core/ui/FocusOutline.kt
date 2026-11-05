@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.compose.ui.platform.LocalWindowInfo
 import app.stova.core.theme.LocalReduceMotion
 import app.stova.core.theme.LocalStrongFocus
 import app.stova.core.theme.LocalAppearance
@@ -36,7 +37,9 @@ val LocalDrawnFocus = staticCompositionLocalOf { false }
 @Composable
 fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean = false): Modifier {
     val hasFocus by source.collectIsFocusedAsState()
-    val focused = hasFocus || LocalDrawnFocus.current
+    // Dialogs and popups retain the old window's interaction source. It must stop drawing
+    // focus while the new window owns input, then regain the cue on return.
+    val focused = (hasFocus && LocalWindowInfo.current.isWindowFocused) || LocalDrawnFocus.current
     val reduceMotion = LocalReduceMotion.current
     val motion = stovaMotion
     val effect = LocalAppearance.current.focusEffect.resolved()
@@ -76,8 +79,8 @@ fun Modifier.focusOutline(source: InteractionSource, shape: Shape, zoom: Boolean
         val style = Stroke(stroke)
         onDrawWithContent {
             drawContent()
-            // Artwork and icon-pack colours stay exact; only control surfaces receive the light wash.
-            if (!zoom && emphasis.value > 0.001f) drawOutline(artOutline, SolidColor((tone?.light(light) ?: light).copy(alpha = StovaFocus.SurfaceAlpha * emphasis.value)))
+            if (emphasis.value > 0.001f) drawOutline(artOutline, SolidColor((tone?.light(light) ?: light).copy(
+                alpha = (if (zoom) StovaFocus.ArtworkSurfaceAlpha else StovaFocus.SurfaceAlpha) * emphasis.value)))
             val a = alpha.value
             if (a > 0.001f) {
                 inset(edge) { drawOutline(outline, SolidColor(color.copy(alpha = a)), style = style) }

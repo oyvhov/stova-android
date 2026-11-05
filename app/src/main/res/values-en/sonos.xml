@@ -29,7 +29,7 @@
     <string name="sonos_no_track">Choose something to listen to</string>
     <string name="sonos_action_failed">The action did not finish. Check the rooms and try again.</string>
     <string name="sonos_library">Music and favourites</string>
-    <string name="sonos_favorites_playlists">Favourites and playlists</string>
+    <string name="sonos_favorites_playlists">Favourites</string>
     <string name="sonos_group">Group rooms</string>
     <string name="sonos_group_hint">Selected rooms follow the music in %1$s. Changes take effect when you choose Apply.</string>
     <string name="sonos_group_anchor">%1$s · playing the music</string>

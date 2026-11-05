@@ -23,6 +23,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.foundation.focusGroup
+import kotlinx.coroutines.launch
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -107,7 +111,7 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
                 itemsIndexed(current!!.children, key = { index, item -> "${item.type}/${item.id}/$index" }) { index, item ->
                     val source = remember { MutableInteractionSource() }
                     val focus = if (index == returnIndex) Modifier.focusRequester(returnedTile) else Modifier
-                    Column(focus.focusOutline(source, MaterialTheme.shapes.large)
+                    Column(focus
                         .clickable(source, null, enabled = item.expandable || item.playable, role = Role.Button) {
                             if (!loading) {
                                 if (item.expandable) {
@@ -116,7 +120,7 @@ internal fun SonosLibrary(repository: SonosRepository, room: SonosRoom, busy: Bo
                                 } else choosing = item
                             }
                         }.padding(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SonosLibraryTile(item, index, thumbnail)
+                        SonosLibraryTile(item, index, thumbnail, Modifier.focusOutline(source, MaterialTheme.shapes.large, zoom = true))
                         SonosLabels(item.title, null, MaterialTheme.typography.titleSmall, titleLines = 2)
                     }
                 }
@@ -152,8 +156,10 @@ internal fun SonosMediaActions(item: SonosMedia, room: SonosRoom, busy: Boolean,
 
 @Composable
 internal fun SonosShelf(media: List<SonosMedia>, thumbnail: SonosThumbnail, restore: SonosMedia?, onRestored: () -> Unit,
-    onOpen: (SonosMedia) -> Unit) {
+    up: FocusRequester = FocusRequester.Default, onOpen: (SonosMedia) -> Unit) {
     val focus = remember { FocusRequester() }
+    val first = remember { FocusRequester() }
+    val scope = rememberCoroutineScope()
     val list = rememberLazyListState()
     LaunchedEffect(restore) {
         val index = media.indexOf(restore)
@@ -170,13 +176,25 @@ internal fun SonosShelf(media: List<SonosMedia>, thumbnail: SonosThumbnail, rest
     }
     Column(Modifier.fillMaxWidth().testTag("sonos-shelf").softEntrance(Unit), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(stringResource(R.string.sonos_favorites_playlists), style = MaterialTheme.typography.titleMedium)
-        LazyRow(state = list, horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(4.dp)) {
+        LazyRow(modifier = Modifier.focusProperties {
+            onEnter = {
+                if (requestedFocusDirection == FocusDirection.Down) {
+                    cancelFocusChange()
+                    scope.launch {
+                        list.scrollToItem(0)
+                        withFrameNanos { }
+                        first.requestFocus()
+                    }
+                }
+            }
+        }.focusGroup(), state = list, horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(4.dp)) {
             itemsIndexed(media, key = { _, item -> "${item.type}/${item.id}" }) { index, item ->
                 val source = remember { MutableInteractionSource() }
                 val modifier = if (item == restore) Modifier.focusRequester(focus) else Modifier
-                Column(modifier.width(88.dp).focusOutline(source, MaterialTheme.shapes.medium)
+                Column(modifier.then(if (index == 0) Modifier.focusRequester(first) else Modifier).width(88.dp)
+                    .focusProperties { this.up = up }
                     .clickable(source, null, role = Role.Button) { onOpen(item) }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    SonosLibraryTile(item, index, thumbnail)
+                    SonosLibraryTile(item, index, thumbnail, Modifier.focusOutline(source, MaterialTheme.shapes.large, zoom = true))
                     Text(item.title, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
@@ -188,12 +206,12 @@ internal fun SonosShelf(media: List<SonosMedia>, thumbnail: SonosThumbnail, rest
  * Album and playlist art fills the square; logos and folder icons sit whole on a quiet plate.
  * The neutral mark shows only until a picture has loaded, never through a transparent one.
  */
-@Composable private fun SonosLibraryTile(item: SonosMedia, index: Int, thumbnail: SonosThumbnail) {
+@Composable private fun SonosLibraryTile(item: SonosMedia, index: Int, thumbnail: SonosThumbnail, modifier: Modifier = Modifier) {
     val path = item.artwork
     var loaded by remember(path) { mutableStateOf(false) }
     val motion = stovaMotion
     val opacity = animateFloatAsState(if (loaded) 1f else 0f, motion.fade(motion.quick), label = "sonos-library-cover")
-    Box(Modifier.fillMaxWidth().aspectRatio(1f).clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceVariant),
+    Box(modifier.fillMaxWidth().aspectRatio(1f).clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center) {
         AnimatedVisibility(!loaded, enter = EnterTransition.None,
             exit = if (motion.still) ExitTransition.None else fadeOut(motion.exit())) {

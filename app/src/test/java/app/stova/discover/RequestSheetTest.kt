@@ -63,8 +63,8 @@ class RequestSheetTest {
         row("Sesong 2").assertIsSelected()
         row("Sesong 3").assertIsSelected()
         // The specials are never chosen from the start, and a season in the library says so instead of being chosen.
-        row("Spesialar").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Selected))
-        compose.onNode(hasText("Sesong 1") and hasText("I biblioteket")).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Selected))
+        row("Spesialar").assertIsNotSelected()
+        compose.onNode(hasText("Sesong 1") and hasText("I biblioteket")).assertIsNotSelected()
         // The seasons in order, with the specials last though Seerr sent them first.
         val tops = listOf("Sesong 1", "Sesong 2", "Sesong 3", "Spesialar").map { row(it).fetchSemanticsNode().boundsInRoot.top }
         assertEquals(tops.sorted(), tops)
@@ -85,7 +85,7 @@ class RequestSheetTest {
         show(details(thrones, seasons))
         row("Sesong 1").performSemanticsAction(SemanticsActions.OnClick)
         compose.onNodeWithText("Send førespurnad · 2 sesongar").assertExists()
-        row("Sesong 1").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Selected))
+        row("Sesong 1").assertIsNotSelected()
         // The specials can be chosen by hand.
         row("Spesialar").performSemanticsAction(SemanticsActions.OnClick)
         compose.onNodeWithText("Send førespurnad · 3 sesongar").performClick()

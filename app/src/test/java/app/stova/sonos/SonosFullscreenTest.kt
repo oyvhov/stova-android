@@ -132,7 +132,7 @@ class SonosFullscreenTest {
                     SideEffect { loaded() }
                 })
         } }
-        compose.onNodeWithText("Favorittar og spelelister").assertIsDisplayed()
+        compose.onNodeWithText("Favorittar").assertIsDisplayed()
         compose.onNodeWithTag("/mix.jpg", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithText("Kveldsmiks").performClick()
         assertTrue(actions.isEmpty())
