@@ -37,7 +37,7 @@ class ShortcutTileTest {
             StovaTheme(reduceMotion = true) {
                 HomeContent(listOf(row), null, HomeRowKey.APPS, AppArtCache(context), PackageManagerAppCatalog(context, emptySet()),
                     {}, {}, {}, {}, canEditRows = true, onShortcutClick = onClick,
-                    shortcutActions = { tile, _, dismiss -> menu += tile; ShortcutActionsMenu(tile, {}, {}, {}, dismiss) })
+                    shortcutActions = { tile, _, dismiss, move -> menu += tile; ShortcutActionsMenu(tile, {}, {}, move, dismiss) })
             }
         }
     }

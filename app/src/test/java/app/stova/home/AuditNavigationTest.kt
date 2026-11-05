@@ -71,4 +71,12 @@ class AuditNavigationTest {
         compose.onNodeWithContentDescription("Alle appar").assertDoesNotExist()
         assertEquals(0,opened)
     }
+    @Test fun favouriteMenuOffersOneMoveModeInsteadOfSinglePositionActions() {
+        var started=0
+        compose.setContent {StovaTheme(reduceMotion=true) {
+            AppActionsMenu(app,true,false,{},{started++},{},{},{},onOpen={})
+        }}
+        compose.onNodeWithText("Flytt").assertIsDisplayed().performClick()
+        assertEquals(1,started)
+    }
 }

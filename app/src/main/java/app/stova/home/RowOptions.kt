@@ -73,12 +73,16 @@ internal fun RowFormatPreview(format: RowFormat) {
 /** The row part of every long-press panel: move, hide, and its own page with the row's look. */
 @Composable
 internal fun RowSheetSection(key: HomeRowKey, prefs: HomePrefs, pages: app.stova.core.ui.SheetPages, onChange: (HomePrefs) -> Unit,
-    onMove: () -> Unit, onHide: () -> Unit, heading: Boolean = true) {
+    onMove: () -> Unit, onHide: () -> Unit) {
     val style = prefs.rowFormats[key] ?: RowStyle()
     val title = style.heading(rowLabel(key))
     when (pages.current) {
         null -> {
-            if (heading) app.stova.core.ui.SheetSection(stringResource(R.string.custom_row_section), title)
+            app.stova.core.ui.SheetAction(stringResource(R.string.custom_row_section), StovaIcons.Rows, { pages.open(ROW_PAGE) },
+                Modifier.focusRequester(pages.opener(ROW_PAGE)), opensPage = true)
+        }
+        ROW_PAGE -> {
+            app.stova.core.ui.SheetHeader(title, stringResource(R.string.custom_row_section), StovaIcons.Rows, compact = true)
             app.stova.core.ui.SheetAction(stringResource(R.string.custom_move_row), StovaIcons.Rows, onMove)
             app.stova.core.ui.SheetAction(stringResource(R.string.custom_hide_row), StovaIcons.Hide, onHide)
             app.stova.core.ui.SheetAction(stringResource(R.string.settings_customize_row), StovaIcons.Edit, { pages.open(ROW_STYLE_PAGE) },
@@ -96,3 +100,4 @@ internal fun RowSheetSection(key: HomeRowKey, prefs: HomePrefs, pages: app.stova
 }
 
 private const val ROW_STYLE_PAGE = "row-style"
+private const val ROW_PAGE = "row"

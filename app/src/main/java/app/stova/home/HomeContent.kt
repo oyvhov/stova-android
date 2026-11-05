@@ -90,20 +90,31 @@ fun HomeContent(
     onMediaPlay: (FocusedTarget.Media) -> Unit = onMediaClick,
     /** What Spole does with a title from its long-press menu; null leaves those actions out. */
     onMediaAction: ((FocusedTarget.Media, app.stova.media.ui.MediaItemAction) -> Unit)? = null,
-    appActions: (@Composable (InstalledApp, @Composable (app.stova.core.ui.SheetPages) -> Unit, () -> Unit) -> Unit)? = null,
+    appActions: (@Composable (InstalledApp, @Composable (app.stova.core.ui.SheetPages) -> Unit, () -> Unit, () -> Unit) -> Unit)? = null,
     onRowFocus: (HomeRowKey) -> Unit = {},
     onShortcutClick: (FavoriteTile) -> Unit = {},
-    shortcutActions: (@Composable (FavoriteTile, @Composable (app.stova.core.ui.SheetPages) -> Unit, () -> Unit) -> Unit)? = null,
+    shortcutActions: (@Composable (FavoriteTile, @Composable (app.stova.core.ui.SheetPages) -> Unit, () -> Unit, () -> Unit) -> Unit)? = null,
     /** The tile at the end of the Oppdag row: the Discover page. */
     onOpenDiscover: () -> Unit = {},
     /** Counts the Home button pressed while Home is already on screen; each press goes back to the top. */
     toTop: Int = 0,
     aboveApps: (@Composable (Modifier) -> Unit)? = null,
+    onFavoriteOrderChange: (List<String>) -> Unit = {},
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
     val preview = LocalHomePreview.current
     val deck = appearance.homeRows != HomeRows.SCROLLING
-    val availableRows = remember(rows, deck) { if (deck) rows?.filter { it.hasFocusableItems() } else rows }
+    val favoriteMove = remember { app.stova.apps.FavoriteMoveState() }
+    val favoriteKeys = rows.orEmpty().filterIsInstance<HomeRowUi.Apps>().firstOrNull()?.tiles.orEmpty().map { it.key }
+    LaunchedEffect(favoriteKeys) { favoriteMove.reconcile(favoriteKeys) }
+    app.stova.apps.FavoriteMoveBackHandler(favoriteMove)
+    val orderedRows = rows?.map { row ->
+        if (row is HomeRowUi.Apps && row.favorites) {
+            val tiles = row.tiles.associateBy { it.key }
+            row.copy(tiles = favoriteMove.ordered(favoriteKeys).mapNotNull(tiles::get))
+        } else row
+    }
+    val availableRows = remember(orderedRows, deck) { if (deck) orderedRows?.filter { it.hasFocusableItems() } else orderedRows }
     val rowTargets = remember { mutableStateMapOf<HomeRowKey, FocusedTarget>() }
     var menuRow by remember { mutableStateOf<HomeRowUi?>(null) }
     var menuMedia by remember { mutableStateOf<FocusedTarget.Media?>(null) }
@@ -236,6 +247,7 @@ fun HomeContent(
     val seasonClock = rememberSeasonalClock()
     SeasonalScene(Modifier.matchParentSize(), clock = seasonClock)
     Column(Modifier.fillMaxSize().onPreviewKeyEvent { event ->
+        if (favoriteMove.handle(event, onFavoriteOrderChange)) return@onPreviewKeyEvent true
         if (event.type == KeyEventType.KeyDown) {
             viewerMoved = true
             // A newer arrow owns focus, even when it only moves within the header or a row.
@@ -441,7 +453,7 @@ fun HomeContent(
                                                     }
                                                     AppsRow(row, art, catalog, requester, rowTarget, appIconOverrides, { app ->
                                                         if (canEditRows) { menuApp = app; rowMenu() } else onAppLongClick(app)
-                                                    }, rowRequester, onShortcutClick, { tile -> if (canEditRows) { menuShortcut = tile; rowMenu() } }) {
+                                                    }, rowRequester, onShortcutClick, { tile -> if (canEditRows) { menuShortcut = tile; rowMenu() } }, favoriteMove) {
                                                         trackFocus(FocusedTarget.App(it))
                                                     }
                                                 }
@@ -460,6 +472,7 @@ fun HomeContent(
         }
         }
     SeasonalScene(Modifier.matchParentSize(), front = true, clock = seasonClock)
+    app.stova.apps.FavoriteMoveHint(favoriteMove, Modifier.align(Alignment.BottomCenter).padding(StovaLayout.TvSafeEdge))
     hiddenRow?.let { hidden ->
         androidx.compose.material3.Surface(Modifier.align(Alignment.BottomCenter).padding(24.dp), shape = MaterialTheme.shapes.large) {
             Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -473,7 +486,7 @@ fun HomeContent(
     }
     menuRow?.let { row ->
         val controls: @Composable (app.stova.core.ui.SheetPages) -> Unit = { pages ->
-            RowSheetSection(row.key, homePrefs, pages, onHomeChange, heading = menuApp != null || menuShortcut != null || menuMedia != null,
+            RowSheetSection(row.key, homePrefs, pages, onHomeChange,
                 onMove = { movingRow = row.key; closeMenu() },
                 onHide = {
                     onHomeChange(homePrefs.copy(hiddenRows = homePrefs.hiddenRows + row.key,
@@ -483,8 +496,14 @@ fun HomeContent(
                 })
         }
         when {
-            menuApp != null && appActions != null -> appActions(menuApp!!, controls, ::closeMenu)
-            menuShortcut != null && shortcutActions != null -> shortcutActions(menuShortcut!!, controls, ::closeMenu)
+            menuApp != null && appActions != null -> {
+                val app = menuApp!!
+                appActions(app, controls, ::closeMenu, { favoriteMove.begin(app.key, favoriteKeys) })
+            }
+            menuShortcut != null && shortcutActions != null -> {
+                val tile = menuShortcut!!
+                shortcutActions(tile, controls, ::closeMenu, { favoriteMove.begin(tile.key, favoriteKeys) })
+            }
             // A title in Seerr is not in the library yet: nothing to play, and nothing for Spole to mark.
             menuMedia != null -> ItemActionsMenu(menuMedia!!.item,
                 { val target = menuMedia!!; closeMenu(); onMediaPlay(target) },

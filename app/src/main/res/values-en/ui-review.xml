@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="favorite_move">Move</string>
+    <string name="favorite_move_hint">← → Move · OK Done · Back Cancel</string>
+    <string name="app_organise">Organise app</string>
     <string name="ha_connection_unreachable">Cannot reach Home Assistant.</string>
     <string name="ha_cached_values">Last known values</string>
     <string name="connection_settings">Connection</string>

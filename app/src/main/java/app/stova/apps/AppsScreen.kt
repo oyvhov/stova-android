@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,8 +26,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -92,6 +97,23 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
     val page = loaded ?: return
     val arranged = page.apps
     val favorites = favoriteTiles(profile.apps, arranged.favorites, page.accounts, page.haReady, profile.kid, page.sonosReady && onOpenSonos != null)
+    val move = remember(profile.id) { FavoriteMoveState() }
+    val favoriteKeys = favorites.map { it.key }
+    LaunchedEffect(favoriteKeys) { move.reconcile(favoriteKeys) }
+    FavoriteMoveBackHandler(move)
+    val byKey = favorites.associateBy { it.key }
+    val displayedFavorites = move.ordered(favoriteKeys).mapNotNull(byKey::get)
+    val moveFocus = remember { FocusRequester() }
+    val grid = rememberLazyGridState()
+    LaunchedEffect(move.revision) {
+        val at = displayedFavorites.indexOfFirst { it.key == move.focusKey }
+        if (at >= 0) {
+            val position = at + 2 // Page heading and favourites heading.
+            if (grid.layoutInfo.visibleItemsInfo.none { it.index == position }) grid.scrollToItem(position)
+            withFrameNanos { }; withFrameNanos { }
+            runCatching { moveFocus.requestFocus() }
+        }
+    }
     val appearance = app.stova.core.theme.LocalAppearance.current
     val format = if (appearance.appStyle == app.stova.profiles.AppStyle.ICON)
         app.stova.profiles.RowFormat.ICON else app.stova.profiles.RowFormat.WIDE
@@ -104,7 +126,8 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
     androidx.compose.runtime.CompositionLocalProvider(app.stova.home.LocalArtworkScale provides fit) {
     LazyVerticalGrid(
         columns = columns?.let { GridCells.Fixed(it) } ?: GridCells.FixedSize(cardWidth.dp),
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().favoriteMoveKeys(move) { order -> apps.launchChange { reorderFavorites(profile.id, order) } },
+        state = grid,
         contentPadding = PaddingValues(StovaLayout.TvSafeEdge),
         horizontalArrangement = Arrangement.spacedBy(StovaLayout.RowGap),
         verticalArrangement = Arrangement.spacedBy(StovaLayout.RowGap),
@@ -115,9 +138,11 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
         }
         if (favorites.isNotEmpty()) {
             header(R.string.apps_favorites)
-            items(favorites, key = { "fav:${it.key}" }) { tile ->
-                if (tile is FavoriteTile.App) AppTile(tile.app, art, { catalog.launch(tile.app) }, { onLong(tile.app) }, iconOverride = profile.apps.iconOverrides[tile.key])
-                else ShortcutTile(tile, { openShortcut(tile) }, { shortcutMenu = tile })
+            items(displayedFavorites, key = { "fav:${it.key}" }) { tile ->
+                val modifier = (if (tile.key == move.focusKey) Modifier.focusRequester(moveFocus) else Modifier)
+                    .then(if (app.stova.core.theme.stovaMotion.still) Modifier else Modifier.animateItem())
+                if (tile is FavoriteTile.App) AppTile(tile.app, art, { catalog.launch(tile.app) }, { onLong(tile.app) }, modifier, iconOverride = profile.apps.iconOverrides[tile.key])
+                else ShortcutTile(tile, { openShortcut(tile) }, { shortcutMenu = tile }, modifier)
             }
         }
         if (spoleProfiles.isNotEmpty()) {
@@ -177,14 +202,17 @@ fun AppsScreen(apps: AppRepository, profile: Profile, art: AppArtCache, catalog:
             }
         }
     }
+    FavoriteMoveHint(move, Modifier.align(Alignment.BottomCenter).padding(StovaLayout.TvSafeEdge))
 
     }
     }
 
     menuFor?.let { app ->
-        AppMenuHost(app, apps, profile, art, catalog) { menuFor = null }
+        AppMenuHost(app, apps, profile, art, catalog,
+            onMove = { move.begin(app.key, favoriteKeys) }) { menuFor = null }
     }
-    shortcutMenu?.let { tile -> ShortcutMenuHost(tile, apps, profile, openShortcut) { shortcutMenu = null } }
+    shortcutMenu?.let { tile -> ShortcutMenuHost(tile, apps, profile, openShortcut,
+        onMove = { move.begin(tile.key, favoriteKeys) }) { shortcutMenu = null } }
     if (spoleMissing) app.stova.media.ui.SpoleMissingDialog { spoleMissing = false }
 }
 

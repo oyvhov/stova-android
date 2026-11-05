@@ -85,9 +85,19 @@ internal fun MediaRow(row: HomeRowUi.Media, focus: FocusRequester?, restore: Foc
 
 @Composable
 internal fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog, focus: FocusRequester?, restore: FocusedTarget?, iconOverrides: Map<String, IconOverride>, onLongClick: (InstalledApp) -> Unit, returnFocus: FocusRequester?,
-    onShortcut: (FavoriteTile) -> Unit = {}, onShortcutLongClick: (FavoriteTile) -> Unit = {}, onFocused: (String) -> Unit) {
+    onShortcut: (FavoriteTile) -> Unit = {}, onShortcutLongClick: (FavoriteTile) -> Unit = {},
+    move: app.stova.apps.FavoriteMoveState? = null, onFocused: (String) -> Unit) {
     val index = row.tiles.indexOfFirst { it.label == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
+    val moveFocus = remember { FocusRequester() }
+    LaunchedEffect(move?.revision) {
+        val at = row.tiles.indexOfFirst { it.key == move?.focusKey }
+        if (at >= 0) {
+            if (state.layoutInfo.visibleItemsInfo.none { it.index == at }) state.scrollToItem(at)
+            withFrameNanos { }; withFrameNanos { }
+            runCatching { moveFocus.requestFocus() }
+        }
+    }
     Column {
         if (LocalRowStyle.current.showTitle) RowHeader(stringResource(if (row.favorites) R.string.row_favorite_apps else R.string.row_apps)) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
         LazyRow(Modifier.focusRestorer(), state = state,
@@ -96,6 +106,8 @@ internal fun AppsRow(row: HomeRowUi.Apps, art: AppArtCache, catalog: AppCatalog,
             itemsIndexed(row.tiles, key = { _, tile -> tile.key }) { i, tile ->
                 val modifier = (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
                     .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier)
+                    .then(if (tile.key == move?.focusKey) Modifier.focusRequester(moveFocus) else Modifier)
+                    .then(if (app.stova.core.theme.stovaMotion.still) Modifier else Modifier.animateItem())
                     .onFocusChanged { if (it.isFocused) onFocused(tile.label) }
                 DrawnFocus(i == index && focus != null) {
                     if (tile is FavoriteTile.App) AppTile(tile.app, art, onClick = { catalog.launch(tile.app) },

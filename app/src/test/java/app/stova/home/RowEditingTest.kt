@@ -48,6 +48,7 @@ class RowEditingTest {
     private fun menu() {
         compose.onNodeWithContentDescription("Film 0").performSemanticsAction(SemanticsActions.RequestFocus)
         compose.onRoot().performKeyInput { pressKey(Key.Menu) }
+        compose.onNodeWithText("Rada").performClick()
     }
 
     @Test fun menuMovesWholeRowWithRemoteAndBackEndsMove() {
@@ -106,6 +107,7 @@ class RowEditingTest {
         render()
         compose.onNodeWithContentDescription("Ekstra").performSemanticsAction(SemanticsActions.RequestFocus)
         compose.onNodeWithContentDescription("Ekstra").performKeyInput { pressKey(Key.Menu) }
+        compose.onNodeWithText("Rada").performClick()
         compose.onNodeWithText("Flytt rada").performClick()
         compose.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.Enter) }
         compose.onNodeWithContentDescription("Ekstra").assertIsFocused()
@@ -115,6 +117,7 @@ class RowEditingTest {
         render()
         compose.onNodeWithContentDescription("Ekstra").performSemanticsAction(SemanticsActions.RequestFocus)
         compose.onNodeWithContentDescription("Ekstra").performKeyInput { pressKey(Key.Menu) }
+        compose.onNodeWithText("Rada").performClick()
         compose.onNodeWithText("Skjul rada").performClick()
         compose.onNodeWithContentDescription("Film 1").assertIsFocused()
         compose.onNodeWithText("Angre").performClick()

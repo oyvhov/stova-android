@@ -28,6 +28,14 @@ class StovaSheetTest {
     private var dismissed = 0
     private var chosen = 0
 
+    @Test fun nestedPagesReturnToTheirParentBeforeClosing() {
+        val pages=SheetPages()
+        pages.open("row"); pages.open("style")
+        assertTrue(pages.back()); assertEquals("row",pages.current); assertEquals("style",pages.returning)
+        assertTrue(pages.back()); assertEquals(null,pages.current); assertEquals("row",pages.returning)
+        assertTrue(!pages.back())
+    }
+
     private fun show(reduceMotion: Boolean = true) {
         compose.setContent {
             StovaTheme(reduceMotion = reduceMotion) {

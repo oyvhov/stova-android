@@ -82,6 +82,10 @@ class AppRepository(
         prefs.copy(favorites = moveFavorite(prefs.favorites, key, delta))
     }
 
+    suspend fun reorderFavorites(profileId: String, ordered: List<String>) = updatePrefs(profileId) { prefs ->
+        prefs.copy(favorites = mergeFavoriteOrder(prefs.favorites, ordered))
+    }
+
     suspend fun setHidden(profileId: String, key: String, hidden: Boolean) = updatePrefs(profileId) { prefs ->
         prefs.copy(hidden = if (hidden) prefs.hidden + key else prefs.hidden - key)
     }

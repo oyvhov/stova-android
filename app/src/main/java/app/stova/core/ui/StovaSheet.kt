@@ -43,15 +43,19 @@ class SheetPages internal constructor() {
         private set
     internal var returning: String? = null
     private val openers = mutableMapOf<String, FocusRequester>()
+    private val parents = mutableListOf<String?>()
 
     /** Put this on the row that opens [page]. */
     fun opener(page: String): FocusRequester = openers.getOrPut(page) { FocusRequester() }
-    fun open(page: String) { returning = null; current = page }
+    fun open(page: String) {
+        if (current == page) return
+        parents += current; returning = null; current = page
+    }
     /** True when it went back a page; false on the main page, where Back closes the panel. */
     fun back(): Boolean {
         val from = current ?: return false
         returning = from
-        current = null
+        current = if (parents.isEmpty()) null else parents.removeAt(parents.lastIndex)
         return true
     }
 }

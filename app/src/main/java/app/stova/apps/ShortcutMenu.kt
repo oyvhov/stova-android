@@ -34,7 +34,7 @@ fun ShortcutActionsMenu(
     tile: FavoriteTile,
     onToggleFavorite: () -> Unit,
     onOpen: () -> Unit,
-    onMove: (Int) -> Unit,
+    onMove: (() -> Unit)?,
     onDismiss: () -> Unit,
     rowActions: @Composable (SheetPages) -> Unit = {},
     favorite: Boolean = true,
@@ -67,15 +67,12 @@ fun ShortcutActionsMenu(
                     favorite -> R.string.sheet_library_favorite
                     else -> R.string.sheet_library
                 }
-                SheetHeader(tile.label, stringResource(kind), when { scene -> StovaIcons.Sun; sonos -> StovaIcons.Sonos; else -> StovaIcons.Rows }, art = art)
+                SheetHeader(tile.label, stringResource(kind), when { scene -> StovaIcons.Sun; sonos -> StovaIcons.Sonos; else -> StovaIcons.Rows }, art = art, compact = true)
                 val full = Modifier.fillMaxWidth()
                 StovaButton(stringResource(if (favorite) R.string.app_remove_favorite else R.string.app_add_favorite),
                     { onToggleFavorite(); onDismiss() }, full, primary = true, icon = StovaIcons.Star)
                 StovaButton(stringResource(if (scene) R.string.shortcut_run else R.string.sheet_open), { onOpen(); onDismiss() }, full, icon = StovaIcons.Play)
-                if (favorite) {
-                    SheetAction(stringResource(R.string.app_move_left), StovaIcons.ChevronLeft, { onMove(-1); onDismiss() })
-                    SheetAction(stringResource(R.string.app_move_right), StovaIcons.ChevronRight, { onMove(+1); onDismiss() })
-                }
+                if (favorite && onMove != null) SheetAction(stringResource(R.string.favorite_move), StovaIcons.Rows, { onDismiss(); onMove() })
                 if (scene && favorite) SheetAction(stringResource(R.string.icon_change), StovaIcons.Palette, { pages.open(ICON_PAGE) },
                     Modifier.focusRequester(pages.opener(ICON_PAGE)), opensPage = true)
             }
@@ -92,7 +89,7 @@ fun ShortcutActionsMenu(
 /** The shortcut panel wired to the profile's favourites. Kids get no panel. */
 @Composable
 fun ShortcutMenuHost(tile: FavoriteTile, apps: AppRepository, profile: Profile, onOpen: (FavoriteTile) -> Unit,
-    rowActions: @Composable (SheetPages) -> Unit = {}, onDismiss: () -> Unit) {
+    rowActions: @Composable (SheetPages) -> Unit = {}, onMove: (() -> Unit)? = null, onDismiss: () -> Unit) {
     if (profile.kid) return
     key(profile.id, tile.key) {
         val favorite = tile.key in profile.apps.favorites
@@ -104,7 +101,7 @@ fun ShortcutMenuHost(tile: FavoriteTile, apps: AppRepository, profile: Profile, 
                 apps.launchChange { if (favorite) toggleFavorite(profile.id, tile.key) else addShortcut(profile.id, tile.key, tile.saved()) }
             },
             onOpen = { onOpen(tile) },
-            onMove = { delta -> apps.launchChange { moveFavorite(profile.id, tile.key, delta) } },
+            onMove = onMove,
             onDismiss = onDismiss, rowActions = rowActions, favorite = favorite,
             onPickIcon = { picking = true }, onResetIcon = { setIcon(null) })
     }

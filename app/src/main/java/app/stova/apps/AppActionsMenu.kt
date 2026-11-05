@@ -24,7 +24,7 @@ fun AppActionsMenu(
     favorite: Boolean,
     hidden: Boolean,
     onToggleFavorite: () -> Unit,
-    onMove: (Int) -> Unit,
+    onMove: (() -> Unit)?,
     onToggleHidden: () -> Unit,
     onAppInfo: () -> Unit,
     onDismiss: () -> Unit,
@@ -42,10 +42,12 @@ fun AppActionsMenu(
                 if (onOpen != null) StovaButton(stringResource(R.string.sheet_open), { onOpen(); onDismiss() }, full, primary = true, icon = StovaIcons.Play)
                 if (!favorite) StovaButton(stringResource(R.string.app_add_favorite),
                     { onToggleFavorite(); onDismiss() }, full, primary = onOpen == null, icon = StovaIcons.Star)
-                if (favorite) {
-                    SheetAction(stringResource(R.string.app_move_left), StovaIcons.ChevronLeft, { onMove(-1); onDismiss() })
-                    SheetAction(stringResource(R.string.app_move_right), StovaIcons.ChevronRight, { onMove(+1); onDismiss() })
-                }
+                if (favorite && onMove != null) SheetAction(stringResource(R.string.favorite_move), StovaIcons.Rows, { onDismiss(); onMove() })
+                SheetAction(stringResource(R.string.app_organise), StovaIcons.Edit, { pages.open(ORGANISE_PAGE) },
+                    Modifier.focusRequester(pages.opener(ORGANISE_PAGE)), opensPage = true)
+            }
+            ORGANISE_PAGE -> {
+                SheetHeader(stringResource(R.string.app_organise), app.label, StovaIcons.Edit, compact = true)
                 SheetAction(stringResource(if (hidden) R.string.app_show else R.string.app_hide), if (hidden) StovaIcons.Show else StovaIcons.Hide,
                     { onToggleHidden(); onDismiss() })
                 SheetAction(stringResource(R.string.icon_change), StovaIcons.Palette, { pages.open(ICON_PAGE) },
@@ -65,3 +67,4 @@ fun AppActionsMenu(
 }
 
 private const val ICON_PAGE = "icon"
+private const val ORGANISE_PAGE = "organise"

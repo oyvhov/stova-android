@@ -112,6 +112,7 @@ fun HomeScreen(
         }
     }
     val openShortcut = rememberShortcutOpener(haConnection, profile, onPlaybackOpened, onOpenSonos) { missing = true }
+    key(profile?.id) {
     HomeContent(rows, focused, initial, art, catalog, onOpenApps, vm::focus,
         onMediaClick = { openMedia(it, SpoleAction.DETAILS) }, onMediaLongClick = { actions = it }, topBar = { HomeChips(haRepository, topBar) },
         spotlight = if(profile==null) spotlight else backgroundForProfile(spotlight,profile.id,profile.appearance.backgroundFilter), appIconOverrides = profile?.apps?.iconOverrides.orEmpty(),
@@ -120,14 +121,16 @@ fun HomeScreen(
         onHomeChange = onHomeChange, canEditRows = profile?.kid == false, onRowFocus = vm::focusRow,
         onMediaPlay = { openMedia(it, SpoleAction.PLAY) },
         onMediaAction = if (profile?.kid == false) ::act else null,
-        appActions = { app, rowActions, dismiss ->
-            if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog, rowActions, dismiss)
+        appActions = { app, rowActions, dismiss, move ->
+            if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog, rowActions, move, dismiss)
         },
         onShortcutClick = openShortcut, toTop = toTop,
-        shortcutActions = { tile, rowActions, dismiss ->
-            if (profile != null && apps != null) ShortcutMenuHost(tile, apps, profile, openShortcut, rowActions, dismiss)
+        shortcutActions = { tile, rowActions, dismiss, move ->
+            if (profile != null && apps != null) ShortcutMenuHost(tile, apps, profile, openShortcut, rowActions, move, dismiss)
         },
-        onOpenDiscover = onOpenDiscover, aboveApps = aboveApps)
+        onOpenDiscover = onOpenDiscover, aboveApps = aboveApps,
+        onFavoriteOrderChange = { order -> if (profile != null && apps != null) apps.launchChange { reorderFavorites(profile.id, order) } })
+    }
     appMenu?.let { app -> if (profile != null && apps != null) AppMenuHost(app, apps, profile, art, catalog) { appMenu = null } }
     actions?.let { target ->
         ItemActionsMenu(target.item,

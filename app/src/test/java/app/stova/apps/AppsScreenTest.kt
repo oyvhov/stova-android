@@ -21,6 +21,9 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.assertWidthIsEqualTo
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.isFocused
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.unit.dp
 import app.stova.profiles.ArtworkSize
@@ -189,6 +192,7 @@ class AppsScreenTest {
         val tile = compose.onNodeWithText("Banan")
         tile.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
         tile.performKeyInput { pressKey(Key.Menu) }
+        compose.onNodeWithText("Ordne appen").performClick()
         compose.onNodeWithText("Endre ikon").performClick()
         compose.onNodeWithText("Frå ikonpakke").assertIsDisplayed()
         compose.onNodeWithText("Tilbakestill").performClick()
@@ -205,6 +209,7 @@ class AppsScreenTest {
         val art = AppArtCache(context, iconPacks = IconPackRepository(source, tmp.root.resolve("icons")))
         show(profiles, adult, FakeAppCatalog(listOf(banan)), art)
         compose.onNodeWithText("Banan").performTouchInput { longClick() }
+        compose.onNodeWithText("Ordne appen").performClick()
         compose.onNodeWithText("Endre ikon").performClick()
         compose.onNodeWithText("Frå ikonpakke").performClick()
         compose.waitUntil(5_000) { compose.onAllNodesWithText("Søk etter ikon").fetchSemanticsNodes().isNotEmpty() }
@@ -232,6 +237,41 @@ class AppsScreenTest {
         compose.waitForIdle()
         gate.complete(Unit)
         compose.onNodeWithText("Favorittar").assertIsDisplayed()
+    }
+
+    @Test fun favouriteGridCanCancelAndSaveSeveralMovesWithoutLaunchingTheApp() {
+        val profiles=profiles()
+        val many=(1..5).map { InstalledApp("p$it/.Main","p$it",".Main","App $it",true) }
+        val keys=many.map {it.key}
+        val adult=runBlocking {
+            val a=profiles.create("A",AvatarColor.LIME,false)
+            profiles.update(a.id) {it.copy(apps=it.apps.copy(favorites=keys),appearance=it.appearance.copy(reduceMotion=true))}
+        }
+        val catalog=FakeAppCatalog(many)
+        show(profiles,adult,catalog)
+        fun focused()=compose.onNode(hasContentDescription("App 1") and hasClickAction() and isFocused())
+        compose.onAllNodes(hasContentDescription("App 1") and hasClickAction()).onFirst()
+            .performSemanticsAction(SemanticsActions.RequestFocus)
+        fun start() {
+            focused().performKeyInput {pressKey(Key.Menu)}
+            compose.onNodeWithText("Opne").performKeyInput {pressKey(Key.DirectionDown)}
+            compose.onNodeWithText("Flytt").assertIsFocused().performKeyInput {pressKey(Key.Enter)}
+            focused().assertIsFocused()
+        }
+        start()
+        repeat(3) {focused().performKeyInput {pressKey(Key.DirectionRight)}}
+        assertEquals(keys,runBlocking {profiles.current().profiles.first().apps.favorites})
+        focused().performKeyInput {pressKey(Key.Back)}
+        assertEquals(keys,runBlocking {profiles.current().profiles.first().apps.favorites})
+        start()
+        repeat(3) {focused().performKeyInput {pressKey(Key.DirectionRight)}}
+        compose.onNodeWithText("← → Flytt · OK Ferdig · Tilbake Avbryt").assertIsDisplayed()
+        focused().performKeyInput {pressKey(Key.Enter)}
+        compose.onNodeWithText("← → Flytt · OK Ferdig · Tilbake Avbryt").assertDoesNotExist()
+        compose.waitUntil(5_000) {runBlocking {profiles.current().profiles.first().apps.favorites!=keys}}
+        assertEquals(listOf(keys[1],keys[2],keys[3],keys[0],keys[4]),runBlocking {profiles.current().profiles.first().apps.favorites})
+        focused().assertIsFocused()
+        assertTrue(catalog.launched.isEmpty())
     }
 
     @Test fun clickLaunches() {
