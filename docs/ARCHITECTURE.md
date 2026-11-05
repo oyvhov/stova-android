@@ -52,7 +52,14 @@ blir fjerna. Det hindrar at Android sitt `wrap`-vindauge krympar til ei
 skuggestripe når animasjonsinnhaldet forsvinn. Topp-popupen animerer alfa og
 skala på eit innhald som held sine mål og sitt anker gjennom utgangen.
 MENY på eit kort opnar ved slepp; gjenteken tast-ned opnar ikkje fleire panel.
-Smarthus viser målingane i korta, og berre den felles lyshandlinga i toppfeltet.
+Smarthus viser målingane i korta. `SmartHomeRooms` teiknar ei romliste til
+venstre med den felles lyshandlinga over. Romval filtrerer berre visinga,
+medan lagra kortrekkjefølgje, storleikar og tettleik blir ståande.
+`SmartHomeContent` pakkar og navigerer dei synlege korta med same geometri.
+Venstre frå den første kolonnen gir fokus til valt rom; Høgre frå romlista
+opnar rommet og gir fokus til kortfeltet. Eit rom som forsvinn frå registeret,
+fell tilbake til Alle rom. Små rom får færre og breiare kolonnar.
+Statusmeldingar tonar over i botnen og tek ikkje høgd frå kortfeltet.
 Kontrollpanel har ei midtstilt hovudavlesing og ein slider med teikna spor og
 gripepunkt. Verdiar tonar over; lysfyll og nivå endrar seg i teiknefasen.
 
@@ -72,6 +79,7 @@ romkopling og lagring bruker dei same ID-ane og namna som før.
 | Smarthus på Heim | `home/HomeChips.kt` | Berre synlege brikketekstar; hendingar teiknar ikkje mediaradene på nytt |
 | Smarthus-skjermen | `ha/ui/SmartHomeScreen.kt` | Livssyklus, datakopling og kontrollpanel |
 | Smarthus-layout | `ha/ui/SmartHomeContent.kt` | Kontrollerte kort, fokus og grupper |
+| Rom i Smarthus | `ha/ui/SmartHomeRooms.kt` | Lokal romfiltrering, romliste, teljing og verktøy; ingen teneste- eller lagringskall |
 | Smarthus-geometri og val | `ha/cards/CardPacking.kt`, `ha/cards/CardFocusNavigation.kt`, `ha/ui/DashboardLayoutDialog.kt` | Same dynamiske pakking for teikning/piler, profillagra tettleik og gruppering |
 | Legg til Smarthus-kort | `ha/ui/AddCardFlow.kt`, `ha/ui/RoomSetupContent.kt` | `AddCardDialog` deler romnavigasjonen med innhaldet: Tilbake går frå kortforslaga til det fokuserte rommet, så ut. Rom først, gjennomgått utval før lagring; full einingskatalog via «Finn éi eining» |
 | Smarthus-kontrollpanel | `ha/cards/CardDialogs.kt`, `DeviceControls.kt`, `DeviceControlPages.kt`, `PanelSlider.kt` | Fast namn/rom og botn, rullbart innhald, korrekt hovudverdi og eigne modus-/kjeldesider med fokusretur |

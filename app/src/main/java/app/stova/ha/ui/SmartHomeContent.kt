@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,6 +31,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import app.stova.R
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.color
@@ -55,11 +58,23 @@ import kotlin.math.ceil
     onLayoutChange:(DashboardPrefs)->Unit={},
     backdrop:String?=null,
 ) {
+    val allCards=cards
+    var chosenRoom by remember(profile.id) {mutableStateOf<SmartHomeRoom>(SmartHomeRoom.All)}
+    val rooms=remember(allCards,registry) {smartHomeRooms(allCards,registry)}
+    val roomCounts=remember(allCards,registry,rooms) {rooms.associateWith {roomCards(allCards,registry,it).size}}
+    val selectedRoom=chosenRoom.takeIf {it in rooms} ?: SmartHomeRoom.All
+    val cards=remember(allCards,registry,selectedRoom) {roomCards(allCards,registry,selectedRoom)}
     BoxWithConstraints(Modifier.fillMaxSize()) {
-    SmartHomeAtmosphere(backdrop,cards.firstOrNull {it.type==CardType.WEATHER}?.let {entities[it.entityId]?.state})
-    val columns = dashboardColumns((maxWidth - StovaLayout.TvSafeEdge * 2 - 8.dp).value,
+    SmartHomeAtmosphere(backdrop,allCards.firstOrNull {it.type==CardType.WEATHER}?.let {entities[it.entityId]?.state})
+    val railWidth=if(LocalDensity.current.fontScale>=1.5f) 168.dp else 144.dp
+    val railFocus=remember {FocusRequester()}
+    val availableColumns = dashboardColumns((maxWidth - StovaLayout.TvSafeEdge * 2 - railWidth - StovaLayout.Gutter - 8.dp).value,
         profile.smartHome.density, LocalDensity.current.fontScale)
-    val headings = profile.smartHome.grouping == DashboardGrouping.ROOM
+    // A sparse room gives its controls more space; the all-rooms grid keeps the saved density.
+    val columns=if(selectedRoom==SmartHomeRoom.All) availableColumns
+        else minOf(availableColumns,maxOf(2,cards.sumOf {it.size.columns}))
+    val grouping=if(selectedRoom==SmartHomeRoom.All) profile.smartHome.grouping else DashboardGrouping.NONE
+    val headings = grouping == DashboardGrouping.ROOM
     var layoutOpen by remember(profile.id) { mutableStateOf(false) }
     val covered = overlayOpen || layoutOpen
     var editing by remember(profile.id) {mutableStateOf(false)}
@@ -97,7 +112,7 @@ import kotlin.math.ceil
     val scrollMotion=app.stova.core.theme.stovaMotion
     var gridFocused by remember {mutableStateOf(false)}
     val visible by remember {derivedStateOf {list.layoutInfo.visibleItemsInfo.map {it.key}.toSet()}}
-    val sections=remember(cards,registry,profile.smartHome.grouping) {dashboardSections(cards,registry,profile.smartHome.grouping)}
+    val sections=remember(cards,registry,grouping) {dashboardSections(cards,registry,grouping)}
     val cells=remember(sections,columns,headings) {cardFocusCells(sections,columns,headings)}
     var navigation by remember {mutableStateOf<Job?>(null)}
     var pendingCard by remember {mutableStateOf<String?>(null)}
@@ -143,6 +158,9 @@ import kotlin.math.ceil
             navigation?.cancel()
             pendingCard=null
             runCatching {headerFocus.requestFocus(FocusDirection.Enter)}
+        } else if(direction==CardFocusDirection.LEFT) {
+            navigation?.cancel();pendingCard=null
+            runCatching {railFocus.requestFocus()}
         }
         return true
     }
@@ -201,7 +219,24 @@ import kotlin.math.ceil
             true
         } else false
     }) {
-    Column(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+    Row(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge),horizontalArrangement=Arrangement.spacedBy(StovaLayout.Gutter)) {
+        SmartHomeRoomRail(rooms,selectedRoom,roomCounts,railFocus,{room ->
+            if(!covered && menuId==null) {
+                if(room==selectedRoom) (focusedId?.takeIf {id->cards.any {it.id==id}} ?: firstId)?.let(::requestCard)
+                else {
+                    navigation?.cancel();pendingCard=null;restoreId=null;focusedId=null
+                    initialFocusGiven=false;chosenRoom=room
+                }
+            }
+        },Modifier.width(railWidth).fillMaxHeight()) {
+            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                Icon(StovaIcons.Home,null,Modifier.size(22.dp).testTag("page-icon-smart-home"),tint=app.stova.core.theme.AvatarColor.GOLD.color)
+                HaStatusLabel(status)
+            }
+            Text(stringResource(R.string.nav_smart_home),Modifier.semantics {heading()},style=MaterialTheme.typography.headlineSmall)
+            DashboardSummary(allCards,entities,canControl(profile),summaryFocus,Modifier.fillMaxWidth()) {lightsToTurnOff=it}
+        }
+    Column(Modifier.weight(1f).fillMaxHeight(),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth().focusRequester(headerFocus).focusRestorer()
             .onPreviewKeyEvent {event ->
                 if(event.key==Key.DirectionDown && cells.isNotEmpty() && !covered && menuId==null) {
@@ -212,17 +247,19 @@ import kotlin.math.ceil
                     false
                 }
             }.focusGroup(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalAlignment=Alignment.CenterVertically) {
-            // Title, summary and actions share one line and one centre; only the summary text yields to space.
-            PageHeader(stringResource(R.string.nav_smart_home),StovaIcons.Home,Modifier.width(IntrinsicSize.Max),
-                tint=app.stova.core.theme.AvatarColor.GOLD.color,
-                iconModifier=Modifier.testTag("page-icon-smart-home"),metadata={HaStatusLabel(status)})
-            DashboardSummary(cards,entities,canControl(profile),summaryFocus,Modifier.weight(1f)) {lightsToTurnOff=it}
+            Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                androidx.compose.animation.Crossfade(selectedRoom,animationSpec=scrollMotion.fade(),label="dashboard-title") {room ->
+                    Text(roomLabel(room),Modifier.semantics {heading()},style=MaterialTheme.typography.headlineLarge,
+                        maxLines=2,overflow=TextOverflow.Ellipsis)
+                }
+                Text(pluralStringResource(R.plurals.ha_v2_room_count,cards.size,cards.size),style=MaterialTheme.typography.bodySmall,
+                    color=MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             if(!profile.kid && status!=HaStatus.NOT_CONFIGURED) {
-                if(cards.isNotEmpty()) StovaButton(stringResource(R.string.ha_layout), { restoreId=null; layoutOpen=true },
-                    Modifier.focusRequester(layoutFocus),icon=StovaIcons.Rows,compact=true,quiet=true)
-                if(cards.isNotEmpty()) StovaButton(stringResource(if(editing) R.string.ha_done else R.string.ha_edit),
-                    {editing=!editing;restoreId=focusedId ?: firstId},icon=if(editing) StovaIcons.Check else StovaIcons.Edit,compact=true,quiet=!editing)
-                StovaButton(stringResource(R.string.ha_add_card),onAdd,icon=StovaIcons.Plus,compact=true)
+                if(allCards.isNotEmpty()) DashboardTool(stringResource(R.string.ha_layout),StovaIcons.Rows, { restoreId=null; layoutOpen=true },Modifier.focusRequester(layoutFocus))
+                if(allCards.isNotEmpty()) DashboardTool(stringResource(if(editing) R.string.ha_done else R.string.ha_edit),
+                    if(editing) StovaIcons.Check else StovaIcons.Edit,{editing=!editing;restoreId=focusedId ?: firstId},active=editing)
+                DashboardTool(stringResource(R.string.ha_add_card),StovaIcons.Plus,onAdd)
             }
         }
         if(status==HaStatus.NOT_CONFIGURED) {
@@ -233,9 +270,6 @@ import kotlin.math.ceil
                     color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
             return@Column
-        }
-        androidx.compose.animation.Crossfade(feedback, animationSpec = app.stova.core.theme.stovaMotion.fade(), label = "ha-feedback") { shown ->
-            if(shown!=null) Text(stringResource(if(shown==HaFeedback.FAILED) R.string.ha_v2_failed else R.string.ha_v2_done),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if(cards.isEmpty()) {
             Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(28.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -248,7 +282,7 @@ import kotlin.math.ceil
         // Moving between cards that show must not slide the dashboard; only a hidden card scrolls.
         @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
         CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides app.stova.core.ui.ScrollOnlyWhenHidden) {
-        LazyColumn(Modifier.fillMaxSize().onFocusChanged {gridFocused=it.hasFocus}.onPreviewKeyEvent {event ->
+        LazyColumn(Modifier.fillMaxSize().testTag("dashboard-grid").stepEntrance(selectedRoom,0).onFocusChanged {gridFocused=it.hasFocus}.onPreviewKeyEvent {event ->
             if(!covered && menuId==null && !editHeld && event.key in listOf(Key.DirectionUp,Key.DirectionDown,Key.DirectionLeft,Key.DirectionRight)) {
                 if(event.type==KeyEventType.KeyDown) navigate(event.key)
                 true
@@ -265,7 +299,7 @@ import kotlin.math.ceil
                     CardBand(band,columns) {card ->
                         val requester=remember(card.id) {focus.getOrPut(card.id) {FocusRequester()}}
                         val intoView=remember(card.id) {BringIntoViewRequester()}
-                        LaunchedEffect(card.id) {
+                        LaunchedEffect(card.id,selectedRoom) {
                             if(!initialFocusGiven && card.id==firstId) {
                                 requester.requestFocus();initialFocusGiven=true
                             }
@@ -276,7 +310,7 @@ import kotlin.math.ceil
                                 onEdit=if(editing) {{menuId=card.id;restoreId=card.id}} else null,
                                 onMenu=if(!profile.kid) {{menuId=card.id;restoreId=card.id}} else null,
                                 pending=card.entityId in pending,connection=connection,completed=card.entityId in completed,editing=editing && !profile.kid,inputSuspended=covered || menuId!=null,
-                                room=if(!headings || section.favorites) registry.entities[card.entityId]?.room else null,
+                                room=if(selectedRoom==SmartHomeRoom.All && (!headings || section.favorites)) registry.entities[card.entityId]?.room else null,
                                 modifier=Modifier.weight(1f).bringIntoViewRequester(intoView).onFocusChanged {
                                     if(it.isFocused) {focusedId=card.id;onCardFocused(card.id);scope.launch {intoView.bringIntoView()}}
                                 }.focusRequester(requester))
@@ -288,11 +322,20 @@ import kotlin.math.ceil
         }
         }
     }
+    }
+    // Feedback floats in the footer instead of reserving an empty row above the cards.
+    // Crossfade retains the last message through its exit without moving the dashboard.
+    androidx.compose.animation.Crossfade(feedback,modifier=Modifier.align(Alignment.BottomCenter)
+        .padding(horizontal=StovaLayout.TvSafeEdge,vertical=12.dp),animationSpec=scrollMotion.fade(),label="ha-feedback") {shown ->
+        if(shown!=null) Text(stringResource(if(shown==HaFeedback.FAILED) R.string.ha_v2_failed else R.string.ha_v2_done),
+            style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
+    }
     val hintCard=cards.find {it.id==focusedId}
     val motion=app.stova.core.theme.stovaMotion
-    val hintAlpha by animateFloatAsState(if(hintVisible) 1f else 0f,motion.fade(motion.quick))
-    if(hintCard!=null && hintAlpha>0f) Text(remoteHint(hintCard,entities[hintCard.entityId],!canControl(profile),profile.kid,editing),
-        Modifier.align(Alignment.BottomCenter).padding(horizontal=StovaLayout.TvSafeEdge,vertical=12.dp).alpha(hintAlpha).testTag("remote-hint"),
+    val hintAlpha=animateFloatAsState(if(hintVisible && feedback==null) 1f else 0f,motion.fade(motion.quick))
+    val showHint by remember {derivedStateOf {hintAlpha.value>0f}}
+    if(hintCard!=null && showHint) Text(remoteHint(hintCard,entities[hintCard.entityId],!canControl(profile),profile.kid,editing),
+        Modifier.align(Alignment.BottomCenter).padding(horizontal=StovaLayout.TvSafeEdge,vertical=12.dp).graphicsLayer {alpha=hintAlpha.value}.testTag("remote-hint"),
         style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1,overflow=TextOverflow.Ellipsis)
     }
     lightsToTurnOff?.let {ids ->

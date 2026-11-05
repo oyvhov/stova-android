@@ -8,6 +8,7 @@ avkryssingsboksar i dei er inga bestilling.
 
 | Plan | Står att |
 |---|---|
+| [Ny Smarthus-oversikt](2026-11-05-smarthus-hovudskjerm.md) | Ny komposisjon, romnavigasjon, kortuttrykk og ekte Shield-bilete. |
 | [Smartheim, MENY og popup-lukking på Shield](2026-11-05-smartheim-meny-og-popup.md) | Design og popup-lukking prøvd og installert. Fysisk MENY-prøve og eventuell retting står att. |
 | [Overgangar og rørsle i heile Stova](2026-11-03-roersle-i-heile-stova.md) | TV-pilot, sidehistorikk, panel, innhaldsbyte og utrulling. |
 | [Oppdag i Stova: Seerr gjennom Spole](2026-11-01-oppdag.md) | Oppgåve 11 (TV-ane) ventar på eigaren; Spole-delen på greina `launcher-discover`. Spesifikasjon: [`../specs/2026-11-01-oppdag-design.md`](../specs/2026-11-01-oppdag-design.md). |

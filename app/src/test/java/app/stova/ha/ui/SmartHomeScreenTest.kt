@@ -44,13 +44,13 @@ class SmartHomeScreenTest {
                 SmartHomeContent(adult, emptyList(), emptyMap(), HaStatus.CONNECTED)
             }
         } }
-        val heading = compose.onNodeWithText("Smarthus").fetchSemanticsNode().boundsInRoot
+        val house = compose.onNodeWithTag("page-icon-smart-home",useUnmergedTree=true).fetchSemanticsNode().boundsInRoot
         compose.onNodeWithText("Tilkopla").assertDoesNotExist()
         val indicator=compose.onNodeWithContentDescription("Tilkopla").assertIsDisplayed()
         val bounds=indicator.getUnclippedBoundsInRoot()
         assertTrue("Status must stay visually small",bounds.right-bounds.left<=16.dp && bounds.bottom-bounds.top<=16.dp)
         val status = indicator.fetchSemanticsNode().boundsInRoot
-        assertEquals("Status must share the heading's vertical centre", heading.center.y, status.center.y, 1f)
+        assertEquals("Status must share the house icon's vertical centre in the rail", house.center.y, status.center.y, 1f)
     }
     @Test fun statusIsCenteredWithHeading() = assertStatusCentered(1f)
     @Test fun statusIsCenteredWithHeadingAtDoubleFont() = assertStatusCentered(2f)
@@ -68,10 +68,10 @@ class SmartHomeScreenTest {
                 emptyMap(),HaStatus.CONNECTED,initialFocusId="0")
         } }
         compose.onNodeWithText("Stova").assertIsFocused()
-        compose.onNodeWithText("Favorittar").assertIsDisplayed()
+        compose.onNode(hasText("Favorittar") and isHeading()).assertIsDisplayed()
         compose.onRoot().performKeyInput { pressKey(androidx.compose.ui.input.key.Key.DirectionRight) }
         compose.onNodeWithText("Kort 1").assertIsFocused()
-        compose.onNodeWithText("Favorittar").assertIsDisplayed()
+        compose.onNode(hasText("Favorittar") and isHeading()).assertIsDisplayed()
     }
     @Test fun emptyStateOffersAddForAdult() {
         var adding=false

@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +31,7 @@ import app.stova.R
 import app.stova.core.ui.*
 
 internal val LocalCardFocused = staticCompositionLocalOf { false }
+internal val LocalCardSize = staticCompositionLocalOf { CardSize.M }
 
 @Composable
 fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: String?, locked: Boolean, onClick: () -> Unit, onLongClick: () -> Unit,
@@ -49,7 +51,7 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
     val windowFocused=LocalWindowInfo.current.isWindowFocused
     LaunchedEffect(focused,windowFocused,inputSuspended) {if(!focused || !windowFocused || inputSuspended) {longPress?.cancel();held=false;consumed=true;menuHeld=false}}
     DisposableEffect(Unit) {onDispose {longPress?.cancel()}}
-    val shape = MaterialTheme.shapes.large
+    val shape = MaterialTheme.shapes.extraLarge
     val lit=glow!=null && glow.alpha>0f
     val surface=MaterialTheme.colorScheme.surface
     val fill=if(lit) glow.color.copy(alpha=glow.alpha).compositeOver(surface) else surface
@@ -97,8 +99,8 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
         // and a compact card keeps its one-row height.
         Column(Modifier.weight(1f).fillMaxHeight().padding(if(small) 12.dp else 16.dp),verticalArrangement=Arrangement.spacedBy(if(small) 3.dp else 8.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.size(if(small) 28.dp else 36.dp).clip(MaterialTheme.shapes.medium).background(if(lit) glow.color else MaterialTheme.colorScheme.surfaceVariant), contentAlignment=Alignment.Center) {
-                Icon(icon,null,Modifier.size(22.dp),tint=if(lit) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurfaceVariant)
+            Box(Modifier.size(if(small) 28.dp else 36.dp).clip(CircleShape).background(if(lit) glow.color else MaterialTheme.colorScheme.surfaceVariant), contentAlignment=Alignment.Center) {
+                Icon(icon,null,Modifier.size(if(small) 19.dp else 21.dp),tint=if(lit) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if(config.size==CardSize.S) Spacer(Modifier.weight(1f))
             else Text(label,Modifier.weight(1f),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)
@@ -111,7 +113,7 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
         if(config.size==CardSize.S) Text(label,Modifier.fillMaxWidth(),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)
         Column(Modifier.weight(1f),verticalArrangement=if(config.size==CardSize.L) Arrangement.Center else Arrangement.Bottom) {
             Column(verticalArrangement=Arrangement.spacedBy(if(small) 3.dp else 4.dp)) {
-                CompositionLocalProvider(LocalCardFocused provides focused) {content()}
+                CompositionLocalProvider(LocalCardFocused provides focused,LocalCardSize provides config.size) {content()}
             }
         }
         }

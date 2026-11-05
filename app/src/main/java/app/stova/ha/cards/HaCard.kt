@@ -108,7 +108,8 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
         else -> CardValue(entityStateLabel(entity))
     }
 }
-@Composable internal fun CardValue(value:String,unit:String?=null,style:androidx.compose.ui.text.TextStyle=MaterialTheme.typography.headlineMedium) {
+@Composable internal fun CardValue(value:String,unit:String?=null,style:androidx.compose.ui.text.TextStyle=
+    if(LocalCardSize.current==CardSize.S) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineLarge) {
     Row(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=androidx.compose.ui.Alignment.Bottom) {
         androidx.compose.animation.Crossfade(value,Modifier.weight(1f,fill=false),app.stova.core.theme.stovaMotion.fade(),label="card-value") { shown ->
             Text(shown,style=style,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)

@@ -56,10 +56,12 @@ class MixedDashboardLayoutTest {
         }
     }
 
-    @Test fun fiveMixedCardsFitTheFirstBandWithoutClipping() {
+    @Test fun standardWeatherAndFourControlsFitBesideTheRoomRailWithoutClipping() {
         val media=HaEntity("media_player.a","playing",buildJsonObject {put("media_title","TV");put("volume_level",0.14)},0,0)
         val energy=HaEntity("sensor.price","117.7",buildJsonObject {put("unit_of_measurement","øre")},0,0)
-        val cards=listOf(CardConfig("w",CardType.WEATHER,weather.id,name="Ute",size=CardSize.L),
+        // The Shield's standard weather tile is M. The separate large-weather test below
+        // keeps L and verifies that the remote reveals the later cards without excess travel.
+        val cards=listOf(CardConfig("w",CardType.WEATHER,weather.id,name="Ute",size=CardSize.M),
             CardConfig("p",CardType.ENERGY_PRICE,energy.id,name="Straumpris",size=CardSize.M),
             CardConfig("l",CardType.LIGHT,light.id,name="Stova"),
             CardConfig("m",CardType.MEDIA_PLAYER,media.id,name="Sonos",size=CardSize.M),
@@ -73,7 +75,7 @@ class MixedDashboardLayoutTest {
             SideEffect {input.requestInputMode(InputMode.Keyboard)}
             SmartHomeContent(profile,cards,entities,HaStatus.CONNECTED,registry=registry,onPerform={_,_->calls++})
         }}
-        val grid=compose.onNode(hasScrollAction()).getUnclippedBoundsInRoot()
+        val grid=compose.onNodeWithTag("dashboard-grid").getUnclippedBoundsInRoot()
         cards.forEach {card ->
             val bounds=compose.onNodeWithText(card.name!!).getUnclippedBoundsInRoot()
             assertTrue("${card.name} must fit $grid, was $bounds",bounds.top>=grid.top && bounds.bottom<=grid.bottom)
@@ -82,14 +84,14 @@ class MixedDashboardLayoutTest {
         compose.onRoot().performKeyInput {pressKey(Key.DirectionRight)}
         compose.onNodeWithText("Straumpris").assertIsFocused()
         compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
-        compose.onNodeWithText("Sonos").assertIsFocused()
+        compose.onNodeWithText("Varmepumpa").assertIsFocused()
         compose.onRoot().performKeyInput {pressKey(Key.DirectionUp)}
         compose.onNodeWithText("Straumpris").assertIsFocused()
         compose.onRoot().performKeyInput {pressKey(Key.DirectionRight)}
-        compose.onNodeWithText("Stova").assertIsFocused()
+        compose.onNodeWithText("Straumpris").assertIsFocused()
         compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
         compose.onNodeWithText("Varmepumpa").assertIsFocused()
-        compose.onRoot().performKeyInput {pressKey(Key.DirectionUp);pressKey(Key.DirectionLeft);pressKey(Key.DirectionDown)}
+        compose.onRoot().performKeyInput {pressKey(Key.DirectionLeft)}
         compose.onNodeWithText("Sonos").assertIsFocused()
         assertEquals(0,calls)
     }
@@ -112,12 +114,12 @@ class MixedDashboardLayoutTest {
             SideEffect {input.requestInputMode(InputMode.Keyboard)}
             SmartHomeContent(Profile("a","A",AvatarColor.OCEAN),cards,entities,HaStatus.CONNECTED,onPerform={_,_->})
         }}
-        val grid=compose.onNode(hasScrollAction()).getUnclippedBoundsInRoot()
+        val grid=compose.onNodeWithTag("dashboard-grid").getUnclippedBoundsInRoot()
         fun top()=compose.onNodeWithText("Ute").getUnclippedBoundsInRoot().top.value
         fun press(key:Key) {compose.onRoot().performKeyInput {pressKey(key)};compose.waitForIdle()}
         val start=top()
         press(Key.DirectionRight)
-        compose.onNodeWithText("Straumpris").assertIsFocused()
+        compose.onNodeWithText("Stova").assertIsFocused()
         press(Key.DirectionDown)
         val below=compose.onNode(isFocused()).getUnclippedBoundsInRoot()
         assertTrue("a card in view below: $below in $grid",below.top>=grid.top && below.bottom<=grid.bottom)

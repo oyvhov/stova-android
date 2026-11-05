@@ -191,7 +191,7 @@ class SmartHomeV2UiTest {
         compose.onRoot().performKeyInput {pressKey(Key.DirectionRight)}
         compose.onNodeWithText("sensor.b").assertIsFocused()
         compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
-        compose.onNodeWithText("sensor.d").assertIsFocused()
+        compose.onNodeWithText("sensor.c").assertIsFocused()
         compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)}
         compose.onNodeWithText("sensor.f").assertIsFocused()
         compose.onRoot().performKeyInput {pressKey(Key.DirectionDown);pressKey(Key.DirectionRight)}
@@ -253,8 +253,8 @@ class SmartHomeV2UiTest {
     @Test fun roomSectionsAndFavoritesAreVisible() {
         val cards=listOf(CardConfig("a",CardType.SENSOR,"sensor.a",favorite=true),CardConfig("b",CardType.SENSOR,"sensor.b"))
         compose.setContent {StovaTheme {SmartHomeContent(adult.copy(smartHome=DashboardPrefs(grouping=DashboardGrouping.ROOM)),cards,emptyMap(),HaStatus.CONNECTED,registry=HaRegistry(mapOf("sensor.b" to HaEntityInfo(room="Stove"))))}}
-        compose.onNodeWithText("Favorittar").assertExists()
-        compose.onNodeWithText("Stove").performScrollTo().assertIsDisplayed()
+        compose.onNode(hasText("Favorittar") and isHeading()).assertExists()
+        compose.onNode(hasText("Stove") and isHeading()).performScrollTo().assertIsDisplayed()
     }
     @Test fun binaryDoorShowsOpenWord() {
         val door=HaEntity("binary_sensor.door","on",buildJsonObject {put("device_class","door")},0,0)
@@ -266,11 +266,11 @@ class SmartHomeV2UiTest {
         compose.setContent {StovaTheme {SmartHomeContent(adult,cards,emptyMap(),HaStatus.CONNECTED)}}
         repeat(3) {compose.onRoot().performKeyInput {pressKey(Key.DirectionDown)};compose.waitForIdle()}
         val focused=compose.onNode(isFocused())
-        val grid=compose.onNode(hasScrollAction()).getUnclippedBoundsInRoot()
+        val grid=compose.onNodeWithTag("dashboard-grid").getUnclippedBoundsInRoot()
         val bounds=focused.getUnclippedBoundsInRoot()
         assertTrue("Focused top $bounds must stay in $grid",bounds.top>=grid.top)
         assertTrue("Focused bottom $bounds must stay in $grid",bounds.bottom<=grid.bottom)
-        compose.onNodeWithText("sensor.12").assertIsFocused()
+        compose.onNodeWithText("sensor.9").assertIsFocused()
     }
     @Test fun remoteHintHidesWhenFocusLeavesGrid() {
         compose.setContent {StovaTheme {SmartHomeContent(adult,listOf(CardConfig("a",CardType.SENSOR,"sensor.a")),emptyMap(),HaStatus.CONNECTED)}}
