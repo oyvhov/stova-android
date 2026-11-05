@@ -1,3 +1,10 @@
+# Smarthus-oversikta bygd om og prøvd på Shield
+2026-11-05 (Codex): `33937e9` byggjer om sjølve hovudskjermen: romliste med teljing, stor romtittel og samla verktøy, balansert kortfelt, rolegare ikon og større verdiar i breie kort. Små rom får breiare kort.
+Romval er lokal vising utan lagrings-/tenestekall. Venstre går frå kortfeltet til valt rom; Høgre opnar rommet og går til korta. Panelretur, rom som forsvinn, stor skrift og redusert rørsle er prøvde i test.
+64 målretta UI-/fokus-/layout-/design-/palett-testar grøne; lintDebug og assembleTv grøne. Eksisterande geometritestar er tilpassa ny romliste og kolonnegeometri, med L-vêrkort framleis prøvd for rulling.
+Installerte med install-r på Shield, samsvarande SHA-256 `7e0453b04e50480e804b5846240ecd0e6318217c1fc2e23bc67f024f4b9bccbf`. Ekte D-pad: Alle rom → Kjøkken → Småstova → Alle rom. Ingen kontrollval stadfesta; lys 80 %, mål 22,5° og TV-volum 20 % uendra.
+Før/no og rombilete i `.superpowers/shield-smart-home-overview-2026-11-05/`, med `Smarthus-rombyte-Shield.mp4` (20,1 s, 1080p, utan lyd). Sluttvising Alle rom. Ingen uferdig kode; fysisk MENY står framleis att i den separate planen.
+
 # Smartheim finpussa og popup-utgangar retta på Shield
 2026-11-05 (Codex): Reinare toppfelt, midtstilt hovudavlesing, tynn slider med gripepunkt, rolege valrader med hake, overtoning av kortverdiar og mjukt lysfyll. Kortmenyen gjentek ikkje tittelen.
 Dialogen held heilskjermsramma, og topp-popupen held mål og anker heilt til fjerning. Raude/grøne regresjonstestar fangar den tidlegare krympinga. Sluttopptaka viser ingen svart stripe i dei kontrollerte lukkingane.
