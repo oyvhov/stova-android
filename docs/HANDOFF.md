@@ -1,3 +1,9 @@
+# Nye Shield-bilete: Heim og Sonos
+2026-11-05 (Codex, 20:21 lokal tid): Tok tre nye, ekte 3840 × 2160-skjermbilete på Shield etter bestilling: `output/screenshots/Shield-nye-2026-11-05/01-Heim.png`, `02-Sonos.png` og `03-Sonos-fullskjerm.png`.
+Venta på ferdig bakgrunn/omslag og favorittar. Alle tre er visuelt kontrollerte, utan opne menyar eller volumdialog; Heim viser The Worst Person in the World, Sonos viser Paradise / Coldplay med dei nye høgtalarbileta.
+Shield står i Sonos-fullskjerm, Kjøkken, Paradise pausa ved 0:00 / 4:38. Ingen avspeling, volum, grupper, innstillingar eller appkode endra; Loftet og emulatorar urørte.
+Ingen bygg eller testar i denne skjermbiletøkta. Ingen uferdig fangst; bileta blir leverte kvar for seg i samtalen, ikkje zip. Mobilvising av vedlegga er ikkje stadfesta.
+
 # Sonos: større høgtalar og romnamn under
 2026-11-05 (Codex): Fullskjerm har større modellbilete med romnamnet midtstilt under på ei lesbar temaflate. Sonos-romlista bruker høgtalarbilete også når HA-romma har ikon.
 150 målretta Sonos-/design-/palettestar grøne, 0 hoppa over; lint 0 feil, debug/TV-bygg grøne. Tre nye/endra kontraktar vart sett feile først. Plan og verifisering: `2026-11-05-sonos-hogtalarbilete.md`.
