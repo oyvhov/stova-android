@@ -11,7 +11,7 @@ import kotlin.math.roundToInt
 
 /** [model] and [manufacturer] come from the HA device registry, never from the room's name. */
 data class SonosRoom(val entity: HaEntity, val name: String, val area: String? = null,
-    val model: String? = null, val manufacturer: String? = null) {
+    val model: String? = null, val manufacturer: String? = null, val roomIcon: String? = null) {
     val id get() = entity.id
     val speaker get() = sonosSpeaker(model, manufacturer)
     val available get() = entity.state !in setOf("unavailable", "unknown", "")
@@ -46,7 +46,7 @@ fun sonosRooms(states: List<HaEntity>, registry: HaRegistry): List<SonosRoom> = 
     val info = registry.entities[entity.id] ?: return@mapNotNull null
     if (info.platform != "sonos" || info.disabled || !entity.id.startsWith("media_player.")) return@mapNotNull null
     SonosRoom(entity, info.name?.takeIf(String::isNotBlank) ?: entity.attributes.text("friendly_name") ?: info.originalName ?: entity.id, info.room,
-        info.model, info.manufacturer)
+        info.model, info.manufacturer, info.roomIcon)
 }.sortedBy { it.name.lowercase() }
 
 fun coordinator(room: SonosRoom, rooms: List<SonosRoom>) = rooms.find { it.id == room.coordinatorId }

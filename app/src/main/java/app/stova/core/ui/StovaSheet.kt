@@ -144,7 +144,7 @@ fun SheetSection(title: String, detail: String? = null) {
 @Composable
 fun SheetAction(label: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier,
     value: String? = null, opensPage: Boolean = false, chosen: Boolean? = null, danger: Boolean = false,
-    enabled: Boolean = true) {
+    enabled: Boolean = true, leading: (@Composable () -> Unit)? = null) {
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.medium
     val colors = MaterialTheme.colorScheme
@@ -154,7 +154,7 @@ fun SheetAction(label: String, icon: ImageVector, onClick: () -> Unit, modifier:
         .clickable(interactionSource = source, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
         .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        Icon(icon, null, Modifier.size(22.dp), tint = if (danger) colors.error else colors.onSurfaceVariant)
+        if(leading!=null) leading() else Icon(icon, null, Modifier.size(22.dp), tint = if (danger) colors.error else colors.onSurfaceVariant)
         Text(label, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium,
             color = if (danger) colors.error else colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
         value?.let {

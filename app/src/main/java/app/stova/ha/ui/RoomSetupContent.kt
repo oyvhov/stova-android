@@ -69,7 +69,8 @@ internal fun suggestedType(item: HaCatalogItem): CardType? = cardTypesFor(item.e
                 items(rooms,key={it}) { name ->
                     SheetAction(name,StovaIcons.Home,{
                         state.pages.open(name);selected=roomSuggestions(catalog,name,existing).map {it.entity.id}.toSet()
-                    },Modifier.focusRequester(state.pages.opener(name)),value=stringResource(R.string.ha_room_count,roomSuggestions(catalog,name,existing).size),opensPage=true)
+                    },Modifier.focusRequester(state.pages.opener(name)),value=stringResource(R.string.ha_room_count,roomSuggestions(catalog,name,existing).size),opensPage=true,
+                        leading={app.stova.ha.HaIcon(catalog.filter {it.room==name}.firstNotNullOfOrNull {it.roomIcon},StovaIcons.Home,22.dp,MaterialTheme.colorScheme.onSurfaceVariant)})
                 }
                 if(rooms.isEmpty()) item {Text(stringResource(R.string.ha_room_none),style=MaterialTheme.typography.bodyLarge)}
                 item {SheetAction(stringResource(R.string.ha_room_browse),StovaIcons.Apps,onBrowse,opensPage=true)}

@@ -30,6 +30,17 @@ class SonosContentTest {
     private val room = SonosRoom(HaEntity("media_player.stova", "playing", StovaJson.parseToJsonElement(
         """{"media_title":"Northern Lights","media_artist":"Test Artist","supported_features":1048575,"volume_level":0.3}""").jsonObject, 0, 0), "Stova")
 
+    @Test fun roomListUsesTheHomeAssistantAreaIconWhenProvided() {
+        val withIcon=room.copy(roomIcon="mdi:stove")
+        compose.setContent {StovaTheme(reduceMotion=true) {
+            SonosContent(SonosState(listOf(withIcon),loading=false),withIcon.id,{},{},{},{},{})
+        }}
+        val icon=hasTestTag("ha-icon") and hasAnyAncestor(hasTestTag("sonos-room-${room.id}"))
+        compose.waitUntil(5_000) {compose.onAllNodes(icon,useUnmergedTree=true).fetchSemanticsNodes().isNotEmpty()}
+        compose.onNode(icon,useUnmergedTree=true).assertIsDisplayed()
+        compose.onNodeWithTag("sonos-room-playing-${room.id}",useUnmergedTree=true).assertIsDisplayed()
+    }
+
     @Test fun seasonDecorationFollowsTheSameProfilePreferenceAsHome() {
         var choice by mutableStateOf(SeasonChoice.HALLOWEEN)
         var decor by mutableStateOf(SeasonalDecor.CALM)

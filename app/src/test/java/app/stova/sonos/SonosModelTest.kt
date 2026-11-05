@@ -7,6 +7,11 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class SonosModelTest {
+    @Test fun homeAssistantAreaIconFollowsTheNativeSpeakerIntoTheRoomList() {
+        val registry=HaRegistry(mapOf("media_player.kitchen" to HaEntityInfo(room="Kjøkken",platform="sonos",roomIcon="mdi:stove")))
+        val room=sonosRooms(listOf(entity("media_player.kitchen","{}")),registry).single()
+        assertEquals("mdi:stove",room.roomIcon)
+    }
     @Test fun inlineGroupDraftKeepsAnchorAndRejectsAChangedGroup() {
         val anchor = SonosRoom(HaEntity("media_player.a", "playing", kotlinx.serialization.json.JsonObject(emptyMap()), 0, 0), "A")
         val other = anchor.copy(entity = anchor.entity.copy(id = "media_player.b"), name = "B")

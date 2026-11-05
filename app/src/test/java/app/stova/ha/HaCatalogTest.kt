@@ -12,6 +12,18 @@ class HaCatalogTest {
         assertEquals("config/device_registry/list", splitIncoming(registryRequest(5, HaRegistryKind.DEVICE)).single()["type"]!!.jsonPrimitive.content)
         assertEquals("config/entity_registry/list", splitIncoming(registryRequest(6, HaRegistryKind.ENTITY)).single()["type"]!!.jsonPrimitive.content)
     }
+    @Test fun roomIconsFollowTheResolvedAreaAndSurviveOldSnapshots() {
+        val registry=parseRegistry(
+            array("""[{"area_id":"k","name":"Kjøkken","icon":"mdi:stove"},{"area_id":"s","name":"Stove","icon":"mdi:sofa"}]"""),
+            array("""[{"id":"device","area_id":"k"}]"""),
+            array("""[{"entity_id":"light.a","device_id":"device","icon":"mdi:lamp"},{"entity_id":"light.b","device_id":"device","area_id":"s"},{"entity_id":"sensor.none"}]"""))
+        assertEquals("mdi:stove",registry.entities["light.a"]?.roomIcon)
+        assertEquals("mdi:lamp",registry.entities["light.a"]?.icon)
+        assertEquals("mdi:sofa",registry.entities["light.b"]?.roomIcon)
+        assertNull(registry.entities["sensor.none"]?.roomIcon)
+        assertEquals(registry,StovaJson.decodeFromString<HaRegistry>(StovaJson.encodeToString(HaRegistry.serializer(),registry)))
+        assertNull(StovaJson.decodeFromString<HaRegistry>("""{"entities":{"light.old":{"room":"Stove"}}}""").entities["light.old"]?.roomIcon)
+    }
     @Test fun registryResolvesOverridesAndDeviceRoomsAndHiddenEntities() {
         val registry = parseRegistry(
             array("""[{"area_id":"living","name":"Stove"},{"area_id":"hall","name":"Gang"}]"""),

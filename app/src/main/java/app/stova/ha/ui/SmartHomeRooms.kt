@@ -61,7 +61,7 @@ internal fun roomCards(cards: List<CardConfig>, registry: HaRegistry, room: Smar
 /** A real TV navigation rail. Choosing a room only changes this view, never the saved dashboard. */
 @Composable internal fun SmartHomeRoomRail(rooms: List<SmartHomeRoom>, selected: SmartHomeRoom,
     counts: Map<SmartHomeRoom, Int>, selectedFocus: FocusRequester, onChoose: (SmartHomeRoom) -> Unit,
-    modifier: Modifier = Modifier, header: @Composable ColumnScope.() -> Unit) {
+    modifier: Modifier = Modifier, icons: Map<SmartHomeRoom,String?> = emptyMap(), header: @Composable ColumnScope.() -> Unit) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp), content = header)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).focusGroup(),
@@ -69,8 +69,8 @@ internal fun roomCards(cards: List<CardConfig>, registry: HaRegistry, room: Smar
             rooms.forEach { room ->
                 val source = remember(room) { MutableInteractionSource() }
                 val chosen = room == selected
-                val iconAlpha=androidx.compose.animation.core.animateFloatAsState(if(chosen) 0f else 1f,
-                    app.stova.core.theme.stovaMotion.fade(app.stova.core.theme.stovaMotion.quick),label="room-symbol")
+                val countAlpha=androidx.compose.animation.core.animateFloatAsState(if(chosen) 0f else 1f,
+                    app.stova.core.theme.stovaMotion.fade(app.stova.core.theme.stovaMotion.quick),label="room-count")
                 val plate=androidx.compose.animation.animateColorAsState(if(chosen) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
                     app.stova.core.theme.stovaMotion.fade(app.stova.core.theme.stovaMotion.quick),label="smart-home-room")
                 val shape = MaterialTheme.shapes.small
@@ -88,13 +88,14 @@ internal fun roomCards(cards: List<CardConfig>, registry: HaRegistry, room: Smar
                     .clickable(source, indication = null, role = Role.Tab) { onChoose(room) }
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(Modifier.size(18.dp),contentAlignment=Alignment.Center) {
-                        Icon(when (room) { SmartHomeRoom.All -> StovaIcons.Home; SmartHomeRoom.Favourites -> StovaIcons.Star
-                            else -> StovaIcons.Rows }, null, Modifier.size(18.dp).graphicsLayer {alpha=iconAlpha.value}, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        SelectionMark(chosen)
-                    }
+                    app.stova.ha.HaIcon(icons[room],when (room) {SmartHomeRoom.All -> StovaIcons.Home; SmartHomeRoom.Favourites -> StovaIcons.Star
+                        else -> StovaIcons.Rows},18.dp,MaterialTheme.colorScheme.onSurfaceVariant)
                     ArtworkCaption(roomLabel(room),source,Modifier.weight(1f))
-                    Text(counts[room].toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Box(Modifier.widthIn(min=12.dp),contentAlignment=Alignment.Center) {
+                        Text(counts[room].toString(),Modifier.graphicsLayer {alpha=countAlpha.value},style = MaterialTheme.typography.labelMedium,
+                            maxLines=1,color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        SelectionMark(chosen,Modifier.size(12.dp))
+                    }
                 }
             }
         }

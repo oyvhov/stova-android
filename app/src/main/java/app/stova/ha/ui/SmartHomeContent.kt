@@ -64,6 +64,10 @@ import kotlin.math.ceil
     var chosenRoom by remember(profile.id) {mutableStateOf<SmartHomeRoom>(SmartHomeRoom.All)}
     val rooms=remember(allCards,registry) {smartHomeRooms(allCards,registry)}
     val roomCounts=remember(allCards,registry,rooms) {rooms.associateWith {roomCards(allCards,registry,it).size}}
+    val roomIcons=remember(rooms,registry) {rooms.associateWith {room ->
+        if(room is SmartHomeRoom.Named) registry.entities.values.filter {it.room?.trim()==room.name}.firstNotNullOfOrNull {it.roomIcon}
+        else null
+    }}
     val selectedRoom=chosenRoom.takeIf {it in rooms} ?: SmartHomeRoom.All
     val cards=remember(allCards,registry,selectedRoom) {roomCards(allCards,registry,selectedRoom)}
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -230,7 +234,7 @@ import kotlin.math.ceil
                     initialFocusGiven=false;chosenRoom=room
                 }
             }
-        },Modifier.width(railWidth).fillMaxHeight()) {
+        },Modifier.width(railWidth).fillMaxHeight(),roomIcons) {
             Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 Icon(StovaIcons.Home,null,Modifier.size(22.dp).testTag("page-icon-smart-home"),tint=app.stova.core.theme.AvatarColor.GOLD.color)
                 HaStatusLabel(status)

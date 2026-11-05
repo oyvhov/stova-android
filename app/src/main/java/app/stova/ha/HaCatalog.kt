@@ -9,24 +9,26 @@ import kotlinx.serialization.json.*
     val originalName:String?=null,val disabled:Boolean=false,val icon:String?=null,val originalIcon:String?=null,
     val platform:String?=null,
     /** Device registry identity, kept only for Sonos players so the catalogue stays lean. */
-    val model:String?=null,val manufacturer:String?=null)
+    val model:String?=null,val manufacturer:String?=null,
+    /** The area's icon, independent of the entity's own icon. */
+    val roomIcon:String?=null)
 @Serializable data class HaRegistry(val entities: Map<String, HaEntityInfo> = emptyMap())
-data class HaCatalogItem(val entity: HaEntity, val name: String, val room: String?, val hidden: Boolean)
+data class HaCatalogItem(val entity: HaEntity, val name: String, val room: String?, val hidden: Boolean, val roomIcon: String? = null)
 internal fun JsonObject.text(key: String) = (get(key) as? JsonPrimitive)?.contentOrNull
 private fun JsonObject.string(key: String) = (get(key) as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()?.takeIf(String::isNotEmpty)
 
 fun parseRegistry(areas: JsonArray, devices: JsonArray, entities: JsonArray): HaRegistry {
-    val rooms = areas.filterIsInstance<JsonObject>().mapNotNull { j -> j.text("area_id")?.let { it to j.text("name") } }.toMap()
+    val rooms = areas.filterIsInstance<JsonObject>().mapNotNull { j -> j.text("area_id")?.let { it to j } }.toMap()
     val deviceList = devices.filterIsInstance<JsonObject>().mapNotNull { j -> j.text("id")?.let { it to j } }.toMap()
     val deviceRooms = deviceList.mapValues { (_, j) -> j.text("area_id") }
     return HaRegistry(entities.filterIsInstance<JsonObject>().mapNotNull { j ->
         val id = j.text("entity_id") ?: return@mapNotNull null
         val areaId = j.text("area_id") ?: deviceRooms[j.text("device_id")]
         val device = deviceList[j.text("device_id")]?.takeIf { j.text("platform") == "sonos" }
-        id to HaEntityInfo(j.text("name"), rooms[areaId],
+        id to HaEntityInfo(j.text("name"), rooms[areaId]?.text("name"),
             j.text("hidden_by") != null || j.text("disabled_by") != null || j.text("entity_category") in setOf("config", "diagnostic"),
             originalName=j.text("original_name"),disabled=j.text("disabled_by")!=null,icon=j.text("icon"),originalIcon=j.text("original_icon"),platform=j.text("platform"),
-            model=device?.string("model"),manufacturer=device?.string("manufacturer"))
+            model=device?.string("model"),manufacturer=device?.string("manufacturer"),roomIcon=rooms[areaId]?.string("icon"))
     }.toMap())
 }
 
@@ -35,7 +37,7 @@ fun entityCatalog(states: List<HaEntity>, registry: HaRegistry): List<HaCatalogI
     .map {(id,_)->HaEntity(id,"unavailable",JsonObject(emptyMap()),0,0)})
     .filter { cardTypesFor(it).isNotEmpty() }.map { entity ->
         val info = registry.entities[entity.id]
-        HaCatalogItem(entity, info?.name?.takeIf(String::isNotBlank) ?: entity.attributes.text("friendly_name") ?: info?.originalName ?: entity.id, info?.room, info?.hidden == true)
+        HaCatalogItem(entity, info?.name?.takeIf(String::isNotBlank) ?: entity.attributes.text("friendly_name") ?: info?.originalName ?: entity.id, info?.room, info?.hidden == true, info?.roomIcon)
     }.sortedWith(compareBy<HaCatalogItem> { it.room == null }.thenBy { it.room?.lowercase().orEmpty() }.thenBy { it.name.lowercase() })
 
 @Serializable data class ForecastDay(val time: Long, val condition: String, val high: Double, val low: Double? = null)

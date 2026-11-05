@@ -26,13 +26,25 @@ class SmartHomeRoomsTest {
         CardConfig("pump",CardType.CLIMATE,"climate.a",name="Varmepumpa"))
     private val entities=mapOf("light.a" to HaEntity("light.a","off",buildJsonObject {},0,0),
         "climate.a" to HaEntity("climate.a","heat",buildJsonObject {put("current_temperature",23);put("temperature",22)},0,0))
-    private val registry=HaRegistry(mapOf("light.a" to HaEntityInfo(room="Småstova"),"climate.a" to HaEntityInfo(room="Kjøkken")))
+    private val registry=HaRegistry(mapOf("light.a" to HaEntityInfo(room="Småstova"),"climate.a" to HaEntityInfo(room="Kjøkken",roomIcon="mdi:stove")))
     private var calls=0
     private fun room(label:String)=compose.onNode(hasText(label) and SemanticsMatcher.expectValue(
         androidx.compose.ui.semantics.SemanticsProperties.Role,androidx.compose.ui.semantics.Role.Tab))
     private fun show(reduceMotion:Boolean=true)=compose.setContent {StovaTheme(reduceMotion=reduceMotion) {
         SmartHomeContent(adult,cards,entities,HaStatus.CONNECTED,registry=registry,onPerform={_,_->calls++},onConfigure={calls++},onLayoutChange={calls++})
     }}
+    @Test fun homeAssistantRoomIconStaysVisibleWhenItsRoomIsSelected() {
+        show()
+        fun icon()=compose.onNode(hasTestTag("ha-icon") and hasAnyAncestor(SemanticsMatcher.expectValue(
+            androidx.compose.ui.semantics.SemanticsProperties.Role,androidx.compose.ui.semantics.Role.Tab)),useUnmergedTree=true)
+        compose.waitUntil(5_000) {compose.onAllNodes(hasTestTag("ha-icon") and hasAnyAncestor(SemanticsMatcher.expectValue(
+            androidx.compose.ui.semantics.SemanticsProperties.Role,androidx.compose.ui.semantics.Role.Tab)),useUnmergedTree=true).fetchSemanticsNodes().isNotEmpty()}
+        icon().assertIsDisplayed()
+        room("Kjøkken").performClick()
+        icon().assertIsDisplayed()
+        room("Kjøkken").assertIsSelected()
+        assertEquals(0,calls)
+    }
     @Test @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
     fun ordinaryRoomNamesFitWithoutBreakingWords() {
         show()
