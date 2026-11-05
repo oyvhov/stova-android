@@ -160,6 +160,7 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
     }
     fun dismissFeedback() {mutableFeedback.value=null}
     suspend fun perform(call: ServiceCall, entityId: String, profile: Profile): Boolean {
+        if(socket.status.value!=HaStatus.CONNECTED) return false
         val active=session.active.value
         if(active?.id!=profile.id || !canControl(active) || entityId in pending.value || entityId.startsWith("alarm_control_panel.") || call.domain=="alarm_control_panel") return false
         val before=mutableEntities.value[entityId]
@@ -179,7 +180,7 @@ class HaRepository(private val socket: HaConnection, private val session: Profil
                 }}
                 // Some bulbs asked to come on without a level stay dark (Taklampe Stova on the Shield,
                 // 2026-11-01), while a level turns them on: ask once more, with the level it last had.
-                if(arrived==null && call.domain=="light" && predicted.state=="on" && mutableEntities.value[entityId]?.state=="off") {
+                if(arrived==null && socket.status.value==HaStatus.CONNECTED && call.domain=="light" && predicted.state=="on" && mutableEntities.value[entityId]?.state=="off") {
                     val level=lastLevels[entityId] ?: 100
                     val again=try {socket.callService("light","turn_on",entityId,kotlinx.serialization.json.buildJsonObject {put("brightness_pct",kotlinx.serialization.json.JsonPrimitive(level))})}
                         catch(e:CancellationException) {throw e} catch(_:Exception) {false}

@@ -18,6 +18,18 @@ import org.junit.rules.TemporaryFolder
 class HaRepositoryTest {
     @get:Rule val dir = TemporaryFolder()
     private fun profiles() = ProfileRepository(JsonFileStore(File(dir.root, "profiles.json"), ProfilesFile.serializer(), ProfilesFile(), UnconfinedTestDispatcher()))
+    @Test fun cachedStateCannotSendOrPredictWhileDisconnected() = runTest {
+        val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection()
+        val repo=HaRepository(socket,s,p,backgroundScope).also {it.showingDashboard(true)}
+        val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()
+        val light=HaEntity("light.a","on",JsonObject(emptyMap()),0,0)
+        repo.add(light,CardType.LIGHT);runCurrent();socket.entities.value=mapOf(light.id to light);runCurrent()
+        socket.status.value=HaStatus.DISCONNECTED;runCurrent()
+        assertFalse(repo.perform(ServiceCall("light","toggle"),light.id,adult))
+        assertEquals(0,socket.calls)
+        assertTrue(repo.pending.value.isEmpty())
+        assertEquals("on",repo.entities.first()[light.id]?.state)
+    }
     @Test fun alarmUnavailableAndRevokedPermissionNeverSend() = runTest {
         val p=profiles();val s=ProfileSession(p,backgroundScope);val socket=FakeHaConnection();val repo=HaRepository(socket,s,p,backgroundScope).also { it.showingDashboard(true) }
         val adult=p.create("A",AvatarColor.LIME,false);s.enter(adult.id);runCurrent()

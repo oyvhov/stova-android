@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ha_connection_unreachable">Cannot reach Home Assistant.</string>
+    <string name="ha_cached_values">Last known values</string>
+    <string name="connection_settings">Connection</string>
+</resources>

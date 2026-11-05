@@ -3,6 +3,7 @@ package app.stova.ha.cards
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
@@ -26,8 +27,10 @@ import kotlin.math.roundToInt
     val latestSend by rememberUpdatedState(send)
     val latestEntity by rememberUpdatedState(entity)
     val latestLocked by rememberUpdatedState(locked)
+    val connectionStatus by socket.status.collectAsStateWithLifecycle()
+    val latestConnected by rememberUpdatedState(connectionStatus==HaStatus.CONNECTED)
     val state=remember(dialog.entityId) {PanelState(scope,entity,sendScope ?: scope) {call ->
-        if(latestLocked || stateText(latestEntity)==StateText.Unavailable || dialog.entityId.startsWith("alarm_control_panel.")) false
+        if(latestLocked || !latestConnected || stateText(latestEntity)==StateText.Unavailable || dialog.entityId.startsWith("alarm_control_panel.")) false
         else latestSend(call,dialog.entityId)
     }}
     val feedback=when {state.pending->stringResource(R.string.ha_v2_pending);state.failed->stringResource(R.string.ha_v2_failed);else->null}
@@ -35,7 +38,7 @@ import kotlin.math.roundToInt
     DisposableEffect(state) {onDispose {state.close()}}
     val shown=state.shown
     if(shown==null) {CardValue(stringResource(R.string.ha_unavailable));return}
-    val enabled=!locked && stateText(entity)!=StateText.Unavailable && !entity!!.id.startsWith("alarm_control_panel.")
+    val enabled=!locked && connectionStatus==HaStatus.CONNECTED && stateText(entity)!=StateText.Unavailable && !entity!!.id.startsWith("alarm_control_panel.")
     val locale=LocalConfiguration.current.locales[0]
     val attrs=shown.attributes
     var confirm by remember(dialog.entityId) {mutableStateOf<ServiceCall?>(null)}

@@ -52,7 +52,8 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
     preparedArtwork: String? = null, loadArtwork: SonosArtLoader? = null,
     shelf: List<SonosMedia> = emptyList(), shelfThumbnail: SonosThumbnail = { _, _, _, _ -> },
     shelfReturn: SonosMedia? = null, onShelfRestored: () -> Unit = {}, onBrowseMedia: (SonosMedia) -> Unit = {},
-    onApplyGroup: ((SonosGroupDraft, (Boolean) -> Unit) -> Unit)? = null) {
+    onApplyGroup: ((SonosGroupDraft, (Boolean) -> Unit) -> Unit)? = null,
+    onConnectionSettings: (() -> Unit)? = null) {
     val room = state.rooms.find { it.id == selectedId } ?: state.rooms.firstOrNull()
     val native = room?.let { coordinator(it, state.rooms) }
     val player = room?.let { sonosPlaybackRoom(it, state) }
@@ -186,6 +187,7 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
                     Text(stringResource(when { state.loading -> R.string.sonos_loading; state.failed -> R.string.sonos_connection_failed; else -> R.string.sonos_empty }),
                         style = MaterialTheme.typography.titleLarge)
                     if (!state.loading) StovaButton(stringResource(R.string.custom_retry), onRetry, Modifier.focusRequester(first))
+                    if (state.failed && onConnectionSettings != null) StovaButton(stringResource(R.string.connection_settings), onConnectionSettings, quiet = true, compact = true)
                 }
             } else {
                 val favorites: @Composable () -> Unit = {

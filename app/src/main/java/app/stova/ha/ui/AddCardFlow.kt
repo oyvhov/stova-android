@@ -247,7 +247,8 @@ private enum class CardGroup(val label:Int,val type:CardType?=null) {
                     .onFocusChanged {if(it.isFocused) {lastCategory=entry;navigation?.cancel();pendingEntity=null}}.semantics {selected=group==entry},primary=group==entry)
             }
         }
-        if(failed) Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
+        if(status!=HaStatus.CONNECTED) HaConnectionNotice(status,catalog.isNotEmpty(),{connection.retryConnection();retry++})
+        if(failed && status==HaStatus.CONNECTED) Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
             Text(stringResource(R.string.ha_v2_failed_load))
             StovaButton(stringResource(R.string.ha_v2_retry),{retryCategory=lastCategory ?: group;restoreAfterRetry=true;retry++},Modifier.focusRequester(retryFocus).onPreviewKeyEvent {event ->
                 when(event.key) {

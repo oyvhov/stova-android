@@ -31,6 +31,8 @@ interface HaConnection {
     /** Pages that need live data while shown hold the connection; with no holder and no watched id the socket rests. */
     fun hold() {}
     fun release() {}
+    /** Keep cached readings; do nothing without a configured service. */
+    fun retryConnection() {}
     suspend fun callService(domain: String, service: String, entityId: String, data: JsonObject = JsonObject(emptyMap())): Boolean
     suspend fun serviceResponse(domain: String, service: String, entityId: String): JsonObject? = null
     suspend fun history(entityId: String, hours: Int = 24): List<Pair<Long, Double>>
@@ -125,6 +127,12 @@ class HaSocket(
         reconcileDemand()
     }
     override fun hold() = post { holders++; reconcileDemand() }
+    override fun retryConnection() = post {
+        if (address() == null || status.value == HaStatus.CONNECTED || status.value == HaStatus.CONNECTING) return@post
+        reconnect?.cancel(); reconnect = null; failures = 0; authFailures = 0
+        if (status.value == HaStatus.SIGNED_OUT) mutableStatus.value = HaStatus.DISCONNECTED
+        reconcileDemand()
+    }
     override fun release() = post { holders = (holders - 1).coerceAtLeast(0); reconcileDemand() }
 
     override fun observeEntities(entityIds: Set<String>): Flow<Map<String, HaEntity>> = callbackFlow {

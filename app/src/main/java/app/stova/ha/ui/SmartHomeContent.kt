@@ -57,6 +57,8 @@ import kotlin.math.ceil
     initialFocusId:String?=null,onCardFocused:(String)->Unit={},overlayOpen:Boolean=false,
     onLayoutChange:(DashboardPrefs)->Unit={},
     backdrop:String?=null,
+    onRetry:()->Unit={},
+    onConnectionSettings:(()->Unit)?=null,
 ) {
     val allCards=cards
     var chosenRoom by remember(profile.id) {mutableStateOf<SmartHomeRoom>(SmartHomeRoom.All)}
@@ -234,7 +236,7 @@ import kotlin.math.ceil
                 HaStatusLabel(status)
             }
             Text(stringResource(R.string.nav_smart_home),Modifier.semantics {heading()},style=MaterialTheme.typography.headlineSmall)
-            DashboardSummary(allCards,entities,canControl(profile),summaryFocus,Modifier.fillMaxWidth()) {lightsToTurnOff=it}
+            DashboardSummary(allCards,entities,canControl(profile) && status==HaStatus.CONNECTED,summaryFocus,Modifier.fillMaxWidth()) {lightsToTurnOff=it}
         }
     Column(Modifier.weight(1f).fillMaxHeight(),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth().focusRequester(headerFocus).focusRestorer()
@@ -262,6 +264,7 @@ import kotlin.math.ceil
                 DashboardTool(stringResource(R.string.ha_add_card),StovaIcons.Plus,onAdd)
             }
         }
+        HaConnectionNotice(status,entities.isNotEmpty(),onRetry,onSettings=onConnectionSettings)
         if(status==HaStatus.NOT_CONFIGURED) {
             Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.large).padding(28.dp),
                 verticalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -305,7 +308,8 @@ import kotlin.math.ceil
                             }
                         }
                         Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                            HaCard(card,entities[card.entityId],!canControl(profile),{onPerform(it,card.entityId)},{restoreId=card.id;onDialog(it)},images,
+                            HaCard(card,entities[card.entityId],!canControl(profile),{if(status==HaStatus.CONNECTED) onPerform(it,card.entityId)},{restoreId=card.id;onDialog(it)},images,
+                                connected=status==HaStatus.CONNECTED,
                                 visible="band-${band.first().card.id}" in visible,
                                 onEdit=if(editing) {{menuId=card.id;restoreId=card.id}} else null,
                                 onMenu=if(!profile.kid) {{menuId=card.id;restoreId=card.id}} else null,

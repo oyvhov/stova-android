@@ -158,6 +158,13 @@ class HaSocketTest {
             delay(100); assertEquals(2, server.requestCount)
         } finally { scope.cancel() }
     }
+    @Test fun retryWithoutDemandDoesNotOpenTheSocket() = runBlocking {
+        try {
+            val s = socket(); s.start(); s.retryConnection(); delay(150)
+            assertEquals(0, server.requestCount)
+            assertEquals(HaStatus.DISCONNECTED, s.status.value)
+        } finally { scope.cancel() }
+    }
     @Test fun callServiceSendsTargetAndReturnsSuccess() = runBlocking {
         try {
             enqueue(); val s = socket(); s.watch(setOf("light.stove")); s.start(); connected(s)

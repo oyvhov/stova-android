@@ -133,14 +133,15 @@ class AddCardV2Test {
         val socket=FakeHaConnection().apply {status.value=HaStatus.CONNECTING;allStates=listOf(light("light.Lampe"))}
         compose.setContent {StovaTheme {AddCardFlow(socket,{_,_->},{},roomFirst=false)}}
         compose.onNodeWithContentDescription("Koplar til …").assertExists()
-        compose.onNodeWithText("Koplar til …").assertDoesNotExist();assertEquals(0,socket.stateRequests)
+        compose.onNodeWithText("Koplar til …").assertExists();assertEquals(0,socket.stateRequests)
         // The picker needs live states, so it holds the connection while shown.
         assertEquals(1,socket.holders)
         compose.runOnIdle {socket.status.value=HaStatus.CONNECTED}
         compose.waitUntil(5_000) {socket.stateRequests==1}
         compose.onNodeWithText("Lampe").assertExists()
         compose.runOnIdle {socket.status.value=HaStatus.DISCONNECTED}
-        compose.onNodeWithText("Fråkopla").assertExists()
+        compose.onNodeWithText("Kan ikkje nå Home Assistant.").assertExists()
+        compose.onNodeWithText("Sist kjende verdiar").assertExists()
         compose.runOnIdle {socket.allStates=listOf(light("light.Ny"));socket.status.value=HaStatus.CONNECTED}
         compose.waitUntil(5_000) {socket.stateRequests==2}
         compose.onNodeWithText("Ny").assertExists()

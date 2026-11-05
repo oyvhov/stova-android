@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun SonosScreen(container: AppContainer, profile: Profile, session: SonosSession, prefs: SonosPrefs,
-    images: HaImageSource?, allowed: Boolean, entryRoom: String?, onRetry: () -> Unit, onBack: () -> Unit) {
+    images: HaImageSource?, allowed: Boolean, entryRoom: String?, onRetry: () -> Unit, onBack: () -> Unit, onConnectionSettings: (() -> Unit)? = null) {
     val repository = session.repository
     val state = session.state
     var selected by rememberSaveable(profile.id) { mutableStateOf(entryRoom) }
@@ -101,7 +101,7 @@ internal fun SonosScreen(container: AppContainer, profile: Profile, session: Son
     }, act,
         {}, { openLibrary(player?.id) }, onRetry, busy || session.busy, failed || session.failed,
         backgroundArt = prefs.backgroundArt && profile.appearance.backgroundSource != app.stova.profiles.BackgroundSource.THEME,
-        onBack = onBack, roomsOpen = roomsOpen, onRoomsOpen = { roomsOpen = it },
+        onBack = onBack, roomsOpen = roomsOpen, onRoomsOpen = { roomsOpen = it },onConnectionSettings = onConnectionSettings,
         preparedArtwork = prepared?.path, loadArtwork = loadArt,
         immersive = immersive, onImmersive = { immersive = it },
         onBrowseMusicAssistant = state.musicAssistant[player?.id]?.takeIf { it.available && it.supports(131072) }?.let { ma -> { openLibrary(ma.id) } },

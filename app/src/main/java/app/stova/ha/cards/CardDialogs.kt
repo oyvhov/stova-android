@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -58,6 +59,7 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
     val sendScope=rememberCoroutineScope()
     if(dialog==null) return
     val entity=entities[dialog.entityId]
+    val connectionStatus by socket.status.collectAsStateWithLifecycle()
     val pages=remember(dialog) {SheetPages()}
     val first=remember(dialog) {FocusRequester()}
     val close=remember(dialog) {FocusRequester()}
@@ -86,6 +88,7 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
                 }
                 if(locked || dialog.entityId.startsWith("alarm_control_panel.")) CardDetail(stringResource(R.string.ha_action_read_only))
             }
+            app.stova.ha.ui.HaConnectionNotice(connectionStatus,entity!=null,socket::retryConnection)
             @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
             CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides app.stova.core.ui.ScrollOnlyWhenHidden) {
             Column(Modifier.weight(1f).fillMaxWidth().focusRequester(first).focusGroup()

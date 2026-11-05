@@ -16,7 +16,7 @@ import app.stova.profiles.Profile
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@Composable fun SmartHomeScreen(container:AppContainer,profile:Profile,initialCardId:String?=null,backdrop:String?=null) {
+@Composable fun SmartHomeScreen(container:AppContainer,profile:Profile,initialCardId:String?=null,backdrop:String?=null,onConnectionSettings:(()->Unit)?=null) {
     androidx.lifecycle.compose.LifecycleResumeEffect(container.haRepository) {
         container.haRepository.showingDashboard(true)
         onPauseOrDispose { container.haRepository.showingDashboard(false) }
@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
         onConfigure={card->scope.launch {container.haRepository.configure(card.id,card.size,card.name,card.icon,card.favorite,card.hiddenModes)}},
         onChipStyle={card,style->container.haRepository.setChipStyle(card.id,style)},
         registry=registry,pending=pending,feedback=feedback,connection=container.haSocket,completed=completed,overlayOpen=dialog!=null || adding,
-        initialFocusId=firstFocus,onCardFocused={container.haRepository.rememberFocus(profile.id,it)})
+        initialFocusId=firstFocus,onCardFocused={container.haRepository.rememberFocus(profile.id,it)},onRetry=container.haSocket::retryConnection,onConnectionSettings=onConnectionSettings)
     if(adding && !profile.kid) AddCardDialog(container) {adding=false}
     CardDialogHost(dialog,entities,container.haSocket,images,!canControl(profile),{call,id->scope.launch {container.haRepository.perform(call,id,profile)}},{dialog=null},room=dialog?.let {registry.entities[it.entityId]?.room},
         name=cards.find {it.entityId==dialog?.entityId}?.name,send={call,id->container.haRepository.perform(call,id,profile)})

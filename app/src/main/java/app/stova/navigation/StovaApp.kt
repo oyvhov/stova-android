@@ -88,6 +88,7 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     val pageOpen = remember { PageOpenContext() }
     val heldPages = rememberSaveableStateHolder()
     var sonosEntryRoom by remember(profile.id) { mutableStateOf<String?>(null) }
+    var settingsEntry by remember(profile.id) { mutableStateOf(app.stova.settings.SettingsSection.APPEARANCE) }
     fun openPage(destination: Destination, roomId: String? = null) {
         if (destination == Destination.SONOS) sonosEntryRoom = roomId
         trail = trail.open(destination, pageOpen.opening)
@@ -318,8 +319,9 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                             // From a tile in the grid, as from Home's row: the page grows from the middle, and Back comes back here.
                             onOpenDiscover = { discoverStart = null; openPage(Destination.DISCOVER) })
                     }
-                    Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId,backdrop=backdrop.shown)
-                    Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile,
+                    Destination.SMART_HOME -> app.stova.ha.ui.SmartHomeScreen(container,profile,initialCardId=smartHomeCardId,backdrop=backdrop.shown,
+                        onConnectionSettings={settingsEntry=app.stova.settings.SettingsSection.SMART_HOME;openPage(Destination.SETTINGS)})
+                    Destination.SETTINGS -> SettingsScreen(container, profile, home, switchProfile, initialSection=settingsEntry,
                         onOpenSonos = { openPage(Destination.SONOS) },
                         onOpenApps = { openPage(Destination.APPS) })
                     // Opened at the title a card showed, or at the rows; Back walks the page's own steps, then to where the
@@ -328,7 +330,9 @@ private fun MainShell(container: AppContainer, profile: Profile) {
                         start = discoverStart?.let { app.stova.discover.DiscoverStep.Title(it.type, it.tmdbId, it) } ?: app.stova.discover.DiscoverStep.Rows,
                         onLeave = { if (current == Destination.DISCOVER) back() })
                     Destination.SONOS -> SonosScreen(container, profile, sonos, sonosPrefs, musicImages,
-                        allowed = sonosEnabled || household == null, entryRoom = sonosEntryRoom, onRetry = { sonosRetry++ }, onBack = back)
+                        allowed = sonosEnabled || household == null, entryRoom = sonosEntryRoom,
+                        onRetry = { container.haSocket.retryConnection();sonosRetry++ }, onBack = back,
+                        onConnectionSettings={settingsEntry=app.stova.settings.SettingsSection.SMART_HOME;openPage(Destination.SETTINGS)})
                 }
                 }
             }

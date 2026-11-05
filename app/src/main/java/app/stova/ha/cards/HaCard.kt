@@ -20,7 +20,7 @@ import kotlinx.coroutines.*
 fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCall)->Unit,openDialog:(CardDialog)->Unit,
     images:HaImageSource?=null,visible:Boolean=true,onEdit:(()->Unit)?=null,onMenu:(()->Unit)?=null,
     pending:Boolean=false,connection:HaConnection?=null,modifier:Modifier=Modifier,room:String?=null,
-    onMove:((Int)->Unit)?=null,editing:Boolean=false,completed:Boolean=false,inputSuspended:Boolean=false) {
+    onMove:((Int)->Unit)?=null,editing:Boolean=false,completed:Boolean=false,inputSuspended:Boolean=false,connected:Boolean=true) {
     val unavailable=stateText(entity)==StateText.Unavailable
     var history by remember(config.entityId) {mutableStateOf(emptyList<Double>())}
     var forecast by remember(config.entityId) {mutableStateOf(emptyList<ForecastDay>())}
@@ -53,7 +53,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
     fun click() {
         if(onEdit!=null) {onEdit();return}
         if(unavailable || entity==null) return
-        if(locked) {panel();return}
+        if(locked || !connected) {panel();return}
         when(config.type) {
             CardType.SENSOR -> openDialog(CardDialog.Graph(entity.id))
             CardType.ENERGY_PRICE -> openDialog(CardDialog.Graph(entity.id,true))
@@ -67,7 +67,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
     CardFrame(config,cardIcon(config.type,shown,config.icon),config.name ?: entity?.let(::friendlyName) ?: config.entityId,
         badge,locked,::click,onLongClick=::panel,onMenu=onMenu,
         // Unavailable content already says so in muted text. Keep its focus ring fully readable.
-        modifier=modifier,glow=if(config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,leading=leading,
+        modifier=modifier,glow=if(connected && config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,leading=leading,
         wash=if(config.type==CardType.WEATHER && shown!=null) app.stova.core.theme.HaTokens.sky(shown.state).let {sky ->
             androidx.compose.ui.graphics.Brush.verticalGradient(listOf(sky.copy(alpha=.26f),sky.copy(alpha=.05f)))} else null,
         onMove=onMove,editing=editing,inputSuspended=inputSuspended,onMediaKey={key ->
@@ -78,7 +78,7 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
                 else->null
             }
             if(config.type==CardType.MEDIA_PLAYER && service!=null) {
-                if(!locked && !pending && !unavailable && !editing && shown?.isTvAudio != true) perform(ServiceCall("media_player",service))
+                if(connected && !locked && !pending && !unavailable && !editing && shown?.isTvAudio != true) perform(ServiceCall("media_player",service))
                 true
             } else false
         }) {

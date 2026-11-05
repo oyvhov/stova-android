@@ -173,6 +173,7 @@ rad- og tittel-id-ar som nøklar.
   legg til eit eige transparent Spole-merke i Stova sin katalog utan å endre tredjepartspakken.
 - HA-socketen treng synlege Heim-brikker, ein open Smarthus-/legg-til-flyt eller synleg oppsett HA-innstillingsside. Innstillingane held transporten open for sann tilkoplingsstatus utan eigne einingsabonnement. Bakgrunn og tapt behov har ein kort fråkoplingsfrist.
 - Heim abonnerer på høgst tre synlege HA-brikker; Smarthus abonnerer på korta i dashbordet.
+- `HaConnectionNotice` viser sist kjende verdiar ved brot og tilbyr ny tilkopling utan å tømme mellomlageret. Dashbord, opne kontrollpanel og `HaRepository.perform` avviser sending når socketen ikkje er tilkopla. Sonos-feil har veg til HA-oppsettet; innstillingssida kan opnast direkte på Smarthus.
 - HA-registeret blir brukt om att i seks timar. Historikk og prognosar blir delte mellom kort og panel.
 - HA-snapshot blir skrive høgst kvart minutt og forsøkt flusha ved stopp. Berre tidsstempelendringar gir inga skriving.
 - Watch Next registrerer ingen innhaldslyttar utan løyve. Klokker stoppar når skjermen ikkje er aktiv.

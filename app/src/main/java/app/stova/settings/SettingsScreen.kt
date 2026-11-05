@@ -39,12 +39,12 @@ internal val SettingsSection.merged: SettingsSection get() = when (this) {
 
 /** Sections on the left, the chosen one on the right, as in Spole's TV settings. */
 @Composable
-fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewModel, onSwitchProfile: () -> Unit, onOpenApps: () -> Unit = {}, onOpenSonos: () -> Unit = {}) {
+fun SettingsScreen(container: AppContainer, profile: Profile, home: HomeViewModel, onSwitchProfile: () -> Unit, onOpenApps: () -> Unit = {}, onOpenSonos: () -> Unit = {}, initialSection: SettingsSection = SettingsSection.APPEARANCE) {
     if (profile.kid) {
         KidSettings(onSwitchProfile)
         return
     }
-    var section by rememberSaveable { mutableStateOf(SettingsSection.APPEARANCE) }
+    var section by rememberSaveable(initialSection) { mutableStateOf(initialSection) }
     val context = androidx.compose.ui.platform.LocalContext.current
     SettingsLayout(section.merged, { section = it }, onOpenApps, appsPane = { AppsPane(profile) }) { shown, _ ->
         if (shown != SettingsSection.APPEARANCE && shown != SettingsSection.SMART_HOME) PageHeader(stringResource(shown.pageTitle), shown.icon,
