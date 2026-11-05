@@ -1,3 +1,9 @@
+# Nytt Sonos-omslag: Paradise
+2026-11-05 (Codex): Eigaren bad om eit finare omslag/song. Valde «Paradise» av Coldplay og tok `output/screenshots/Shield-2026-11-05/09-Sonos-fullskjerm-Coldplay-Paradise.png`, 3840 × 2160, visuelt kontrollert.
+Shield står på Sonos i fullskjerm, Kjøkken i den eksisterande gruppa med Storestova, pausa ved 0:00 / 4:38. Ingen volum- eller gruppeendringar.
+Prøvde Spel på favoritten 2023 og brukte deretter Neste/Førre i køen for å velje omslag. Biblioteket Favorites → Playlists gav hentefeil to gonger; brukte køen vidare, utan koderetting.
+Ingen kode, installering eller bygg/testar. Biletet skal leverast direkte i samtalen. Spørsmålet om ei eventuell tredje side etter «og» er framleis ubesvart.
+
 # Heim og Sonos i fullskjerm
 2026-11-05 (Codex): Oppdaterte Heim-biletet og tok Sonos i fullskjerm på Shield etter ny bestilling; `output/screenshots/Shield-2026-11-05/01-Heim.png` og `06-Sonos-fullskjerm.png`.
 Begge PNG-filer er 3840 × 2160 og visuelt kontrollerte; skal visast direkte i samtalen, utan ZIP.
