@@ -1,3 +1,10 @@
+# Brei UI-vurdering mot Apple og Google
+2026-11-05 (Codex): Lesande gjennomgang av 12 flytar på Shield; 29 inspiserte skjermbilete og tre opptak i `.superpowers/ui-audit-2026-11-05/`. Full rapport `Stova-UI-rapport-Apple-Google.html`, kort oversikt `Oversikt.png`; kjelder og funn i `docs/verification/2026-11-05-ui-apple-google.md`.
+P1: svarte Oppdag-sidebyte reproduserte i to opptak (34–134 ms), kvit omtale over lys kunst, og sprikande fråkopla tilstand i Smarthus / Sonos / Legg til. Årsaka til dei svarte rammene er ikkje fastsett. Ingen appkode eller installering endra; dette er vurdering, inga ny implementeringsbestilling.
+HA svara ikkje under hovuddelen av økta, også etter Prøv igjen. Sonos-fullskjerm/bibliotek/widget/låtbyte, barnevising, PIN, større skrift, redusert rørsle, TalkBack og fysisk MENY er ikkje verifiserte. Varmepumpe-panelet lukka til rett rom utan flygande stripe i den prøva.
+Ingen kontrollkommandoar mot lyd/lys/varme, førespurnader sende eller profil-/kontoinnstillingar lagra. Shield tilbake på Heim i Øyvind-profilen, same APK SHA-256 som før. Ingen emulator eller Loftet brukt.
+HTML-struktur, 60 interne lenkjer, 29 PNG og tre MP4 er validerte; all akseptert kjeldekunst og oversikta er inspisert. Automatisk nettlesarførehandsvising vart blokkert (lokal server avvist, file-protokoll ikkje tillaten); ingen omgåing prøvd, rapportfila kan opnast manuelt. Ingen uferdig kode.
+
 # Sonos-høgd og fokus retta på Shield
 2026-11-05 (Codex): `4d00cca` gir botnknappane plass med mindre høgd/mellomrom. Eigaren avviste flytting av favorittane: sluttkoden bevarer rada i spelarfeltet ved sida av romlista, som før.
 Omslagsfokus utan tittel, namnet Favorittar, Ned til første favoritt og eksplisitt retur til opnaren er retta. Felles standard er svakt løft + mjukt lys, også for barn; vindauge utan input teiknar ikkje attståande fokus bak popup/dialog.
