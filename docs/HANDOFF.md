@@ -1,3 +1,9 @@
+# Fem nye skjermbilete frå Shield
+2026-11-05 (Codex): Tok nye PNG-bilete av Heim, Appar, Oppdag, Smarthus og Sonos på Shield, etter bestilling frå eigaren.
+Alle fem er 3840 × 2160 og visuelt kontrollerte; ligg i `output/screenshots/Shield-2026-11-05/`. Eigaren vil ha bileta direkte i samtalen, utan ZIP.
+Shield var i kvile og vart vekt med WAKEUP; sett tilbake på Heim i same Øyvind-profil etter opptaka. Ingen lyd-/lys-/varmekommandoar eller endra profilinnstillingar.
+Ingen appkode, installering eller bygg/testar i denne reine skjermbiletøkta. Ingen uferdig arbeid eller spørsmål; emulator og Loftet urørte.
+
 # Samla UI-retting og romikon frå Home Assistant
 2026-11-05 (Codex): Fullført alle sju stega i `docs/superpowers/plans/2026-11-05-ui-utbetringar.md`: kontinuerleg favorittflytting, lesbarheit, fråkopla tilstandar, kortare menyar, heil applogo og flate romlister med HA-ikon.
 Oppdag måtte òg halde sjølve biletekomposisjonen levande (`DiscoverStage`); nytt opptak av to opningar/returar har ingen svarte blackdetect-segment. Native materiale og 13 validerte kjeldefiler i `.superpowers/ui-fixes-2026-11-05/`; samla resultat i `docs/verification/2026-11-05-ui-utbetringar.md`.
