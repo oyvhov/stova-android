@@ -744,7 +744,7 @@
     <string name="ha_density_compact">Compact · more cards</string>
     <string name="ha_density_balanced">Balanced · default</string>
     <string name="ha_density_airy">Spacious · larger cards</string>
-    <string name="ha_layout_hint">Cards adapt to the screen and text size. Press Menu on a card to change its individual size.</string>
+    <string name="ha_layout_hint">Press Menu on a card to change its size.</string>
     <string name="ha_move">Move card</string>
     <string name="ha_move_earlier">Earlier in order</string>
     <string name="ha_move_later">Later in order</string>

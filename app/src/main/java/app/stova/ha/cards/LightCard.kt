@@ -1,5 +1,6 @@
 package app.stova.ha.cards
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material3.*
 import androidx.compose.ui.res.stringResource
 import app.stova.R
@@ -23,6 +24,9 @@ import app.stova.ha.text
             if(glow.colored) Box(Modifier.size(10.dp).background(glow.color,CircleShape))
             else if(kelvin!=null) CardDetail(stringResource(temperatureWord(kelvin.toInt())))
         }
-        if(percent!=null) LinearProgressIndicator(progress={percent/100f},modifier=Modifier.fillMaxWidth().height(3.dp),color=glow.color,trackColor=MaterialTheme.colorScheme.surfaceVariant,drawStopIndicator={})
+        if(percent!=null) {
+            val progress=animateFloatAsState(percent/100f,app.stova.core.theme.stovaMotion.fade(),label="light-level")
+            LinearProgressIndicator(progress={progress.value},modifier=Modifier.fillMaxWidth().height(3.dp),color=glow.color,trackColor=MaterialTheme.colorScheme.surfaceVariant,drawStopIndicator={})
+        }
     }
 }

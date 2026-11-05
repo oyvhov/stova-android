@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -67,7 +66,8 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
     }
     CardFrame(config,cardIcon(config.type,shown,config.icon),config.name ?: entity?.let(::friendlyName) ?: config.entityId,
         badge,locked,::click,onLongClick=::panel,onMenu=onMenu,
-        modifier=modifier.alpha(if(unavailable) 0.55f else 1f),glow=if(config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,leading=leading,
+        // Unavailable content already says so in muted text. Keep its focus ring fully readable.
+        modifier=modifier,glow=if(config.type==CardType.LIGHT) lightGlow(shown) else null,pending=pending,leading=leading,
         wash=if(config.type==CardType.WEATHER && shown!=null) app.stova.core.theme.HaTokens.sky(shown.state).let {sky ->
             androidx.compose.ui.graphics.Brush.verticalGradient(listOf(sky.copy(alpha=.26f),sky.copy(alpha=.05f)))} else null,
         onMove=onMove,editing=editing,inputSuspended=inputSuspended,onMediaKey={key ->
@@ -110,7 +110,9 @@ fun HaCard(config:CardConfig,entity:HaEntity?,locked:Boolean,perform:(ServiceCal
 }
 @Composable internal fun CardValue(value:String,unit:String?=null,style:androidx.compose.ui.text.TextStyle=MaterialTheme.typography.headlineMedium) {
     Row(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=androidx.compose.ui.Alignment.Bottom) {
-        Text(value,style=style,color=MaterialTheme.colorScheme.onSurface,modifier=Modifier.weight(1f,fill=false),maxLines=2,overflow=TextOverflow.Ellipsis)
+        androidx.compose.animation.Crossfade(value,Modifier.weight(1f,fill=false),app.stova.core.theme.stovaMotion.fade(),label="card-value") { shown ->
+            Text(shown,style=style,color=MaterialTheme.colorScheme.onSurface,maxLines=2,overflow=TextOverflow.Ellipsis)
+        }
         if(!unit.isNullOrBlank()) Text(unit,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(bottom=4.dp))
     }
 }

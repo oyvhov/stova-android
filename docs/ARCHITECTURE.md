@@ -47,6 +47,14 @@ av eit Smarthus-kort, skjer etter utgangen. Fokuset går tilbake til opningsbrik
 eller Oppsett-knappen. Vêrtonen og volumfyllinga blir endra i teikne-/lagfasen.
 `CardFrame` tek berre imot eit nytt OK-trykk frå ein fersk tast-ned-hending.
 Gjentaking og lausriven tast-opp etter eit panelbyte utløyser aldri kortet.
+`StovaOverlay` held ei gjennomsiktig heilskjermsramme heilt til vindauget
+blir fjerna. Det hindrar at Android sitt `wrap`-vindauge krympar til ei
+skuggestripe når animasjonsinnhaldet forsvinn. Topp-popupen animerer alfa og
+skala på eit innhald som held sine mål og sitt anker gjennom utgangen.
+MENY på eit kort opnar ved slepp; gjenteken tast-ned opnar ikkje fleire panel.
+Smarthus viser målingane i korta, og berre den felles lyshandlinga i toppfeltet.
+Kontrollpanel har ei midtstilt hovudavlesing og ein slider med teikna spor og
+gripepunkt. Verdiar tonar over; lysfyll og nivå endrar seg i teiknefasen.
 
 `SonosLabels` gir Sonos eit felles oppsett for tittel og sekundærtekst frå
 Heim til spelaren, biblioteket og Fleire val. Visingsnamnet tek bort eit

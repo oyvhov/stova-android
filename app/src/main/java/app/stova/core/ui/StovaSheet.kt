@@ -139,14 +139,15 @@ fun SheetSection(title: String, detail: String? = null) {
 /** One calm row: icon, label, an optional value, a tick when chosen and a chevron when it opens a page. */
 @Composable
 fun SheetAction(label: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier,
-    value: String? = null, opensPage: Boolean = false, chosen: Boolean = false, danger: Boolean = false) {
+    value: String? = null, opensPage: Boolean = false, chosen: Boolean? = null, danger: Boolean = false,
+    enabled: Boolean = true) {
     val source = remember { MutableInteractionSource() }
     val shape = MaterialTheme.shapes.medium
     val colors = MaterialTheme.colorScheme
     Row(modifier.fillMaxWidth().heightIn(min = StovaLayout.SheetRowMinHeight)
-        .semantics { if (chosen) selected = true }
+        .semantics { chosen?.let { selected = it } }
         .focusOutline(source, shape).clip(shape)
-        .clickable(source, indication = null, role = Role.Button, onClick = onClick)
+        .clickable(interactionSource = source, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
         .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         Icon(icon, null, Modifier.size(22.dp), tint = if (danger) colors.error else colors.onSurfaceVariant)
@@ -156,7 +157,7 @@ fun SheetAction(label: String, icon: ImageVector, onClick: () -> Unit, modifier:
             Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (chosen) Icon(StovaIcons.Check, null, Modifier.size(18.dp), tint = colors.primary)
+        if (chosen == true) Icon(StovaIcons.Check, null, Modifier.size(18.dp), tint = colors.primary)
         if (opensPage) Icon(StovaIcons.ChevronRight, null, Modifier.size(14.dp), tint = colors.onSurfaceVariant)
     }
 }

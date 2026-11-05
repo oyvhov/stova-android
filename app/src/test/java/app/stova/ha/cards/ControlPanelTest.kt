@@ -26,6 +26,19 @@ class ControlPanelTest {
     private fun panel(dialog:CardDialog,e:HaEntity,locked:Boolean=false) {
         compose.setContent {StovaTheme {CardDialogHost(dialog,mapOf(e.id to e),FakeHaConnection(),null,locked,{c,_->calls+=c},{})}}
     }
+    @Test fun modeChoicesIdentifyTheCurrentModeAsSelected() {
+        panel(CardDialog.Climate("climate.a"),entity("climate.a","heat","""{"hvac_modes":["heat","cool"]}"""))
+        compose.onNodeWithText("Drift").performClick()
+        compose.onNodeWithText("Varme").assertIsSelected()
+        compose.onNodeWithText("Kjøling").assertIsNotSelected()
+    }
+    @Test fun aLockedPanelCanBrowseModesButCannotSelectOne() {
+        panel(CardDialog.Climate("climate.a"),entity("climate.a","heat","""{"hvac_modes":["heat","cool"]}"""),locked=true)
+        compose.onNodeWithText("Drift").performClick()
+        compose.onNodeWithText("Varme").assertIsNotEnabled()
+        compose.onNodeWithText("Kjøling").assertIsNotEnabled()
+        assertTrue(calls.isEmpty())
+    }
     @Test fun closeButtonUsesTheSameExitAsBack() {
         val light=entity("light.a",attrs="""{"brightness":128,"supported_color_modes":["brightness"]}""")
         var open by mutableStateOf(true)

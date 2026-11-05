@@ -744,7 +744,7 @@
     <string name="ha_density_compact">Kompakt · fleire kort</string>
     <string name="ha_density_balanced">Balansert · standard</string>
     <string name="ha_density_airy">Romleg · større kort</string>
-    <string name="ha_layout_hint">Korta tilpassar seg skjermen og skriftstorleiken. Trykk Meny på eit kort for å endre storleiken på akkurat det kortet.</string>
+    <string name="ha_layout_hint">Meny på eit kort endrar storleiken.</string>
     <string name="ha_move">Flytt kort</string>
     <string name="ha_move_earlier">Tidlegare i rekkja</string>
     <string name="ha_move_later">Seinare i rekkja</string>

@@ -18,6 +18,8 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.foundation.border
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.draw.drawBehind
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -51,9 +53,10 @@ fun CardFrame(config: CardConfig, icon: ImageVector, label: String, badge: Strin
     val lit=glow!=null && glow.alpha>0f
     val surface=MaterialTheme.colorScheme.surface
     val fill=if(lit) glow.color.copy(alpha=glow.alpha).compositeOver(surface) else surface
+    val cardFill=animateColorAsState(fill,app.stova.core.theme.stovaMotion.fade(),label="card-fill")
     val small=config.size==CardSize.S
     Row(modifier.fillMaxWidth().height(IntrinsicSize.Min).heightIn(min=if(config.size==CardSize.L) 320.dp else 152.dp)
-        .focusOutline(source,shape).then(if(editing) Modifier.border(1.dp,MaterialTheme.colorScheme.outline,shape) else Modifier).clip(shape).background(fill)
+        .focusOutline(source,shape).then(if(editing) Modifier.border(1.dp,MaterialTheme.colorScheme.outline,shape) else Modifier).clip(shape).drawBehind {drawRect(cardFill.value)}
         .then(if(wash!=null) Modifier.background(wash) else Modifier)
         .onPreviewKeyEvent {event -> when {
             event.key==Key.Menu -> {

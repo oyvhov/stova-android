@@ -1,13 +1,8 @@
 package app.stova.core.ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -22,6 +17,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -71,10 +67,14 @@ internal fun TopActionDropdown(onDismiss: () -> Unit, width: Dp, gap: Dp = 10.dp
     }
     Popup(popupPositionProvider = position, onDismissRequest = ::close, properties = PopupProperties(focusable = true)) {
         val origin = TransformOrigin(if (alignEnd) 1f else 0f, 0f)
-        AnimatedVisibility(shown, enter = if (motion.still) EnterTransition.None else fadeIn(motion.enter()) + scaleIn(motion.enter(), initialScale = .985f,
-            transformOrigin = origin), exit = if (motion.still) ExitTransition.None else fadeOut(motion.exit()) +
-                scaleOut(motion.exit(), targetScale = .985f, transformOrigin = origin)) {
-            Column(Modifier.width(width).clip(MaterialTheme.shapes.large)
+        val transition = rememberTransition(shown, label = "top-popup")
+        val opacity = transition.animateFloat(transitionSpec = { if (targetState) motion.enter() else motion.exit() }, label = "opacity") { if (it) 1f else 0f }
+        val scale = transition.animateFloat(transitionSpec = { if (targetState) motion.enter() else motion.exit() }, label = "scale") { if (it) 1f else .985f }
+        // Keep the native window's bounds and anchor until removal. Removing the last measured
+        // child before the dismissal made the empty window move and leave a dark shadow behind.
+        Column(Modifier.width(width).graphicsLayer {
+            alpha = opacity.value; scaleX = scale.value; scaleY = scale.value; transformOrigin = origin
+        }.clip(MaterialTheme.shapes.large)
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = StovaDropdown.SurfaceAlpha))
                 .onPreviewKeyEvent { event ->
                     if (!shown.targetState) true
@@ -84,7 +84,6 @@ internal fun TopActionDropdown(onDismiss: () -> Unit, width: Dp, gap: Dp = 10.dp
                 // Holding OK may have opened it; that hold's repeats and release must not choose anything.
                 .freshPressesOnly()
                 .padding(vertical = 10.dp)) { content(::close) }
-        }
     }
 }
 

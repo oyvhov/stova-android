@@ -30,14 +30,15 @@ internal fun lightLevel(entity:HaEntity):Double? = if(entity.state=="off") 0.0 e
     // Large text scrolls the reading and control separately. It must remain reachable with Up.
     val readingFocus=if(LocalDensity.current.fontScale>=1.5f) Modifier.semantics(mergeDescendants=true) {}
         .focusOutline(source,MaterialTheme.shapes.medium).focusable(interactionSource=source) else Modifier
-    Row(Modifier.fillMaxWidth().then(readingFocus),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(20.dp)) {
-        Icon(icon,null,Modifier.size(56.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
-        Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(2.dp)) {
+    Column(Modifier.fillMaxWidth().then(readingFocus).padding(vertical=8.dp),horizontalAlignment=Alignment.CenterHorizontally,
+        verticalArrangement=Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            Icon(icon,null,Modifier.size(18.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
             Text(label,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(value,style=MaterialTheme.typography.displaySmall,color=MaterialTheme.colorScheme.onSurface)
-            detail?.takeIf {it.isNotBlank()}?.let {Text(it,style=MaterialTheme.typography.bodyMedium,maxLines=1,
-                overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurfaceVariant)}
         }
+        Text(value,style=MaterialTheme.typography.displaySmall,color=MaterialTheme.colorScheme.onSurface)
+        detail?.takeIf {it.isNotBlank()}?.let {Text(it,style=MaterialTheme.typography.bodyMedium,maxLines=1,
+            overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurfaceVariant)}
     }
 }
 
@@ -87,17 +88,19 @@ internal fun lightLevel(entity:HaEntity):Double? = if(entity.state=="off") 0.0 e
             }
         }
         "hvac" -> attrs.strings("hvac_modes").filter {it !in (dialog as CardDialog.Climate).hiddenModes}.forEach {mode->
-            StovaButton(modeLabel(mode),{choose(ServiceCall("climate","set_hvac_mode",buildJsonObject {put("hvac_mode",mode)}))},
-                Modifier.fillMaxWidth(),enabled=enabled,primary=entity.state==mode)
+            SheetAction(modeLabel(mode),when(mode) {"heat"->StovaIcons.Sun;"cool"->StovaIcons.Snow;"off"->StovaIcons.Toggle;else->StovaIcons.Climate},
+                {choose(ServiceCall("climate","set_hvac_mode",buildJsonObject {put("hvac_mode",mode)}))},
+                enabled=enabled,chosen=entity.state==mode)
         }
         "presets" -> attrs.strings("preset_modes").filter {it !in (dialog as CardDialog.Climate).hiddenModes}.forEach {preset->
-            StovaButton(presetLabel(preset),{choose(ServiceCall("climate","set_preset_mode",buildJsonObject {put("preset_mode",preset)}))},
-                Modifier.fillMaxWidth(),enabled=enabled,primary=attrs.text("preset_mode")==preset)
+            SheetAction(presetLabel(preset),StovaIcons.Rows,{choose(ServiceCall("climate","set_preset_mode",buildJsonObject {put("preset_mode",preset)}))},
+                enabled=enabled,chosen=attrs.text("preset_mode")==preset)
         }
         "sources" -> attrs.strings("source_list").forEach {source->
             val features=attrs.number("supported_features")?.toInt()
-            StovaButton(source,{choose(ServiceCall("media_player","select_source",buildJsonObject {put("source",source)}))},
-                Modifier.fillMaxWidth(),enabled=enabled && (features==null || features and 2048!=0),primary=attrs.text("source")==source)
+            SheetAction(source,if(source.equals("TV",true)) StovaIcons.Tv else StovaIcons.Speaker,
+                {choose(ServiceCall("media_player","select_source",buildJsonObject {put("source",source)}))},
+                enabled=enabled && (features==null || features and 2048!=0),chosen=attrs.text("source")==source)
         }
     }
 }

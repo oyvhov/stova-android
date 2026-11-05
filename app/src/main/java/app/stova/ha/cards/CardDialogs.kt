@@ -74,7 +74,7 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
         }
         // Name and footer never scroll. A stable frame also keeps pending/error states from jumping.
         val frame=if(dialog is CardDialog.Camera) Modifier.fillMaxSize() else Modifier
-            .widthIn(max=640.dp).fillMaxWidth()
+            .widthIn(max=560.dp).fillMaxWidth()
             .height((windowHeight-72.dp).coerceIn(160.dp,440.dp))
         Column(frame.background(MaterialTheme.colorScheme.surface,MaterialTheme.shapes.extraLarge).padding(24.dp),
             verticalArrangement=Arrangement.spacedBy(14.dp)) {
@@ -86,7 +86,6 @@ fun CardDialogHost(dialog:CardDialog?,entities:Map<String,HaEntity>,socket:HaCon
                 }
                 if(locked || dialog.entityId.startsWith("alarm_control_panel.")) CardDetail(stringResource(R.string.ha_action_read_only))
             }
-            HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
             @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
             CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides app.stova.core.ui.ScrollOnlyWhenHidden) {
             Column(Modifier.weight(1f).fillMaxWidth().focusRequester(first).focusGroup()

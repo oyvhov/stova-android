@@ -322,9 +322,7 @@ import kotlin.math.ceil
 }
 
 @Composable private fun DashboardSummary(cards:List<CardConfig>,entities:Map<String,HaEntity>,canControl:Boolean,focus:FocusRequester,modifier:Modifier=Modifier,onLights:(List<String>)->Unit) {
-    val locale=LocalConfiguration.current.locales[0]
     val selected=cards.mapNotNull {entities[it.entityId]}.distinctBy {it.id}
-    val parts=mutableListOf<String>()
     val lights=selected.filter {it.id.startsWith("light.") && it.state=="on"}.map {it.id}
     Row(modifier,horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
         if(selected.any {it.id.startsWith("light.")}) {
@@ -332,11 +330,8 @@ import kotlin.math.ceil
             if(canControl && lights.isNotEmpty()) StovaButton(label,{onLights(lights)},Modifier.focusRequester(focus),icon=StovaIcons.Light,compact=true,quiet=true)
             else Text(label,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        selected.firstNotNullOfOrNull {if(it.id.startsWith("climate.")) it.attributes.number("current_temperature") else null}?.let {parts+=stringResource(R.string.ha_v2_inside,formatNumber(it,locale))}
-        cards.firstOrNull {it.type==CardType.ENERGY_PRICE}?.let {entities[it.entityId]}?.let {e ->
-            (stateText(e) as? StateText.Number)?.let {parts+=stringResource(R.string.ha_v2_price_now,formatNumber(it.value,locale),it.unit.orEmpty())}
-        }
-        if(parts.isNotEmpty() || selected.isEmpty()) Text(if(parts.isEmpty()) stringResource(R.string.ha_v2_overview) else parts.joinToString(" · "),
+        // Readings belong to their cards. The header only keeps the house-wide light action.
+        if(selected.isEmpty()) Text(stringResource(R.string.ha_v2_overview),
             Modifier.weight(1f,fill=false),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
