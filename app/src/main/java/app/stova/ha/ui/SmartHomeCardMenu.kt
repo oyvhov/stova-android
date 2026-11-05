@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
         fun save(updated:CardConfig) {onConfigure(updated);close()}
         when(pages.current) {
             null -> {
-                SheetHeader(label,stringResource(cardTypeLabel(card.type)),cardIcon(card.type,override=card.icon))
+                SheetHeader(label,stringResource(cardTypeLabel(card.type)).takeUnless {it.equals(label,true)},cardIcon(card.type,override=card.icon))
                 SheetAction(stringResource(R.string.ha_v2_size),StovaIcons.Rows,{pages.open("size")},Modifier.focusRequester(pages.opener("size")),
                     value=stringResource(sizeLabel(card.size)).substringBefore(" "),opensPage=true)
                 if(modes.isNotEmpty()) SheetAction(stringResource(R.string.ha_v2_modes),StovaIcons.Toggle,{pages.open("modes")},

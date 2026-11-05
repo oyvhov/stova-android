@@ -29,7 +29,9 @@ Full testkøyring: 1115 køyrde testar bestod, 86 skjermtestar vart hoppa over
 utan skjermtest-flagget. Etter siste valrad-endring: 327 målretta testar
 bestod, 8 skjermtestar vart hoppa over. `DesignRulesTest`, `ThemePaletteTest`,
 `lintDebug` og `assembleTv` grøne. Slutt-APK-en er installert med `install -r`
-på Shield, SHA-256 `e6edd55e49783f7b95de3fe9534223575f22e6f95eae2b771815802d5cd18271`.
+på Shield. Siste kosmetiske retting fjernar lik tittel og undertittel i
+kortmenyen; 31 meny-/design-/palett-testar bestod etterpå. Slutt-APK SHA-256:
+`172c41e3e75750c7e2e486e6bc4fdea2e32f79fd36511ddc77359232be773bba`.
 
 MENY: Native logging på Shield viser at Android ikkje leverer KEYCODE_MENU
 til aktiviteten. Prøva utan kvar av dei to tastemapparane, og utan begge,
