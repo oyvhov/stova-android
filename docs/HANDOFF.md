@@ -1,3 +1,9 @@
+# Shield installert og Smartheim filma
+2026-11-05 (Codex): Installerte TV-APK-en frå `64a70c0` på Shield med install-r og samsvarande SHA-256. Same testa kode som på Loftet.
+Filma ekte Smartheim, Oppsett, kortmeny, varmepumpepanel og Drift, retur til Heim og den vesle innstillingsmenyen. Brukte D-pad og nokre peikartrykk. Ingen kontrollval vart stadfesta.
+Eit klipt opptak på 61,5 s i 1080p ligg i `.superpowers/shield-smartheim-2026-11-05/Shield-Smartheim-og-popupar.mp4`, med råopptak og skjermbilete i same mappe.
+MENY-tasten opna ikkje kortmenyen i prøva. Han vart filma via Rediger. Sluttvisinga er Smartheim. Ingen kodeendringar i denne økta.
+
 # Omslag på førehand og Smartheim-overgangar
 2026-11-05 (Codex): Naturleg «Dance Monkey» → «Bad Things» på Loftet viste om lag 0,9 s overtoning utan bortfall. Fann at førehandshenting berre støtta MA, og la til den vanlege Sonos-køen gjennom HA-biblioteket.
 Smartheim-panel, kortmeny og topp-popupane bruker same utgang for handlingar og Tilbake. Fokusretur er kontrollert i testane. Vêrtonen og mediaikon/-volum endrar seg i teikne-/lagfasen.
