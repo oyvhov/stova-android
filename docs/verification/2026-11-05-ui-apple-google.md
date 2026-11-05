@@ -10,6 +10,13 @@ Rapporten er `.superpowers/ui-audit-2026-11-05/Stova-UI-rapport-Apple-Google.htm
 ligg òg som eigne filer i same mappe. `accepted-evidence.json` listar dei
 aksepterte bileta med SHA-256. `Oversikt.png` gir ei kort visuell oversikt.
 
+PDF-utgåve laga etter at eigaren ikkje fekk opna HTML-fila:
+`output/pdf/Stova-UI-rapport.pdf` (28 sider, om lag 3,7 MB). Ho inneheld alle
+29 skjermbileta og vurderingane, med stillbilete frå opptaka. Alle PDF-sidene
+er renderte med Poppler og visuelt inspiserte; dei 12 flytane og
+avgrensingane er òg kontrollerte med tekstuttrekk. Native filopning i Codex
+vart kølagd, ikkje stadfesta som synleg. PDF-en blir levert som filvedlegg.
+
 ## Konklusjon og prioritet
 
 Den rolege hovudforma, romlista, profilvalet og innstillingsstrukturen fungerer.

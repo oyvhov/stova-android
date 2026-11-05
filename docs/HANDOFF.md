@@ -1,3 +1,8 @@
+# UI-rapport levert som PDF
+2026-11-05 (Codex): Eigaren fekk ikkje opna HTML-rapporten. Laga `output/pdf/Stova-UI-rapport.pdf`, 28 sider / 3,7 MB, med alle 29 skjermbileta, vurderingane og stillbilete frå opptaka.
+Alle 28 sider renderte med Poppler og visuelt inspiserte i fem kontaktark; tekstuttrekk stadfestar alle 12 flytar og avgrensingane. Ingen klipping/overlapping observert. Byggeskript og kontrollbilete i `.superpowers/ui-audit-2026-11-05/`.
+Codex sin native filopning gav status queued; ikkje hevda at PDF-en er synleg. PDF levert som output-filkort i svaret. PDF-en er eit medvite uversjonert resultat under `output/`; ingen appkode, TV-ar eller innstillingar endra.
+
 # Brei UI-vurdering mot Apple og Google
 2026-11-05 (Codex): Lesande gjennomgang av 12 flytar på Shield; 29 inspiserte skjermbilete og tre opptak i `.superpowers/ui-audit-2026-11-05/`. Full rapport `Stova-UI-rapport-Apple-Google.html`, kort oversikt `Oversikt.png`; kjelder og funn i `docs/verification/2026-11-05-ui-apple-google.md`.
 P1: svarte Oppdag-sidebyte reproduserte i to opptak (34–134 ms), kvit omtale over lys kunst, og sprikande fråkopla tilstand i Smarthus / Sonos / Legg til. Årsaka til dei svarte rammene er ikkje fastsett. Ingen appkode eller installering endra; dette er vurdering, inga ny implementeringsbestilling.
