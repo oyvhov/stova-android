@@ -83,4 +83,33 @@ class DiscoverArtworkTransitionTest {
     }
     @Test fun titleEntranceAndReturnNeverFadeArtworkToBlack()=artworkStaysVisible(true)
     @Test fun rowsEntranceAndReturnNeverFadeArtworkToBlack()=artworkStaysVisible(false)
+    @Test fun changingTheActualStepKeepsTheSameDecodedArtworkNode() {
+        var details by mutableStateOf(false)
+        val loader=ImageLoader.Builder(compose.activity).components {
+            add(Fetcher.Factory<Uri> {_,_,_->Fetcher {
+                val bitmap=Bitmap.createBitmap(4,4,Bitmap.Config.ARGB_8888)
+                bitmap.eraseColor(android.graphics.Color.WHITE)
+                ImageFetchResult(bitmap.asImage(),false,DataSource.MEMORY)
+            }})
+        }.build()
+        coil3.SingletonImageLoader.setUnsafe(loader)
+        compose.setContent {StovaTheme {
+            val backdrop=rememberBackdropState()
+            DiscoverStage(details,if(details) 1 else 0,details,backdrop) {entrance,onArtwork ->
+                key(details) {
+                    if(details) DiscoverTitleContent(title,null,null,SeerrAccess.NONE,false,{},{},{},{},
+                        modifier=entrance,backdrop=backdrop,onBackdropChange=onArtwork)
+                    else DiscoverContent(DiscoverState(SeerrAccess.PERSONAL,listOf(DiscoverRow(DiscoverRowKind.TRENDING,listOf(title))),emptyList(),false,false),
+                        {},{},{},{},modifier=entrance,backdrop=backdrop,onBackdropChange=onArtwork)
+                }
+            }
+        }}
+        compose.waitUntil(5_000) {compose.onAllNodesWithTag("backdrop:${title.backdrop}").fetchSemanticsNodes().isNotEmpty()}
+        val original=compose.onNodeWithTag("backdrop:${title.backdrop}").fetchSemanticsNode().id
+        for(next in listOf(true,false,true,false)) {
+            compose.runOnIdle {details=next}
+            assertEquals("The decoded image must outlive the step's composition",original,
+                compose.onNodeWithTag("backdrop:${title.backdrop}").fetchSemanticsNode().id)
+        }
+    }
 }

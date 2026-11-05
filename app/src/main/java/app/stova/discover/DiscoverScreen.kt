@@ -3,8 +3,6 @@ package app.stova.discover
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,7 +21,6 @@ import app.stova.AppContainer
 import app.stova.R
 import app.stova.background.BackdropState
 import app.stova.background.rememberBackdropState
-import app.stova.core.ui.stepEntrance
 import app.stova.media.HandoffResult
 import app.stova.media.SpoleHandoff
 import app.stova.media.ui.SpoleMissingDialog
@@ -153,8 +150,7 @@ fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverSte
     val step = steps.last()
     val stepKey = step.stateKey(steps.lastIndex)
     // The picture must never inherit the arriving controls' zero-alpha first frame.
-    val entrance = Modifier.stepEntrance(stepKey, steps.lastIndex)
-    Box(Modifier.fillMaxSize()) {
+    DiscoverStage(stepKey, steps.lastIndex, step is DiscoverStep.Title, backdrop) { entrance, onArtwork ->
     held.SaveableStateProvider(stepKey) {
         when (step) {
             DiscoverStep.Rows -> DiscoverContent(state,
@@ -162,8 +158,8 @@ fun DiscoverScreen(container: AppContainer, profile: Profile, start: DiscoverSte
                 onOpenSearch = { steps = steps + DiscoverStep.Search },
                 onOpenRequest = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it.asDiscoverTitle()) },
                 onRetry = { link?.let { container.appScope.launch { container.discover.refresh(profile.id, it, force = true) } } },
-                modifier = entrance, backdrop = backdrop)
-            is DiscoverStep.Title -> TitleStep(container, profile.id, link, step, state?.access ?: SeerrAccess.NONE, backdrop, entrance,
+                modifier = entrance, backdrop = backdrop, onBackdropChange = onArtwork)
+            is DiscoverStep.Title -> TitleStep(container, profile.id, link, step, state?.access ?: SeerrAccess.NONE, backdrop, entrance, onArtwork,
                 onOpenSpole = { openInSpole(step.type, step.tmdbId) },
                 onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) })
             DiscoverStep.Search -> SearchStep(container, link, modifier = entrance, onOpenTitle = { steps = steps + DiscoverStep.Title(it.type, it.tmdbId, it) })
@@ -239,7 +235,7 @@ private enum class TitleSheet { REQUEST, WITHDRAW }
  */
 @Composable
 private fun TitleStep(container: AppContainer, profileId: String, link: SpoleLink?, step: DiscoverStep.Title, access: SeerrAccess,
-    backdrop: BackdropState, modifier: Modifier, onOpenSpole: () -> Unit, onOpenTitle: (DiscoverTitle) -> Unit) {
+    backdrop: BackdropState, modifier: Modifier, onArtwork: ((String?) -> Unit)?, onOpenSpole: () -> Unit, onOpenTitle: (DiscoverTitle) -> Unit) {
     var details by remember { mutableStateOf<DiscoverDetails?>(null) }
     // Null until Spole has answered for the related rows, so Back from a related title knows when its card can be found.
     var related by remember { mutableStateOf<List<DiscoverRow>?>(null) }
@@ -277,7 +273,8 @@ private fun TitleStep(container: AppContainer, profileId: String, link: SpoleLin
     // A step saved without its card has only Seerr's page to show, once it comes.
     val title = step.fallback ?: DiscoverTitle(step.type, step.tmdbId, "", null, null, null, null, SeerrStatus.UNKNOWN, null, emptyList())
     DiscoverTitleContent(title, details, related, access, busy, onRequest = { if (!busy) sheet = TitleSheet.REQUEST },
-        onWithdraw = { if (!busy) sheet = TitleSheet.WITHDRAW }, onOpenSpole = onOpenSpole, onOpenTitle = onOpenTitle, modifier = modifier, backdrop = backdrop)
+        onWithdraw = { if (!busy) sheet = TitleSheet.WITHDRAW }, onOpenSpole = onOpenSpole, onOpenTitle = onOpenTitle, modifier = modifier, backdrop = backdrop,
+        onBackdropChange = onArtwork)
     val page = details
     when (sheet) {
         TitleSheet.REQUEST -> if (page != null) RequestSheet(page, onSend = { seasons ->

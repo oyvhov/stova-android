@@ -77,7 +77,7 @@ private const val REQUESTS_ROW = "REQUESTS"
 @Composable
 fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit, onOpenSearch: () -> Unit,
     onOpenRequest: (DiscoverRequest) -> Unit, onRetry: () -> Unit, modifier: Modifier = Modifier,
-    backdrop: BackdropState = rememberBackdropState()) {
+    backdrop: BackdropState = rememberBackdropState(), onBackdropChange: ((String?) -> Unit)? = null) {
     val shown = remember(state?.rows) {
         PAGE_ROWS.mapNotNull { (kind, heading) -> state?.rows?.firstOrNull { it.kind == kind && it.items.isNotEmpty() }?.let { it to heading } }
     }
@@ -106,7 +106,9 @@ fun DiscoverContent(state: DiscoverState?, onOpenTitle: (DiscoverTitle) -> Unit,
     // The profile's background choice holds here too: the theme's own surface shows no title's picture.
     val themeSurface = LocalAppearance.current.backgroundSource == BackgroundSource.THEME
     Box(Modifier.fillMaxSize()) {
-        BackdropLayer(hero?.backdrop.takeUnless { themeSurface }, state = backdrop)
+        val artwork=hero?.backdrop.takeUnless {themeSurface}
+        if(onBackdropChange==null) BackdropLayer(artwork, state = backdrop)
+        else androidx.compose.runtime.SideEffect {onBackdropChange(artwork)}
         Column(modifier.fillMaxSize().padding(top = StovaLayout.TvSafeEdge)) {
             PageHeader(stringResource(R.string.discover_title), StovaIcons.Discover, Modifier.padding(horizontal = StovaLayout.TvSafeEdge),
                 subtitle = stringResource(R.string.discover_subtitle)) {

@@ -81,7 +81,7 @@ private enum class TitleButton { REQUEST, WITHDRAW, SPOLE }
 @Composable
 fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, related: List<DiscoverRow>?, access: SeerrAccess, busy: Boolean,
     onRequest: () -> Unit, onWithdraw: () -> Unit, onOpenSpole: () -> Unit, onOpenTitle: (DiscoverTitle) -> Unit,
-    modifier: Modifier = Modifier, backdrop: BackdropState = rememberBackdropState()) {
+    modifier: Modifier = Modifier, backdrop: BackdropState = rememberBackdropState(), onBackdropChange: ((String?) -> Unit)? = null) {
     val shown = details?.title ?: title
     // The profile's background choice holds here too: the theme's own surface shows no title's picture.
     val themeSurface = LocalAppearance.current.backgroundSource == BackgroundSource.THEME
@@ -152,7 +152,9 @@ fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, relate
     val head = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
     Box(Modifier.fillMaxSize()) {
-        BackdropLayer(shown.backdrop.takeUnless { themeSurface }, state = backdrop, reading = true)
+        val artwork=shown.backdrop.takeUnless {themeSurface}
+        if(onBackdropChange==null) BackdropLayer(artwork, state = backdrop, reading = true)
+        else androidx.compose.runtime.SideEffect {onBackdropChange(artwork)}
         Column(modifier.fillMaxSize().onFocusChanged { holds.value = it.hasFocus }.verticalScroll(rememberScrollState())
             .padding(vertical = StovaLayout.TvSafeEdge)) {
             Row(Modifier.padding(horizontal = StovaLayout.TvSafeEdge).bringIntoViewRequester(head)

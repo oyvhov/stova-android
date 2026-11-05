@@ -13,12 +13,14 @@ startposisjon ut frå opnaren før den første lista blir lagd ut. Planen ligg i
 [`2026-11-03-roersle-i-heile-stova.md`](superpowers/plans/2026-11-03-roersle-i-heile-stova.md).
 
 Oppdag legg `stepEntrance` berre på kontrollkolonnen i rader, tittel og søk.
-`BackdropLayer` ligg utanfor dette laget og deler `BackdropState` gjennom
-steghistorikken; kunsten får aldri alfa null frå kontrollane sin inngang.
+`DiscoverStage` eig éin `BackdropLayer` utanfor stega sin `SaveableStateProvider`.
+Innhaldet melder ønskja kunst tilbake; både `BackdropState` og den dekoda
+`AsyncImage` lever gjennom heile steghistorikken. Berre å dele URL-en var
+ikkje nok: ein ny biletekomposisjon hadde tomme første rammer også frå minnebufferen.
 Titteldetaljane bruker den utvida lesekurva i `BackdropScrim`, som vernar
 heile omtalen også over kvit kunst. Heim dempar kunsten medan radene blir
 bladde; rullestillinga blir lesen i grafikklaget. `ArtworkCaption` deler
-ei fast tekstline mellom app-, media- og Sonos-kort: berre fokusert tekst
+ei fast tekstline mellom app-, media- og Sonos-kort og romnamn: berre fokusert tekst
 rullar, etter ein roleg pause. Redusert rørsle held teksten i ro.
 
 På Sonos-sida førehandshentar `SonosScreen` eitt omslag medan sporet spelar.
