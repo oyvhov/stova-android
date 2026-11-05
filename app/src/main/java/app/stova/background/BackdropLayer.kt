@@ -55,7 +55,7 @@ class BackdropState {
  var tone by mutableStateOf<androidx.compose.ui.graphics.Color?>(null)
 }
 @Composable fun rememberBackdropState() = remember { BackdropState() }
-@Composable fun BackdropLayer(url:String?,modifier:Modifier=Modifier,imageLoader:ImageLoader=SingletonImageLoader.get(LocalContext.current),visible:Boolean=true,state:BackdropState=rememberBackdropState()) {
+@Composable fun BackdropLayer(url:String?,modifier:Modifier=Modifier,imageLoader:ImageLoader=SingletonImageLoader.get(LocalContext.current),visible:Boolean=true,state:BackdropState=rememberBackdropState(),reading:Boolean=false) {
  val ink=MaterialTheme.colorScheme.background
  val prefs=app.stova.core.theme.LocalAppearance.current
  val dimming=prefs.dimmingPercent
@@ -98,6 +98,6 @@ class BackdropState {
     }
    }
   }
-  app.stova.core.theme.BackdropScrim(dimming, Modifier.fillMaxSize())
+  app.stova.core.theme.BackdropScrim(dimming, Modifier.fillMaxSize(), reading)
  }
 }

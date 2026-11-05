@@ -195,7 +195,7 @@ internal fun SonosShelf(media: List<SonosMedia>, thumbnail: SonosThumbnail, rest
                     .focusProperties { this.up = up }
                     .clickable(source, null, role = Role.Button) { onOpen(item) }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     SonosLibraryTile(item, index, thumbnail, Modifier.focusOutline(source, MaterialTheme.shapes.large, zoom = true))
-                    Text(item.title, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    app.stova.core.ui.ArtworkCaption(item.title, source, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

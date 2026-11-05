@@ -41,10 +41,13 @@ private fun smoothAt(curve: List<Pair<Float, Float>>, x: Float): Float {
     return (2 * t3 - 3 * t2 + 1) * y0 + (t3 - 2 * t2 + t) * h * m[i] + (-2 * t3 + 3 * t2) * y1 + (t3 - t2) * h * m[i + 1]
 }
 
-internal fun backdropScrimAlpha(percent: Int, x: Float): Float {
-    val scaled = percent.coerceIn(0, 100) / 25f
+internal fun backdropScrimAlpha(percent: Int, x: Float, reading: Boolean = false): Float {
+    // A detail page's story reaches across the picture. Protect that entire reading width,
+    // rather than applying Home's much narrower left-side curve to its text.
+    val position = if (reading) x * .46f / .92f else x
+    val scaled = (if (reading) percent.coerceAtLeast(50) else percent).coerceIn(0, 100) / 25f
     val low = scaled.toInt().coerceAtMost(3)
-    val a = smoothAt(curves[low], x); val b = smoothAt(curves[low + 1], x)
+    val a = smoothAt(curves[low], position); val b = smoothAt(curves[low + 1], position)
     return (a + (b - a) * (scaled - low)).coerceIn(0f, 1f)
 }
 
@@ -53,14 +56,14 @@ private fun eased(t: Float) = t * t * (3 - 2 * t)
 
 /** Shared by Home and its settings preview. Top-bar protection stays stable. */
 @Composable
-fun BackdropScrim(percent: Int, modifier: Modifier = Modifier) {
+fun BackdropScrim(percent: Int, modifier: Modifier = Modifier, reading: Boolean = false) {
     val base = MaterialTheme.colorScheme.background
     val tone = LocalArtTone.current
     Canvas(modifier) {
         val ink = tone?.ink(base) ?: base
         // Many stops sampled from the smooth curve, so the GPU's straight segments stay invisible.
         drawRect(Brush.horizontalGradient(*(0..SCRIM_STOPS).map { val x = it / SCRIM_STOPS.toFloat()
-            x to ink.copy(alpha = backdropScrimAlpha(percent, x)) }.toTypedArray()))
+            x to ink.copy(alpha = backdropScrimAlpha(percent, x, reading)) }.toTypedArray()))
         val bottomStart = .5f - ((percent - 25) / 25f).coerceIn(0f, 1f) * .05f
         val bottomAlpha = (percent / 25f).coerceIn(0f, 1f)
         drawRect(Brush.verticalGradient(*(0..16).map { val t = it / 16f; t to ink.copy(alpha = bottomAlpha * eased(t)) }.toTypedArray(),
@@ -69,4 +72,11 @@ fun BackdropScrim(percent: Int, modifier: Modifier = Modifier) {
         drawRect(Brush.verticalGradient(*(0..16).map { val t = it / 16f; t to ink.copy(alpha = 1f - eased(t)) }.toTypedArray(), endY = size.height * .3f),
             size = Size(size.width, size.height * .3f))
     }
+}
+
+/** A quiet reading surface while browsing rows, drawn over the existing artwork without blur. */
+@Composable
+fun BrowsingArtworkShade(modifier: Modifier = Modifier) {
+    val ink = MaterialTheme.colorScheme.background
+    Canvas(modifier) { drawRect(ink.copy(alpha = .48f)) }
 }

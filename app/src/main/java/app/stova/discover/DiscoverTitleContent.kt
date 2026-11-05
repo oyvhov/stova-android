@@ -152,7 +152,7 @@ fun DiscoverTitleContent(title: DiscoverTitle, details: DiscoverDetails?, relate
     val head = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
     Box(Modifier.fillMaxSize()) {
-        BackdropLayer(shown.backdrop.takeUnless { themeSurface }, state = backdrop)
+        BackdropLayer(shown.backdrop.takeUnless { themeSurface }, state = backdrop, reading = true)
         Column(modifier.fillMaxSize().onFocusChanged { holds.value = it.hasFocus }.verticalScroll(rememberScrollState())
             .padding(vertical = StovaLayout.TvSafeEdge)) {
             Row(Modifier.padding(horizontal = StovaLayout.TvSafeEdge).bringIntoViewRequester(head)

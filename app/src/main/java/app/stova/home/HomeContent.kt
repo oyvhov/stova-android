@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -225,6 +226,12 @@ fun HomeContent(
         nextRow(-1, 1)?.let(::focusRow)
     }
     Box(Modifier.fillMaxSize()) {
+    // A single draw-layer read follows the row scroll without recomposing the cards per frame.
+    app.stova.core.theme.BrowsingArtworkShade(Modifier.matchParentSize().graphicsLayer {
+        alpha = if (deck) { if (activeRow != null && activeRow != HomeRowKey.APPS) 1f else 0f }
+            else if (listState.firstVisibleItemIndex > 0) 1f
+            else (listState.firstVisibleItemScrollOffset / 420.dp.toPx()).coerceIn(0f,1f)
+    })
     // One clock for the decor behind the content and the see-through layer over it.
     val seasonClock = rememberSeasonalClock()
     SeasonalScene(Modifier.matchParentSize(), clock = seasonClock)

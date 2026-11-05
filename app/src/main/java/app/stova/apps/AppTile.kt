@@ -95,8 +95,7 @@ internal fun TileFrame(
             content(spec)
         }
         if (captions) {
-            Text(label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            app.stova.core.ui.ArtworkCaption(label, source, Modifier.padding(top = 8.dp))
         }
     }
 }

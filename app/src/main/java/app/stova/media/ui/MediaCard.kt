@@ -53,7 +53,7 @@ import coil3.request.ImageRequest
    if(prefs.progressStyle.dp > 0) item.progress?.let { progress -> Box(Modifier.testTag("card-progress").align(Alignment.BottomStart).fillMaxWidth(progress.coerceIn(0f,1f)).height(prefs.progressStyle.dp.dp).background(MaterialTheme.colorScheme.primary)) }
   }
   if(rowStyle.showsCardTitles(prefs)) {
-  Text(title,Modifier.padding(top=8.dp),style=MaterialTheme.typography.titleSmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurface)
+  app.stova.core.ui.ArtworkCaption(title,source,Modifier.padding(top=8.dp))
  }
  }
 }

@@ -15,6 +15,11 @@ startposisjon ut frå opnaren før den første lista blir lagd ut. Planen ligg i
 Oppdag legg `stepEntrance` berre på kontrollkolonnen i rader, tittel og søk.
 `BackdropLayer` ligg utanfor dette laget og deler `BackdropState` gjennom
 steghistorikken; kunsten får aldri alfa null frå kontrollane sin inngang.
+Titteldetaljane bruker den utvida lesekurva i `BackdropScrim`, som vernar
+heile omtalen også over kvit kunst. Heim dempar kunsten medan radene blir
+bladde; rullestillinga blir lesen i grafikklaget. `ArtworkCaption` deler
+ei fast tekstline mellom app-, media- og Sonos-kort: berre fokusert tekst
+rullar, etter ein roleg pause. Redusert rørsle held teksten i ro.
 
 På Sonos-sida førehandshentar `SonosScreen` eitt omslag medan sporet spelar.
 Ein kopla Music Assistant-kø blir lesen gjennom den tilgjengelege køhandlinga.
