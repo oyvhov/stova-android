@@ -14,7 +14,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.theme.StovaLayout
@@ -23,7 +22,7 @@ import app.stova.core.ui.StovaIcons
 /**
  * The music on its own: the sleeve edge to edge (when the profile allows background art), the
  * theme's own ink fading in where words sit, title and artist, icon-only transport and the quiet
- * volume button. The room stays named at the top so the target is never in doubt. No rooms, library,
+ * speaker volume button, with the room named beneath it. No rooms, library,
  * grouping or settings here. TV audio and lost speakers never show album art, not even fading out.
  */
 @Composable internal fun SonosImmersive(room: SonosRoom, native: SonosRoom?, player: SonosRoom?, busy: Boolean, actionFailed: Boolean,
@@ -43,16 +42,13 @@ import app.stova.core.ui.StovaIcons
         Column(Modifier.fillMaxSize().padding(horizontal = StovaLayout.TvSafeEdge, vertical = 28.dp)
             .then(if (largeType) Modifier.verticalScroll(rememberScrollState()) else Modifier),
             verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SonosIconButton(StovaIcons.Collapse, stringResource(R.string.sonos_fullscreen_exit), onExit,
                     Modifier.focusRequester(exitFocus).testTag("sonos-fullscreen-exit"), quiet = true)
-                Text(room.displayName, Modifier.weight(1f),
-                    style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.weight(1f))
                 SonosSeasonMark()
-                room.volume?.let { volume ->
-                    SonosVolumePopup(room, volume, busy, onAction, volumeFocus,
-                        Modifier.focusProperties { if (canPlay) down = playFocus })
-                }
+                SonosVolumePopup(room, room.volume, busy, onAction, volumeFocus,
+                    Modifier.focusProperties { if (canPlay) down = playFocus })
             }
             if (!largeType) Spacer(Modifier.weight(1f))
             if (art != null && !backgroundArt) key(room.id, player?.id) {

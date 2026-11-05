@@ -12,6 +12,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
 import app.stova.core.storage.StovaJson
@@ -228,6 +229,28 @@ class SonosFullscreenTest {
         assertEquals(0, left)
         systemBack()
         assertEquals(1, left)
+        assertTrue(actions.isEmpty())
+    }
+
+    @Test fun fullScreenShowsALargeSpeakerWithTheRoomNameCentredBelowIt() {
+        immersive = true
+        page(room(name = "Sonos Kjøkken").copy(model = "Era 100"))
+        val speaker = compose.onNodeWithTag("sonos-volume-speaker", useUnmergedTree = true)
+        speaker.assertIsDisplayed().assertWidthIsAtLeast(88.dp).assertHeightIsAtLeast(68.dp)
+        val image = speaker.getUnclippedBoundsInRoot()
+        val name = compose.onNodeWithText("Kjøkken", useUnmergedTree = true).assertIsDisplayed().getUnclippedBoundsInRoot()
+        assertTrue("The room name belongs below the speaker", name.top >= image.bottom)
+        assertEquals((image.left + image.right).value / 2, (name.left + name.right).value / 2, 1f)
+    }
+
+    @Test fun fullScreenKeepsTheSpeakerAndNameWhenVolumeIsUnknown() {
+        immersive = true
+        val current = room(name = "Sonos Kjøkken").copy(model = "Era 100")
+        page(current.copy(entity = current.entity.copy(attributes = JsonObject(current.entity.attributes - "volume_level"))))
+        compose.onNodeWithTag("sonos-volume-speaker", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithText("Kjøkken", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("sonos-volume-button").assertIsNotEnabled()
+        compose.onNodeWithTag("sonos-play").assertIsFocused()
         assertTrue(actions.isEmpty())
     }
 

@@ -39,9 +39,11 @@ kunsten med ein gong. Dempinga endrar seg i grafikklaget mellom vanleg
 spelar og fullskjerm. Standardspelaren held same toppfelthøgd under
 romgruppering og same omslagsstorleik medan favorittane blir henta.
 `SonosImmersive` midtstiller transport og framdrift. Opp frå transporten
-går til volumknappen øvst til høgre, teikna som den valde høgtalarmodellen
-når Stova kjenner han. `SonosVolumePopup` opnar ein loddrett skyveknapp
-under knappen. Ved lukking blir volumutkastet sendt og fokuset går tilbake.
+går til den store høgtalarmodellen øvst til høgre, med romnamnet midtstilt
+under, på ei lita, ugjennomsiktig temaflate som held teksten lesbar over lyse omslag.
+Ukjend modell får ei nøytral høgtalarform; modell og namn blir ståande
+også utan volumstyring. `SonosVolumePopup` opnar ein loddrett skyveknapp
+under namnet. Ved lukking blir volumutkastet sendt og fokuset går tilbake.
 På den vanlege spelarsida hentar `SonosRepository.playerShelf` favorittar
 og spelelister frå same medietre som biblioteket. Bileta tonar inn når
 dei er lasta. Rada heiter «Favorittar» og teiknar fokus berre på omslaget,
@@ -175,7 +177,7 @@ rad- og tittel-id-ar som nøklar.
   legg til eit eige transparent Spole-merke i Stova sin katalog utan å endre tredjepartspakken.
 - HA-socketen treng synlege Heim-brikker, ein open Smarthus-/legg-til-flyt eller synleg oppsett HA-innstillingsside. Innstillingane held transporten open for sann tilkoplingsstatus utan eigne einingsabonnement. Bakgrunn og tapt behov har ein kort fråkoplingsfrist.
 - Heim abonnerer på høgst tre synlege HA-brikker; Smarthus abonnerer på korta i dashbordet.
-- `HaEntityInfo.roomIcon` kjem frå `area_registry/list.icon` for det faktisk løyste rommet (einingsoverstyring før eininga sitt apparat). Det er skilt frå eininga sitt eige ikon og følgjer det eksisterande registermellomlageret til fråkopla snapshot. Smarthus, Sonos-romlista (`SonosRoom.roomIcon`) og romveljaren i Legg til bruker den same MDI-fonten som HA-einingsikona; ukjende ikon får standardikon, og Sonos held høgtalarbiletet når eit rom manglar ikon. Sonos bevarer eit lite spelarlys under romikonet. Valt rom held romikonet synleg og viser ei separat, lita valmarkering.
+- `HaEntityInfo.roomIcon` kjem frå `area_registry/list.icon` for det faktisk løyste rommet (einingsoverstyring før eininga sitt apparat). Det er skilt frå eininga sitt eige ikon og følgjer det eksisterande registermellomlageret til fråkopla snapshot. Smarthus og romveljaren i Legg til bruker den same MDI-fonten som HA-einingsikona; ukjende ikon får standardikon. Sonos-romlista bruker alltid høgtalarmodellen frå `SonosSpeakerArt`, også når HA-rommet har ikon. Spelarlyset ligg i høgtalarbiletet. Valt rom held biletet synleg og viser ei separat, lita valmarkering.
 - Smarthus og Sonos deler `core/ui/SelectionMark`: nøytral, inn-/uttona valmarkering som er uavhengig av fokus og reserverer fast plass. `apps/AppLabels.kt` skil kolliderande appnamn med byggtype/TV/mobil, og pakkeidentitet som siste utveg; startnøklar og lagra favorittar blir ikkje endra.
 - Favorittar i Heim og Appar deler `apps/FavoriteMove.kt`: eit lokalt utkast med stabil kortnøkkel, gjentekne piler, OK for éi lagring og Tilbake for å avbryte. `AppRepository.reorderFavorites` flettar den synlege rekkjefølgja inn i nyaste profil utan å fjerne utilgjengelege/nye favorittar. Langtrykkmenyen har eitt Flytt-val; sjeldnare appval og radoppsett ligg på undersider. `SheetPages` held ein foreldrestakk med fokusretur.
 - `HaConnectionNotice` viser sist kjende verdiar ved brot og tilbyr ny tilkopling utan å tømme mellomlageret. Dashbord, opne kontrollpanel og `HaRepository.perform` avviser sending når socketen ikkje er tilkopla. Sonos-feil har veg til HA-oppsettet; innstillingssida kan opnast direkte på Smarthus.

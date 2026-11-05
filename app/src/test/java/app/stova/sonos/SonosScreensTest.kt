@@ -170,6 +170,9 @@ class SonosScreensTest {
     private fun attrs(room: SonosRoom, vararg extra: Pair<String, kotlinx.serialization.json.JsonElement>, drop: String? = null) = room.copy(entity =
         room.entity.copy(attributes = kotlinx.serialization.json.JsonObject(room.entity.attributes.filterKeys { it != drop } + extra)))
     @Test fun immersiveArt() = immersive("sonos-fullscreen")
+    @Test fun immersiveUprightSpeaker() = immersive("sonos-fullscreen-era", sonosPreviewRooms()[1])
+    @Test fun immersiveLongRoomName() = immersive("sonos-fullscreen-long-room",
+        sonosPreviewRooms()[1].copy(name = "Sonos Kjøkken og spisestove"), scale = 2f)
     @Test fun immersiveVolumePopup() {
         immersive("sonos-fullscreen")
         compose.onNodeWithTag("sonos-volume-button").performClick()

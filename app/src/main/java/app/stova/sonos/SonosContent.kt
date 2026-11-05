@@ -303,22 +303,14 @@ fun SonosContent(state: SonosState, selectedId: String?, onSelect: (String) -> U
 private fun SonosRoomButton(room: SonosRoom, visual: SonosRoomVisual, active: Boolean, onClick: () -> Unit, modifier: Modifier,
     onLongClick: (() -> Unit)?, editing: Boolean, anchor: Boolean, rotation: () -> Float) {
     val source = remember { MutableInteractionSource() }
-    val colors = MaterialTheme.colorScheme
     Row(modifier.fillMaxWidth().testTag("sonos-room-${room.id}").focusOutline(source, MaterialTheme.shapes.small)
         .clip(MaterialTheme.shapes.small)
         .semantics { selected = active }.combinedClickable(source, null, role = if (editing) Role.Checkbox else Role.Tab,
             onLongClickLabel = if (onLongClick != null) stringResource(R.string.sonos_group) else null,
             onLongClick = onLongClick, onClick = onClick).padding(horizontal = 10.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        val symbol=Modifier.size(52.dp,48.dp).graphicsLayer {rotationZ=rotation()}
-        if(room.roomIcon!=null) Box(symbol,contentAlignment=Alignment.Center) {
-            app.stova.ha.HaIcon(room.roomIcon,StovaIcons.Home,28.dp,colors.onSurfaceVariant)
-            androidx.compose.animation.AnimatedVisibility(visual.playing,Modifier.align(Alignment.BottomCenter).padding(bottom=4.dp),
-                enter=androidx.compose.animation.fadeIn(stovaMotion.fade()),exit=androidx.compose.animation.fadeOut(stovaMotion.fade())) {
-                Box(Modifier.size(3.dp).background(colors.onSurface,androidx.compose.foundation.shape.CircleShape)
-                    .testTag("sonos-room-playing-${room.id}"))
-            }
-        } else SonosSpeakerArt(room.speaker, visual, symbol, "sonos-speaker-${room.id}", room.available)
+        SonosSpeakerArt(room.speaker, visual, Modifier.size(52.dp, 48.dp).graphicsLayer { rotationZ = rotation() },
+            "sonos-speaker-${room.id}", room.available)
         val status = when {
             !room.available -> R.string.sonos_unavailable
             room.tvAudio -> R.string.sonos_tv

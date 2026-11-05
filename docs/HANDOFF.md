@@ -1,3 +1,10 @@
+# Sonos: større høgtalar og romnamn under
+2026-11-05 (Codex): Fullskjerm har større modellbilete med romnamnet midtstilt under på ei lesbar temaflate. Sonos-romlista bruker høgtalarbilete også når HA-romma har ikon.
+150 målretta Sonos-/design-/palettestar grøne, 0 hoppa over; lint 0 feil, debug/TV-bygg grøne. Tre nye/endra kontraktar vart sett feile først. Plan og verifisering: `2026-11-05-sonos-hogtalarbilete.md`.
+Installert med install-r på Shield og Loftet etter bestilling; begge APK-hashar samsvarer med `32e48e9121feb45367d8f7e1c55c3372867d996f2511a97b9e18c47cf6a4bc1b`. Romliste, fullskjerm og volumdialog kontrollerte på begge; full D-pad-fokusretur på Loftet.
+Loftet står i fullskjerm med Paradise pausa ved 0:00, Kjøkken-volum 0. Shield viste NRK ved siste kontroll, og vidare tastetrykk vart stoppa. Siste fokusretur på Shield er ikkje verifisert. Ingen Sonos-avspeling/volum/gruppering endra.
+Rein prøve-AVD `Stova_TV` på 5580 under `.superpowers/sonos-speaker-emulator/avd/` er stoppa; den vanlege AVD-en med ekte oppsett vart ikkje oppdatert. Bilete i `output/screenshots/Sonos-speaker-2026-11-05/`. Ingen uferdig kode eller push; biletevising i sjølve samtalen er framleis ikkje stadfesta.
+
 # Biletevising og ustabilt fjernsamband
 2026-11-05 (Codex): Eigaren fekk ikkje opna lokale bilete-lenkjer og stadfesta at samtalen/ChatGPT-appen koplar frå. Alle PNG-filer er gyldige, og Shield er tilkopla.
 Laga `output/screenshots/Shield-2026-11-05/Heim.jpg` og `Sonos-fullskjerm.jpg`, 1600 × 900 / 172 og 140 kB, og viste begge via bileteverktøyet. Brukaren har enno ikkje stadfesta om desse kan sjåast.

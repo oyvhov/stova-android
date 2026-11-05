@@ -16,6 +16,8 @@ avkryssingsboksar i dei er inga bestilling.
 
 ## Historikk
 
+- 2026-11-05: [Sonos: større høgtalar og modellbilete](2026-11-05-sonos-hogtalarbilete.md), fullført med 150 grøne testar, lint og bygg. Installert og visuelt prøvd på Shield og Loftet; fjernkontroll og fokusretur prøvd på Loftet.
+
 - 2026-11-05: [Sonos-favorittar, sidehøgd og roleg fokus](2026-11-05-sonos-favorittfokus.md), opphavleg plassering bevart, botnknappar synlege, omslagsfokus og første favoritt retta. Felles løft/lys og vindaugsfokus prøvd; installert på Shield.
 
 - 2026-11-05: [Ny Smarthus-oversikt](2026-11-05-smarthus-hovudskjerm.md), installert og prøvd på Shield med ekte rombyte, før-/etterbilete, 64 grøne målretta testar, lint og TV-bygg.
