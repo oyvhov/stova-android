@@ -1,3 +1,10 @@
+# Sonos-høgd og fokus retta på Shield
+2026-11-05 (Codex): `4d00cca` gir botnknappane plass med mindre høgd/mellomrom. Eigaren avviste flytting av favorittane: sluttkoden bevarer rada i spelarfeltet ved sida av romlista, som før.
+Omslagsfokus utan tittel, namnet Favorittar, Ned til første favoritt og eksplisitt retur til opnaren er retta. Felles standard er svakt løft + mjukt lys, også for barn; vindauge utan input teiknar ikkje attståande fokus bak popup/dialog.
+Full testpakke: 1131 bestod / 86 hoppa over. Etter siste høgdjustering: 121 målretta bestod / 22 hoppa over; lintDebug og assembleTv grøne. Gamle RequestSheet-testar ventar no uttrykkeleg selected=false slik eksisterande SheetAction gir.
+Installert med install-r på Shield, samsvarande SHA-256 `1658400ca9c17758542eac17c86e6e9445c9a5b7eb33fb9e65875e7ba75b8cc0`. Ekte D-pad favoritt 3 → Opp → Ned landa på 2021 Sommar; alle botnknappar synlege. Volum-popup prøvd utan lydkommandoar; pause 0:21 og volum 0 % uendra.
+Sluttbilete `.superpowers/shield-sonos-favorites-2026-11-05/Sonos-Shield-retta.png`, popup `Volum-Shield.png`. Berre Shield brukt, ingen emulator/Loftet. Ingen uferdig kode; fysisk MENY står framleis att i eigen plan.
+
 # Smarthus-oversikta bygd om og prøvd på Shield
 2026-11-05 (Codex): `33937e9` byggjer om sjølve hovudskjermen: romliste med teljing, stor romtittel og samla verktøy, balansert kortfelt, rolegare ikon og større verdiar i breie kort. Små rom får breiare kort.
 Romval er lokal vising utan lagrings-/tenestekall. Venstre går frå kortfeltet til valt rom; Høgre opnar rommet og går til korta. Panelretur, rom som forsvinn, stor skrift og redusert rørsle er prøvde i test.
