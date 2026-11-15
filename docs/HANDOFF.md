@@ -1,3 +1,10 @@
+# Watch Next til Home Assistant
+2026-11-15 (Claude): Ny `ha/WatchNextSensor.kt` sender Watch Next-lista som `sensor.stova_watch_next` (REST `POST /api/states/…`, same HA-token) for veggdashbordet. Han køyrer i `haScope` også når NRK står framme. `WatchNextEntry` har fått `positionMs`/`durationMs`; kontrakten står i ARCHITECTURE.md og spesifikasjonen §10. Commit `6b5499d`.
+Testar: 346 i `app.stova.ha.*`, `app.stova.watchnext.*`, DesignRules, ThemePalette og AppearanceRendering, 0 feil (7 skjermtestar hoppa over som vanleg); lint 0 feil. Dei nye testane vart sett feile først, og ei mutasjonsprøve av «ikkje send uendra» vart fanga.
+Installert med `Install-Stova.ps1 -Tv -Build` (install -r) på Shield; SHA-256 `ada8ab1480bcc54fe4e899645c4d83c910f4211c0a39fc70ba564252347a2632` samsvarer med `base.apk`. Stova og Heim-knapp-tenesta køyrer. Shield sov heile tida (skjerm av); ingen avspeling, volum eller innstillingar endra. Loftet og emulatorar urørte, ingen push.
+Ikkje verifisert: at sensoren finst i HA. Shield er i lett Doze, og Stova har nettregelen REJECT_ALL medan han søv, så første sending kjem når Shield vaknar og Heim koplar til HA (eller når lista endrar seg). `content query` som shell gir «No result found» (TvProvider viser shell berre eigne rader); NRK TV har `WRITE_EPG_DATA` og Watch Next-mottakarar.
+Spørsmål til eigaren: Blir same bygg installert på Loftet, skriv begge TV-ane til same `sensor.stova_watch_next` med namnet «Shield · Fortsett å sjå». Skal Loftet ha eiga eining eller ingen sending?
+
 # Nye skjermbilete frå Shield
 2026-11-05 (Codex, 20:38 lokal tid): Tok tre nye, ekte skjermbilete: `output/screenshots/Shield-2026-11-05-2035/01-Heim.png`, `02-Sonos.png` og `03-Sonos-fullskjerm.png`.
 Alle tre PNG-filer er 3840 × 2160 og visuelt kontrollerte. Heim viser Superman med Spole først i apprada; begge Sonos-visingane viser Paradise / Coldplay og dei nye høgtalarbileta.
