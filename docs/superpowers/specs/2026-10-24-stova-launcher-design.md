@@ -678,6 +678,10 @@ Smarthus v2 utvidar protokollen utan å endre innlogginga:
   bort fordi medieradene alt viser dei. Rada blir sortert på `LAST_ENGAGEMENT_TIME_UTC_MILLIS`
   (nyaste først), med maks 20 innslag. Opning bruker innslaget sin `INTENT_URI`
   (`Intent.parseUri(…, URI_INTENT_SCHEME)`).
+- **Watch Next til Home Assistant:** når Home Assistant er sett opp og innlogga, sender Stova den same lista
+  (utan aldersgrense) som `sensor.stova_watch_next` med `POST /api/states`, også medan ein annan app står
+  framme, slik at veggdashbordet ser kva som blir sett i NRK TV og andre appar. Kontrakten står i
+  `ha/WatchNextSensor.kt` og i arkitekturoversikta.
 
 ## 11. Tryggleik og personvern
 

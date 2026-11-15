@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.filter
 import app.stova.apps.AppArtCache
 import app.stova.apps.AppRepository
 import app.stova.apps.PackageManagerAppCatalog
@@ -177,5 +178,10 @@ class AppContainer(
         JsonFileStore(File(appContext.filesDir, "cinema.json"), app.stova.ha.CinemaState.serializer(), app.stova.ha.CinemaState())) { block ->
         app.stova.ha.withCinemaConnection(haSocket, { stovaVisible }, block)
     }
-    init { appScope.launch { haAuth.restore() } }
+    /** Watch Next as `sensor.stova_watch_next` for the wall dashboard, kept current also while another app is in front. */
+    val watchNextSensor = WatchNextSensor(haHttp,
+        kotlinx.coroutines.flow.combine(household.data.map { it.haBaseUrl }.distinctUntilChanged(), haAuth.state) { url, auth ->
+            url?.takeIf { auth == HaAuthState.SIGNED_IN }?.let { (checkHaAddress(it) as? AddressCheck.Ok)?.address }
+        }, haAuth::accessToken, watchNext.observe(), haSocket.status.filter { it == HaStatus.CONNECTED }.map { })
+    init { appScope.launch { haAuth.restore() }; haScope.launch { watchNextSensor.run() } }
 }

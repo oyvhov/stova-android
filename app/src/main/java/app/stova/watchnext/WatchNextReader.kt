@@ -17,7 +17,9 @@ import kotlinx.coroutines.withContext
 data class WatchNextEntry(val id: Long, val packageName: String, val title: String, val subtitle: String?,
     val posterUri: String?, val intentUri: String, val progress: Float?, val lastEngagement: Long,
     /** Android's content ratings as the app wrote them, such as `com.android.tv/US_MV/US_MV_PG13`; most apps write none. */
-    val contentRating: String? = null)
+    val contentRating: String? = null,
+    /** Where playback stopped and how long the title is, in milliseconds; null unless the app wrote a positive value. */
+    val positionMs: Long? = null, val durationMs: Long? = null)
 sealed interface WatchNextResult {
     data class Available(val entries: List<WatchNextEntry>) : WatchNextResult
     data class Unavailable(val reason: Reason) : WatchNextResult
@@ -30,13 +32,13 @@ fun mapWatchNext(cursor: Cursor): List<WatchNextEntry> = buildList {
         val pkg = text(TvContract.WatchNextPrograms.COLUMN_PACKAGE_NAME) ?: continue
         val title = text(TvContract.WatchNextPrograms.COLUMN_TITLE) ?: continue
         val intent = text(TvContract.WatchNextPrograms.COLUMN_INTENT_URI) ?: continue
-        val position = number(TvContract.WatchNextPrograms.COLUMN_LAST_PLAYBACK_POSITION_MILLIS)
-        val duration = number(TvContract.WatchNextPrograms.COLUMN_DURATION_MILLIS)
+        val position = number(TvContract.WatchNextPrograms.COLUMN_LAST_PLAYBACK_POSITION_MILLIS).takeIf { it > 0 }
+        val duration = number(TvContract.WatchNextPrograms.COLUMN_DURATION_MILLIS).takeIf { it > 0 }
         add(WatchNextEntry(number(BaseColumns._ID), pkg, title,
             text(TvContract.WatchNextPrograms.COLUMN_EPISODE_TITLE), text(TvContract.WatchNextPrograms.COLUMN_POSTER_ART_URI), intent,
-            if (position > 0 && duration > 0) (position.toFloat() / duration).coerceIn(0f, 1f) else null,
+            if (position != null && duration != null) (position.toFloat() / duration).coerceIn(0f, 1f) else null,
             number(TvContract.WatchNextPrograms.COLUMN_LAST_ENGAGEMENT_TIME_UTC_MILLIS),
-            text(TvContract.WatchNextPrograms.COLUMN_CONTENT_RATING)))
+            text(TvContract.WatchNextPrograms.COLUMN_CONTENT_RATING), position, duration))
     }
 }
 

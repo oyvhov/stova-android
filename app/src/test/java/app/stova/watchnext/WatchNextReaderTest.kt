@@ -42,6 +42,8 @@ class WatchNextReaderTest {
         val kept = filterWatchNext(entries, "app.stova")
         assertEquals(listOf("Dark", "Andor"), kept.map { it.title }); assertEquals(0.2f, kept[0].progress!!, 0.001f); assertNull(kept[1].progress)
         assertEquals("com.android.tv/US_TV/US_TV_MA", kept[0].contentRating); assertNull(kept[1].contentRating)
+        assertEquals(600_000L, kept[0].positionMs); assertEquals(3_000_000L, kept[0].durationMs)
+        assertNull(kept[1].positionMs); assertNull(kept[1].durationMs)
     }
     @Test fun contentRatingsBecomeAges() {
         assertEquals(13, watchNextAge("com.android.tv/US_MV/US_MV_PG13"))
