@@ -1,3 +1,10 @@
+# Kva Stova kan lære av Tunet-privat
+
+2026-11-18 (Codex): Samanlikna Stova med den lokale arbeidskopien i `C:\Tunet-privat` og såg på dei lagra Shield-bileta av Heim og Sonos.
+Framlegga er sluttid på kortet i «Hald fram», dørstatus i Heim-brikkene, ringeklokkevarsel som gir slepp på skjermen, og neste spor i Sonos. Eventuell gjennomføring ventar på prioritering frå eigaren.
+37 målretta testar i Stova og 56 i Tunet-privat bestod. Tunet-privat las tittel, episode og speletid frå NRK-dømet i Stova sin Watch Next-test.
+Levering frå ein vaken Shield til det fysiske veggbrettet står att å prøve. Begge prosjekta brukar `sensor.stova_watch_next` for Shield. Framlegget er ei eiga kjelde om Loftet òg skal sende.
+
 # Watch Next til Home Assistant
 2026-11-15 (Claude): Ny `ha/WatchNextSensor.kt` sender Watch Next-lista som `sensor.stova_watch_next` (REST `POST /api/states/…`, same HA-token) for veggdashbordet. Han køyrer i `haScope` også når NRK står framme. `WatchNextEntry` har fått `positionMs`/`durationMs`; kontrakten står i ARCHITECTURE.md og spesifikasjonen §10. Commit `6b5499d`.
 Testar: 346 i `app.stova.ha.*`, `app.stova.watchnext.*`, DesignRules, ThemePalette og AppearanceRendering, 0 feil (7 skjermtestar hoppa over som vanleg); lint 0 feil. Dei nye testane vart sett feile først, og ei mutasjonsprøve av «ikkje send uendra» vart fanga.
