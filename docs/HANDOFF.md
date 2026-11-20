@@ -1,3 +1,8 @@
+# Shield-prøve
+2026-11-20 (Codex): Installerte TV-bygget med install -r på Shield og vekte eininga.
+Heim vart vist med eksisterande profil og appar. Opp/ned og fokus til Smarthus vart prøvde, og Smarthus viste kort og data. Tilbake og Heim vart sende.
+Skjermbilete ligg i `output/screenshots/shield-2026-11-20-test.png` og `shield-2026-11-20-smarthus.png`. Døgnbyte, radredigering og lange trykk vart ikkje prøvde på Shield.
+
 # Heim-rader, fjernkontrollhjelp og rulling
 2026-11-20 (Codex): Vaksne med standardrekkjefølgje får Watch Next tidleg på dagen og nye filmar og seriar frå kl. 17. «Rader på Heim» kan gjenopprette standarden og bevarer skjulte rader, radstil og startfokus. Commit `9a67aae`.
 Watch Next hugsar rett episode og samlar duplikat. Uavklart aldersmerking er skjult. Smarthus viser vanleg korthjelp dei tre første besøka per profil. Innstillingar og Smarthus rullar til skjermkanten. Committar `3972106` og `26b6343`.
