@@ -119,6 +119,16 @@ class ProfileRepository(
         store.update { it.copy(lastProfileId = id) }
     }
 
+    internal suspend fun recordSmartHomeHintVisit(id: String) {
+        store.update { file ->
+            file.copy(profiles = file.profiles.map { profile ->
+                if (profile.id == id && profile.smartHomeHintVisits < SMART_HOME_HINT_VISITS) {
+                    profile.copy(smartHomeHintVisits = profile.smartHomeHintVisits.coerceAtLeast(0) + 1)
+                } else profile
+            })
+        }
+    }
+
     suspend fun resetAppearance(id: String) {
         update(id) { it.copy(appearance = AppearancePrefs(), home = HomePrefs()) }
     }

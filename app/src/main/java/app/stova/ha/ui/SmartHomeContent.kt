@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
@@ -40,6 +41,7 @@ import app.stova.core.ui.*
 import app.stova.ha.*
 import app.stova.ha.cards.*
 import app.stova.profiles.Profile
+import app.stova.profiles.SMART_HOME_HINT_VISITS
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
@@ -59,7 +61,11 @@ import kotlin.math.ceil
     backdrop:String?=null,
     onRetry:()->Unit={},
     onConnectionSettings:(()->Unit)?=null,
+    onFirstRemoteHint:()->Unit={},
 ) {
+    // The third visit keeps its hints when the updated profile arrives from disk.
+    val showOrdinaryHints = rememberSaveable(profile.id) { profile.smartHomeHintVisits < SMART_HOME_HINT_VISITS }
+    var countedHint by rememberSaveable(profile.id) { mutableStateOf(false) }
     val allCards=cards
     var chosenRoom by remember(profile.id) {mutableStateOf<SmartHomeRoom>(SmartHomeRoom.All)}
     val rooms=remember(allCards,registry) {smartHomeRooms(allCards,registry)}
@@ -88,7 +94,7 @@ import kotlin.math.ceil
     var restoreId by remember(profile.id) {mutableStateOf<String?>(null)}
     var initialFocusGiven by remember(profile.id) {mutableStateOf(false)}
     var focusedId by remember(profile.id) {mutableStateOf(initialFocusId)}
-    var hintVisible by remember {mutableStateOf(false)}
+    var hintVisible by remember(profile.id) {mutableStateOf(false)}
     var lightsToTurnOff by remember {mutableStateOf<List<String>?>(null)}
     val summaryFocus=remember {FocusRequester()}
     val headerFocus=remember {FocusRequester()}
@@ -192,8 +198,8 @@ import kotlin.math.ceil
             restoreId=null
         }
     }
-    LaunchedEffect(focusedId,gridFocused,editing,covered,menuId) {
-        hintVisible=gridFocused && !covered && menuId==null
+    LaunchedEffect(profile.id,focusedId,gridFocused,editing,covered,menuId) {
+        hintVisible=gridFocused && !covered && menuId==null && (showOrdinaryHints || editing)
         if(hintVisible) {delay(4_000);hintVisible=false}
     }
     DisposableEffect(Unit) {onDispose {holdJob?.cancel();navigation?.cancel()}}
@@ -342,6 +348,12 @@ import kotlin.math.ceil
     val motion=app.stova.core.theme.stovaMotion
     val hintAlpha=animateFloatAsState(if(hintVisible && feedback==null) 1f else 0f,motion.fade(motion.quick))
     val showHint by remember {derivedStateOf {hintAlpha.value>0f}}
+    if (hintCard != null && showHint && hintVisible && feedback == null && !editing && !countedHint) {
+        LaunchedEffect(profile.id) {
+            countedHint = true
+            onFirstRemoteHint()
+        }
+    }
     if(hintCard!=null && showHint) Text(remoteHint(hintCard,entities[hintCard.entityId],!canControl(profile),profile.kid,editing),
         Modifier.align(Alignment.BottomCenter).padding(horizontal=StovaLayout.TvSafeEdge,vertical=12.dp).graphicsLayer {alpha=hintAlpha.value}.testTag("remote-hint"),
         style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1,overflow=TextOverflow.Ellipsis)

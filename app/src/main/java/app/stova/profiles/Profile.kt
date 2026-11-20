@@ -23,7 +23,11 @@ data class Profile(
     val pip: app.stova.kids.PipPrefs = app.stova.kids.PipPrefs(),
     /** The person in Spole who follows this profile, chosen in settings; null follows the profile's own account. */
     val spole: SpoleLink? = null,
+    /** Dashboard visits on which this person saw the ordinary remote-control hint. */
+    val smartHomeHintVisits: Int = 0,
 )
+
+internal const val SMART_HOME_HINT_VISITS = 3
 
 /** A profile in Spole, by the account it opens with. */
 @Serializable

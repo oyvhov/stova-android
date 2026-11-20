@@ -39,6 +39,8 @@ Reglar som før: modulært (ingen arbeid når noko er av eller ikkje sett opp), 
 - [ ] 3. (6) Småfunn: 7 hjelpetekst berre første gongene, 9 `Accent.container` frå tema og tydelegare
   brytar, 10 eitt namn per stad, 11 eige Smarthus-ikon, 12 dialogjustering, 13 NO-A → «Alle», skjul TBA,
   ingen duplikat i Watch Next, 14 statusprikken inn i ikonet.
+  - [x] 3.7. Vanleg fjernkontrollhjelp i Smarthus blir vist dei tre første besøka med korthint per profil. Redigeringshjelpa er tilgjengeleg på seinare besøk.
+  - [x] 3.13. Uavklart aldersmerking («TBA») er skjult. Watch Next samlar filmkort med tom eller manglande episodetittel og gir fokus tilbake til rett episode.
 - [ ] 4. (6) Større funn: 4 profilval med kunst og logo, 5 appfliser med farge frå ikonet og jamt
   rutenett, 8 ekte førehandsvisingar i Tema/Kort (8 ferdig 2026-10-27: den ekte Heim i lite format
   ved tittelen på kvar Utsjånad-side, `HomeMiniature`).

@@ -143,10 +143,11 @@ internal fun EmptyHome(onOpenApps: () -> Unit) {
 internal fun WatchNextRow(row: HomeRowUi.WatchNext, focus: FocusRequester?, onFocus: (FocusedTarget) -> Unit, onLongClick: () -> Unit,
     returnFocus: FocusRequester?, restore: FocusedTarget?) {
     val context = LocalContext.current
-    val index = row.entries.indexOfFirst { it.title == (restore as? FocusedTarget.App)?.label }.coerceAtLeast(0)
+    val index = row.entries.indexOfFirst { it.id == (restore as? FocusedTarget.WatchNext)?.id }.coerceAtLeast(0)
+    val state = rememberLazyListState(initialFirstVisibleItemIndex = index)
     Column {
         if (LocalRowStyle.current.showTitle) RowHeader(stringResource(R.string.row_watch_next)) else Spacer(Modifier.height(app.stova.core.theme.LocalAppearance.current.rowSpacing.top.dp))
-        LazyRow(Modifier.focusRestorer(), contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
+        LazyRow(Modifier.focusRestorer(), state = state, contentPadding = PaddingValues(horizontal = StovaLayout.TvSafeEdge),
             horizontalArrangement = Arrangement.spacedBy(app.stova.core.theme.LocalAppearance.current.spacingDp.dp)) {
             itemsIndexed(row.entries, key = { _, entry -> entry.id }) { i, entry ->
               DrawnFocus(i == index && focus != null) {
@@ -160,7 +161,7 @@ internal fun WatchNextRow(row: HomeRowUi.WatchNext, focus: FocusRequester?, onFo
                     } catch (_: SecurityException) {
                         Toast.makeText(context, R.string.app_open_failed, Toast.LENGTH_SHORT).show()
                     }
-                }, onFocused = { onFocus(FocusedTarget.App(entry.title)) },
+                }, onFocused = { onFocus(FocusedTarget.WatchNext(entry.id)) },
                     modifier = (if (i == index && focus != null) Modifier.focusRequester(focus) else Modifier)
                         .then(if (i == index && returnFocus != null) Modifier.focusRequester(returnFocus) else Modifier), onLongClick = onLongClick)
               }

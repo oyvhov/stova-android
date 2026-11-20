@@ -22,6 +22,31 @@ import org.robolectric.annotation.Config
 @Config(sdk=[30],qualifiers=TV_QUALIFIERS)
 class HomeFocusNavigationTest {
     @get:Rule val compose=createComposeRule()
+
+    @Test fun watchNextReturnsToTheSameEpisodeBeyondTheFirstVisibleCards() {
+        val entries = (1..10).map { episode ->
+            app.stova.watchnext.WatchNextEntry(episode.toLong(), "demo.player",
+                if (episode == 1 || episode == 10) "Emil" else "Serie $episode", "Episode $episode",
+                null, "demo://episode/$episode", null, 0)
+        }
+        val row = HomeRowUi.WatchNext(entries = entries)
+        var focused: FocusedTarget? = null
+        val visit = androidx.compose.runtime.mutableIntStateOf(0)
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            val context = LocalContext.current
+            androidx.compose.runtime.key(visit.intValue) {
+                HomeContent(listOf(row), focused, row.key, AppArtCache(context),
+                    PackageManagerAppCatalog(context, emptySet()), {}, { focused = it }, {}, {})
+            }
+        } }
+        repeat(9) { compose.onNode(isFocused()).performKeyInput { pressKey(Key.DirectionRight) } }
+        compose.onNode(hasContentDescription("Emil") and isFocused()).assertIsDisplayed()
+        compose.onNodeWithText("Episode 10").assertIsDisplayed()
+        compose.runOnIdle { visit.intValue++ }
+        compose.onNode(hasContentDescription("Emil") and isFocused()).assertIsDisplayed()
+        compose.onNodeWithText("Episode 10").assertIsDisplayed()
+    }
+
     private fun render(apps:Boolean, middleRows:Int=0, emptyApps:Boolean=false, reduceMotion:Boolean=true, startOnApps:Boolean=false, returnFocus:String?=null) {
         val account=MediaAccount("a","p",ServerKind.JELLYFIN,"s","Demo","https://demo.invalid","u","U")
         val media=HomeRowUi.Media(HomeRowKey.latestMovies("a"),account,MediaRowKind.LATEST_MOVIES,

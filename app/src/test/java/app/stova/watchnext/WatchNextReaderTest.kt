@@ -81,7 +81,7 @@ class WatchNextReaderTest {
             WatchNextEntry(id, pkg, title, subtitle, null, "intent:#Intent;package=$pkg;end", null, at)
         val kept = filterWatchNext(listOf(entry(1, "org.jellyfin.androidtv", "One Battle After Another", 100),
             entry(2, "org.jellyfin.androidtv", "One Battle After Another", 300), entry(3, "org.jellyfin.androidtv", "one battle after another ", 200),
-            entry(4, "com.netflix.ninja", "One Battle After Another", 50),
+            entry(4, "com.netflix.ninja", "One Battle After Another", 50, "  "),
             entry(5, "no.nrk.tv", "Emil", 40, "Episode 1"), entry(6, "no.nrk.tv", "Emil", 30, "Episode 2")), "app.stova")
         assertEquals(listOf(2L, 5L, 6L), kept.map { it.id })
     }

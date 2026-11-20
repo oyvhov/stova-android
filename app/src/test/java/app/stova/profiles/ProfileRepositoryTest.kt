@@ -63,4 +63,14 @@ class ProfileRepositoryTest {
         val r = repo(); val id = r.create("A", AvatarColor.LIME, false).id
         assertEquals(PinCheck.Accepted, r.verifyPin(id, "9999"))
     }
+
+    @Test fun dashboardHintVisitsSurviveRestartAndBelongOnlyToTheirProfile() = runTest {
+        val repository = repo()
+        val first = repository.create("A", AvatarColor.LIME, false)
+        val second = repository.create("B", AvatarColor.ROSE, false)
+        repeat(5) { repository.recordSmartHomeHintVisit(first.id) }
+        val profiles = repo().current().profiles
+        assertEquals(3, profiles.single { it.id == first.id }.smartHomeHintVisits)
+        assertEquals(0, profiles.single { it.id == second.id }.smartHomeHintVisits)
+    }
 }

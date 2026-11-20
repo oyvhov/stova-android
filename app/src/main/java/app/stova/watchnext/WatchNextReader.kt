@@ -69,7 +69,7 @@ fun filterWatchNext(entries: List<WatchNextEntry>, selfPackage: String, limit: I
         .sortedByDescending { it.lastEngagement }
         // The same film showed three times on the Shield (2026-11-01): several apps for one Jellyfin server
         // each put it here. A title is shown once, from the app that saw it last.
-        .distinctBy { it.title.trim().lowercase() to it.subtitle?.trim()?.lowercase() }
+        .distinctBy { it.title.trim().lowercase() to it.subtitle.orEmpty().trim().lowercase() }
         .take(limit)
 
 fun launchIntentFor(entry: WatchNextEntry): Intent? = try {

@@ -3,6 +3,7 @@ import app.stova.media.model.*
 sealed interface FocusedTarget {
  data class Media(val item:MediaItem,val account:MediaAccount):FocusedTarget
  data class App(val label:String):FocusedTarget
+ data class WatchNext(val id:Long):FocusedTarget
 }
 sealed interface MetaPart {
  data class Year(val y:Int):MetaPart

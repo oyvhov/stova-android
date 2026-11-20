@@ -153,7 +153,7 @@ fun HomeContent(
                 row.account.id == target.account.id && row.items.any { it.id == target.item.id }
             } == true
             is HomeRowUi.Apps -> restoreTarget is FocusedTarget.App && row.tiles.any { it.label == restoreTarget.label }
-            is HomeRowUi.WatchNext -> restoreTarget is FocusedTarget.App && row.entries.any { it.title == restoreTarget.label }
+            is HomeRowUi.WatchNext -> restoreTarget is FocusedTarget.WatchNext && row.entries.any { it.id == restoreTarget.id }
     }
     val requestedRow = availableRows?.firstOrNull { it.key == initial && matchesRestore(it) }?.key
         ?: availableRows?.firstOrNull(::matchesRestore)?.key ?: initial

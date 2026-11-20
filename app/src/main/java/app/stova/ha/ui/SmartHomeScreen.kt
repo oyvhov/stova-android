@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
     LaunchedEffect(feedback) {if(feedback!=null) {delay(if(feedback==HaFeedback.FAILED) 5_000 else 2_000);container.haRepository.dismissFeedback()}}
     val firstFocus=remember(profile.id,initialCardId) {initialCardId ?: container.haRepository.lastFocused(profile.id)}
     SmartHomeContent(profile,cards,entities,if(household?.haBaseUrl==null) HaStatus.NOT_CONFIGURED else status,
+        onFirstRemoteHint={container.appScope.launch {container.profiles.recordSmartHomeHintVisit(profile.id)}},
         images=images,onAdd={adding=true},backdrop=backdrop,
         onLayoutChange={prefs->scope.launch {container.profiles.update(profile.id) {it.copy(smartHome=prefs)}}},
         onPerform={call,id->scope.launch {container.haRepository.perform(call,id,profile)}},onDialog={dialog=it},

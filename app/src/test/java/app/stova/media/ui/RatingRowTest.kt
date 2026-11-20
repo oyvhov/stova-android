@@ -43,6 +43,12 @@ class RatingRowTest {
         compose.onNodeWithText("NO-A").assertDoesNotExist()
     }
 
+    @Test fun pendingAgeRatingLeavesTheOtherFactsVisible() {
+        compose.setContent { StovaTheme { RatingRow(Ratings(official = "  tBa "), year = 2026) } }
+        compose.onNodeWithText("TBA", ignoreCase = true, substring = true).assertDoesNotExist()
+        compose.onNodeWithText("2026").assertIsDisplayed()
+    }
+
     @Test
     @Config(qualifiers = "en-w960dp-h540dp-land-television-xhdpi")
     fun englishAgeUsesLocalizedYears() {

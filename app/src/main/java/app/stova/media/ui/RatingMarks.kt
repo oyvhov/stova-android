@@ -49,7 +49,8 @@ fun RatingRow(ratings: Ratings, modifier: Modifier = Modifier, year: Int? = null
             RatingFact(stringResource(R.string.appearance_star_score, communityText(it, locale)))
         }
         year?.let { RatingFact(it.toString()) }
-        ratings.official?.takeIf { it.isNotBlank() }?.let { RatingFact(officialRatingText(it)) }
+        ratings.official?.trim()?.takeIf { it.isNotEmpty() && !it.equals("TBA", ignoreCase = true) }
+            ?.let { RatingFact(officialRatingText(it)) }
         ratings.criticPercent?.takeIf { it in 0..100 }?.let { score ->
             val fresh = score >= 60
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {

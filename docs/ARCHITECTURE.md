@@ -185,6 +185,7 @@ rad- og tittel-id-ar som nøklar.
 - HA-registeret blir brukt om att i seks timar. Historikk og prognosar blir delte mellom kort og panel.
 - HA-snapshot blir skrive høgst kvart minutt og forsøkt flusha ved stopp. Berre tidsstempelendringar gir inga skriving.
 - Watch Next registrerer ingen innhaldslyttar utan løyve. Klokker stoppar når skjermen ikkje er aktiv.
+- Heim hugsar Watch Next-kortet med rad-ID-en frå TvProvider. Rada rullar kortet inn ved retur, også når fleire episodar har same serienamn.
 - Watch Next til Home Assistant blir sendt om lag 2 s etter at lista har roa seg, éin gong per adresse og per ny socket-tilkopling (ein tilstand sett med REST forsvinn når Home Assistant startar på nytt), og aldri to gonger på rad utan endring. Ein feila sending er stille og går att ved neste endring.
 - «Hald fram i andre appar» følgjer aldersgrensa til profilen slik heroen gjer: med ei grense treng ein tittel ei kjend
   aldersgrense (`content_rating` frå appen, lesen av `watchNextAge`) innanfor henne, elles blir han skjult. Barneprofilar har ikkje rada.
@@ -330,7 +331,10 @@ plass frå kontrollane. Ikon-sida har i staden ei kompakt, ikkje-fokuserbar appp
 med same `AppTile`, ikonpakke og bakgrunnsval som Heim. Langt-OK-panela samlar dei detaljerte radvala på sida «Tilpass rada».
 
 Smarthus bruker `ha/cards/CardFocusNavigation.kt` for retningar mellom logiske kortrektangel
-frå same pakking som visinga. Venstre/Høgre held seg på same kortband; Opp/Ned vel næraste
+frå same pakking som visinga. Vanleg fjernkontrollhjelp blir vist på dei tre første besøka der
+profilen får sjå eit korthint. `ProfileRepository` lagrar éi teljing per slikt besøk. I redigeringsmodus
+er hjelpa alltid tilgjengeleg.
+Venstre/Høgre held seg på same kortband; Opp/Ned vel næraste
 neste rad og tek omsyn til breie/høge kort. Fokus utanfor skjermen blir rulla inn før flytting.
 Første kortband blir rulla inn saman med gruppeoverskrifta. Dersom eit høgt kort ikkje får
 plass med overskrifta, har heile det fokuserte kortet prioritet. Små kort gir namnet eiga

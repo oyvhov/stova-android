@@ -7,6 +7,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.stova.TV_QUALIFIERS
+import app.stova.core.storage.StovaJson
 import app.stova.core.theme.*
 import app.stova.ha.*
 import app.stova.ha.cards.*
@@ -25,6 +26,41 @@ class RemoteDashboardTest {
     private val adult=Profile("a","A",AvatarColor.LIME)
     private val cards=listOf(CardConfig("a",CardType.LIGHT,"light.a"),CardConfig("b",CardType.LIGHT,"light.b"),CardConfig("c",CardType.CLIMATE,"climate.c"))
     private val entities=cards.associate {it.entityId to HaEntity(it.entityId,"on",buildJsonObject {put("brightness",128)},0,0)}
+    @Test fun fourthDashboardVisitSkipsOrdinaryHintsButStillExplainsEditing() {
+        val returning = StovaJson.decodeFromString(Profile.serializer(),
+            """{"id":"a","name":"A","avatar":"LIME","smartHomeHintVisits":3}""")
+        compose.setContent { StovaTheme { SmartHomeContent(returning, cards, entities, HaStatus.CONNECTED) } }
+        compose.onNodeWithText("light.a").assertIsFocused()
+        compose.onNodeWithTag("remote-hint").assertDoesNotExist()
+        compose.onNodeWithText("Rediger").performClick()
+        compose.onNodeWithText("OK: kortval", substring = true).assertIsDisplayed()
+    }
+
+    @Test fun theThirdVisitCountsOnceWhenACardShowsAHintAndKeepsHelpingUntilExit() {
+        var profile by mutableStateOf(adult.copy(smartHomeHintVisits = 2))
+        var visibleCards by mutableStateOf(emptyList<CardConfig>())
+        var visit by mutableIntStateOf(0)
+        var counted = 0
+        compose.setContent {
+            StovaTheme {
+                key(visit) {
+                    SmartHomeContent(profile, visibleCards, entities, HaStatus.CONNECTED, onFirstRemoteHint = {
+                        counted++
+                        profile = profile.copy(smartHomeHintVisits = profile.smartHomeHintVisits + 1)
+                    })
+                }
+            }
+        }
+        compose.onNodeWithText("Ingen kort enno").assertExists()
+        compose.runOnIdle { assertEquals(0, counted); visibleCards = cards }
+        compose.onNodeWithText("OK: slå av", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("light.a").performKeyInput { pressKey(Key.DirectionRight); pressKey(Key.DirectionRight) }
+        compose.onNodeWithText("OK: juster temperatur", substring = true).assertIsDisplayed()
+        compose.runOnIdle { assertEquals(1, counted); visit++ }
+        compose.onNodeWithText("light.a").assertIsFocused()
+        compose.onNodeWithTag("remote-hint").assertDoesNotExist()
+        compose.runOnIdle { assertEquals(1, counted) }
+    }
     @Test fun contextHintChangesWithFocusThenFadesAfterFourSeconds() {
         compose.setContent {StovaTheme {SmartHomeContent(adult,cards,entities,HaStatus.CONNECTED)}}
         compose.onNodeWithText("OK: slå av",substring=true).assertIsDisplayed()
