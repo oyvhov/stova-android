@@ -231,7 +231,8 @@ import kotlin.math.ceil
             true
         } else false
     }) {
-    Row(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge),horizontalArrangement=Arrangement.spacedBy(StovaLayout.Gutter)) {
+    Row(Modifier.fillMaxSize().padding(start=StovaLayout.TvSafeEdge,top=StovaLayout.TvSafeEdge,end=StovaLayout.TvSafeEdge),
+        horizontalArrangement=Arrangement.spacedBy(StovaLayout.Gutter)) {
         SmartHomeRoomRail(rooms,selectedRoom,roomCounts,railFocus,{room ->
             if(!covered && menuId==null) {
                 if(room==selectedRoom) (focusedId?.takeIf {id->cards.any {it.id==id}} ?: firstId)?.let(::requestCard)
@@ -294,13 +295,14 @@ import kotlin.math.ceil
         Box(Modifier.weight(1f).fillMaxWidth()) {
         // Moving between cards that show must not slide the dashboard; only a hidden card scrolls.
         @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-        CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides app.stova.core.ui.ScrollOnlyWhenHidden) {
-        LazyColumn(Modifier.fillMaxSize().testTag("dashboard-grid").stepEntrance(selectedRoom,0).onFocusChanged {gridFocused=it.hasFocus}.onPreviewKeyEvent {event ->
+        CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides rememberTvScrollSpec(ScrollOnlyWhenHidden)) {
+        LazyColumn(Modifier.fillMaxSize().testTag("dashboard-grid").bottomFade {list.canScrollForward}
+            .stepEntrance(selectedRoom,0).onFocusChanged {gridFocused=it.hasFocus}.onPreviewKeyEvent {event ->
             if(!covered && menuId==null && !editHeld && event.key in listOf(Key.DirectionUp,Key.DirectionDown,Key.DirectionLeft,Key.DirectionRight)) {
                 if(event.type==KeyEventType.KeyDown) navigate(event.key)
                 true
             } else false
-        },state=list,verticalArrangement=Arrangement.spacedBy(16.dp),contentPadding=PaddingValues(4.dp,4.dp,4.dp,28.dp)) {
+        },state=list,verticalArrangement=Arrangement.spacedBy(16.dp),contentPadding=PaddingValues(4.dp,4.dp,4.dp,StovaLayout.TvSafeEdge)) {
             sections.forEachIndexed {index,section ->
                 if (headings) item(key="section-$index") {
                     SectionHeading(if(section.favorites) stringResource(R.string.ha_v2_favorites) else section.room ?: stringResource(R.string.ha_v2_unassigned),
@@ -339,10 +341,12 @@ import kotlin.math.ceil
     }
     // Feedback floats in the footer instead of reserving an empty row above the cards.
     // Crossfade retains the last message through its exit without moving the dashboard.
+    val footerLabel = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.small)
+        .padding(horizontal = 8.dp, vertical = 2.dp)
     androidx.compose.animation.Crossfade(feedback,modifier=Modifier.align(Alignment.BottomCenter)
-        .padding(horizontal=StovaLayout.TvSafeEdge,vertical=12.dp),animationSpec=scrollMotion.fade(),label="ha-feedback") {shown ->
+        .padding(horizontal=StovaLayout.TvSafeEdge,vertical=8.dp),animationSpec=scrollMotion.fade(),label="ha-feedback") {shown ->
         if(shown!=null) Text(stringResource(if(shown==HaFeedback.FAILED) R.string.ha_v2_failed else R.string.ha_v2_done),
-            style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            modifier=footerLabel,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
     }
     val hintCard=cards.find {it.id==focusedId}
     val motion=app.stova.core.theme.stovaMotion
@@ -355,7 +359,8 @@ import kotlin.math.ceil
         }
     }
     if(hintCard!=null && showHint) Text(remoteHint(hintCard,entities[hintCard.entityId],!canControl(profile),profile.kid,editing),
-        Modifier.align(Alignment.BottomCenter).padding(horizontal=StovaLayout.TvSafeEdge,vertical=12.dp).graphicsLayer {alpha=hintAlpha.value}.testTag("remote-hint"),
+        Modifier.align(Alignment.BottomCenter).padding(horizontal=StovaLayout.TvSafeEdge,vertical=12.dp)
+            .graphicsLayer {alpha=hintAlpha.value}.then(footerLabel).testTag("remote-hint"),
         style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1,overflow=TextOverflow.Ellipsis)
     }
     lightsToTurnOff?.let {ids ->

@@ -38,6 +38,20 @@ class MixedDashboardLayoutTest {
         put("temperature",9.7);put("temperature_unit","°C")
     },0,0)
 
+    @Test fun gridScrollsToTheScreenEdgeAndLeavesRoomBelowItsLastCard() {
+        val cards = List(24) { index -> CardConfig("p$index", CardType.SENSOR, "sensor.p$index", name = "Sensor $index") }
+        compose.setContent { StovaTheme(reduceMotion = true) {
+            SmartHomeContent(Profile("a", "A", AvatarColor.OCEAN), cards, emptyMap(), HaStatus.CONNECTED)
+        } }
+        val grid = compose.onNodeWithTag("dashboard-grid")
+        val bottom = compose.onRoot().getUnclippedBoundsInRoot().bottom
+        assertEquals(bottom, grid.getUnclippedBoundsInRoot().bottom)
+        grid.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.ScrollBy) { it(0f, 10_000f) }
+        compose.waitForIdle()
+        val last = compose.onNodeWithText("Sensor 23").getUnclippedBoundsInRoot()
+        assertTrue("Last card should clear the TV safe area: $last", last.bottom <= bottom - StovaLayout.TvSafeEdge)
+    }
+
     @Test fun smallControlsKeepTheirRoomAndDetailsInsideOneCompactRow() {
         compose.setContent {StovaTheme(reduceMotion=true) {Row(horizontalArrangement=Arrangement.spacedBy(16.dp)) {
             HaCard(CardConfig("l",CardType.LIGHT,light.id,name="Stova"),light,false,{},{},
@@ -128,14 +142,15 @@ class MixedDashboardLayoutTest {
         repeat(3) {if(runCatching {compose.onNodeWithText("Sonos").assertIsFocused()}.isFailure) press(Key.DirectionDown)}
         compose.onNodeWithText("Sonos").assertIsFocused()
         val sonos=compose.onNodeWithText("Sonos").getUnclippedBoundsInRoot()
-        // All of it shows, above the grid's 28 dp bottom margin, and no further up than that.
-        assertTrue("Sonos shows just above the margin: $sonos in $grid",sonos.bottom<=grid.bottom && sonos.bottom>=grid.bottom-29.dp)
+        val safeBottom = grid.bottom - StovaLayout.TvSafeEdge
+        assertTrue("Sonos shows just above the TV margin: $sonos in $grid",
+            sonos.bottom <= safeBottom + 1.dp && sonos.bottom >= safeBottom - 29.dp)
         val revealed=top()
         val before=listOf("Ute","Straumpris","Stova","Varmepumpa").associateWith {compose.onNodeWithText(it).getUnclippedBoundsInRoot()}
         press(Key.DirectionUp)
         val name=before.keys.first {runCatching {compose.onNodeWithText(it).assertIsFocused()}.isSuccess}
         val was=before.getValue(name)
-        if(was.top>=grid.top && was.bottom<=grid.bottom) assertEquals("back up to $name, in view: nothing moves",revealed,top(),0.5f)
+        if(was.top>=grid.top && was.bottom<=safeBottom) assertEquals("back up to $name, in view: nothing moves",revealed,top(),0.5f)
         else assertTrue("$name was hidden at the top and now shows",compose.onNodeWithText(name).getUnclippedBoundsInRoot().top>=grid.top)
     }
 

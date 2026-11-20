@@ -4,9 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -30,6 +28,7 @@ import app.stova.core.theme.AvatarColor
 import app.stova.core.theme.StovaLayout
 import app.stova.core.theme.color
 import app.stova.core.ui.CategoryIcon
+import app.stova.core.ui.TvScrollColumn
 import app.stova.core.ui.focusOutline
 import app.stova.core.ui.StovaIcons
 
@@ -56,14 +55,14 @@ internal fun SettingsNavigation(
     Column(Modifier.width(StovaLayout.SettingsNavigationWidth), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface)
-        Column(Modifier.weight(1f).onPreviewKeyEvent { event ->
+        TvScrollColumn(Modifier.weight(1f).onPreviewKeyEvent { event ->
             if (event.type == KeyEventType.KeyDown &&
                 (event.key == Key.DirectionLeft || event.key == Key.DirectionUp || event.key == Key.DirectionDown))
                 onCancelEntry()
             false
         }.focusProperties {
             onExit = { if (requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down) cancelFocusChange() }
-        }.focusGroup().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        }.focusGroup(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             entries.forEachIndexed { index, entry ->
                 val order = Modifier.focusRequester(requesters[index]).focusProperties {
                     up = requesters.getOrNull(index - 1) ?: FocusRequester.Cancel

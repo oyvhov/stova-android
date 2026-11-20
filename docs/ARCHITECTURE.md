@@ -303,7 +303,10 @@ Ei rad utanfor lazy-lista blir rulla inn før fokus blir bede om; eit nyare pilt
 ventande flytting. Radflytting i redigeringsmodus har framleis eigarskap til pilene.
 
 `SettingsLayout` eig innstikket frå sidekolonnen og viser berre den valde seksjonen i
-fokustreet. Opp/Ned held seg i sitt område. Venstre får først flytte mellom kontrollar
+fokustreet. Rulleflatene i Innstillingar og Smarthus går til skjermkanten.
+`core/ui/TvScrollEdge.kt` legg TV-randa etter siste kontroll og held fokus over randa
+ved rulling. Når det finst meir innhald, tonar dei siste 8 dp mjukt ut.
+Opp/Ned held seg i sitt område. Venstre får først flytte mellom kontrollar
 eller i tekst; ved utgang frå innhaldet går fokus til den valde menyseksjonen.
 Lenkjer parkerer fokus på den stabile målseksjonen før den gamle sida blir fjerna.
 Innstillingar opnar `OVERVIEW`, med seks ikonlenkjer og to kolonnar (éi ved stor skrift).

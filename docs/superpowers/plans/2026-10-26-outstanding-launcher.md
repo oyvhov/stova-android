@@ -34,8 +34,8 @@ Reglar som før: modulært (ingen arbeid når noko er av eller ikkje sett opp), 
 
 - [x] 1. (6) Synleg fokus (funn 1; fjør utan sprett på skala og løft): kunst 6 % større ved fokus, resten av den aktive rada dempa til
   ~70 %, tittel under fokuskortet lys og dei andre dempa; kontrollflater 16 % lys. Ingen glød.
-- [ ] 2. (6) Harde klipp nedst (funn 3): Innstillingar og Smarthus brukar `contentPadding` i
-  staden for ytre botnmarg, med mjuk overgang.
+- [x] 2. (6) Innstillingar og Smarthus lèt innhaldet rulle til skjermkanten med 8 dp mjuk overgang.
+  Fokus og siste kontroll har 48 dp trygg avstand. Prøvd på Stova_TV med dobbel skrift i Smarthus.
 - [ ] 3. (6) Småfunn: 7 hjelpetekst berre første gongene, 9 `Accent.container` frå tema og tydelegare
   brytar, 10 eitt namn per stad, 11 eige Smarthus-ikon, 12 dialogjustering, 13 NO-A → «Alle», skjul TBA,
   ingen duplikat i Watch Next, 14 statusprikken inn i ikonet.

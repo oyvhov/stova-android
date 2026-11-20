@@ -13,9 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.*
@@ -34,6 +31,7 @@ import app.stova.R
 import app.stova.apps.*
 import app.stova.core.theme.StovaLayout
 import app.stova.core.ui.StovaButton
+import app.stova.core.ui.bottomFade
 import app.stova.core.ui.smoothScrollToItem
 import app.stova.core.ui.staggeredEntrance
 import app.stova.core.theme.stovaMotion
@@ -43,26 +41,6 @@ import app.stova.media.ui.*
 import app.stova.profiles.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-/**
- * Rows below the screen's lower margin fade out within 8 dp instead of peeking in, cut through.
- * Above the margin they draw straight to the screen; only the 8 dp seam goes through a layer of its
- * own. A layer the size of Home cost a small TV GPU two extra screens of pixels in every frame.
- */
-private fun Modifier.bottomFade(margin: androidx.compose.ui.unit.Dp) = drawWithContent {
-    val top = size.height - margin.toPx()
-    val soft = 8.dp.toPx()
-    clipRect(bottom = top) { this@drawWithContent.drawContent() }
-    drawIntoCanvas { canvas ->
-        canvas.saveLayer(androidx.compose.ui.geometry.Rect(0f, top, size.width, top + soft), androidx.compose.ui.graphics.Paint())
-        clipRect(top = top, bottom = top + soft) { this@drawWithContent.drawContent() }
-        drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(
-            listOf(androidx.compose.ui.graphics.Color.Transparent, androidx.compose.ui.graphics.Color.Black), startY = top, endY = top + soft),
-            topLeft = androidx.compose.ui.geometry.Offset(0f, top), size = androidx.compose.ui.geometry.Size(size.width, soft),
-            blendMode = androidx.compose.ui.graphics.BlendMode.DstOut)
-        canvas.restore()
-    }
-}
 
 /** Settings draws Home small: it places no focus, and draws the start row's card as focused instead. */
 internal val LocalHomePreview = staticCompositionLocalOf { false }

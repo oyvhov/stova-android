@@ -5,8 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -64,7 +62,7 @@ internal fun roomCards(cards: List<CardConfig>, registry: HaRegistry, room: Smar
     modifier: Modifier = Modifier, icons: Map<SmartHomeRoom,String?> = emptyMap(), header: @Composable ColumnScope.() -> Unit) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp), content = header)
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).focusGroup(),
+        TvScrollColumn(Modifier.weight(1f).focusGroup(),
             verticalArrangement = Arrangement.spacedBy(6.dp)) {
             rooms.forEach { room ->
                 val source = remember(room) { MutableInteractionSource() }

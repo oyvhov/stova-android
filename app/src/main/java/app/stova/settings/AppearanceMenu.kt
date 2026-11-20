@@ -7,8 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -26,6 +24,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import app.stova.R
 import app.stova.core.ui.StovaButton
+import app.stova.core.ui.TvScrollColumn
 import app.stova.core.ui.StovaIcons
 import app.stova.core.ui.PageHeader
 import app.stova.core.ui.CategoryIcon
@@ -111,10 +110,9 @@ internal fun AppearanceMenu(scrollable: Boolean = true, preview: (@Composable (A
             }
         }
         key(selected) {
-            val scroll = rememberScrollState()
-            Column(Modifier.fillMaxWidth().softEntrance(selected).focusProperties {
+            TvScrollColumn(Modifier.fillMaxWidth().softEntrance(selected).focusProperties {
                 onExit = { if (requestedFocusDirection == FocusDirection.Left) sidebar?.requestFocus() }
-            }.focusGroup().then(if (scrollable) Modifier.verticalScroll(scroll) else Modifier), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            }.focusGroup(), verticalArrangement = Arrangement.spacedBy(12.dp), scrollable = scrollable) {
                 val category = selected
                 if (category == null) {
                     PageHeader(stringResource(R.string.settings_section_look), StovaIcons.Palette,

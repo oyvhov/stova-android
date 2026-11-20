@@ -3,8 +3,6 @@ package app.stova.settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -14,6 +12,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.unit.dp
 import app.stova.core.theme.StovaLayout
+import app.stova.core.ui.TvScrollColumn
 import app.stova.core.ui.stepEntrance
 
 internal val LocalSettingsSectionFocus = staticCompositionLocalOf<FocusRequester?> { null }
@@ -87,14 +86,15 @@ internal fun SettingsLayout(
         enterSection = null // About has no controls: keep focus on its tab.
     }
 
-    Row(Modifier.fillMaxSize().padding(StovaLayout.TvSafeEdge), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+    Row(Modifier.fillMaxSize().padding(start = StovaLayout.TvSafeEdge, top = StovaLayout.TvSafeEdge, end = StovaLayout.TvSafeEdge),
+        horizontalArrangement = Arrangement.spacedBy(32.dp)) {
         SettingsNavigation(selected, ::select, tabs, ::enter,
             onCancelEntry = { enterSection = null }, onApps = onApps, appsSelected = appsShown, onAppsFocused = { appsShown = true })
         // Keep only the selected pane in the focus tree. An outgoing animated pane must not
         // compete for Up/Down while the user is already selecting the next section.
         val stepMotion = Modifier.stepEntrance(selected to appsShown, history.size)
         key(selected, appsShown) {
-            Column(
+            TvScrollColumn(
                 Modifier.weight(1f).fillMaxHeight().then(stepMotion)
                     .onFocusChanged { paneFocused = it.hasFocus }
                     .focusRequester(pane)
@@ -107,9 +107,9 @@ internal fun SettingsLayout(
                             }
                         }
                     }
-                    .focusGroup()
-                    .then(if (selected == SettingsSection.APPEARANCE) Modifier else Modifier.verticalScroll(rememberScrollState())),
+                    .focusGroup(),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
+                scrollable = selected != SettingsSection.APPEARANCE || appsShown,
             ) {
                 CompositionLocalProvider(LocalSettingsSectionFocus provides tabs.getValue(selected),
                     LocalSettingsPaneEntry provides { enter(selected) }, LocalSettingsReturnedFrom provides returnedFrom) {

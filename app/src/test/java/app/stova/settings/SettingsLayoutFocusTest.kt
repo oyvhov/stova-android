@@ -41,6 +41,21 @@ class SettingsLayoutFocusTest {
 
     private fun tab(label: String) = compose.onNode(hasText(label) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab))
 
+    @Test fun settingsScrollsToTheScreenEdgeAndLeavesRoomBelowTheLastControl() {
+        render()
+        val pane = compose.onNode(hasScrollAction() and hasAnyDescendant(hasText("PROFILE 11")))
+        val bottom = compose.onRoot().getUnclippedBoundsInRoot().bottom
+        org.junit.Assert.assertEquals(bottom, pane.getUnclippedBoundsInRoot().bottom)
+        tab("Profilar").performKeyInput { pressKey(Key.DirectionRight) }
+        repeat(11) { compose.onRoot().performKeyInput { pressKey(Key.DirectionDown) } }
+        val last = compose.onNodeWithText("PROFILE 11").assertIsFocused()
+        pane.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.ScrollBy) { it(0f, 10_000f) }
+        compose.waitForIdle()
+        val bounds = last.getUnclippedBoundsInRoot()
+        org.junit.Assert.assertTrue("Last control should clear the TV safe area: $bounds",
+            bounds.bottom <= bottom - app.stova.core.theme.StovaLayout.TvSafeEdge)
+    }
+
     @Test fun largeFontSidebarMovesInOrderAndStopsAtBothEnds() {
         render(fontScale = 2f)
         tab("Heim og utsjånad").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
