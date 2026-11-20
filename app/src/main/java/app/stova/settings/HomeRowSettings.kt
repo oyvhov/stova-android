@@ -17,6 +17,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,7 +55,7 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
     } + (if (discoverRow) listOf(HomeRowKey.DISCOVER) else emptyList()) + stored).distinct()
     val available = if (home != null) {
         val loaded by home.availableRows.collectAsStateWithLifecycle()
-        (known + loaded).distinct()
+        (loaded + known).distinct()
     } else known
     val watchNext by container.watchNext.status.collectAsStateWithLifecycle()
     LaunchedEffect(container.watchNext, profile.kid) { if (!profile.kid) container.watchNext.read() }
@@ -97,9 +99,15 @@ fun HomeRowSettings(container: AppContainer, profile: Profile, home: HomeViewMod
     HomeRowOrderSettings(
         ordered, prefs.hiddenRows,
         onVisible = { key, visible -> save { it.copy(hiddenRows = if (visible) it.hiddenRows - key else it.hiddenRows + key) } },
-        onMove = { key, delta -> save { it.copy(rowOrder = moveItem(ordered, key, delta)) } },
+        onMove = { key, delta -> save { latest ->
+            val knownNow = (available + latest.rowOrder + latest.hiddenRows + latest.rowFormats.keys).distinct()
+            val before = arrangeRows(knownNow, latest.copy(hiddenRows = emptySet()))
+            val after = moveItem(before, key, delta)
+            if (after == before) latest else latest.copy(rowOrder = after)
+        } },
         rowFormats = prefs.rowFormats,
         appearance = profile.appearance,
+        onResetOrder = if (prefs.rowOrder.isEmpty()) null else ({ save { it.copy(rowOrder = emptyList()) } }),
         onStyle = { key, style -> save { it.copy(rowFormats = if (style == RowStyle()) it.rowFormats - key else it.rowFormats + (key to style)) } },
     )
 }
@@ -111,18 +119,25 @@ internal fun HomeRowOrderSettings(
     onMove: (HomeRowKey, Int) -> Unit,
     rowFormats: Map<HomeRowKey, RowStyle> = emptyMap(),
     appearance: AppearancePrefs = AppearancePrefs(),
+    onResetOrder: (() -> Unit)? = null,
     onStyle: (HomeRowKey, RowStyle) -> Unit = { _, _ -> },
 ) {
     if (ordered.isNotEmpty()) {
+        val firstRow = remember { FocusRequester() }
         SettingsGroup(stringResource(R.string.home_rows)) {
-            ordered.forEach { key ->
+            if (onResetOrder != null) StovaButton(stringResource(R.string.row_reset_order), {
+                firstRow.requestFocus()
+                onResetOrder()
+            })
+            ordered.forEachIndexed { index, key ->
                 key(key) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(Modifier.weight(1f)) {
-                        SettingsSwitchRow((rowFormats[key] ?: RowStyle()).heading(rowLabel(key)), key !in hiddenRows, { visible -> onVisible(key, visible) })
+                        SettingsSwitchRow((rowFormats[key] ?: RowStyle()).heading(rowLabel(key)), key !in hiddenRows,
+                            { visible -> onVisible(key, visible) }, modifier = if (index == 0) Modifier.focusRequester(firstRow) else Modifier)
                     }
-                    StovaButton(stringResource(R.string.row_move_up), { onMove(key, -1) })
-                    StovaButton(stringResource(R.string.row_move_down), { onMove(key, +1) })
+                    StovaButton(stringResource(R.string.row_move_up), { if (index > 0) onMove(key, -1) })
+                    StovaButton(stringResource(R.string.row_move_down), { if (index < ordered.lastIndex) onMove(key, +1) })
                 }
                 RowStyleChoices(rowFormats[key] ?: RowStyle(), defaultRowFormat(key, appearance), appearance.cardSize, rowLabel(key),
                     hasSource = key != HomeRowKey.APPS && key != HomeRowKey.WATCH_NEXT && key != HomeRowKey.DISCOVER, globalTitles = appearance.showTitles) { onStyle(key, it) }

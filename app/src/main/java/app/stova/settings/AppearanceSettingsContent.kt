@@ -30,6 +30,7 @@ fun AppearanceSettingsContent(
     onCopy: (String) -> Unit = {},
     category: AppearanceCategory? = null,
     firstControl: Modifier = Modifier,
+    adultHome: Boolean = true,
     onChange: (AppearancePrefs) -> Unit,
 ) {
     if (category == null) Text(stringResource(R.string.appearance_choice_hint), style = MaterialTheme.typography.bodySmall,
@@ -52,6 +53,10 @@ fun AppearanceSettingsContent(
         Choice(R.string.home_visible_rows, p.homeRows, HomeRows.entries,
             listOf(R.string.home_rows_one, R.string.home_rows_two, R.string.home_rows_scrolling), modifier = firstControl) { onChange(p.copy(homeRows = it)) }
         GroupHint(R.string.home_rows_hint)
+        if (adultHome) app.stova.core.ui.SettingsSwitchRow(
+            stringResource(R.string.home_rows_by_time), p.rowsByTime, { onChange(p.copy(rowsByTime = it)) },
+            subtitle = stringResource(R.string.home_rows_by_time_hint),
+        )
         if (p.homeRows != HomeRows.SCROLLING) Choice(R.string.home_row_inset, p.homeRowInset, HomeRowInset.entries,
             listOf(R.string.home_row_low, R.string.home_row_balanced, R.string.home_row_high)) { onChange(p.copy(homeRowInset = it)) }
         Choice(R.string.appearance_hero_size, p.heroSize, HeroSize.entries, listOf(R.string.appearance_off, R.string.appearance_compact, R.string.appearance_large)) { onChange(p.copy(heroSize = it)) }

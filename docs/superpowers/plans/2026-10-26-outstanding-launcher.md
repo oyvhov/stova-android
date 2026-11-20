@@ -44,7 +44,9 @@ Reglar som før: modulært (ingen arbeid når noko er av eller ikkje sett opp), 
 - [ ] 4. (6) Større funn: 4 profilval med kunst og logo, 5 appfliser med farge frå ikonet og jamt
   rutenett, 8 ekte førehandsvisingar i Tema/Kort (8 ferdig 2026-10-27: den ekte Heim i lite format
   ved tittelen på kvar Utsjånad-side, `HomeMiniature`).
-- [ ] 5. (2) Rader etter tid på døgnet, med val under Utsjånad → Heim og hero.
+- [x] 5. (2) Rader etter tid på døgnet, med val under Utsjånad → Heim og hero.
+  For vaksne med standardrekkjefølgje byter prioriteringa kl. 05 og 17. Radredigeringa
+  følgjer den viste rekkjefølgja og kan gjenopprette standarden med skjulte rader og radstil i behald.
 - [ ] 6. (3) Fart: mål kaldstart, første ramme på Heim og Smarthus med `scripts/Measure-Stova.ps1`;
   rett dei største; ny Baseline Profile.
 - [x] 7. (4) Kino-modus: oppsett under Innstillingar → Smarthus; dimming ved «Spel» til Spole,

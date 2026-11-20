@@ -70,6 +70,7 @@ class RowEditingTest {
         menu()
         compose.onNodeWithText("Skjul rada").performClick()
         assertTrue(first in saved.hiddenRows)
+        assertTrue("Hiding a row leaves automatic ordering active", saved.rowOrder.isEmpty())
         compose.onNodeWithContentDescription("Film 0").assertDoesNotExist()
         compose.onNodeWithText("Angre").performClick()
         assertFalse(first in saved.hiddenRows)

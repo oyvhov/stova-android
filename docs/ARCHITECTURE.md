@@ -186,6 +186,9 @@ rad- og tittel-id-ar som nøklar.
 - HA-snapshot blir skrive høgst kvart minutt og forsøkt flusha ved stopp. Berre tidsstempelendringar gir inga skriving.
 - Watch Next registrerer ingen innhaldslyttar utan løyve. Klokker stoppar når skjermen ikkje er aktiv.
 - Heim hugsar Watch Next-kortet med rad-ID-en frå TvProvider. Rada rullar kortet inn ved retur, også når fleire episodar har same serienamn.
+- `HomeViewModel` sorterer synlege medierader på nytt ved kl. 05 og 17 når `Profile.hasTimedRows` gjeld.
+  Kjeldehentinga held fram uavhengig av sorteringa. Heim og radredigeringa bruker same rekkjefølgje,
+  og redigeringa tek med skjulte rader. Ei manuell flytting blir lagra per profil.
 - Watch Next til Home Assistant blir sendt om lag 2 s etter at lista har roa seg, éin gong per adresse og per ny socket-tilkopling (ein tilstand sett med REST forsvinn når Home Assistant startar på nytt), og aldri to gonger på rad utan endring. Ein feila sending er stille og går att ved neste endring.
 - «Hald fram i andre appar» følgjer aldersgrensa til profilen slik heroen gjer: med ei grense treng ein tittel ei kjend
   aldersgrense (`content_rating` frå appen, lesen av `watchNextAge`) innanfor henne, elles blir han skjult. Barneprofilar har ikkje rada.

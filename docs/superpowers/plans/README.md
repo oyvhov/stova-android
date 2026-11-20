@@ -12,7 +12,7 @@ avkryssingsboksar i dei er inga bestilling.
 | [Smartheim, MENY og popup-lukking på Shield](2026-11-05-smartheim-meny-og-popup.md) | Design og popup-lukking prøvd og installert. Fysisk MENY-prøve og eventuell retting står att. |
 | [Overgangar og rørsle i heile Stova](2026-11-03-roersle-i-heile-stova.md) | TV-pilot, sidehistorikk, panel, innhaldsbyte og utrulling. |
 | [Oppdag i Stova: Seerr gjennom Spole](2026-11-01-oppdag.md) | Oppgåve 11 (TV-ane) ventar på eigaren; Spole-delen på greina `launcher-discover`. Spesifikasjon: [`../specs/2026-11-01-oppdag-design.md`](../specs/2026-11-01-oppdag-design.md). |
-| [Eineståande launcher: finpuss, Heim etter tid, fart og huset](2026-10-26-outstanding-launcher.md) | Steg 2–9. I steg 4 er punkt 8 (snøggmenyen på Innstillingar) gjort. |
+| [Eineståande launcher: finpuss, Heim etter tid, fart og huset](2026-10-26-outstanding-launcher.md) | Resten av finpussen i steg 3 og 4, fart i steg 6 og varsel og sluttkontroll i steg 8–9. |
 
 ## Historikk
 

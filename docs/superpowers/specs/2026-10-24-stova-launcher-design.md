@@ -213,6 +213,13 @@ Tilbake lukkar. Tilbake på Heim gjer ingenting (launcheren lukkar seg ikkje).
   4. Nyleg lagt til · Seriar
   5. Hald fram i andre appar (Watch Next)
 
+  For vaksne er «Rader etter tid på døgnet» på som standard. Frå kl. 05 til 17 kjem
+  Watch Next etter «Hald fram». Frå kl. 17 til 05 får nye filmar og seriar plassen
+  etter «Hald fram». Apprada, Oppdag og sesongrada har faste plassar i begge periodane.
+  Ei manuelt lagra rekkjefølgje har prioritet. Valet ligg under «Heim og hero».
+  «Bruk standardrekkjefølgja» under «Rader på Heim» tek opp att den automatiske
+  sorteringa og bevarer skjulte rader, kortstil og startfokus.
+
   I ein sesong kjem òg «Halloween» (gresskar) eller «Jul» (snøfnugg) per mediekonto. Halloween
   hentar `Tags=halloween` og `Genres=Horror|Skrekk` kvar for seg og slår saman med OR, utan duplikat.
   Jul hentar `Tags=christmas`. Begge bruker rekursive `Items` for Movie/Series, med same

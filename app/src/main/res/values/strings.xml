@@ -105,6 +105,7 @@
     <string name="home_start_on_apps_hint">Elles startar Heim på første medierad</string>
     <string name="home_rows">Rader</string>
     <string name="row_move_up">Flytt opp</string>
+    <string name="row_reset_order">Bruk standardrekkjefølgja</string>
     <string name="row_move_down">Flytt ned</string>
     <string name="row_watch_next">Hald fram i andre appar</string>
     <string name="row_discover">Oppdag</string>
@@ -693,6 +694,8 @@
     <string name="settings_customize_row">Tilpass rada</string>
     <string name="settings_customize_row_hint">Overskrift, kortformat og storleik</string>
     <string name="home_visible_rows">Synlege rader</string>
+    <string name="home_rows_by_time">Rader etter tid på døgnet</string>
+    <string name="home_rows_by_time_hint">Hald fram i andre appar kjem tidlegare på dagen, nye filmar og seriar frå kl. 17. Eiga radrekkjefølgje har prioritet.</string>
     <string name="home_rows_one">Éi rad</string>
     <string name="home_rows_two">To rader</string>
     <string name="home_rows_scrolling">Rullande oversikt</string>

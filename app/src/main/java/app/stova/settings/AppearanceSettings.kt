@@ -60,7 +60,7 @@ fun AppearanceSettings(container: AppContainer, profile: Profile, scrollable: Bo
         if (category == AppearanceCategory.ROWS) HomeRowSettings(container, profile, home, firstControl = firstControl) else
         AppearanceSettingsContent(draft, packs, onPickBackground = { picking = true },
             onPickLibraries={restoreLibraries=true;pickingLibraries=true},onPickKidsLibraries={pickingKidsLibraries=true},libraryControl=Modifier.focusRequester(libraryFocus),
-            category = category, firstControl = firstControl,
+            category = category, firstControl = firstControl, adultHome = !profile.kid,
             others = profiles.profiles.filter { it.id != profile.id },
             onReset = { container.appScope.launch { edits.awaitSaved(); container.profiles.resetAppearance(profile.id) } },
             onCopy = { sourceId -> container.appScope.launch {

@@ -77,6 +77,7 @@ fun HomeContent(
     /** Counts the Home button pressed while Home is already on screen; each press goes back to the top. */
     toTop: Int = 0,
     aboveApps: (@Composable (Modifier) -> Unit)? = null,
+    rowOrderForMove: (() -> List<HomeRowKey>)? = null,
     onFavoriteOrderChange: (List<String>) -> Unit = {},
 ) {
     val appearance = app.stova.core.theme.LocalAppearance.current
@@ -239,7 +240,8 @@ fun HomeContent(
         if (key == null) false else when (event.key) {
             Key.DirectionUp, Key.DirectionDown -> {
                 if (event.type == KeyEventType.KeyDown) {
-                    onHomeChange(moveHomeRow(homePrefs, availableRows.orEmpty().map { it.key }, key, if (event.key == Key.DirectionUp) -1 else 1))
+                    val order = rowOrderForMove?.invoke() ?: availableRows.orEmpty().map { it.key }
+                    onHomeChange(moveHomeRow(homePrefs, order, key, if (event.key == Key.DirectionUp) -1 else 1))
                 }
                 true
             }
@@ -467,8 +469,7 @@ fun HomeContent(
             RowSheetSection(row.key, homePrefs, pages, onHomeChange,
                 onMove = { movingRow = row.key; closeMenu() },
                 onHide = {
-                    onHomeChange(homePrefs.copy(hiddenRows = homePrefs.hiddenRows + row.key,
-                        rowOrder = (homePrefs.rowOrder + availableRows.orEmpty().map { it.key }).distinct()))
+                    onHomeChange(homePrefs.copy(hiddenRows = homePrefs.hiddenRows + row.key))
                     hiddenRow = row.key; closeMenu()
                     restore(availableRows.orEmpty().firstOrNull { it.key != row.key }?.key)
                 })

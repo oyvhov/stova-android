@@ -45,6 +45,7 @@ import app.stova.core.theme.StovaTheme
 import app.stova.core.theme.stovaMotion
 import app.stova.core.ui.PinDialog
 import app.stova.profiles.Profile
+import app.stova.profiles.hasTimedRows
 import app.stova.profiles.season
 import app.stova.profiles.ProfileGate
 import app.stova.profiles.leavingNeedsAdultPin
@@ -128,10 +129,12 @@ private fun MainShell(container: AppContainer, profile: Profile) {
     } }
     val date = app.stova.core.theme.LocalSeasonDate.current
     LaunchedEffect(home, date) { home.setCalendarDate(date) }
-    // Kids time switches the hero on the hour; nothing ticks when it is off or the app is stopped.
+    // Share the hour with the hero and the adult Home row order. Refresh immediately on return.
     val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(home, profile.appearance.kidsHours.enabled, lifecycle) {
-        if (!profile.appearance.kidsHours.enabled) return@LaunchedEffect
+    val needsHour = profile.appearance.kidsHours.enabled ||
+        (profile.hasTimedRows && (current == Destination.HOME || current == Destination.SETTINGS))
+    LaunchedEffect(home, needsHour, lifecycle) {
+        if (!needsHour) return@LaunchedEffect
         lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
             while (true) {
                 val now = java.time.LocalTime.now()

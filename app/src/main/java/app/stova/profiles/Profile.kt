@@ -118,7 +118,11 @@ data class AppearancePrefs(
     val moodBeforeSeason: app.stova.core.theme.VisualTheme? = null,
     val accentBeforeSeason: Accent? = null,
     @kotlinx.serialization.Transient val seasonOverlay: SeasonOverlay? = null,
+    val rowsByTime: Boolean = true,
 )
+
+/** Manual row moves and Pip's own row order take precedence over the adult default. */
+val Profile.hasTimedRows: Boolean get() = !kid && appearance.rowsByTime && home.rowOrder.isEmpty()
 
 @Serializable enum class ArtworkSize(val width: Int) {
     TINY(152), SMALL(200), COMPACT(224), MEDIUM(248), LARGE(296), EXTRA_LARGE(344)

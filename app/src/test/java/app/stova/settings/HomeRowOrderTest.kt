@@ -10,6 +10,17 @@ import app.stova.TV_QUALIFIERS
 import app.stova.core.theme.StovaTheme
 import app.stova.home.HomeRowKey
 import app.stova.home.moveItem
+import app.stova.home.HomeViewModel
+import app.stova.home.HomeRowSource
+import app.stova.home.HomeRowUi
+import app.stova.media.MediaRowKind
+import app.stova.media.model.MediaAccount
+import app.stova.media.model.ServerKind
+import app.stova.profiles.HomePrefs
+import app.stova.profiles.RowStyle
+import app.stova.profiles.StartFocus
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,6 +30,48 @@ import org.robolectric.annotation.Config
 @Config(sdk = [30], qualifiers = TV_QUALIFIERS)
 class HomeRowOrderTest {
     @get:Rule val compose = createComposeRule()
+
+    @Test fun pressingPastTheFirstOrLastRowNeverStartsAManualOrder() {
+        var moves = 0
+        compose.setContent { StovaTheme {
+            HomeRowOrderSettings(listOf(HomeRowKey.APPS, HomeRowKey.WATCH_NEXT), emptySet(), { _, _ -> }, { _, _ -> moves++ })
+        } }
+        compose.onAllNodesWithText("Flytt opp")[0].performClick()
+        compose.onAllNodesWithText("Flytt ned")[1].performClick()
+        org.junit.Assert.assertEquals(0, moves)
+    }
+
+    @Test fun firstManualMoveUsesTheCurrentHomeOrderAndResetKeepsTheOtherSettings() {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<app.stova.StovaApplication>()
+        val container = context.container
+        val account = MediaAccount("a", "p", ServerKind.JELLYFIN, "Demo", "Demo", "https://demo.invalid", "u", "U")
+        val movies = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, emptyList(), false)
+        val resume = movies.copy(key = HomeRowKey.continueWatching("a"), kind = MediaRowKind.CONTINUE)
+        val unavailable = HomeRowKey.latestSeries("offline")
+        val prefs = HomePrefs(startFocus = StartFocus.FAVORITE_APPS, hiddenRows = setOf(unavailable),
+            rowFormats = mapOf(unavailable to RowStyle(title = "Arkiv")))
+        val adult = runBlocking {
+            val created = container.profiles.create("Rutine", app.stova.core.theme.AvatarColor.LIME, false)
+            container.profiles.update(created.id) { it.copy(home = prefs) }.also { container.session.enter(it.id) }
+        }
+        val rows = listOf(HomeRowUi.Apps(HomeRowKey.APPS, emptyList()), movies, resume, HomeRowUi.WatchNext(entries = emptyList()))
+        lateinit var vm: HomeViewModel
+        compose.setContent { StovaTheme {
+            vm = remember { HomeViewModel(container.session, listOf(HomeRowSource { flowOf(rows) })).also { it.setHour(8) } }
+            val profile by container.session.active.collectAsState()
+            HomeRowSettings(container, profile ?: adult, vm)
+        } }
+        compose.waitUntil(5_000) { vm.rows.value?.size == 4 }
+        compose.runOnIdle { vm.setHour(19) }
+        compose.waitForIdle()
+        compose.onAllNodesWithText("Flytt ned")[0].performClick()
+        fun saved() = runBlocking { container.profiles.current().profiles.first { it.id == adult.id }.home }
+        compose.waitUntil(5_000) { saved().rowOrder.isNotEmpty() }
+        org.junit.Assert.assertEquals(listOf(resume.key, HomeRowKey.APPS, movies.key, HomeRowKey.WATCH_NEXT, unavailable), saved().rowOrder)
+        compose.onNodeWithText("Bruk standardrekkjefølgja").performClick()
+        compose.waitUntil(5_000) { saved() == prefs }
+        compose.onNodeWithText("Bruk standardrekkjefølgja").assertDoesNotExist()
+    }
 
     @Test fun rowHeadingCanBeEditedWithoutLosingItsLayoutChoices() {
         var style by mutableStateOf(app.stova.profiles.RowStyle(format = app.stova.profiles.RowFormat.ICON))

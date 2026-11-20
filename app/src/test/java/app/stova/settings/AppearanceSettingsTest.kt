@@ -24,6 +24,20 @@ import org.robolectric.annotation.Config
 class AppearanceSettingsTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun rowOrderingByTimeCanBeTurnedOffAndOnUnderHomeAndHero() {
+        var prefs by mutableStateOf(AppearancePrefs())
+        compose.setContent { StovaTheme {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                AppearanceSettingsContent(prefs, category = AppearanceCategory.HERO) { prefs = it }
+            }
+        } }
+        val toggle = compose.onNodeWithText("Rader etter tid på døgnet")
+        toggle.performScrollTo().assertIsOn().performClick().assertIsOff()
+        assertNotEquals(AppearancePrefs(), prefs)
+        toggle.performClick().assertIsOn()
+        assertEquals(AppearancePrefs(), prefs)
+    }
+
     @Test fun appBackgroundHasARealPercentageRange() {
         compose.setContent { StovaTheme { IconPackSettingsContent(AppearancePrefs(), emptyList()) {} } }
         compose.onNodeWithText("Bakgrunn på appkort")

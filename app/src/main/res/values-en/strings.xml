@@ -105,6 +105,7 @@
     <string name="home_start_on_apps_hint">Otherwise Home starts on the first media row</string>
     <string name="home_rows">Rows</string>
     <string name="row_move_up">Move up</string>
+    <string name="row_reset_order">Use default row order</string>
     <string name="row_move_down">Move down</string>
     <string name="row_watch_next">Continue in other apps</string>
     <string name="row_discover">Discover</string>
@@ -693,6 +694,8 @@
     <string name="settings_customize_row">Customise row</string>
     <string name="settings_customize_row_hint">Heading, artwork format and size</string>
     <string name="home_visible_rows">Visible rows</string>
+    <string name="home_rows_by_time">Order rows by time of day</string>
+    <string name="home_rows_by_time_hint">Continue in other apps moves up during the day. New movies and series move up from 5 pm. Your custom row order takes priority.</string>
     <string name="home_rows_one">One row</string>
     <string name="home_rows_two">Two rows</string>
     <string name="home_rows_scrolling">Scrolling view</string>

@@ -118,6 +118,7 @@ fun HomeScreen(
         spotlight = if(profile==null) spotlight else backgroundForProfile(spotlight,profile.id,profile.appearance.backgroundFilter), appIconOverrides = profile?.apps?.iconOverrides.orEmpty(),
         onAppLongClick = { app -> if (profile?.kid == false) appMenu = app },
         homePrefs = profile?.home ?: HomePrefs(),
+        rowOrderForMove = vm::rowOrderForMove,
         onHomeChange = onHomeChange, canEditRows = profile?.kid == false, onRowFocus = vm::focusRow,
         onMediaPlay = { openMedia(it, SpoleAction.PLAY) },
         onMediaAction = if (profile?.kid == false) ::act else null,

@@ -4,6 +4,8 @@ import app.stova.apps.InstalledApp
 import app.stova.core.storage.JsonFileStore
 import app.stova.core.theme.AvatarColor
 import app.stova.media.SpotlightEntry
+import app.stova.media.MediaRowKind
+import app.stova.watchnext.WatchNextEntry
 import app.stova.media.model.*
 import app.stova.profiles.Season
 import app.stova.profiles.SeasonChoice
@@ -132,6 +134,70 @@ class HomeViewModelTest {
     }
 
     private val account = MediaAccount("a", "p", ServerKind.JELLYFIN, "s", "Heim", "http://jf", "u", "U")
+
+    @Test fun hiddenWatchNextNeverMovesDiscoverWhenTheHourChanges() = runTest(UnconfinedTestDispatcher()) {
+        val repo = ProfileRepository(JsonFileStore(tmp.root.resolve("hidden-timed.json"), ProfilesFile.serializer(),
+            ProfilesFile(), UnconfinedTestDispatcher(testScheduler)))
+        val id = repo.create("A", AvatarColor.LIME, false).id
+        repo.update(id) { it.copy(home = it.home.copy(hiddenRows = setOf(HomeRowKey.WATCH_NEXT))) }
+        val session = ProfileSession(repo, backgroundScope).also { it.enter(id) }
+        val movies = HomeRowUi.Media(HomeRowKey.latestMovies("a"), account, MediaRowKind.LATEST_MOVIES, listOf(entry("film").item), false)
+        val resume = movies.copy(key = HomeRowKey.continueWatching("a"), kind = MediaRowKind.CONTINUE)
+        val series = movies.copy(key = HomeRowKey.latestSeries("a"), kind = MediaRowKind.LATEST_SERIES)
+        val discover = movies.copy(key = HomeRowKey.DISCOVER, kind = MediaRowKind.DISCOVER)
+        val visible = listOf(HomeRowUi.Apps(HomeRowKey.APPS, listOf(app)), resume, movies, series, discover)
+        val rows = visible + HomeRowUi.WatchNext(entries = emptyList())
+        val vm = HomeViewModel(session, listOf(HomeRowSource { flowOf(rows) }))
+        for (time in listOf(8, 19)) {
+            vm.setHour(time)
+            assertEquals(visible, vm.rows.value)
+            assertEquals(rows.map { it.key }, vm.rowOrderForMove())
+        }
+        val hidden = session.active.value!!.home
+        assertEquals(hidden, moveHomeRow(hidden, vm.rowOrderForMove(), HomeRowKey.APPS, -1))
+        assertEquals(hidden, moveHomeRow(hidden, vm.rowOrderForMove(), HomeRowKey.DISCOVER, 1))
+    }
+
+    @Test fun adultsSeeContinueAndWatchNextByDayAndNewTitlesAfterContinueAtNight() = runTest(UnconfinedTestDispatcher()) {
+        val repo = ProfileRepository(JsonFileStore(tmp.root.resolve("timed-rows.json"), ProfilesFile.serializer(),
+            ProfilesFile(), UnconfinedTestDispatcher(testScheduler)))
+        val id = repo.create("A", AvatarColor.LIME, false).id
+        val session = ProfileSession(repo, backgroundScope).also { it.enter(id) }
+        fun media(key: HomeRowKey, kind: MediaRowKind) =
+            HomeRowUi.Media(key, account, kind, listOf(entry(key.value).item), false)
+        val movies = media(HomeRowKey.latestMovies("a"), MediaRowKind.LATEST_MOVIES)
+        val series = media(HomeRowKey.latestSeries("a"), MediaRowKind.LATEST_SERIES)
+        val resume = media(HomeRowKey.continueWatching("a"), MediaRowKind.CONTINUE)
+        val apps = HomeRowUi.Apps(HomeRowKey.APPS, listOf(app))
+        val next = HomeRowUi.WatchNext(entries = listOf(WatchNextEntry(1, "demo", "Film", null, null, "demo://film", null, 1)))
+        val discover = media(HomeRowKey.DISCOVER, MediaRowKind.DISCOVER)
+        val all = listOf(apps, movies, series, discover, resume, next)
+        var loads = 0
+        val vm = HomeViewModel(session, listOf(HomeRowSource { loads++; flowOf(all) }))
+        val day = listOf(apps, resume, next, discover, movies, series)
+        val night = listOf(apps, resume, movies, discover, series, next)
+        for ((hour, wanted) in listOf(4 to night, 5 to day, 16 to day, 17 to night)) {
+            vm.setHour(hour)
+            assertEquals("hour=$hour", wanted, vm.rows.value)
+        }
+        repo.update(id) { it.copy(home = it.home.copy(hiddenRows = setOf(series.key))) }
+        assertEquals(listOf(apps, resume, discover, movies, next), vm.rows.value)
+        assertEquals(listOf(apps, resume, series, discover, movies, next).map { it.key }, vm.rowOrderForMove())
+        repo.update(id) { it.copy(appearance = it.appearance.copy(rowsByTime = false)) }
+        vm.setHour(9)
+        assertEquals(all - series, vm.rows.value)
+        repo.update(id) { it.copy(appearance = it.appearance.copy(rowsByTime = true)) }
+        assertEquals(listOf(apps, resume, discover, next, movies), vm.rows.value)
+        val custom = listOf(movies.key, apps.key, next.key, resume.key, discover.key)
+        repo.update(id) { it.copy(home = it.home.copy(rowOrder = custom)) }
+        vm.setHour(8)
+        assertEquals(custom, vm.rows.value!!.map { it.key })
+        assertEquals(custom, session.active.value!!.home.rowOrder)
+        repo.update(id) { it.copy(kid = true, home = it.home.copy(rowOrder = emptyList())) }
+        assertEquals(all - series, vm.rows.value)
+        assertEquals(1, loads)
+    }
+
     private fun entry(id: String) = SpotlightEntry(MediaItem(id, "a", ItemType.MOVIE, id, art = ItemArt(backdrop = "b-$id")), account, false)
     private suspend fun TestScope.spotlightVm(vararg ids: String): HomeViewModel {
         val vm = HomeViewModel(session(backgroundScope, StartFocus.FIRST_MEDIA_ROW), emptyList()) { flowOf(ids.map(::entry)) }

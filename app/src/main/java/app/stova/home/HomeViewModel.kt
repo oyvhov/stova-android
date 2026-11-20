@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.stova.media.SpotlightEntry
 import app.stova.profiles.Profile
+import app.stova.profiles.hasTimedRows
+import app.stova.media.MediaRowKind
 import app.stova.profiles.season
 import app.stova.profiles.atHour
 import app.stova.profiles.seasonal
@@ -68,7 +70,7 @@ class HomeViewModel(
 
     private var lastPool: List<SpotlightEntry> = emptyList()
     private val hour = MutableStateFlow(java.time.LocalTime.now().hour)
-    /** The shell feeds the hour only while kids time is on and the app is started. */
+    /** The shell supplies the local hour while a visible feature depends on it. */
     fun setHour(value: Int) { hour.value = value }
 
     private val spotlightPool: Flow<List<SpotlightEntry>> = combine(session.active,calendarDate,hour) { profile,date,now ->
@@ -139,17 +141,46 @@ class HomeViewModel(
             .debounce { if (first) { first = false; 0L } else SEASON_SETTLE_MILLIS }
     }
 
-    val rows: StateFlow<List<HomeRowUi>?> = combine(available, session.active) { rows, profile ->
+    private fun orderedRowKeys(rows: List<HomeRowUi>, profile: Profile, localHour: Int): List<HomeRowKey> {
+        val keys = rows.map { it.key }.distinct()
+        if (!profile.hasTimedRows) return arrangeRows(keys, profile.home.copy(hiddenRows = emptySet()))
+        val daytime = localHour in 5 until 17
+        // Only these slots change. Apps, seasonal rows and Discover keep their places.
+        val priorities = buildMap {
+            for (row in rows) {
+                if (row.key in profile.home.hiddenRows) continue
+                val rank = when {
+                    row is HomeRowUi.WatchNext -> if (daytime) 1 else 2
+                    row is HomeRowUi.Media && row.kind == MediaRowKind.CONTINUE -> 0
+                    row is HomeRowUi.Media && (row.kind == MediaRowKind.LATEST_MOVIES || row.kind == MediaRowKind.LATEST_SERIES) -> if (daytime) 2 else 1
+                    else -> continue
+                }
+                put(row.key, rank)
+            }
+        }
+        val timed = priorities.keys.sortedBy { priorities.getValue(it) }.iterator()
+        return keys.map { if (it in priorities) timed.next() else it }
+    }
+
+    private data class RowOrder(val keys: List<HomeRowKey>, val visible: List<HomeRowUi>)
+
+    private val rowOrder = combine(available, session.active, hour) { rows, profile, now ->
         if (profile == null || rows == null) null
         else {
+            val keys = orderedRowKeys(rows, profile, now)
             val byKey = rows.associateBy { it.key }
-            arrangeRows(rows.map { it.key }, profile.home).mapNotNull { byKey[it] }
+            RowOrder(keys, keys.filterNot { it in profile.home.hiddenRows }.mapNotNull { byKey[it] })
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    /** Every row a profile could show, before its own order and hiding are applied. */
-    val availableRows: StateFlow<List<HomeRowKey>> = available.map { rows -> rows.orEmpty().map { it.key } }
+    val rows: StateFlow<List<HomeRowUi>?> = rowOrder.map { it?.visible }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** Settings shows the same order as Home and includes hidden rows at their retained positions. */
+    val availableRows: StateFlow<List<HomeRowKey>> = rowOrder.map { it?.keys.orEmpty() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    fun rowOrderForMove(): List<HomeRowKey> = availableRows.value
 
     val initialFocus: StateFlow<HomeRowKey?> = combine(rows, session.active, focusedRow) { rows, profile, lastRow ->
         when {
