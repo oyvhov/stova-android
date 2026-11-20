@@ -1,3 +1,9 @@
+# Heim-rader, fjernkontrollhjelp og rulling
+2026-11-20 (Codex): Vaksne med standardrekkjefølgje får Watch Next tidleg på dagen og nye filmar og seriar frå kl. 17. «Rader på Heim» kan gjenopprette standarden og bevarer skjulte rader, radstil og startfokus. Commit `9a67aae`.
+Watch Next hugsar rett episode og samlar duplikat. Uavklart aldersmerking er skjult. Smarthus viser vanleg korthjelp dei tre første besøka per profil. Innstillingar og Smarthus rullar til skjermkanten. Committar `3972106` og `26b6343`.
+Alle 1 272 testar bestod med skjermtestar på, ingen hoppa over. Lint hadde 0 feil. Debug- og TV-bygget er klare. Debug-APK-en samsvarte med installasjonen på den isolerte Demo-emulatoren på 5580. Flytting og retur til standard vart prøvde der.
+Før-/etterbilete av Smarthus ved dobbel skrift og bilete av «Heim og hero» ligg i `output/screenshots/Stova-2026-11-20/`. Fysisk Shield står att å prøve. Resten av finpussen i plansteg 3 og 4 står open.
+
 # Kva Stova kan lære av Tunet-privat
 
 2026-11-18 (Codex): Samanlikna Stova med den lokale arbeidskopien i `C:\Tunet-privat` og såg på dei lagra Shield-bileta av Heim og Sonos.
